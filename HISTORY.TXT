@@ -1,5 +1,11 @@
 ***   VirtuaWin Revision History   ***
 --------------------------------------
+Ver 2.6.2 2002/10/01
+* Bugfix: Fixed a memory leak
+* Bugfix: Added mutex protection for the window list to increase robustness
+* Bugfix: Fixed so that the recovery file is written with correct endlines
+
+----------------------------
 
 Ver 2.6.1 2002/07/17 
 * Removed the MF_POPUP flag from the window menus since they shouldn't be created like this. 
