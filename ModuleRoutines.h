@@ -1,7 +1,7 @@
 //
 //  VirtuaWin - Virtual Desktop Manager for Win9x/NT/Win2K
 // 
-//  Copyright (c) 1999, 2000, 2001, 2002 jopi
+//  Copyright (c) 1999, 2000, 2001, 2002 Johan Piculell
 // 
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -35,6 +35,9 @@ void postModuleMessage(UINT Msg, WPARAM wParam, LPARAM lParam);
 
 /*
  * $Log$
+ * Revision 1.3  2002/02/14 21:23:40  jopi
+ * Updated copyright header
+ *
  * Revision 1.2  2001/02/05 21:13:08  jopi
  * Updated copyright header
  *

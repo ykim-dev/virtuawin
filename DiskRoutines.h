@@ -1,7 +1,7 @@
 //
 //  VirtuaWin - Virtual Desktop Manager for Win9x/NT/Win2K
 // 
-//  Copyright (c) 1999, 2000, 2001, 2002 jopi
+//  Copyright (c) 1999, 2000, 2001, 2002 Johan Piculell
 // 
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -45,6 +45,9 @@ char *replace(char *g_string, char *replace_from, char *replace_to);
 
 /*
  * $Log$
+ * Revision 1.6  2002/02/14 21:23:39  jopi
+ * Updated copyright header
+ *
  * Revision 1.5  2001/12/01 00:05:53  jopi
  * Added alternative window hiding for troublesome windows like InternetExplorer
  *
