@@ -1,6 +1,6 @@
 
                        VirtuaWin
-               <http://www.virtuawin.com>
+          <http://virtuawin.sourceforge.net/>
 	
                   by Johan Piculell
                  <virtuawin@home.se>
@@ -22,7 +22,7 @@ README.TXT	This file.
 COPYING.TXT	GNU General Public License Version 2.
 
 Complete source for VirtuaWin can be downloaded from:
-<http://www.virtuawin.com>
+<http://virtuawin.sourceforge.net/>
 
 
 Bugs

@@ -162,7 +162,7 @@ BEGIN
     CTEXT           "Copyright (c) 1999-2002 and 2003 Johan Piculell", IDC_STATIC, 9, 38, 158, 8
     CTEXT           "virtuawin@home.se", IDC_MAILTO, 9, 48, 158, 8, 0x0100
     CTEXT           "Latest version, info, source, etc. visit:", IDC_STATIC, 9, 62, 158, 8
-    CTEXT           "http://www.virtuawin.com", IDC_HTTP, 9, 72, 158, 10, 0x0100
+    CTEXT           "http://virtuawin.sourceforge.net/", IDC_HTTP, 9, 72, 158, 10, 0x0100
     GROUPBOX        "License", IDC_STATIC, 6, 87, 165, 160, 0x0300
     EDITTEXT        IDC_LICENSE, 11, 98, 155, 147, ES_MULTILINE | ES_READONLY |NOT WS_TABSTOP | NOT WS_BORDER
 END

@@ -1,6 +1,6 @@
 
                        VirtuaWin
-               <http://www.virtuawin.com>
+          <http://virtuawin.sourceforge.net/>
 	
                   by Johan Piculell
                  <virtuawin@home.se>
