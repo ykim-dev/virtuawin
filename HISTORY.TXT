@@ -1,12 +1,13 @@
 ***   VirtuaWin Revision History   ***
 --------------------------------------
 
-Ver 2.6 2001/12/xx 
+Ver 2.6 2002/xx/xx 
 * Bugfix: Alternative way of hiding windows. This solves the disappearing 
   Explorer bug
 * Bugfix: Saving of sticky state for "User windows" is now fixed
 * Bugfix: Problems with saving desktop and stickiness state of applications 
   containing spaces in their classnames
+* Taskbar warp now works for all locations of the taskbar. Thanks to Philip Walford
 * Double click in the module list will bring up module config window (if any)
 * Option to hide the system tray icon
 * Trying to start-up a second VirtuaWin instance will bring up setup window
