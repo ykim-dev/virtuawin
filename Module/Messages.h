@@ -30,7 +30,7 @@
 /* Message, remove the systray icon */
 #define VW_DELICON    (WM_USER + 17) 
 /* Message, displays the systray icon */
-#define VW_SHOWICON   (WM_USER + 18) 
+#define VW_SHOWICON    (WM_USER + 18) 
 /* Message, bring up the help */ 
 #define VW_HELP       (WM_USER + 19) 
 /* Message, gather all windows */
@@ -43,7 +43,9 @@
 #define VW_WINLIST    (WM_USER + 23)
 /* Message, returns the current desktop number */
 #define VW_CURDESK    (WM_USER + 24)
-/* Message, assign a window to the specified desktop */
+/* Message, assign a window to the specified desktop 
+   wParam is the window handle (HWND) and lParam is the desktop number 
+*/
 #define VW_ASSIGNWIN  (WM_USER + 25)
 
 /* Message, sent by VirtuaWin after a switch. lParam will contain current desktop number 
@@ -71,11 +73,11 @@
 
 /*
  * $Log$
- * Revision 1.4  2002/11/23 15:12:18  jopi
- * Added missing message, SDK file differed from main file.
+ * Revision 1.5  2003/06/26 19:56:52  jopi
+ * Added module support for assigning a window to specified desktop
  *
- * Revision 1.3  2001/01/12 18:34:37  jopi
- * Added module message for getting the current desktop number
+ * Revision 1.4  2001/11/12 21:39:15  jopi
+ * Added functionality for disabling the systray icon
  *
  * Revision 1.3  2001/01/12 16:58:11  jopi
  * Added module message for getting the current desktop number

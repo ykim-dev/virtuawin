@@ -43,7 +43,9 @@
 #define VW_WINLIST    (WM_USER + 23)
 /* Message, returns the current desktop number */
 #define VW_CURDESK    (WM_USER + 24)
-/* Message, assign a window to the specified desktop */
+/* Message, assign a window to the specified desktop 
+   wParam is the window handle (HWND) and lParam is the desktop number 
+*/
 #define VW_ASSIGNWIN  (WM_USER + 25)
 
 /* Message, sent by VirtuaWin after a switch. lParam will contain current desktop number 
@@ -71,6 +73,9 @@
 
 /*
  * $Log$
+ * Revision 1.5  2003/06/26 19:56:52  jopi
+ * Added module support for assigning a window to specified desktop
+ *
  * Revision 1.4  2001/11/12 21:39:15  jopi
  * Added functionality for disabling the systray icon
  *
