@@ -34,6 +34,8 @@
 #include <commctrl.h>
 #include <math.h>
 
+HANDLE hMutex;
+
 /*************************************************
  * VirtuaWin start point
  */
@@ -47,7 +49,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
    hInst = hInstance;
 
    /* Only one instance may be started */
-   CreateMutex(NULL, TRUE, "PreventSecondVirtuaWin");
+   hMutex = CreateMutex(NULL, FALSE, "PreventSecondVirtuaWin");
 
    if(GetLastError() == ERROR_ALREADY_EXISTS)
    {
@@ -128,7 +130,9 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 
    initData();			      // init window list
    EnumWindows(enumWindowsProc, 0);   // get all windows
+   lockMutex();
    saveDesktopState(&nWin, winList);  // Let's save them now
+   releaseMutex();
    
    curUser = loadUserList(userList);  // load any user defined windows
    if(curUser != 0)
@@ -152,6 +156,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
       DispatchMessage(&msg);
    }
    
+   CloseHandle(hMutex);
    return msg.wParam;
 }
 
@@ -167,7 +172,6 @@ DWORD WINAPI MouseProc(LPVOID lpParameter)
    while(1) {
       Sleep(50);
       GetCursorPos(&pt);
-      //printf("Taksbar values: %d %d %d %d", taskBarLeftWarp, taskBarRightWarp, taskBarTopWarp, taskBarBottomWarp);
       if(     pt.x < (screenLeft   + 3 + (taskBarWarp * taskBarLeftWarp   * checkMouseState()))) {
          // switch left
          SendNotifyMessage(hWnd, VW_MOUSEWARP, 0, 
@@ -658,6 +662,7 @@ LRESULT CALLBACK wndProc(HWND aHWnd, UINT message, WPARAM wParam, LPARAM lParam)
                                         TPM_LEFTBUTTON, (pt.x-2), (pt.y-2), // screen coordinates
                                         0, aHWnd, NULL);
                if(retItem) {
+                  lockMutex();
                   if(retItem < (2 * MAXWIN)) { // Sticky toggle
                      if(winList[retItem - MAXWIN].Sticky)
                         winList[retItem - MAXWIN].Sticky = FALSE;
@@ -672,6 +677,7 @@ LRESULT CALLBACK wndProc(HWND aHWnd, UINT message, WPARAM wParam, LPARAM lParam)
                      showHideWindow( &winList[retItem - (3 * MAXWIN)], TRUE );
                      forceForeground(winList[retItem - (3 * MAXWIN)].Handle);
                   }
+                  releaseMutex();
                }
                
                PostMessage(aHWnd, 0, 0, 0);  // see above
@@ -777,8 +783,10 @@ LRESULT CALLBACK wndProc(HWND aHWnd, UINT message, WPARAM wParam, LPARAM lParam)
          // Send over the window list with WM_COPYDATA
          COPYDATASTRUCT cds;         
          cds.dwData = nWin;
+         lockMutex();
          cds.cbData = sizeof(winList);
-         cds.lpData = (void*)winList;   
+         cds.lpData = (void*)winList;
+         releaseMutex();
          sendModuleMessage(WM_COPYDATA, 0, (LPARAM)&cds); 
          return TRUE;
       }
@@ -881,6 +889,7 @@ LRESULT CALLBACK wndProc(HWND aHWnd, UINT message, WPARAM wParam, LPARAM lParam)
                                            TPM_LEFTBUTTON, (pt.x-2), (pt.y-2), // screen coordinates
                                            0, aHWnd, NULL);
                   if(retItem) {
+                     lockMutex();
                      if(retItem < (2 * MAXWIN)) { // Sticky toggle
                         if(winList[retItem - MAXWIN].Sticky)
                            winList[retItem - MAXWIN].Sticky = FALSE;
@@ -895,6 +904,7 @@ LRESULT CALLBACK wndProc(HWND aHWnd, UINT message, WPARAM wParam, LPARAM lParam)
                         showHideWindow( &winList[retItem - (3 * MAXWIN)], TRUE );
                         forceForeground(winList[retItem - (3 * MAXWIN)].Handle);
                      }
+                     releaseMutex();
                   }
         
                   PostMessage(aHWnd, 0, 0, 0);  // see above
@@ -992,7 +1002,12 @@ void unRegisterAllKeys()
  */
 VOID CALLBACK TimerProc(HWND hwnd, UINT uMsg, UINT idEvent, DWORD dwTime)
 {
+   lockMutex();
+   /* We now own the mutex. */
    EnumWindows(enumWindowsProc, 0); // Get all windows
+   /* Let other threads have a go. */
+   releaseMutex();
+   if (hMutex != (HANDLE)0) ReleaseMutex(hMutex);
    currentActive = GetForegroundWindow();
    if(userDefinedWin)
       findUserWindows();
@@ -1002,7 +1017,9 @@ VOID CALLBACK TimerProc(HWND hwnd, UINT uMsg, UINT idEvent, DWORD dwTime)
    if(crashRecovery) {
       if(saveInterval < 0) {
          saveInterval = 240; // 250 * 240 = 1 min
+         lockMutex();
          saveDesktopState(&nWin, winList);
+         releaseMutex();
       }
       saveInterval--;
    }
@@ -1014,7 +1031,11 @@ VOID CALLBACK TimerProc(HWND hwnd, UINT uMsg, UINT idEvent, DWORD dwTime)
 void shutDown()
 {
    if(saveLayoutOnExit)
+   {
+      lockMutex();
       saveDesktopConfiguration(&nWin, winList); 
+      releaseMutex();
+   }
    writeDisabledList(&nOfModules, moduleList);
    unloadModules();
    showAll();	        // gather all windows on exit
@@ -1022,7 +1043,11 @@ void shutDown()
    unRegisterAllKeys();
    Shell_NotifyIcon(NIM_DELETE, &nIconD); // This removes the icon
    if(saveSticky)
+   {
+      lockMutex();
       saveStickyWindows(&nWin, winList);
+      releaseMutex();
+   }
    PostQuitMessage(0);
    KillTimer(hWnd, 0x29a);                // Remove the timer
 }
@@ -1055,6 +1080,7 @@ void setMouseKey()
 void stepDesk()
 {
    int x;  
+   lockMutex();
    for (x = 0; x < nWin ; ++x) {
       // Show these windows
       if(winList[x].Desk == currentDesk) {
@@ -1092,6 +1118,7 @@ void stepDesk()
          }
       }
    }
+   releaseMutex();
    topWindow = NULL;
    
    if(refreshOnWarp) // Refresh the desktop 
@@ -1294,6 +1321,7 @@ void initData()
 {
   int x;
   currentActive = GetForegroundWindow();
+  lockMutex();
   for (x = 0; x < MAXWIN; ++x) {
     winList[x].Handle = NULL;
     winList[x].Active = FALSE;
@@ -1303,6 +1331,7 @@ void initData()
     winList[x].StyleFlags = 0;
     winList[x].Desk = currentDesk;
   }
+  releaseMutex();
 }
 
 /*************************************************
@@ -1397,7 +1426,8 @@ void findUserWindows()
       if(!tmpHnd)
         userList[i].isClass = TRUE;
     }
-
+    
+    lockMutex();
     if(!inWinList(tmpHnd)) {
       winList[nWin].Handle = tmpHnd;
       winList[nWin].Desk = currentDesk;
@@ -1405,6 +1435,7 @@ void findUserWindows()
       winList[nWin].NormalHide = TRUE;
       nWin++;
     }
+    releaseMutex();
   }
 }
 
@@ -1445,14 +1476,16 @@ __inline BOOL inWinList(HWND* hwnd)
  */
 void showAll()
 {
-  int x;
-  for (x = 0; x < MAXWIN; ++x) 
-  {
-     if (IsWindow(winList[x].Handle)) 
-     {
-        showHideWindow( &winList[x], TRUE );
-     }
-  }
+   int x;
+   lockMutex();
+   for (x = 0; x < MAXWIN; ++x) 
+   {
+      if (IsWindow(winList[x].Handle)) 
+      {
+         showHideWindow( &winList[x], TRUE );
+      }
+   }
+   releaseMutex();
 }
 
 /*************************************************
@@ -1462,7 +1495,7 @@ void packList()
 {
    int i;
    int j;
-
+   lockMutex();
    for (i = 0; i < nWin; ++i) {
       // remove killed windows
       if(!IsWindow(winList[i].Handle) || 
@@ -1485,6 +1518,7 @@ void packList()
             winList[i].Active = FALSE;
       }
    }
+   releaseMutex();
 }
 
 /*************************************************
@@ -1544,6 +1578,7 @@ HMENU createSortedWinList_cos()
    hMenu = CreatePopupMenu();
 
    // create the window list
+   lockMutex();
    for(i = 0; i < nWin; ++i)
    {
       GetWindowText(winList[i].Handle, buff, 30);
@@ -1557,7 +1592,7 @@ HMENU createSortedWinList_cos()
       items [i+1] = NULL;
    }
    items [i+2] = NULL; // just in case
-
+   releaseMutex();
 
    // sorting using bubble sort
    for (x = 0; x < i; x++ )
@@ -1700,7 +1735,7 @@ HMENU createSortedWinList(int multiplier)
    hMenu = NULL;
 
    hMenu = CreatePopupMenu();
-
+   lockMutex();
    // create the window list
    for(i = 0; i < nWin; ++i)
    {
@@ -1715,6 +1750,7 @@ HMENU createSortedWinList(int multiplier)
       items [i+1] = NULL;
    }
    items [i+2] = NULL; // just in case
+   releaseMutex();
 
    // sorting using bubble sort
    for (x = 0; x < i; x++ )
@@ -1770,7 +1806,7 @@ void toggleActiveSticky()
 {
    HWND tempHnd = GetForegroundWindow();
    int i;
-
+   lockMutex();
    for (i = 0; i < nWin; ++i) {
       if(tempHnd == winList[i].Handle) {
          if(winList[i].Sticky)
@@ -1780,6 +1816,7 @@ void toggleActiveSticky()
          return;
       }
    }
+   releaseMutex();
 }
 
 /*************************************************
@@ -2008,6 +2045,9 @@ void getScreenSize()
    screenBottom = r.bottom;
 }
 
+/************************************************
+ * Grabs and stores the taskbar coordinates
+ */
 void getTaskbarLocation()
 {
    RECT r;
@@ -2026,8 +2066,29 @@ void getTaskbarLocation()
          taskBarBottomWarp = r.bottom - r.top - 3;
 }
 
+/************************************************
+ * Locks the window list protection
+ */
+void lockMutex()
+{
+   if (hMutex != (HANDLE)0 && WaitForSingleObject(hMutex,0) == WAIT_TIMEOUT) {
+      WaitForSingleObject(hMutex,INFINITE);
+   }
+}
+
+/************************************************
+ * Releases the window list protection
+ */
+void releaseMutex()
+{
+   if (hMutex != (HANDLE)0) ReleaseMutex(hMutex);
+}
+
 /*
  * $Log$
+ * Revision 1.23  2002/06/15 11:25:13  jopi
+ * Now we try to locate the MSTaskSwWClass even if it is a direct child of Shell_TrayWnd, this will make it work on more windows version since this differs sometimes.
+ *
  * Revision 1.22  2002/06/15 11:17:50  jopi
  * Fixed so that window coordinates are reloaded when resolution is changed, and also so that taskbar location is reloaded if moved.
  *
