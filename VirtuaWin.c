@@ -2126,7 +2126,7 @@ void assignWindow(HWND* theWin, int theDesk)
          if(winList[index].Desk != theDesk)
          {
             lockMutex();
-            showHideWindow( &winList[index], FALSE );
+            showHideWindow( &winList[index], currentDesk == theDesk ? TRUE:FALSE );
             winList[index].Desk = theDesk;
             releaseMutex();
          }
@@ -2135,6 +2135,9 @@ void assignWindow(HWND* theWin, int theDesk)
 
 /*
  * $Log$
+ * Revision 1.37  2004/01/10 11:15:52  jopi
+ * Updated copyright for 2004
+ *
  * Revision 1.36  2004/01/10 11:04:12  jopi
  * Changed what windows that should be handled, was some problems with some windows
  *
