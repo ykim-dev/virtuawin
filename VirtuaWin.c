@@ -1982,9 +1982,15 @@ BOOL isSpecialWindow( char* className )
 void goGetTheTaskbarHandle()
 {
    HWND hwndTray = FindWindowEx(NULL, NULL, "Shell_TrayWnd", NULL);
-   HWND hwndBar = FindWindowEx(hwndTray, NULL, "RebarWindow32", NULL );
+   HWND hwndBar = FindWindowEx(hwndTray, NULL, "ReBarWindow32", NULL );
+
+   // Maybe "RebarWindow32" is not a child to "Shell_TrayWnd", then try this
+   if( hwndBar == NULL )
+      hwndBar = hwndTray;
+   
    hwndTask = FindWindowEx(hwndBar, NULL, "MSTaskSwWClass", NULL);
-   if( !hwndTask )
+
+   if( hwndTask == NULL )
       MessageBox(hWnd, "Could not locate handle to the taskbar.\n This will disable the ability to hide troublesome windows correctly.", "VirtuaWin", 0); 
 }
 
@@ -2022,6 +2028,9 @@ void getTaskbarLocation()
 
 /*
  * $Log$
+ * Revision 1.22  2002/06/15 11:17:50  jopi
+ * Fixed so that window coordinates are reloaded when resolution is changed, and also so that taskbar location is reloaded if moved.
+ *
  * Revision 1.21  2002/06/11 20:10:27  jopi
  * Improved the window menus so that unnecessary menus and items won't show and they all have a lable. Fixes by Ulf Jaenicke-Roessler.
  *
