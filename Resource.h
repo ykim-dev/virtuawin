@@ -105,12 +105,16 @@
 #define	ID_SETUP	32771
 #define	ID_EXIT	        32772
 #define	ID_GATHER	32775
+#define ID_DISABLE      32776
 #define	ID_HELP	        32777
 
 #endif
 
 /*
  * $Log$
+ * Revision 1.7  2002/12/23 15:42:28  jopi
+ * Added config options to disable taskbar detection and the alternative hiding technique.
+ *
  * Revision 1.6  2002/12/23 14:16:47  jopi
  * Added a new setup tab, "expert" and moved some settings from misc.
  *

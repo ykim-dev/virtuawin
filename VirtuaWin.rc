@@ -195,6 +195,7 @@ BEGIN
         MENUITEM "Setup", ID_SETUP
         MENUITEM "Gather", ID_GATHER
         MENUITEM "Help", ID_HELP
+        MENUITEM "Disable", ID_DISABLE
         MENUITEM SEPARATOR
         MENUITEM "Exit", ID_EXIT
         END

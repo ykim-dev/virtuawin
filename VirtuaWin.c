@@ -785,7 +785,7 @@ LRESULT CALLBACK wndProc(HWND aHWnd, UINT message, WPARAM wParam, LPARAM lParam)
       case VW_GATHER:
          showAll();
          return TRUE;
-    
+         
       case VW_DESKX:
          return nDesksX;
     
@@ -833,7 +833,14 @@ LRESULT CALLBACK wndProc(HWND aHWnd, UINT message, WPARAM wParam, LPARAM lParam)
             case WM_RBUTTONUP:		   // Let's track a popup menu
                GetCursorPos(&pt);
                hmenu = LoadMenu(hInst, MAKEINTRESOURCE(IDR_MENU1));
+               
                hpopup = GetSubMenu(hmenu, 0);
+
+               UINT nID = GetMenuItemID(hpopup, 3); // Get the Disable item
+               if(enabled) // Change the text depending on state
+                  ModifyMenu(hpopup, nID, MF_BYCOMMAND, nID, "Disable");
+               else
+                  ModifyMenu(hpopup, nID, MF_BYCOMMAND, nID, "Enable");
                SetForegroundWindow(aHWnd);
       
                switch (TrackPopupMenu(hpopup, TPM_RETURNCMD |    // Return menu code
@@ -852,6 +859,8 @@ LRESULT CALLBACK wndProc(HWND aHWnd, UINT message, WPARAM wParam, LPARAM lParam)
                   case ID_HELP:	// show help
                      WinHelp(aHWnd, vwHelp, HELP_CONTENTS, 0);
                      break;
+                  case ID_DISABLE:
+                     disableAll(aHWnd);
                }
                PostMessage(aHWnd, 0, 0, 0);	
                DestroyMenu(hpopup);  // Delete loaded menu and reclaim its resources
@@ -859,38 +868,7 @@ LRESULT CALLBACK wndProc(HWND aHWnd, UINT message, WPARAM wParam, LPARAM lParam)
                break;
 
             case WM_LBUTTONDBLCLK:		// double click on icon
-               if(enabled) {			// disable VirtuaWin
-                  strcpy(nIconD.szTip,"VirtuaWin - Disabled"); //Tooltip
-                  nIconD.hIcon = icons[0];
-                  Shell_NotifyIcon(NIM_MODIFY, &nIconD);
-                  unRegisterKeys();
-                  unRegisterHotKeys();
-                  unRegisterStickyKey();
-                  unRegisterCyclingKeys();
-                  unRegisterMenuHotKey();
-                  KillTimer(aHWnd, 0x29a);
-                  enabled = FALSE;
-               } else {			        // Enable VirtuaWin
-                  strcpy(nIconD.szTip, appName);	// Tooltip
-                  setIcon(calculateDesk());
-                  if(!registerKeys())
-                     MessageBox(aHWnd, "Invalid key modifier combination, check control keys!", 
-                                NULL, MB_ICONWARNING);
-                  if(!registerHotKeys())
-                     MessageBox(aHWnd, "Invalid key modifier combination, check hot keys!", 
-                                NULL, MB_ICONWARNING);
-                  if(!registerStickyKey())
-                     MessageBox(aHWnd, "Invalid key modifier combination, check sticky hot key!", 
-                                NULL, MB_ICONWARNING);
-                  if(!registerCyclingKeys())
-                     MessageBox(aHWnd, "Invalid key modifier combination, check cycling hot keys!", 
-                                NULL, MB_ICONWARNING);
-                  if(!registerMenuHotKey())
-                     MessageBox(aHWnd, "Invalid key modifier combination, check menu hot key!", 
-                                NULL, MB_ICONWARNING);
-                  SetTimer(aHWnd, 0x29a, 250, TimerProc);  // Set the timer in ms
-                  enabled = TRUE;
-               }
+               showSetup();
                break;
       
             case WM_LBUTTONDOWN: // Show the window list
@@ -2113,8 +2091,50 @@ void releaseMutex()
    if (hMutex != (HANDLE)0) ReleaseMutex(hMutex);
 }
 
+/************************************************
+ * Toggles the disabled state of VirtuaWin
+ */
+void disableAll(HWND* aHWnd)
+{
+   if(enabled) {                                   // disable VirtuaWin
+      strcpy(nIconD.szTip,"VirtuaWin - Disabled"); //Tooltip
+      nIconD.hIcon = icons[0];
+      Shell_NotifyIcon(NIM_MODIFY, &nIconD);
+      unRegisterKeys();
+      unRegisterHotKeys();
+      unRegisterStickyKey();
+      unRegisterCyclingKeys();
+      unRegisterMenuHotKey();
+      KillTimer(aHWnd, 0x29a);
+      enabled = FALSE;
+   } else {			        // Enable VirtuaWin
+      strcpy(nIconD.szTip, appName);	// Tooltip
+      setIcon(calculateDesk());
+      if(!registerKeys())
+         MessageBox(aHWnd, "Invalid key modifier combination, check control keys!", 
+                    NULL, MB_ICONWARNING);
+      if(!registerHotKeys())
+         MessageBox(aHWnd, "Invalid key modifier combination, check hot keys!", 
+                    NULL, MB_ICONWARNING);
+      if(!registerStickyKey())
+         MessageBox(aHWnd, "Invalid key modifier combination, check sticky hot key!", 
+                    NULL, MB_ICONWARNING);
+      if(!registerCyclingKeys())
+         MessageBox(aHWnd, "Invalid key modifier combination, check cycling hot keys!", 
+                    NULL, MB_ICONWARNING);
+      if(!registerMenuHotKey())
+         MessageBox(aHWnd, "Invalid key modifier combination, check menu hot key!", 
+                    NULL, MB_ICONWARNING);
+      SetTimer(aHWnd, 0x29a, 250, TimerProc);  // Set the timer in ms
+      enabled = TRUE;
+   }
+}
+
 /*
  * $Log$
+ * Revision 1.29  2003/03/10 19:23:43  jopi
+ * Fixed so that we retry to add the systray icon incase of failure, we might be in a position where we try to add the icon before the systray process is started.
+ *
  * Revision 1.28  2003/02/27 19:57:01  jopi
  * Old taskbar position was not deleted if taskbar position moved during operation. Also improved left/right/up/down taskbar position detection, seems like we can have negative coordinates on the position.
  *

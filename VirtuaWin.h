@@ -99,6 +99,7 @@ void getScreenSize();
 void getTaskbarLocation();
 void lockMutex();
 void releaseMutex();
+void disableAll(HWND*);
 
 // Variables
 HWND topWindow;        // holds the top window on a desktop
@@ -275,6 +276,9 @@ LPSTR vwWindowsState;
 
 /*
  * $Log$
+ * Revision 1.19  2003/01/27 20:23:54  jopi
+ * Updated copyright header for 2003
+ *
  * Revision 1.18  2002/12/23 15:42:25  jopi
  * Added config options to disable taskbar detection and the alternative hiding technique.
  *
