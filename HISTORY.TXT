@@ -1,6 +1,15 @@
 ***   VirtuaWin Revision History   ***
 --------------------------------------
 
+Ver 2.8 2003/07/10
+* Added possibility to disable the use of one config file for each user
+* Added module support for assigning a window to specified desktop 
+* Changed the mouse control checkboxes to radiobuttons.
+* Bugfix: (SF745820)Excluded some special types of windows from beeing handled by VirtuaWin.
+* Bugfix: Updated the webaddress link
+* Bugfix: (SF693876)Fixed option to handle XP skinned style taskbars 
+----------------------------
+
 Ver 2.7.1 2003/04/11
 * Bugfix: Accidently placed another option over the "switch minimized" option in the setup.
 ----------------------------
