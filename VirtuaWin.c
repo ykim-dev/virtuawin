@@ -1989,7 +1989,6 @@ void goGetTheTaskbarHandle()
  */
 void getScreenSize()
 {
-   RECT r;
    screenLeft = GetSystemMetrics(SM_XVIRTUALSCREEN);
    screenRight = GetSystemMetrics(SM_CXVIRTUALSCREEN);
    screenTop = GetSystemMetrics(SM_YVIRTUALSCREEN);
@@ -2149,6 +2148,9 @@ void setSticky(HWND theWin, int state)
 
 /*
  * $Log$
+ * Revision 1.43  2005/02/04 11:04:41  jopi
+ * SF936865, use virtual sceensize for mouse switching instead since multimonitor setups would switch desktop prematurely otherwise.
+ *
  * Revision 1.42  2004/12/07 19:18:42  jopi
  * SF1053738, added application icons to the window list
  *
