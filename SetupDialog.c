@@ -165,7 +165,7 @@ static BOOL APIENTRY about(HWND hDlg, UINT message, UINT wParam, LONG lParam)
             }  
          }
          else if(LOWORD(wParam) == IDC_HTTP) {
-            HINSTANCE h = ShellExecute(NULL, "open", "http://w1.457.telia.com/~u45706979", 
+            HINSTANCE h = ShellExecute(NULL, "open", "http://virtuawin.sourceforge.net", 
                                        NULL, NULL, SW_SHOWNORMAL);
             if ((UINT)h < 33) {
                MessageBox(hDlg, "Error open web link.", "VirtuawWin", MB_ICONWARNING);
@@ -936,6 +936,9 @@ static BOOL APIENTRY expert(HWND hDlg, UINT message, UINT wParam, LONG lParam)
 
 /*
  * $Log$
+ * Revision 1.19  2003/07/08 21:18:11  jopi
+ * Changed the module enable message
+ *
  * Revision 1.18  2003/06/24 19:49:08  jopi
  * SF693876 Fixed option to handle XP skinned style taskbars
  *
