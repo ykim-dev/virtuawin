@@ -1,7 +1,7 @@
 //
 //  VirtuaWin - Virtual Desktop Manager for Win9x/NT/Win2K
 // 
-//  Copyright (c) 1999, 2000, 2001, 2002 jopi
+//  Copyright (c) 1999, 2000, 2001, 2002 Johan Piculell
 // 
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -38,7 +38,7 @@
  */
 int createPropertySheet(HINSTANCE theHinst, HWND theHwndOwner)
 {
-   PROPSHEETPAGE psp[5]; // How many sheets
+   PROPSHEETPAGE psp[6]; // How many sheets
    PROPSHEETHEADER psh;
 
    int xIcon = GetSystemMetrics(SM_CXSMICON);
@@ -83,11 +83,20 @@ int createPropertySheet(HINSTANCE theHinst, HWND theHwndOwner)
    psp[4].dwSize = sizeof(PROPSHEETPAGE);
    psp[4].dwFlags = PSP_USETITLE;
    psp[4].hInstance = theHinst;
-   psp[4].pszTemplate = MAKEINTRESOURCE(IDD_PROPPAGE_ABOUT);
+   psp[4].pszTemplate = MAKEINTRESOURCE(IDD_PROPPAGE_EXPERT);
    psp[4].pszIcon = NULL;
-   psp[4].pfnDlgProc = about;
-   psp[4].pszTitle = "About";
+   psp[4].pfnDlgProc = expert;
+   psp[4].pszTitle = "Expert";
    psp[4].lParam = 0;
+
+   psp[5].dwSize = sizeof(PROPSHEETPAGE);
+   psp[5].dwFlags = PSP_USETITLE;
+   psp[5].hInstance = theHinst;
+   psp[5].pszTemplate = MAKEINTRESOURCE(IDD_PROPPAGE_ABOUT);
+   psp[5].pszIcon = NULL;
+   psp[5].pfnDlgProc = about;
+   psp[5].pszTitle = "About";
+   psp[5].lParam = 0;
 
    psh.dwSize = sizeof(PROPSHEETHEADER);
    psh.dwFlags = PSH_USECALLBACK | PSH_PROPSHEETPAGE | PSH_USEHICON;
@@ -560,7 +569,6 @@ static BOOL APIENTRY keys(HWND hDlg, UINT message, UINT wParam, LONG lParam)
  */
 static BOOL APIENTRY misc(HWND hDlg, UINT message, UINT wParam, LONG lParam)
 {
-   static HWND focus;
    static int tmpDesksY;
    static int tmpDesksX;
    static HWND xBuddy;
@@ -570,7 +578,6 @@ static BOOL APIENTRY misc(HWND hDlg, UINT message, UINT wParam, LONG lParam)
    
    switch (message) {
       case WM_INITDIALOG:
-         focus = GetDlgItem(hDlg, IDC_FOCUS);
          SetDlgItemInt(hDlg, IDC_DESKY, nDesksY, FALSE);
          SetDlgItemInt(hDlg, IDC_DESKX, nDesksX, FALSE);
          tmpDesksY = nDesksY;
@@ -588,25 +595,8 @@ static BOOL APIENTRY misc(HWND hDlg, UINT message, UINT wParam, LONG lParam)
          SendMessage(GetDlgItem(hDlg, IDC_SLIDERX), UDM_SETPOS, 0L, MAKELONG( nDesksX, 0));
          SendMessage(GetDlgItem(hDlg, IDC_SLIDERY), UDM_SETPOS, 0L, MAKELONG( nDesksY, 0));
            
-         if(minSwitch)
-            SendDlgItemMessage(hDlg, IDC_MINIMIZED, BM_SETCHECK, 1,0);
          if(saveSticky)
             SendDlgItemMessage(hDlg, IDC_STICKYSAVE, BM_SETCHECK, 1,0);
-         if(releaseFocus)
-            SendDlgItemMessage(hDlg, IDC_FOCUS, BM_SETCHECK, 1,0);
-         if(keepActive) {
-            SendDlgItemMessage(hDlg, IDC_FOCUS, BM_SETCHECK, 0,0);
-            EnableWindow(focus, FALSE);
-            SendDlgItemMessage(hDlg, IDC_LASTACTIVE, BM_SETCHECK, 1,0);
-         }
-         if(refreshOnWarp)
-            SendDlgItemMessage(hDlg, IDC_REFRESH, BM_SETCHECK, 1,0);
-         if(crashRecovery)
-            SendDlgItemMessage(hDlg, IDC_RECOVERY, BM_SETCHECK, 1,0);
-         if(deskWrap)
-            SendDlgItemMessage(hDlg, IDC_DESKCYCLE, BM_SETCHECK, 1,0);
-         if(invertY)
-            SendDlgItemMessage(hDlg, IDC_INVERTY, BM_SETCHECK, 1,0);
          if(stickyMenu) 
             SendDlgItemMessage(hDlg, IDC_MENUSTICKY, BM_SETCHECK, 1,0);
          if(assignMenu)
@@ -644,38 +634,10 @@ static BOOL APIENTRY misc(HWND hDlg, UINT message, UINT wParam, LONG lParam)
                // Maybe we have a new desktop number now, tell the modules
                postModuleMessage(MOD_CHANGEDESK, currentDesk, currentDesk);
                   
-               if(SendDlgItemMessage(hDlg, IDC_MINIMIZED, BM_GETCHECK, 0, 0) == BST_CHECKED)
-                  minSwitch = TRUE;
-               else
-                  minSwitch = FALSE;
                if(SendDlgItemMessage(hDlg, IDC_STICKYSAVE, BM_GETCHECK, 0, 0) == BST_CHECKED)
                   saveSticky = TRUE;
                else
                   saveSticky = FALSE;
-               if(SendDlgItemMessage(hDlg, IDC_FOCUS, BM_GETCHECK, 0, 0) == BST_CHECKED)
-                  releaseFocus = TRUE;
-               else
-                  releaseFocus = FALSE;
-               if(SendDlgItemMessage(hDlg, IDC_LASTACTIVE, BM_GETCHECK, 0, 0) == BST_CHECKED)
-                  keepActive = TRUE;
-               else
-                  keepActive = FALSE;
-               if(SendDlgItemMessage(hDlg, IDC_REFRESH, BM_GETCHECK, 0, 0) == BST_CHECKED)
-                  refreshOnWarp = TRUE;
-               else
-                  refreshOnWarp = FALSE;
-               if(SendDlgItemMessage(hDlg, IDC_RECOVERY, BM_GETCHECK, 0, 0) == BST_CHECKED)
-                  crashRecovery = TRUE;
-               else
-                  crashRecovery = FALSE;
-               if(SendDlgItemMessage(hDlg, IDC_DESKCYCLE, BM_GETCHECK, 0, 0) == BST_CHECKED)
-                  deskWrap = TRUE;
-               else
-                  deskWrap = FALSE;           
-               if(SendDlgItemMessage(hDlg, IDC_INVERTY, BM_GETCHECK, 0, 0) == BST_CHECKED)
-                  invertY = TRUE;
-               else
-                  invertY = FALSE;
                if(SendDlgItemMessage(hDlg, IDC_MENUSTICKY, BM_GETCHECK, 0, 0) == BST_CHECKED)
                   stickyMenu = TRUE;
                else 
@@ -700,17 +662,6 @@ static BOOL APIENTRY misc(HWND hDlg, UINT message, UINT wParam, LONG lParam)
                   saveLayoutOnExit = TRUE;
                else
                   saveLayoutOnExit= FALSE;
-               if(SendDlgItemMessage(hDlg, IDC_DISPLAYICON, BM_GETCHECK, 0, 0) == BST_CHECKED)
-               {
-                  displayTaskbarIcon = FALSE;
-                  PostMessage(hWnd, VW_DELICON, 0, 0);
-               }
-               else
-               {
-                  displayTaskbarIcon = TRUE;
-                  PostMessage(hWnd, VW_SHOWICON, 0, 0);
-               }
-               
                if(SendDlgItemMessage(hDlg, IDC_HOTMENUEN, BM_GETCHECK, 0, 0) == BST_CHECKED) {
                   hotkeyMenuEn = TRUE;
                   wRawHotKey = (WORD)SendDlgItemMessage(hDlg, IDC_HOTMENU, HKM_GETHOTKEY, 0, 0);
@@ -740,15 +691,12 @@ static BOOL APIENTRY misc(HWND hDlg, UINT message, UINT wParam, LONG lParam)
          }
 
       case WM_COMMAND:
-         if(LOWORD(wParam) == IDC_LASTACTIVE || LOWORD(wParam) == IDC_FOCUS ||
-            LOWORD(wParam) == IDC_MINIMIZED  || LOWORD(wParam) == IDC_REFRESH ||
-            LOWORD(wParam) == IDC_STICKYSAVE || LOWORD(wParam) == IDC_RECOVERY ||
-            LOWORD(wParam) == IDC_DESKCYCLE  || LOWORD(wParam) == IDC_INVERTY ||
-            LOWORD(wParam) == IDC_MENUSTICKY || LOWORD(wParam) == IDC_MENUACCESS ||
-            LOWORD(wParam) == IDC_MENUASSIGN || LOWORD(wParam) == IDC_USEASSIGN ||
-            LOWORD(wParam) == IDC_FIRSTONLY  || LOWORD(wParam) == IDC_SAVEEXITSTATE ||
-            LOWORD(wParam) == IDC_HOTMENUEN  || LOWORD(wParam) == IDC_HOTMENUW || 
-            LOWORD(wParam) == IDC_HOTMENU    || LOWORD(wParam) == IDC_DISPLAYICON ) {
+         if( LOWORD(wParam) == IDC_STICKYSAVE || LOWORD(wParam) == IDC_DISPLAYICON ||
+             LOWORD(wParam) == IDC_MENUSTICKY || LOWORD(wParam) == IDC_MENUACCESS ||
+             LOWORD(wParam) == IDC_MENUASSIGN || LOWORD(wParam) == IDC_USEASSIGN ||
+             LOWORD(wParam) == IDC_FIRSTONLY  || LOWORD(wParam) == IDC_SAVEEXITSTATE ||
+             LOWORD(wParam) == IDC_HOTMENUEN  || LOWORD(wParam) == IDC_HOTMENUW || 
+             LOWORD(wParam) == IDC_HOTMENU ) {
             SendMessage(GetParent(hDlg), PSM_CHANGED, (WPARAM)hDlg, 0L);
          }
     
@@ -757,15 +705,6 @@ static BOOL APIENTRY misc(HWND hDlg, UINT message, UINT wParam, LONG lParam)
          }
          else if(LOWORD(wParam) == IDC_SAVESTICKY) {
             saveStickyWindows(&nWin, winList);
-         }
-         else if (LOWORD(wParam) == IDC_LASTACTIVE) {
-            if(SendDlgItemMessage(hDlg, IDC_LASTACTIVE, BM_GETCHECK, 0, 0) == BST_CHECKED) {
-               SendDlgItemMessage(hDlg, IDC_FOCUS, BM_SETCHECK, 0,0);
-               EnableWindow(focus, FALSE);
-               releaseFocus = FALSE;
-            } else {
-               EnableWindow(focus, TRUE);
-            }
          }
          if (LOWORD(wParam) == IDC_SLIDERX)
             spinPressed = 1;
@@ -886,39 +825,148 @@ static BOOL APIENTRY modules(HWND hDlg, UINT message, UINT wParam, LONG lParam)
    return (FALSE);
 }
 
+/*************************************************
+ * The "Expert" tab callback
+ */
+static BOOL APIENTRY expert(HWND hDlg, UINT message, UINT wParam, LONG lParam)
+{
+   static HWND focus;
+   
+   switch (message) {
+      case WM_INITDIALOG:
+         focus = GetDlgItem(hDlg, IDC_FOCUS);
+         if(minSwitch)
+            SendDlgItemMessage(hDlg, IDC_MINIMIZED, BM_SETCHECK, 1,0);
+         if(releaseFocus)
+            SendDlgItemMessage(hDlg, IDC_FOCUS, BM_SETCHECK, 1,0);
+         if(keepActive) {
+            SendDlgItemMessage(hDlg, IDC_FOCUS, BM_SETCHECK, 0,0);
+            EnableWindow(focus, FALSE);
+            SendDlgItemMessage(hDlg, IDC_LASTACTIVE, BM_SETCHECK, 1,0);
+         }
+         if(refreshOnWarp)
+            SendDlgItemMessage(hDlg, IDC_REFRESH, BM_SETCHECK, 1,0);
+         if(crashRecovery)
+            SendDlgItemMessage(hDlg, IDC_RECOVERY, BM_SETCHECK, 1,0);
+         if(deskWrap)
+            SendDlgItemMessage(hDlg, IDC_DESKCYCLE, BM_SETCHECK, 1,0);
+         if(invertY)
+            SendDlgItemMessage(hDlg, IDC_INVERTY, BM_SETCHECK, 1,0);
+         if(!displayTaskbarIcon)
+            SendDlgItemMessage(hDlg, IDC_DISPLAYICON, BM_SETCHECK, 1,0);
+         return TRUE;
+
+      case WM_NOTIFY:
+         switch (((NMHDR FAR *) lParam)->code) {
+            case PSN_SETACTIVE:
+               // Initialize the controls.
+               break;
+            case PSN_APPLY:
+               if(SendDlgItemMessage(hDlg, IDC_MINIMIZED, BM_GETCHECK, 0, 0) == BST_CHECKED)
+                  minSwitch = TRUE;
+               else
+                  minSwitch = FALSE;
+               if(SendDlgItemMessage(hDlg, IDC_FOCUS, BM_GETCHECK, 0, 0) == BST_CHECKED)
+                  releaseFocus = TRUE;
+               else
+                  releaseFocus = FALSE;
+               if(SendDlgItemMessage(hDlg, IDC_LASTACTIVE, BM_GETCHECK, 0, 0) == BST_CHECKED)
+                  keepActive = TRUE;
+               else
+                  keepActive = FALSE;
+               if(SendDlgItemMessage(hDlg, IDC_REFRESH, BM_GETCHECK, 0, 0) == BST_CHECKED)
+                  refreshOnWarp = TRUE;
+               else
+                  refreshOnWarp = FALSE;
+               if(SendDlgItemMessage(hDlg, IDC_RECOVERY, BM_GETCHECK, 0, 0) == BST_CHECKED)
+                  crashRecovery = TRUE;
+               else
+                  crashRecovery = FALSE;
+               if(SendDlgItemMessage(hDlg, IDC_DESKCYCLE, BM_GETCHECK, 0, 0) == BST_CHECKED)
+                  deskWrap = TRUE;
+               else
+                  deskWrap = FALSE;           
+               if(SendDlgItemMessage(hDlg, IDC_INVERTY, BM_GETCHECK, 0, 0) == BST_CHECKED)
+                  invertY = TRUE;
+               else
+                  invertY = FALSE;
+               if(SendDlgItemMessage(hDlg, IDC_DISPLAYICON, BM_GETCHECK, 0, 0) == BST_CHECKED)
+               {
+                  displayTaskbarIcon = FALSE;
+                  PostMessage(hWnd, VW_DELICON, 0, 0);
+               }
+               else
+               {
+                  displayTaskbarIcon = TRUE;
+                  PostMessage(hWnd, VW_SHOWICON, 0, 0);
+               }
+               break;
+            case PSN_KILLACTIVE:
+               SetWindowLong(hDlg, DWL_MSGRESULT, FALSE);
+               return 1;
+               break;
+            case PSN_RESET:
+               SetWindowLong(hDlg, DWL_MSGRESULT, FALSE);
+               break;
+         }
+
+      case WM_COMMAND:
+         if(LOWORD(wParam) == IDC_FOCUS      || LOWORD(wParam) == IDC_LASTACTIVE ||
+            LOWORD(wParam) == IDC_MINIMIZED  || LOWORD(wParam) == IDC_REFRESH ||
+            LOWORD(wParam) == IDC_DESKCYCLE  || LOWORD(wParam) == IDC_INVERTY ||
+            LOWORD(wParam) == IDC_RECOVERY   || LOWORD(wParam) == IDC_DISPLAYICON ) {
+            SendMessage(GetParent(hDlg), PSM_CHANGED, (WPARAM)hDlg, 0L);
+         }
+         else if (LOWORD(wParam) == IDC_LASTACTIVE) {
+            if(SendDlgItemMessage(hDlg, IDC_LASTACTIVE, BM_GETCHECK, 0, 0) == BST_CHECKED) {
+               SendDlgItemMessage(hDlg, IDC_FOCUS, BM_SETCHECK, 0,0);
+               EnableWindow(focus, FALSE);
+               releaseFocus = FALSE;
+            } else {
+               EnableWindow(focus, TRUE);
+            }
+         }
+         break;
+   }
+   return (FALSE);
+}
+
 /*
  * $Log$
- * Revision 1.11  2002/06/01 19:33:34  jopi
+ * Revision 1.12  2002/06/01 21:15:22  Johan Piculell
+ * Multiple fixes by Christian Storm.
+ *
+ * Revision 1.11  2002/06/01 19:33:34  Johan Piculell
  * *** empty log message ***
  *
- * Revision 1.10  2002/02/14 21:23:40  jopi
+ * Revision 1.10  2002/02/14 21:23:40  Johan Piculell
  * Updated copyright header
  *
- * Revision 1.9  2001/12/24 10:11:01  jopi
+ * Revision 1.9  2001/12/24 10:11:01  Johan Piculell
  * Added doubleclick support in the module listbox for bringing up the config window.
  *
- * Revision 1.8  2001/11/12 21:39:14  jopi
+ * Revision 1.8  2001/11/12 21:39:14  Johan Piculell
  * Added functionality for disabling the systray icon
  *
- * Revision 1.7  2001/02/10 11:11:53  jopi
+ * Revision 1.7  2001/02/10 11:11:53  Administrator
  * Removed the context help icon since there is no functionality for this
  *
- * Revision 1.6  2001/02/05 21:13:08  jopi
+ * Revision 1.6  2001/02/05 21:13:08  Administrator
  * Updated copyright header
  *
- * Revision 1.5  2001/01/29 21:09:34  jopi
+ * Revision 1.5  2001/01/29 21:09:34  Administrator
  * Changed web adress
  *
- * Revision 1.4  2001/01/28 16:26:56  jopi
+ * Revision 1.4  2001/01/28 16:26:56  Administrator
  * Configuration behaviour change. It is now possible to test all settings by using apply and all changes will be rollbacked if cancel is pressed
  *
- * Revision 1.3  2001/01/12 18:14:34  jopi
+ * Revision 1.3  2001/01/12 18:14:34  Administrator
  * Modules will now get a notification when desktop layout has changed since we might have a new current desktop number after a change. Also fixed so that config update notification is sent upon apply and only when something has changed upon hitting ok. Config file will also be written upon every apply and not if cancel is selected
  *
- * Revision 1.2  2000/08/18 23:43:07  jopi
+ * Revision 1.2  2000/08/18 23:43:07  Administrator
  *  Minor modifications by Matti Jagula <matti@proekspert.ee> List of modifications follows: Added window title sorting in popup menus (Assign, Direct, Sticky) Added some controls to Setup Misc tab and support for calling the popup menus from keyboard.
  *
- * Revision 1.1.1.1  2000/06/03 15:38:05  jopi
+ * Revision 1.1.1.1  2000/06/03 15:38:05  Administrator
  * Added first time
  *
  */
