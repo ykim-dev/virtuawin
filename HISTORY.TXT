@@ -1,7 +1,7 @@
 ***   VirtuaWin Revision History   ***
 --------------------------------------
 
-Ver 2.5 2001/01/xx
+Ver 2.5 2001/02/10
 * Bugfix: Too many modules would corrupt data and cause undefined behavior,
   also increased the maximum number of modules handled from 5 to 10
 * Bugfix: Fixed a bug with the username lookup for config file, could go wrong sometimes
@@ -15,11 +15,12 @@ Ver 2.5 2001/01/xx
 * Added module message for getting the current desktop number
 * Modules will now get a notification when desktop layout has changed since we 
   might have a new current desktop number after a change
+* The question mark in the setup dialog is removed since it is no functionality for it
 ----------------------------
 
 Ver 2.4 2000/08/19
 * Bugfix: Added the code again that removes closed windows, this will avoid having closed 
-  child windows reappearing again. This fix have the dissadvantage of beeing able to remove 
+  child windows reappearing again. This fix has the disadvantage of being able to remove 
   valid windows when under heavy load, see next item for more info on a workaround
 * Added a module, WinList, in the installation package. This module has a list of all 
   windows on the system and can restore any of them if VirtuaWin should loose them
