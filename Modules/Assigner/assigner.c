@@ -42,6 +42,7 @@ UINT HOT_PREV;
 UINT HOT_PREV_MOD;
 LPSTR vwPath;
 LPSTR configFile;
+UINT numberOfDesktops;
 
 /* prototype for the dialog box function. */
 static BOOL CALLBACK DialogFunc(HWND hwndDlg, UINT msg, WPARAM wParam, LPARAM lParam);
@@ -79,43 +80,62 @@ static BOOL InitApplication(void)
 
 LRESULT CALLBACK MainWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
-   HWND theActive = NULL;
-   int theCurDesk;
-   InitCommonControls();
-   switch (msg) {
-      case WM_HOTKEY:
-         // Get the current desktop
-         theCurDesk = SendMessage(vwHandle, VW_CURDESK, 0, 0);
-         // Get the active window
-         theActive = GetForegroundWindow();
+    HWND theActive = NULL;
+    int theCurDesk;
+    int deskX, deskY;
+    InitCommonControls();
+    switch (msg) {
+        case WM_HOTKEY:
+            // Get the current desktop
+            theCurDesk = SendMessage(vwHandle, VW_CURDESK, 0, 0);
+            // Get the active window
+            theActive = GetForegroundWindow();
          
-         if(theActive)
-         {
-            if(wParam == hotKeyUp)
-               PostMessage(vwHandle, VW_ASSIGNWIN, (WPARAM)theActive, theCurDesk + 1);
-            else if(wParam == hotKeyDown)
-               PostMessage(vwHandle, VW_ASSIGNWIN, (WPARAM)theActive, theCurDesk - 1);
-         }
-         break;  
-      case MOD_INIT: // This must be taken care of in order to get the handle to VirtuaWin. 
-         // The handle to VirtuaWin comes in the wParam 
-         vwHandle = (HWND) wParam; // Should be some error handling here if NULL 
-         break;
-      case MOD_QUIT: // This must be handeled, otherwise VirtuaWin can't shut down the module 
-         PostQuitMessage(0);
-         break;
-      case MOD_SETUP:
-         DialogBox(hInst, MAKEINTRESOURCE(IDD_MAINDIALOG), vwHandle, (DLGPROC) DialogFunc);
-         break;
-      case WM_DESTROY:
-         unregisterAssignment();
-         PostQuitMessage(0);
-         break;
-      default:
-         return DefWindowProc(hwnd, msg, wParam, lParam);
-   }
+            if(theActive)
+            {
+                if(wParam == hotKeyUp)
+                {
+                    if(theCurDesk < numberOfDesktops)
+                        PostMessage(vwHandle, VW_ASSIGNWIN, (WPARAM)theActive, theCurDesk + 1);
+                    else
+                        PostMessage(vwHandle, VW_ASSIGNWIN, (WPARAM)theActive, 1);  
+                }
+                else if(wParam == hotKeyDown)
+                {
+                    if((theCurDesk - 1) > 0)
+                        PostMessage(vwHandle, VW_ASSIGNWIN, (WPARAM)theActive, theCurDesk - 1);
+                    else
+                        PostMessage(vwHandle, VW_ASSIGNWIN, (WPARAM)theActive, numberOfDesktops); 
+                }
+            }
+            break;  
+        case MOD_INIT: // This must be taken care of in order to get the handle to VirtuaWin. 
+            // The handle to VirtuaWin comes in the wParam 
+            vwHandle = (HWND) wParam; // Should be some error handling here if NULL 
+            deskY = SendMessage(vwHandle, VW_DESKY, 0, 0);
+            deskX = SendMessage(vwHandle, VW_DESKX, 0, 0);
+            numberOfDesktops = deskX * deskY;
+            break;
+        case MOD_CFGCHANGE:
+            deskY = SendMessage(vwHandle, VW_DESKY, 0, 0);
+            deskX = SendMessage(vwHandle, VW_DESKX, 0, 0);
+            numberOfDesktops = deskX * deskY;
+            break;
+        case MOD_QUIT: // This must be handeled, otherwise VirtuaWin can't shut down the module 
+            PostQuitMessage(0);
+            break;
+        case MOD_SETUP:
+            DialogBox(hInst, MAKEINTRESOURCE(IDD_MAINDIALOG), vwHandle, (DLGPROC) DialogFunc);
+            break;
+        case WM_DESTROY:
+            unregisterAssignment();
+            PostQuitMessage(0);
+            break;
+        default:
+            return DefWindowProc(hwnd, msg, wParam, lParam);
+    }
   
-   return 0;
+    return 0;
 }
 
 /*
@@ -308,6 +328,9 @@ WORD hotKey2ModKey(BYTE vModifiers)
 
 /*
  * $Log$
+ * Revision 1.2  2004/04/10 11:38:40  jopi
+ * Updated to use gcc/mingw
+ *
  * Revision 1.1  2003/06/26 19:27:40  jopi
  * Added new VWAssigner module
  *
