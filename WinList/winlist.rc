@@ -1,0 +1,17 @@
+/* Wedit generated resource file */
+#include <windows.h>
+#include "c:\winlist\winlistres.h"
+
+
+IDD_MAINDIALOG DIALOG 79, 25, 211, 226
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "WinList - 1.0"
+FONT 8, "Helv"
+BEGIN
+    DEFPUSHBUTTON   "Restore", IDOK, 43, 206, 40, 14
+    PUSHBUTTON      "Done", IDCANCEL, 131, 206, 40, 14
+    LISTBOX         ID_WINLIST, 6, 44, 202, 167, WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Use this module to restore windows that might have been lost. Mark the window that you want to restore and press the Restore button. Press Undo if you accidently restored the wrong window.", 
+                    102, 6, 6, 199, 34
+    PUSHBUTTON      "Undo", IDUNDO, 87, 206, 40, 14
+END
