@@ -39,7 +39,7 @@ void loadFilePaths()
    DWORD dwType;
    DWORD cbData = 0;
    DWORD dwUserNameLen = 0;
-   LPSTR winCurrentUser;
+   LPSTR winCurrentUser = 0;
    LONG multiUser = 0;
 
    long lResult = RegOpenKeyEx(HKEY_LOCAL_MACHINE, "Software\\VirtuaWin\\Settings", 0,
@@ -129,7 +129,7 @@ int loadDisabledModules(disModules* theDisList)
    FILE* fp;
    int nOfDisMod = 0;
    
-   if(fp = fopen(vwDisabled, "r")) {
+   if((fp = fopen(vwDisabled, "r"))) {
       while(!feof(fp)) {
          fgets(dummy, 80, fp);
          // Remove the newline
@@ -151,13 +151,13 @@ int loadDisabledModules(disModules* theDisList)
  */
 int loadStickyList(stickyType* theStickyList) 
 {
-   char dummy[80];
+   char* dummy = malloc(sizeof(char) * 80);
    FILE* fp;
    int nOfSticky = 0;
    
-   if(fp = fopen(vwSticky, "r")) {
+   if((fp = fopen(vwSticky, "r"))) {
       while(!feof(fp)) {
-         fscanf(fp, "%79s", &dummy);
+         fscanf(fp, "%79s", dummy);
          char* theReplaceString = replace(dummy, "££", " ");
          strcpy(dummy, theReplaceString);
          free(theReplaceString);
@@ -169,6 +169,7 @@ int loadStickyList(stickyType* theStickyList)
       }
       fclose(fp);
    }
+   free(dummy);
    return nOfSticky;
 }
 
@@ -202,14 +203,14 @@ void saveStickyWindows(int* theNOfWin, windowType* theWinList)
  */
 int loadTrickyList(stickyType* theTrickyList) 
 {
-   char dummy[80];
+   char* dummy = malloc(sizeof(char) * 80);
    FILE* fp;
    int nOfTricky = 0;
    
-   if(fp = fopen(vwTricky, "r")) 
+   if((fp = fopen(vwTricky, "r"))) 
    {
       while(!feof(fp)) {
-         fscanf(fp, "%79s", &dummy); 
+         fscanf(fp, "%79s", dummy); 
          char* theReplaceString = replace(dummy, "££", " ");
          strcpy(dummy, theReplaceString);
          free(theReplaceString);
@@ -222,34 +223,36 @@ int loadTrickyList(stickyType* theTrickyList)
       }
       fclose(fp);
    }
+   free(dummy);
    return nOfTricky;
 }
+
 
 /*************************************************
  * Writes down the classnames on the tricky windows on file
  */
-void saveTrickyWindows(int* theNOfWin, windowType* theWinList)
-{
 /*
-   char className[80];
-   FILE* fp;
-    
-   if(!(fp = fopen(vwTricky, "w"))) {
-      MessageBox(hWnd, "Error writing tricky file", NULL, MB_ICONWARNING);
-   } else {
-      int i;
-      for(i = 0; i < *theNOfWin; ++i) {
-         if (theWinList[i].Sticky) {
-            GetClassName(theWinList[i].Handle, className, 79);
-            char* theReplaceString = replace(className, " ", "££");
-            fprintf(fp, "%s\n",  theReplaceString);
-            free(theReplaceString);
-         }
-      }
-      fclose(fp);
-   }
+  void saveTrickyWindows(int* theNOfWin, windowType* theWinList)
+  {
+  char className[80];
+  FILE* fp;
+  
+  if(!(fp = fopen(vwTricky, "w"))) {
+  MessageBox(hWnd, "Error writing tricky file", NULL, MB_ICONWARNING);
+  } else {
+  int i;
+  for(i = 0; i < *theNOfWin; ++i) {
+  if (theWinList[i].Sticky) {
+  GetClassName(theWinList[i].Handle, className, 79);
+  char* theReplaceString = replace(className, " ", "££");
+  fprintf(fp, "%s\n",  theReplaceString);
+  free(theReplaceString);
+  }
+  }
+  fclose(fp);
+  }
+  }
 */
-}
 
 /*************************************************
  * Writes down the classnames of the windows currently in list
@@ -304,13 +307,13 @@ void saveDesktopConfiguration(int* theNOfWin, windowType* theWinList)
  */
 int loadAssignedList(assignedType* theAssignList) 
 {
-   char dummy[51];
+   char* dummy = malloc(sizeof(char) * 51);
    FILE* fp;
    int curAssigned = 0;
    
-   if(fp = fopen(vwWindowsState, "r")) {
+   if((fp = fopen(vwWindowsState, "r"))) {
       while(!feof(fp)) {
-         fscanf(fp, "%s%i", &dummy, &theAssignList[curAssigned].desktop);
+         fscanf(fp, "%s%i", dummy, &theAssignList[curAssigned].desktop);
          char* theReplaceString = replace(dummy, "££", " ");
          strcpy(dummy, theReplaceString);
          free(theReplaceString);
@@ -322,6 +325,7 @@ int loadAssignedList(assignedType* theAssignList)
       }
       fclose(fp);
    }
+   free(dummy);
    return curAssigned;
 }
 
@@ -330,11 +334,11 @@ int loadAssignedList(assignedType* theAssignList)
  */
 int loadUserList(userType* theUserList) 
 {
-   char dummy[100];
+   char* dummy = malloc(sizeof(char) * 100);
    FILE* fp;
    int curUser = 0;
    
-   if(fp = fopen(vwList, "r")) {
+   if((fp = fopen(vwList, "r"))) {
       while(!feof(fp)) {
          fgets(dummy, 99, fp);
          // Remove the newline
@@ -351,6 +355,7 @@ int loadUserList(userType* theUserList)
       fclose(fp);
    }
    
+   free(dummy);
    return curUser;
 }
 
@@ -449,7 +454,7 @@ void writeConfig()
  */
 void readConfig()
 {
-   char dummy[80];
+   char* dummy = malloc(sizeof(char) * 80);
    FILE* fp;
 
    if((fp = fopen(vwConfig, "r")) == NULL) {
@@ -459,84 +464,84 @@ void readConfig()
          MessageBox(NULL, "Error writing new config file. Check writepermissions.", NULL, MB_ICONWARNING);
       }
    } else {   
-      fscanf(fp, "%s%i", &dummy, &mouseEnable);
-      fscanf(fp, "%s%i", &dummy, &configMultiplier);
-      fscanf(fp, "%s%i", &dummy, &keyEnable);
-      fscanf(fp, "%s%i", &dummy, &releaseFocus);
-      fscanf(fp, "%s%i", &dummy, &keepActive);
-      fscanf(fp, "%s%i", &dummy, &modAlt);
-      fscanf(fp, "%s%i", &dummy, &modShift);
-      fscanf(fp, "%s%i", &dummy, &modCtrl);
-      fscanf(fp, "%s%i", &dummy, &modWin);
-      fscanf(fp, "%s%i", &dummy, &warpLength);
-      fscanf(fp, "%s%i", &dummy, &minSwitch);
-      fscanf(fp, "%s%i", &dummy, &taskBarWarp);
-      fscanf(fp, "%s%i", &dummy, &nDesksY);
-      fscanf(fp, "%s%i", &dummy, &nDesksX);
-      fscanf(fp, "%s%i", &dummy, &hotKeyEnable);
-      fscanf(fp, "%s%i", &dummy, &hotkey1);
-      fscanf(fp, "%s%i", &dummy, &hotkey1Mod);
-      fscanf(fp, "%s%i", &dummy, &hotkey1Win);
-      fscanf(fp, "%s%i", &dummy, &hotkey2);
-      fscanf(fp, "%s%i", &dummy, &hotkey2Mod);
-      fscanf(fp, "%s%i", &dummy, &hotkey2Win);
-      fscanf(fp, "%s%i", &dummy, &hotkey3);
-      fscanf(fp, "%s%i", &dummy, &hotkey3Mod);
-      fscanf(fp, "%s%i", &dummy, &hotkey3Win);
-      fscanf(fp, "%s%i", &dummy, &hotkey4);
-      fscanf(fp, "%s%i", &dummy, &hotkey4Mod);
-      fscanf(fp, "%s%i", &dummy, &hotkey4Win);
-      fscanf(fp, "%s%i", &dummy, &hotkey5);
-      fscanf(fp, "%s%i", &dummy, &hotkey5Mod);
-      fscanf(fp, "%s%i", &dummy, &hotkey5Win);
-      fscanf(fp, "%s%i", &dummy, &hotkey6);
-      fscanf(fp, "%s%i", &dummy, &hotkey6Mod);
-      fscanf(fp, "%s%i", &dummy, &hotkey6Win);
-      fscanf(fp, "%s%i", &dummy, &hotkey7);
-      fscanf(fp, "%s%i", &dummy, &hotkey7Mod);
-      fscanf(fp, "%s%i", &dummy, &hotkey7Win);
-      fscanf(fp, "%s%i", &dummy, &hotkey8);
-      fscanf(fp, "%s%i", &dummy, &hotkey8Mod);
-      fscanf(fp, "%s%i", &dummy, &hotkey8Win);
-      fscanf(fp, "%s%i", &dummy, &hotkey9);
-      fscanf(fp, "%s%i", &dummy, &hotkey9Mod);
-      fscanf(fp, "%s%i", &dummy, &hotkey9Win);
-      fscanf(fp, "%s%i", &dummy, &useMouseKey);
-      fscanf(fp, "%s%i", &dummy, &mouseModAlt);
-      fscanf(fp, "%s%i", &dummy, &mouseModShift);
-      fscanf(fp, "%s%i", &dummy, &mouseModCtrl);
-      fscanf(fp, "%s%i", &dummy, &saveSticky);
-      fscanf(fp, "%s%i", &dummy, &refreshOnWarp);
-      fscanf(fp, "%s%i", &dummy, &noMouseWrap);
-      fscanf(fp, "%s%i", &dummy, &VW_STICKYMOD);
-      fscanf(fp, "%s%i", &dummy, &VW_STICKY);
-      fscanf(fp, "%s%i", &dummy, &crashRecovery);
-      fscanf(fp, "%s%i", &dummy, &deskWrap);
-      fscanf(fp, "%s%i", &dummy, &invertY);
-      fscanf(fp, "%s%i", &dummy, &stickyMenu);
-      fscanf(fp, "%s%i", &dummy, &assignMenu);
-      fscanf(fp, "%s%i", &dummy, &directMenu);
-      fscanf(fp, "%s%i", &dummy, &useDeskAssignment);
-      fscanf(fp, "%s%i", &dummy, &saveLayoutOnExit);
-      fscanf(fp, "%s%i", &dummy, &assignOnlyFirst);
-      fscanf(fp, "%s%i", &dummy, &cyclingKeysEnabled);
-      fscanf(fp, "%s%i", &dummy, &hotCycleUp);
-      fscanf(fp, "%s%i", &dummy, &hotCycleUpMod);
-      fscanf(fp, "%s%i", &dummy, &hotCycleDown);
-      fscanf(fp, "%s%i", &dummy, &hotCycleDownMod);
-      fscanf(fp, "%s%i", &dummy, &hotkeyMenuEn);
-      fscanf(fp, "%s%i", &dummy, &hotkeyMenu);
-      fscanf(fp, "%s%i", &dummy, &hotkeyMenuMod);
-      fscanf(fp, "%s%i", &dummy, &hotkeyMenuWin);
-      fscanf(fp, "%s%i", &dummy, &displayTaskbarIcon);
-      fscanf(fp, "%s%i", &dummy, &VW_STICKYWIN);
-      fscanf(fp, "%s%i", &dummy, &noTaskbarCheck);
-      fscanf(fp, "%s%i", &dummy, &trickyWindows);
-      fscanf(fp, "%s%i", &dummy, &taskbarOffset);
-      fscanf(fp, "%s%i", &dummy, &permanentSticky);
-
+      fscanf(fp, "%s%i", dummy, &mouseEnable);
+      fscanf(fp, "%s%i", dummy, &configMultiplier);
+      fscanf(fp, "%s%i", dummy, &keyEnable);
+      fscanf(fp, "%s%i", dummy, &releaseFocus);
+      fscanf(fp, "%s%i", dummy, &keepActive);
+      fscanf(fp, "%s%i", dummy, &modAlt);
+      fscanf(fp, "%s%i", dummy, &modShift);
+      fscanf(fp, "%s%i", dummy, &modCtrl);
+      fscanf(fp, "%s%i", dummy, &modWin);
+      fscanf(fp, "%s%i", dummy, &warpLength);
+      fscanf(fp, "%s%i", dummy, &minSwitch);
+      fscanf(fp, "%s%i", dummy, &taskBarWarp);
+      fscanf(fp, "%s%i", dummy, &nDesksY);
+      fscanf(fp, "%s%i", dummy, &nDesksX);
+      fscanf(fp, "%s%i", dummy, &hotKeyEnable);
+      fscanf(fp, "%s%i", dummy, &hotkey1);
+      fscanf(fp, "%s%i", dummy, &hotkey1Mod);
+      fscanf(fp, "%s%i", dummy, &hotkey1Win);
+      fscanf(fp, "%s%i", dummy, &hotkey2);
+      fscanf(fp, "%s%i", dummy, &hotkey2Mod);
+      fscanf(fp, "%s%i", dummy, &hotkey2Win);
+      fscanf(fp, "%s%i", dummy, &hotkey3);
+      fscanf(fp, "%s%i", dummy, &hotkey3Mod);
+      fscanf(fp, "%s%i", dummy, &hotkey3Win);
+      fscanf(fp, "%s%i", dummy, &hotkey4);
+      fscanf(fp, "%s%i", dummy, &hotkey4Mod);
+      fscanf(fp, "%s%i", dummy, &hotkey4Win);
+      fscanf(fp, "%s%i", dummy, &hotkey5);
+      fscanf(fp, "%s%i", dummy, &hotkey5Mod);
+      fscanf(fp, "%s%i", dummy, &hotkey5Win);
+      fscanf(fp, "%s%i", dummy, &hotkey6);
+      fscanf(fp, "%s%i", dummy, &hotkey6Mod);
+      fscanf(fp, "%s%i", dummy, &hotkey6Win);
+      fscanf(fp, "%s%i", dummy, &hotkey7);
+      fscanf(fp, "%s%i", dummy, &hotkey7Mod);
+      fscanf(fp, "%s%i", dummy, &hotkey7Win);
+      fscanf(fp, "%s%i", dummy, &hotkey8);
+      fscanf(fp, "%s%i", dummy, &hotkey8Mod);
+      fscanf(fp, "%s%i", dummy, &hotkey8Win);
+      fscanf(fp, "%s%i", dummy, &hotkey9);
+      fscanf(fp, "%s%i", dummy, &hotkey9Mod);
+      fscanf(fp, "%s%i", dummy, &hotkey9Win);
+      fscanf(fp, "%s%i", dummy, &useMouseKey);
+      fscanf(fp, "%s%i", dummy, &mouseModAlt);
+      fscanf(fp, "%s%i", dummy, &mouseModShift);
+      fscanf(fp, "%s%i", dummy, &mouseModCtrl);
+      fscanf(fp, "%s%i", dummy, &saveSticky);
+      fscanf(fp, "%s%i", dummy, &refreshOnWarp);
+      fscanf(fp, "%s%i", dummy, &noMouseWrap);
+      fscanf(fp, "%s%i", dummy, &VW_STICKYMOD);
+      fscanf(fp, "%s%i", dummy, &VW_STICKY);
+      fscanf(fp, "%s%i", dummy, &crashRecovery);
+      fscanf(fp, "%s%i", dummy, &deskWrap);
+      fscanf(fp, "%s%i", dummy, &invertY);
+      fscanf(fp, "%s%hi", dummy, &stickyMenu);
+      fscanf(fp, "%s%hi", dummy, &assignMenu);
+      fscanf(fp, "%s%hi", dummy, &directMenu);
+      fscanf(fp, "%s%i", dummy, &useDeskAssignment);
+      fscanf(fp, "%s%i", dummy, &saveLayoutOnExit);
+      fscanf(fp, "%s%i", dummy, &assignOnlyFirst);
+      fscanf(fp, "%s%i", dummy, &cyclingKeysEnabled);
+      fscanf(fp, "%s%i", dummy, &hotCycleUp);
+      fscanf(fp, "%s%i", dummy, &hotCycleUpMod);
+      fscanf(fp, "%s%i", dummy, &hotCycleDown);
+      fscanf(fp, "%s%i", dummy, &hotCycleDownMod);
+      fscanf(fp, "%s%i", dummy, &hotkeyMenuEn);
+      fscanf(fp, "%s%i", dummy, &hotkeyMenu);
+      fscanf(fp, "%s%i", dummy, &hotkeyMenuMod);
+      fscanf(fp, "%s%i", dummy, &hotkeyMenuWin);
+      fscanf(fp, "%s%i", dummy, &displayTaskbarIcon);
+      fscanf(fp, "%s%i", dummy, &VW_STICKYWIN);
+      fscanf(fp, "%s%i", dummy, &noTaskbarCheck);
+      fscanf(fp, "%s%i", dummy, &trickyWindows);
+      fscanf(fp, "%s%i", dummy, &taskbarOffset);
+      fscanf(fp, "%s%i", dummy, &permanentSticky);
       fclose(fp);
    }
+   free(dummy);
 }
 
 /*************************************************
@@ -609,6 +614,9 @@ BOOL tryToLock()
 
 /*
  * $Log$
+ * Revision 1.20  2004/02/28 18:54:01  jopi
+ * SF904069 Added possibility to choose if sticky should be permanent for all instances of the same classname.
+ *
  * Revision 1.19  2004/01/10 11:15:52  jopi
  * Updated copyright for 2004
  *

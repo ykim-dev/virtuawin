@@ -32,6 +32,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <shellapi.h>
+#include <prsht.h>
+#include <commctrl.h>
 
 /*************************************************
  * Creates the property sheet that holds the setup dialog
@@ -127,7 +129,7 @@ int CALLBACK propCallBack( HWND hwndDlg, UINT uMsg, LPARAM lParam )
          
          // Removes the question mark button in the title bar
          ptr = (DLGTEMPLATE*)lParam;
-         ptr->style = ptr->style ^ DS_CONTEXTHELP | DS_CENTER; 
+         ptr->style = ptr->style ^ (DS_CONTEXTHELP | DS_CENTER); 
          
          break;  
    }
@@ -137,7 +139,7 @@ int CALLBACK propCallBack( HWND hwndDlg, UINT uMsg, LPARAM lParam )
 /*************************************************
  * The "About" tab callback
  */
-static BOOL APIENTRY about(HWND hDlg, UINT message, UINT wParam, LONG lParam)
+BOOL APIENTRY about(HWND hDlg, UINT message, UINT wParam, LONG lParam)
 {
    char license[] = "This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later version.\r\n \r\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details. \r\n \r\nYou should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.";
    
@@ -179,7 +181,7 @@ static BOOL APIENTRY about(HWND hDlg, UINT message, UINT wParam, LONG lParam)
 /*************************************************
  * The "Mouse" tab callback
  */
-static BOOL APIENTRY mouse(HWND hDlg, UINT message, UINT wParam, LONG lParam)
+BOOL APIENTRY mouse(HWND hDlg, UINT message, UINT wParam, LONG lParam)
 {
    char buff[5];
 
@@ -292,7 +294,7 @@ static BOOL APIENTRY mouse(HWND hDlg, UINT message, UINT wParam, LONG lParam)
  * The "Key" tab callback
  * This is the firts callback to be called when the property sheet is created
  */
-static BOOL APIENTRY keys(HWND hDlg, UINT message, UINT wParam, LONG lParam)
+BOOL APIENTRY keys(HWND hDlg, UINT message, UINT wParam, LONG lParam)
 {
    RECT r;
    WORD wRawHotKey;
@@ -550,7 +552,7 @@ static BOOL APIENTRY keys(HWND hDlg, UINT message, UINT wParam, LONG lParam)
 /*************************************************
  * The "Misc." tab callback
  */
-static BOOL APIENTRY misc(HWND hDlg, UINT message, UINT wParam, LONG lParam)
+BOOL APIENTRY misc(HWND hDlg, UINT message, UINT wParam, LONG lParam)
 {
    static int tmpDesksY;
    static int tmpDesksX;
@@ -718,7 +720,7 @@ static BOOL APIENTRY misc(HWND hDlg, UINT message, UINT wParam, LONG lParam)
 /*************************************************
  * The "Modules" tab callback
  */
-static BOOL APIENTRY modules(HWND hDlg, UINT message, UINT wParam, LONG lParam)
+BOOL APIENTRY modules(HWND hDlg, UINT message, UINT wParam, LONG lParam)
 {
    int index;
    char tmpName[80];
@@ -811,7 +813,7 @@ static BOOL APIENTRY modules(HWND hDlg, UINT message, UINT wParam, LONG lParam)
 /*************************************************
  * The "Expert" tab callback
  */
-static BOOL APIENTRY expert(HWND hDlg, UINT message, UINT wParam, LONG lParam)
+BOOL APIENTRY expert(HWND hDlg, UINT message, UINT wParam, LONG lParam)
 {
    static HWND focus;
    
@@ -942,6 +944,9 @@ static BOOL APIENTRY expert(HWND hDlg, UINT message, UINT wParam, LONG lParam)
 
 /*
  * $Log$
+ * Revision 1.23  2004/02/28 18:54:01  jopi
+ * SF904069 Added possibility to choose if sticky should be permanent for all instances of the same classname.
+ *
  * Revision 1.22  2004/01/10 11:15:52  jopi
  * Updated copyright for 2004
  *

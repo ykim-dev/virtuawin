@@ -34,12 +34,12 @@ extern void loadModules();
 extern void enableMouse(BOOL);
 extern void setMouseKey();
 
-static BOOL APIENTRY mouse(HWND, UINT, UINT, LONG);
-static BOOL APIENTRY keys(HWND, UINT, UINT, LONG);
-static BOOL APIENTRY misc(HWND, UINT, UINT, LONG);
-static BOOL APIENTRY modules(HWND, UINT, UINT, LONG);
-static BOOL APIENTRY expert(HWND, UINT, UINT, LONG);
-static BOOL APIENTRY about(HWND, UINT, UINT, LONG);
+BOOL APIENTRY mouse(HWND, UINT, UINT, LONG);
+BOOL APIENTRY keys(HWND, UINT, UINT, LONG);
+BOOL APIENTRY misc(HWND, UINT, UINT, LONG);
+BOOL APIENTRY modules(HWND, UINT, UINT, LONG);
+BOOL APIENTRY expert(HWND, UINT, UINT, LONG);
+BOOL APIENTRY about(HWND, UINT, UINT, LONG);
 
 int CALLBACK propCallBack(HWND hwndDlg, UINT uMsg, LPARAM lParam);
 
@@ -47,6 +47,9 @@ int CALLBACK propCallBack(HWND hwndDlg, UINT uMsg, LPARAM lParam);
 
 /*
  * $Log$
+ * Revision 1.9  2004/01/10 11:15:52  jopi
+ * Updated copyright for 2004
+ *
  * Revision 1.8  2003/01/27 20:23:54  jopi
  * Updated copyright header for 2003
  *

@@ -74,7 +74,7 @@ void addModule(struct _finddata_t* aModule)
    STARTUPINFO si;
    PROCESS_INFORMATION pi;  
    sprintf(tmpPath, "%smodules\\", vwPath);
-   DWORD retVal = 1;
+   int retVal = 1;
 
    if(nOfModules >= MAXMODULES) {
       sprintf(errMsg, "Max number of modules where added.\n'%s' won't be loaded.", aModule->name);
@@ -84,7 +84,7 @@ void addModule(struct _finddata_t* aModule)
   
    // Is the module disabled
    if(!checkDisabledList(aModule->name)) {
-      if(myModule = FindWindow(aModule->name, NULL)) {
+      if((myModule = FindWindow(aModule->name, NULL))) {
          sprintf(errMsg, "The module '%s' seems to already be running and will be re-used. \nThis is probably due to incorrect shutdown of VirtuaWin" , aModule->name);
          MessageBox(hWnd, errMsg, "Module warning", 0);
       } else {
@@ -170,6 +170,9 @@ void postModuleMessage(UINT Msg, WPARAM wParam, LPARAM lParam)
 
 /*
  * $Log$
+ * Revision 1.9  2004/01/10 11:15:52  jopi
+ * Updated copyright for 2004
+ *
  * Revision 1.8  2003/02/28 16:59:43  jopi
  * Changed the wait time for module startup timeout to 10 secs instead of 5.
  *

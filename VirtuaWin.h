@@ -42,16 +42,16 @@ HMENU createSortedWinList_cos();
 
 // Forward declarations of callbacks
 LRESULT CALLBACK wndProc(HWND, UINT, WPARAM, LPARAM);	// main window
-BOOL CALLBACK enumWindowsProc(HWND, LPARAM);            // for collecting windows
+inline BOOL CALLBACK enumWindowsProc(HWND, LPARAM);            // for collecting windows
 VOID CALLBACK TimerProc(HWND, UINT, UINT, DWORD);
 VOID CALLBACK FlashProc(HWND, UINT, UINT, DWORD);
 DWORD WINAPI MouseProc(LPVOID lpParameter);
  
 // Forward declarations of functions
-void integrateWindow(HWND*);
+inline void integrateWindow(HWND);
 void initData();
 void showAll();
-BOOL inWinList(HWND*);
+inline BOOL inWinList(HWND);
 void stepDesk();
 int  stepLeft();
 int  stepRight();
@@ -72,7 +72,7 @@ void unRegisterMenuHotKey();
 void setKeyMod();
 void setHotKeyMod();
 void packList();
-void forceForeground(HWND*);
+void forceForeground(HWND);
 void findUserWindows();
 void loadIcons();
 void reLoadIcons();
@@ -80,16 +80,16 @@ void setMouseKey();
 WORD hotKey2ModKey(BYTE);
 void toggleActiveSticky();
 void recoverWindows();
-BOOL checkIfSavedSticky(HWND* hwnd);
+BOOL checkIfSavedSticky(HWND hwnd);
 BOOL checkIfSavedStickyString(char* className);
 void shutDown();
 void showSetup();
-int checkIfAssignedDesktop(HWND*);
+int checkIfAssignedDesktop(HWND);
 void showHideWindow( windowType*, BOOL );
-BOOL safeShowWindow( HWND*, int );
+BOOL safeShowWindow( HWND, int );
 void moveShowWindow( windowType*, BOOL );
 void warningIcon();
-BOOL checkMouseState();
+inline BOOL checkMouseState();
 HMENU createSortedWinList(int);
 void enableMouse(BOOL);
 BOOL isSpecialWindow( char* className );
@@ -98,9 +98,9 @@ void getScreenSize();
 void getTaskbarLocation();
 void lockMutex();
 void releaseMutex();
-void disableAll(HWND*);
-void assignWindow(HWND*, int);
-void setSticky(HWND*, int);
+void disableAll(HWND);
+void assignWindow(HWND, int);
+void setSticky(HWND, int);
 
 // Variables
 HWND topWindow;        // holds the top window on a desktop
@@ -279,6 +279,9 @@ LPSTR vwWindowsState;
 
 /*
  * $Log$
+ * Revision 1.27  2004/02/28 23:50:26  jopi
+ * SF905625 Added module message for changing the sticky state of a window
+ *
  * Revision 1.26  2004/02/28 18:54:01  jopi
  * SF904069 Added possibility to choose if sticky should be permanent for all instances of the same classname.
  *

@@ -41,10 +41,9 @@ HANDLE hMutex;
  */
 int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
-   RECT r;
    MSG msg;
    WNDCLASSEX wc;
-   int threadID;
+   DWORD threadID;
    char *classname = "VirtuaWinMainClass";
    hInst = hInstance;
 
@@ -125,7 +124,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
          BOOL retry = 1;
          do
          {
-            sleep(2000);
+            Sleep(2000);
             // Maybe Systray process hasn't started yet, try again
             retry = Shell_NotifyIcon(NIM_ADD, &nIconD);  // This adds the icon
          }
@@ -215,7 +214,7 @@ DWORD WINAPI MouseProc(LPVOID lpParameter)
 /*************************************************
  * Checks if mouse key modifier is pressed
  */
-__inline BOOL checkMouseState()
+inline BOOL checkMouseState()
 {
    if(!GetSystemMetrics(SM_SWAPBUTTON)) {  // Check the state of mouse button(s)
       if(HIWORD(GetAsyncKeyState(VK_LBUTTON)))
@@ -808,11 +807,11 @@ LRESULT CALLBACK wndProc(HWND aHWnd, UINT message, WPARAM wParam, LPARAM lParam)
          return currentDesk;
 
       case VW_ASSIGNWIN:
-         assignWindow((HWND*)wParam, (int)lParam);
+         assignWindow((HWND)wParam, (int)lParam);
          return TRUE;
          
       case VW_SETSTICKY:
-         setSticky((HWND*)wParam, (int)lParam);
+         setSticky((HWND)wParam, (int)lParam);
          return TRUE;
          
          // End plugin messages
@@ -1110,7 +1109,7 @@ void stepDesk()
       HWND tmpHwnd = GetTopWindow(NULL); 
       // We are trying to find the sticky window (if any) 
       // with the highest z-order
-      while(tmpHwnd = GetNextWindow(tmpHwnd, GW_HWNDNEXT)) {
+      while((tmpHwnd = GetNextWindow(tmpHwnd, GW_HWNDNEXT))) {
          for (x = 0; x < nWin; ++x) {
             if (winList[x].Sticky && tmpHwnd == winList[x].Handle) {
                SetForegroundWindow(winList[x].Handle);
@@ -1289,7 +1288,7 @@ int calculateDesk()
  * Forces a window into the foreground. Must be done in this way to avoid
  * the flashing in the taskbar insted of actually changing active window.
  */
-void forceForeground(HWND* theWin)
+void forceForeground(HWND theWin)
 {
    DWORD ThreadID1;
    DWORD ThreadID2;
@@ -1338,7 +1337,7 @@ void initData()
 /*************************************************
  * Checks if a window is a previous saved sticky window
  */
-BOOL checkIfSavedSticky(HWND* hwnd)
+BOOL checkIfSavedSticky(HWND hwnd)
 {
    char className[51];
    int i;
@@ -1373,7 +1372,7 @@ BOOL checkIfSavedStickyString(char* className)
 /*************************************************
  * Add a window in the list
  */
-__inline void integrateWindow(HWND* hwnd)
+inline void integrateWindow(HWND hwnd)
 {
    int style = GetWindowLong(hwnd, GWL_STYLE);
    int exstyle = GetWindowLong(hwnd, GWL_EXSTYLE);
@@ -1448,7 +1447,7 @@ void findUserWindows()
 /*************************************************
  * Callback function. Integrates all enumerated windows
  */
-__inline BOOL CALLBACK enumWindowsProc(HWND hwnd, LPARAM lParam) 
+inline BOOL CALLBACK enumWindowsProc(HWND hwnd, LPARAM lParam) 
 {
   if(nWin >= MAXWIN) {
     KillTimer(hWnd, 0x29a);
@@ -1465,7 +1464,7 @@ __inline BOOL CALLBACK enumWindowsProc(HWND hwnd, LPARAM lParam)
 /*************************************************
  * Returns true if a window is in the list
  */
-__inline BOOL inWinList(HWND* hwnd)
+inline BOOL inWinList(HWND hwnd)
 {
   int index;
   if (!hwnd)
@@ -1801,15 +1800,15 @@ void toggleActiveSticky()
  */
 void recoverWindows()
 {
-   char dummy[80];
+   char* dummy = malloc(sizeof(char) * 80);
    int nOfRec = 0;
    HWND tmpHnd;
    char buff[27];
    FILE* fp;
     
-   if(fp = fopen(vwState, "r")) {
+   if((fp = fopen(vwState, "r"))) {
       while(!feof(fp)) {
-         fscanf(fp, "%79s", &dummy);
+         fscanf(fp, "%79s", dummy);
          if((strlen(dummy) != 0) && !feof(fp)) {
             tmpHnd = FindWindow(dummy, NULL);
             if(tmpHnd) {
@@ -1832,7 +1831,7 @@ void recoverWindows()
       }
       fclose(fp);
    }
-    
+   free(dummy);
    sprintf(buff, "%d windows was recovered.", nOfRec);
    MessageBox(hWnd, buff, "VirtuaWin", 0); 
 }
@@ -1840,7 +1839,7 @@ void recoverWindows()
 /*************************************************
  * Checks if a window is an predifined desktop to go to
  */
-int checkIfAssignedDesktop(HWND* aHwnd)
+int checkIfAssignedDesktop(HWND aHwnd)
 {
    char className[51];
    int i;
@@ -1895,7 +1894,7 @@ void showHideWindow( windowType* aWindow, BOOL show )
  * Wraps ShowWindow() and make sure that we won't hang on crashed applications
  * Instead we notify user by flashing the systray icon
  */
-BOOL safeShowWindow(HWND* theHwnd, int theState)
+BOOL safeShowWindow(HWND theHwnd, int theState)
 {
    if(SendMessageTimeout(theHwnd, (int)NULL, 0, 0, SMTO_ABORTIFHUNG | SMTO_BLOCK, 2000, NULL)) {
       ShowWindow(theHwnd, theState);
@@ -1937,7 +1936,7 @@ void moveShowWindow( windowType* aWindow, BOOL show )
                    0, 0, SWP_NOZORDER | SWP_NOSIZE | SWP_NOACTIVATE );
       // This removes window from taskbar and alt+tab list
       SetWindowLong( aWindow->Handle, GWL_EXSTYLE, 
-                     aWindow->StyleFlags & (~WS_EX_APPWINDOW) | WS_EX_TOOLWINDOW );
+                     aWindow->StyleFlags & ((~WS_EX_APPWINDOW) | WS_EX_TOOLWINDOW) );
       // Notify taskbar of the change
       PostMessage( hwndTask, RM_Shellhook, 2, (LPARAM) aWindow->Handle);
       aWindow->Hidden = TRUE;
@@ -2079,7 +2078,7 @@ void releaseMutex()
 /************************************************
  * Toggles the disabled state of VirtuaWin
  */
-void disableAll(HWND* aHWnd)
+void disableAll(HWND aHWnd)
 {
    if(enabled) {                                   // disable VirtuaWin
       strcpy(nIconD.szTip,"VirtuaWin - Disabled"); //Tooltip
@@ -2119,7 +2118,7 @@ void disableAll(HWND* aHWnd)
  * Assigns a window to the specified desktop
  * Used by the module message VW_ASSIGNWIN
  */
-void assignWindow(HWND* theWin, int theDesk)
+void assignWindow(HWND theWin, int theDesk)
 {
    int index;
    
@@ -2144,7 +2143,7 @@ void assignWindow(HWND* theWin, int theDesk)
  * Changes sticky state of a window
  * Used by the module message VW_SETSTICKY
  */
-void setSticky(HWND* theWin, int state)
+void setSticky(HWND theWin, int state)
 {
    int index;
 
@@ -2178,6 +2177,9 @@ void setSticky(HWND* theWin, int state)
 
 /*
  * $Log$
+ * Revision 1.40  2004/02/28 23:50:26  jopi
+ * SF905625 Added module message for changing the sticky state of a window
+ *
  * Revision 1.39  2004/02/28 18:54:01  jopi
  * SF904069 Added possibility to choose if sticky should be permanent for all instances of the same classname.
  *
