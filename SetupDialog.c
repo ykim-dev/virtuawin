@@ -90,7 +90,7 @@ int createPropertySheet(HINSTANCE theHinst, HWND theHwndOwner)
    psp[4].lParam = 0;
 
    psh.dwSize = sizeof(PROPSHEETHEADER);
-   psh.dwFlags = PSH_PROPSHEETPAGE | PSH_USEHICON;
+   psh.dwFlags = PSH_USECALLBACK | PSH_PROPSHEETPAGE | PSH_USEHICON;
    psh.hwndParent = theHwndOwner;
    psh.hInstance = theHinst;
    psh.pszIcon = NULL;
@@ -99,8 +99,30 @@ int createPropertySheet(HINSTANCE theHinst, HWND theHwndOwner)
    psh.ppsp = (LPCPROPSHEETPAGE) &psp;
    psh.nStartPage = 0;
    psh.hIcon = (HICON) LoadImage(theHinst, MAKEINTRESOURCE(IDI_VIRTWIN), IMAGE_ICON, xIcon, yIcon, 0);
-
+   psh.pfnCallback = (PFNPROPSHEETCALLBACK)propCallBack;
+   
    return (PropertySheet(&psh));
+}
+
+/*************************************************
+ * Initialize callback function for the property sheet
+ * Used for removing the "?" in the title bar
+ */
+int CALLBACK propCallBack( HWND hwndDlg, UINT uMsg, LPARAM lParam )
+{
+   DLGTEMPLATE* ptr;
+ 
+   switch(uMsg)
+   {
+      case PSCB_PRECREATE:
+         
+         // Removes the question mark button in the title bar
+         ptr = (DLGTEMPLATE*)lParam;
+         ptr->style = ptr->style ^ DS_CONTEXTHELP | DS_CENTER; 
+         
+         break;  
+   }
+   return 0;
 }
 
 /*************************************************
@@ -849,6 +871,9 @@ static BOOL APIENTRY modules(HWND hDlg, UINT message, UINT wParam, LONG lParam)
 
 /*
  * $Log$
+ * Revision 1.6  2001/02/05 21:13:08  jopi
+ * Updated copyright header
+ *
  * Revision 1.5  2001/01/29 21:09:34  jopi
  * Changed web adress
  *

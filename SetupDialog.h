@@ -36,12 +36,15 @@ static BOOL APIENTRY misc(HWND, UINT, UINT, LONG);
 static BOOL APIENTRY modules(HWND, UINT, UINT, LONG);
 static BOOL APIENTRY about(HWND, UINT, UINT, LONG);
 
-BOOL configChanged;
+int CALLBACK propCallBack(HWND hwndDlg, UINT uMsg, LPARAM lParam);
 
 #endif
 
 /*
  * $Log$
+ * Revision 1.4  2001/02/05 21:13:08  jopi
+ * Updated copyright header
+ *
  * Revision 1.3  2001/01/28 16:26:56  jopi
  * Configuration behaviour change. It is now possible to test all settings by using apply and all changes will be rollbacked if cancel is pressed
  *
