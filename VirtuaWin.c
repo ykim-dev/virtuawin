@@ -1990,11 +1990,10 @@ void goGetTheTaskbarHandle()
 void getScreenSize()
 {
    RECT r;
-   GetClientRect(GetDesktopWindow(), &r);
-   screenLeft = r.left;
-   screenRight = r.right;
-   screenTop = r.top;
-   screenBottom = r.bottom;
+   screenLeft = GetSystemMetrics(SM_XVIRTUALSCREEN);
+   screenRight = GetSystemMetrics(SM_CXVIRTUALSCREEN);
+   screenTop = GetSystemMetrics(SM_YVIRTUALSCREEN);
+   screenBottom = GetSystemMetrics(SM_CYVIRTUALSCREEN);
 }
 
 /************************************************
@@ -2150,6 +2149,9 @@ void setSticky(HWND theWin, int state)
 
 /*
  * $Log$
+ * Revision 1.42  2004/12/07 19:18:42  jopi
+ * SF1053738, added application icons to the window list
+ *
  * Revision 1.41  2004/04/10 10:20:01  jopi
  * Updated to compile with gcc/mingw
  *
