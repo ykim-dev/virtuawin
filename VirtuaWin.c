@@ -112,7 +112,8 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
    nIconD.hIcon = icons[1];
 
    strcpy(nIconD.szTip, appName);		// Tooltip
-   Shell_NotifyIcon(NIM_ADD, &nIconD);		// This adds the icon
+   if( displayTaskbarIcon )
+      Shell_NotifyIcon(NIM_ADD, &nIconD);	// This adds the icon
 
    /* Register the keys */
    registerAllKeys();
@@ -764,7 +765,11 @@ LRESULT CALLBACK wndProc(HWND aHWnd, UINT message, WPARAM wParam, LPARAM lParam)
       case VW_DELICON:
          Shell_NotifyIcon(NIM_DELETE, &nIconD); // This removes the icon
          return TRUE;
-    
+      
+      case VW_SHOWICON:
+         Shell_NotifyIcon(NIM_ADD, &nIconD);    // This re-adds the icon
+         return TRUE;
+
       case VW_HELP:
          WinHelp(aHWnd, vwHelp, HELP_CONTENTS, 0);
          return TRUE;
@@ -913,7 +918,7 @@ LRESULT CALLBACK wndProc(HWND aHWnd, UINT message, WPARAM wParam, LPARAM lParam)
          
       default:
          // If taskbar restarted
-         if(message == taskbarRestart)
+         if((message == taskbarRestart) && displayTaskbarIcon )
             Shell_NotifyIcon(NIM_ADD, &nIconD);	// This re-adds the icon
          break;
    }
@@ -1221,6 +1226,7 @@ int gotoDesk(int theDesk)
    currentDesk	= theDesk;
 
    nIconD.hIcon = icons[currentDesk];
+   if( displayTaskbarIcon )
    Shell_NotifyIcon(NIM_MODIFY, &nIconD);
 
    /* Calculations for getting the x and y positions */
@@ -1239,7 +1245,8 @@ int gotoDesk(int theDesk)
 void setIcon(int theNumber)
 {
    nIconD.hIcon = icons[theNumber];
-   Shell_NotifyIcon(NIM_MODIFY, &nIconD);
+   if( displayTaskbarIcon )
+      Shell_NotifyIcon(NIM_MODIFY, &nIconD);
    currentDesk = theNumber;
 }
 
@@ -1677,8 +1684,9 @@ BOOL safeShowWindow(HWND* theHwnd, int theState)
       ShowOwnedPopups(theHwnd, theState);
       return TRUE;
    } else {
-      warningIcon(); // Flash the systray icon
-      return FALSE;  // Probably hanged
+      if( displayTaskbarIcon )
+         warningIcon(); // Flash the systray icon
+      return FALSE;     // Probably hanged
    }
 }
 
@@ -1713,6 +1721,9 @@ VOID CALLBACK FlashProc(HWND hwnd, UINT uMsg, UINT idEvent, DWORD dwTime)
 
 /*
  * $Log$
+ * Revision 1.13  2001/11/12 20:11:47  jopi
+ * Display setup dialog if started a second time instead of just quit
+ *
  * Revision 1.12  2001/11/12 18:33:42  jopi
  * Fixed so that user windows are also checked if they are saved as sticky.
  *

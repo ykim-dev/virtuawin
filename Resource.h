@@ -96,6 +96,7 @@
 #define IDC_HOTMENU 1077
 #define IDC_HOTMENUW 1078
 #define IDC_HOTMENUEN 1079
+#define IDC_DISPLAYICON 1080
 
 #define	ID_SETUP	32771
 #define	ID_EXIT	        32772
@@ -106,6 +107,9 @@
 
 /*
  * $Log$
+ * Revision 1.3  2001/01/28 16:10:00  jopi
+ * Added #ifndef/#define
+ *
  * Revision 1.2  2000/08/18 23:43:07  jopi
  *  Minor modifications by Matti Jagula <matti@proekspert.ee> List of modifications follows: Added window title sorting in popup menus (Assign, Direct, Sticky) Added some controls to Setup Misc tab and support for calling the popup menus from keyboard.
  *

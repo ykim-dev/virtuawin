@@ -618,6 +618,8 @@ static BOOL APIENTRY misc(HWND hDlg, UINT message, UINT wParam, LONG lParam)
             SendDlgItemMessage(hDlg, IDC_HOTMENUEN, BM_SETCHECK, 1,0);
          if(hotkeyMenuWin)
             SendDlgItemMessage(hDlg, IDC_HOTMENUW, BM_SETCHECK, 1,0);
+         if(!displayTaskbarIcon)
+            SendDlgItemMessage(hDlg, IDC_DISPLAYICON, BM_SETCHECK, 1,0);
          SendDlgItemMessage(hDlg, IDC_HOTMENU, HKM_SETHOTKEY, MAKEWORD(hotkeyMenu, hotkeyMenuMod), 0);
          return TRUE;
 
@@ -693,7 +695,17 @@ static BOOL APIENTRY misc(HWND hDlg, UINT message, UINT wParam, LONG lParam)
                   saveLayoutOnExit = TRUE;
                else
                   saveLayoutOnExit= FALSE;
-
+               if(SendDlgItemMessage(hDlg, IDC_DISPLAYICON, BM_GETCHECK, 0, 0) == BST_CHECKED)
+               {
+                  displayTaskbarIcon = FALSE;
+                  PostMessage(hWnd, VW_DELICON, 0, 0);
+               }
+               else
+               {
+                  displayTaskbarIcon = TRUE;
+                  PostMessage(hWnd, VW_SHOWICON, 0, 0);
+               }
+               
                if(SendDlgItemMessage(hDlg, IDC_HOTMENUEN, BM_GETCHECK, 0, 0) == BST_CHECKED) {
                   hotkeyMenuEn = TRUE;
                   wRawHotKey = (WORD)SendDlgItemMessage(hDlg, IDC_HOTMENU, HKM_GETHOTKEY, 0, 0);
@@ -731,7 +743,7 @@ static BOOL APIENTRY misc(HWND hDlg, UINT message, UINT wParam, LONG lParam)
             LOWORD(wParam) == IDC_MENUASSIGN || LOWORD(wParam) == IDC_USEASSIGN ||
             LOWORD(wParam) == IDC_FIRSTONLY  || LOWORD(wParam) == IDC_SAVEEXITSTATE ||
             LOWORD(wParam) == IDC_HOTMENUEN  || LOWORD(wParam) == IDC_HOTMENUW || 
-            LOWORD(wParam) == IDC_HOTMENU) {
+            LOWORD(wParam) == IDC_HOTMENU    || LOWORD(wParam) == IDC_DISPLAYICON ) {
             SendMessage(GetParent(hDlg), PSM_CHANGED, (WPARAM)hDlg, 0L);
          }
     
@@ -871,6 +883,9 @@ static BOOL APIENTRY modules(HWND hDlg, UINT message, UINT wParam, LONG lParam)
 
 /*
  * $Log$
+ * Revision 1.7  2001/02/10 11:11:53  jopi
+ * Removed the context help icon since there is no functionality for this
+ *
  * Revision 1.6  2001/02/05 21:13:08  jopi
  * Updated copyright header
  *

@@ -122,7 +122,7 @@ BEGIN
     AUTOCHECKBOX    "Save sticky on exit", IDC_STICKYSAVE,   6, 74, 80, 10
     PUSHBUTTON      "Save sticky", IDC_SAVESTICKY,         104, 65, 45, 14
 
-    GROUPBOX        "Extras", IDC_STATIC, 0, 95, 165, 75
+    GROUPBOX        "Extras", IDC_STATIC, 0, 95, 165, 86
     AUTOCHECKBOX    "Keep last active", IDC_LASTACTIVE,  6, 105, 65, 10
     AUTOCHECKBOX    "Release focus", IDC_FOCUS,         74, 105, 61, 10
     AUTOCHECKBOX    "Switch minimized", IDC_MINIMIZED,   6, 115, 69, 10
@@ -130,32 +130,33 @@ BEGIN
     AUTOCHECKBOX    "Crash recovery", IDC_RECOVERY,      6, 135, 73, 10
     AUTOCHECKBOX    "Desktop cycling", IDC_DESKCYCLE,    6, 145, 74, 10
     AUTOCHECKBOX    "Invert Up/Down", IDC_INVERTY,       6, 155, 74, 10
+    AUTOCHECKBOX    "Hide system tray icon", IDC_DISPLAYICON, 6, 165, 80, 10
 
-    GROUPBOX        "Window menu", IDC_STATIC, 0, 172, 165, 22
-    AUTOCHECKBOX    "Sticky toggle", IDC_MENUSTICKY, 6, 182, 55, 10
-    AUTOCHECKBOX    "Direct access", IDC_MENUACCESS, 60, 182, 55, 10
-    AUTOCHECKBOX    "Assign",        IDC_MENUASSIGN, 118, 182, 45, 10
+    GROUPBOX        "Window menu", IDC_STATIC, 0, 184, 165, 22
+    AUTOCHECKBOX    "Sticky toggle", IDC_MENUSTICKY, 6, 194, 55, 10
+    AUTOCHECKBOX    "Direct access", IDC_MENUACCESS, 60, 194, 55, 10
+    AUTOCHECKBOX    "Assign",        IDC_MENUASSIGN, 118, 194, 45, 10
 
-    GROUPBOX        "Window list", IDC_STATIC, 0, 198, 165, 38
-    AUTOCHECKBOX    "Enable Access Menu key", IDC_HOTMENUEN, 6, 209, 96, 9, 0x0020
-    LTEXT           "Menu key", 180, 6, 222, 32, 10
+    GROUPBOX        "Window list", IDC_STATIC, 0, 210, 165, 38
+    AUTOCHECKBOX    "Enable Access Menu key", IDC_HOTMENUEN, 4, 222, 96, 9, 0x0020
+    LTEXT           "Menu key", 180, 6, 234, 32, 10
     CONTROL         "HotMenu", IDC_HOTMENU, "msctls_hotkey32", 0x0 | WS_BORDER |
-                    WS_TABSTOP, 41, 220, 65, 12
-    AUTOCHECKBOX    "+ WIN key", IDC_HOTMENUW, 107, 222, 47, 9, 0x0020
+                    WS_TABSTOP, 41, 232, 65, 12
+    AUTOCHECKBOX    "+ WIN key", IDC_HOTMENUW, 107, 234, 47, 9, 0x0020
 END
 
 IDD_PROPPAGE_ABOUT DIALOG 0, 0, 150, 150
 STYLE DS_3DLOOK | WS_CHILD | WS_DISABLED | WS_BORDER
 FONT 8, "MS Sans Serif"
 BEGIN
-    GROUPBOX        "VirtuaWin  V2.5", IDC_STATIC, 6, 6, 165, 85, 0x0300
-    ICON            IDI_LARGEAPP, IDC_STATIC, 78, 18, 20, 20
-    CTEXT           "Copyright (c) 1999, 2000, 2001 jopi", IDC_STATIC, 9, 42, 158, 8
-    CTEXT           "virtuawin@home.se", IDC_MAILTO, 9, 52, 158, 8, 0x0100
-    CTEXT           "Latest version, info, source, etc. visit:", IDC_STATIC, 9, 66, 158, 8
-    CTEXT           "http://w1.457.telia.com/~u45706979/", IDC_HTTP, 9, 76, 158, 10, 0x0100
-    GROUPBOX        "License", IDC_STATIC, 6, 95, 165, 140, 0x0300
-    EDITTEXT        IDC_LICENSE, 11, 105, 155, 125, ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY |NOT WS_TABSTOP | NOT WS_BORDER
+    GROUPBOX        "VirtuaWin  V2.6 Pre2", IDC_STATIC, 6, 2, 165, 81, 0x0300
+    ICON            IDI_LARGEAPP, IDC_STATIC, 78, 14, 20, 20
+    CTEXT           "Copyright (c) 1999, 2000, 2001 jopi", IDC_STATIC, 9, 38, 158, 8
+    CTEXT           "virtuawin@home.se", IDC_MAILTO, 9, 48, 158, 8, 0x0100
+    CTEXT           "Latest version, info, source, etc. visit:", IDC_STATIC, 9, 62, 158, 8
+    CTEXT           "http://w1.457.telia.com/~u45706979/", IDC_HTTP, 9, 72, 158, 10, 0x0100
+    GROUPBOX        "License", IDC_STATIC, 6, 87, 165, 160, 0x0300
+    EDITTEXT        IDC_LICENSE, 11, 98, 155, 147, ES_MULTILINE | ES_READONLY |NOT WS_TABSTOP | NOT WS_BORDER
 END
 
 IDD_PROPPAGE_MODULES DIALOG 0, 0, 150, 150

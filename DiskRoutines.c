@@ -348,7 +348,8 @@ void writeConfig()
       fprintf(fp, "Hot_key_Menu# %i\n", hotkeyMenu);
       fprintf(fp, "Hot_key_ModMenu# %i\n", hotkeyMenuMod);
       fprintf(fp, "Hot_key_WinMenu# %i\n", hotkeyMenuWin);
-
+      fprintf(fp, "Display_systray_icon# %i\n", displayTaskbarIcon);
+      
       fclose(fp);
    }
 }
@@ -437,7 +438,8 @@ void readConfig()
       fscanf(fp, "%s%i", &dummy, &hotkeyMenu);
       fscanf(fp, "%s%i", &dummy, &hotkeyMenuMod);
       fscanf(fp, "%s%i", &dummy, &hotkeyMenuWin);
-      
+      fscanf(fp, "%s%i", &dummy, &displayTaskbarIcon);
+
       fclose(fp);
    }
 }
@@ -512,6 +514,10 @@ BOOL tryToLock()
 
 /*
  * $Log$
+ * Revision 1.8  2001/11/12 18:21:52  jopi
+ * Added support for classnames that contains spaces which will fix some
+ * problems with desktop state save and sticky save.
+ *
  * Revision 1.7  2001/02/05 21:13:07  jopi
  * Updated copyright header
  *

@@ -71,6 +71,7 @@ extern BOOL useDeskAssignment;  // if we have desktop assignment
 extern BOOL saveLayoutOnExit;   // save the desktop layout upon exit
 extern BOOL assignOnlyFirst;    // only assign the first window to a saved desktop 
 extern BOOL cyclingKeysEnabled; // If we are using the cycling hotkeys
+extern BOOL displayTaskbarIcon;// Should we display the systray icon
 
 extern UINT MOUSEKEY;           // Holds the modifier for enabling mouse warp
 extern UINT VW_STICKY;
@@ -133,6 +134,9 @@ extern LPSTR vwWindowsState;  // holds windowsata file name + path
 
 /*
  * $Log$
+ * Revision 1.3  2001/02/05 21:13:07  jopi
+ * Updated copyright header
+ *
  * Revision 1.2  2000/08/18 23:43:07  jopi
  *  Minor modifications by Matti Jagula <matti@proekspert.ee> List of modifications follows: Added window title sorting in popup menus (Assign, Direct, Sticky) Added some controls to Setup Misc tab and support for calling the popup menus from keyboard.
  *

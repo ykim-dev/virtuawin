@@ -180,6 +180,7 @@ BOOL useDeskAssignment = FALSE;
 BOOL saveLayoutOnExit = FALSE;
 BOOL assignOnlyFirst = FALSE;
 BOOL cyclingKeysEnabled = FALSE;
+BOOL displayTaskbarIcon = TRUE;
 
 UINT MOUSEKEY;                  
 UINT VW_STICKY = 0;
@@ -241,6 +242,9 @@ LPSTR vwWindowsState;
 
 /*
  * $Log$
+ * Revision 1.10  2001/11/12 18:33:42  jopi
+ * Fixed so that user windows are also checked if they are saved as sticky.
+ *
  * Revision 1.9  2001/02/05 21:13:08  jopi
  * Updated copyright header
  *

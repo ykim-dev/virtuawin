@@ -29,18 +29,20 @@
 #define VW_SETUP      (WM_USER + 16) 
 /* Message, remove the systray icon */
 #define VW_DELICON    (WM_USER + 17) 
+/* Message, displays the systray icon */
+#define VW_SHOWICON    (WM_USER + 18) 
 /* Message, bring up the help */ 
-#define VW_HELP       (WM_USER + 18) 
+#define VW_HELP       (WM_USER + 19) 
 /* Message, gather all windows */
-#define VW_GATHER     (WM_USER + 19) 
+#define VW_GATHER     (WM_USER + 20) 
 /* Message, retuns desktop width */
-#define VW_DESKX      (WM_USER + 20)
+#define VW_DESKX      (WM_USER + 21)
 /* Message, retuns desktop height */
-#define VW_DESKY      (WM_USER + 21)
+#define VW_DESKY      (WM_USER + 22)
 /* Message, require the window list from VirtuaWin. List will be returned with WM_COPYDATA */
-#define VW_WINLIST    (WM_USER + 22)
+#define VW_WINLIST    (WM_USER + 23)
 /* Message, returns the current desktop number */
-#define VW_CURDESK    (WM_USER + 23)
+#define VW_CURDESK    (WM_USER + 24)
 
 /* Message, sent by VirtuaWin after a switch. lParam will contain current desktop number 
    if wParam isn't one of the following, then wParam will also contain current desktop.
@@ -67,6 +69,9 @@
 
 /*
  * $Log$
+ * Revision 1.3  2001/01/12 16:58:11  jopi
+ * Added module message for getting the current desktop number
+ *
  * Revision 1.2  2000/07/18 16:03:34  jopi
  * Changed mail adress in error message
  *
