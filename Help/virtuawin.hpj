@@ -4,7 +4,7 @@
 COMPRESS=12 Hall Zeck
 LCID=0x409 0x0 0x0 ; English (United States)
 REPORT=Yes
-COPYRIGHT=VirtuaWin 2.4 1999, 2000 jopi
+COPYRIGHT=VirtuaWin 1999, 2000, 2001 jopi
 HLP=virtuawin.hlp
 
 [FILES]
