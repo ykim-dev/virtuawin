@@ -1,0 +1,49 @@
+
+                       VirtuaWin
+	<http://www.student.hk-r.se/~pt96jpi/>
+	
+                  by jopi
+                 <virtuawin@home.se>
+
+
+Description
+--------------------------------------------------------------
+This is a small, fast and easy to use virtual desktop manager for 
+Windows9x/NT/2000 with no unnecessary features. 
+It indicates current desktop in the system tray for saving space. 
+A lot of configuration possibilities for both mouse and key control.
+It also supports modules for adding features without decreasing performance 
+in VirtuaWin itself.
+
+
+Code comments
+--------------------------------------------------------------
+I use the Lcc-Win32 compiler by Jacob Navia for this project. 
+(See <http://www.cs.virginia.edu/~lcc-win32>)
+It should be possible to compile with other win32 C compilers with 
+perhaps minor changes.
+
+Check my website for info on module development.
+
+
+Files
+--------------------------------------------------------------
+README.TXT      This file.
+HISTORY.TXT     Description of changes.
+COPYING.TXT     GNU General Public License Version 2.
+*.c *.h	        Source files.
+
+
+Bugs
+--------------------------------------------------------------
+If you discover any bugs in this software, please send a 
+bugreport to virtuawin@home.se and describe the problem.
+Please include version number.
+
+
+Copyright
+--------------------------------------------------------------
+VirtuaWin is copyright (c) 1999, 2000 by jopi and is 
+licensed through the GNU General Public License. Read the 
+COPYING.TXT file for the complete license.
+
