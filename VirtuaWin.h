@@ -101,7 +101,7 @@ static int curUser = 0;       // how many user applications we have
 
 static UINT MODKEY;	      // Holds the switch key modifiers
 
-static char appName[] = "VirtuaWin 2.6";   // application name
+static char appName[] = "VirtuaWin 2.6 Pre3";   // application name
 
 ATOM stickyKey;
 ATOM vwLeft;
@@ -128,7 +128,10 @@ BOOL isDragging = FALSE;	// if we are currently dragging a window
 BOOL cyclingKeysRegistered = FALSE; // if the cycling keys are registrered
 BOOL menuHotKeyRegistered = FALSE;  // if the menu hotkey is registered
 
-int taskBarHeight;		// the height of the taskbar
+int taskBarLeftWarp   = 0;      // the warp size for Left taskbar
+int taskBarRightWarp  = 0;      // the warp size for Right taskbar
+int taskBarTopWarp    = 0;      // the warp size for Top taskbar
+int taskBarBottomWarp = 0;      // the warp size for Bottom taskbar
 
 HINSTANCE hInst;		// current instance
 HWND hWnd;			// handle to VirtuaWin
@@ -227,8 +230,10 @@ UINT hotkeyMenuMod = 0;
 UINT hotkeyMenuWin = 0;
 UINT hotkeyMenuEn = 0;
 
-int screenWidth;
-int screenHeight;
+int screenLeft;
+int screenRight;
+int screenTop;
+int screenBottom;
 int curDisabledMod = 0; 
 
 UINT RM_Shellhook;
@@ -251,6 +256,9 @@ LPSTR vwWindowsState;
 
 /*
  * $Log$
+ * Revision 1.13  2002/02/14 21:23:41  jopi
+ * Updated copyright header
+ *
  * Revision 1.12  2001/12/01 00:05:52  jopi
  * Added alternative window hiding for troublesome windows like InternetExplorer
  *

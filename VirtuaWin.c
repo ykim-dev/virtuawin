@@ -78,13 +78,26 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 
    RegisterClassEx(&wc);
 
-   /* Get screen witdth and height */
+   /* Get screen width and height */
    GetClientRect(GetDesktopWindow(), &r);
-   screenWidth = r.right - 3;
-   screenHeight = r.bottom - 3;
+   screenLeft = r.left;
+   screenRight = r.right;
+   screenTop = r.top;
+   screenBottom = r.bottom;
    /* Get the height of the task bar */
    GetWindowRect(FindWindow("Shell_traywnd", ""), &r);
-   taskBarHeight = (r.bottom - r.top);
+   /* Determine position of task bar */
+   printf("Values: %d %d %d %d\n", r.bottom, r.top, screenBottom, screenTop);
+   if ((r.bottom + r.top) == (screenBottom - screenTop)) // task bar is on side
+      if (r.left == screenLeft)                          // task bar is on left
+         taskBarLeftWarp   = r.right - r.left - 3;
+      else                                               // task bar is on right
+         taskBarRightWarp  = r.right - r.left - 3;
+   else                                                  // task bar is on top/bottom
+      if (r.top == screenTop)                            // task bar is on top
+         taskBarTopWarp    = r.bottom - r.top - 3;
+      else                                               // task bar is on bottom
+         taskBarBottomWarp = r.bottom - r.top - 3;
 
    /* set the window to give focus to when releasing focus on switch also used to refresh */
    releaseHnd = GetDesktopWindow();
@@ -148,7 +161,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
    mouseThread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)MouseProc, NULL, 0, &threadID); 	
    if(!mouseEnable) // Suspend the thread if no mouse support
       enableMouse(FALSE);
-      //SuspendThread(mouseThread);
+   //SuspendThread(mouseThread);
    
    /* Main message loop */
    while (GetMessage(&msg, NULL, 0, 0)) {
@@ -171,23 +184,23 @@ DWORD WINAPI MouseProc(LPVOID lpParameter)
    while(1) {
       Sleep(50);
       GetCursorPos(&pt);
-      
-      if(pt.x < 3) {
+      //printf("Taksbar values: %d %d %d %d", taskBarLeftWarp, taskBarRightWarp, taskBarTopWarp, taskBarBottomWarp);
+      if(     pt.x < (screenLeft   + 3 + (taskBarWarp * taskBarLeftWarp   * checkMouseState()))) {
          // switch left
          SendNotifyMessage(hWnd, VW_MOUSEWARP, 0, 
                            MAKELPARAM(checkMouseState(), VW_MOUSELEFT));
       }
-      else if(pt.x > screenWidth) { 
+      else if(pt.x > (screenRight  - 3 - (taskBarWarp * taskBarRightWarp  * checkMouseState()))) { 
          // switch right
          SendNotifyMessage(hWnd, VW_MOUSEWARP, 0, 
                            MAKELPARAM(checkMouseState(), VW_MOUSERIGHT));
       }
-      else if(pt.y < 3) { 
+      else if(pt.y < (screenTop    + 3 + (taskBarWarp * taskBarTopWarp    * checkMouseState()))) { 
          // switch up
          SendNotifyMessage(hWnd, VW_MOUSEWARP, 0, 
                            MAKELPARAM(checkMouseState(), VW_MOUSEUP));
       }
-      else if(pt.y > (screenHeight - (taskBarWarp * taskBarHeight * checkMouseState()))) {
+      else if(pt.y > (screenBottom - 3 - (taskBarWarp * taskBarBottomWarp * checkMouseState()))) {
          // switch down
          SendNotifyMessage(hWnd, VW_MOUSEWARP, 0, 
                            MAKELPARAM(checkMouseState(), VW_MOUSEDOWN));
@@ -511,6 +524,9 @@ LRESULT CALLBACK wndProc(HWND aHWnd, UINT message, WPARAM wParam, LPARAM lParam)
     
    switch (message) {
       case VW_MOUSEWARP:
+         // Try to avoid switching if we press on the taskbar
+         if((LOWORD(lParam) && (GetForegroundWindow() == FindWindow("Shell_traywnd", ""))))
+            goto skipMouseWarp; // if so, skip whole sequence
          if(enabled) { // Is virtuawin enabled
             if(useMouseKey) { // Are we using a mouse key
                if(!HIWORD(GetAsyncKeyState(MOUSEKEY))) {
@@ -521,7 +537,7 @@ LRESULT CALLBACK wndProc(HWND aHWnd, UINT message, WPARAM wParam, LPARAM lParam)
             // otherwise we might step over several desktops
             SuspendThread(mouseThread); 
             GetCursorPos(&pt);
-            
+
             switch HIWORD(lParam) {
                case VW_MOUSELEFT:
                   warpMultiplier++;
@@ -532,7 +548,7 @@ LRESULT CALLBACK wndProc(HWND aHWnd, UINT message, WPARAM wParam, LPARAM lParam)
                         if(noMouseWrap)
                            SetCursorPos(pt.x + warpLength, pt.y);
                         else
-                           SetCursorPos(screenWidth-warpLength, pt.y);
+                           SetCursorPos(screenRight-warpLength, pt.y);
                      }
                      warpMultiplier = 0;
                   }
@@ -548,7 +564,7 @@ LRESULT CALLBACK wndProc(HWND aHWnd, UINT message, WPARAM wParam, LPARAM lParam)
                         if(noMouseWrap)
                            SetCursorPos(pt.x - warpLength, pt.y);
                         else
-                           SetCursorPos(warpLength, pt.y);
+                           SetCursorPos(screenLeft+warpLength, pt.y);
                      }
                      warpMultiplier = 0;
                   }
@@ -569,7 +585,7 @@ LRESULT CALLBACK wndProc(HWND aHWnd, UINT message, WPARAM wParam, LPARAM lParam)
                         if(noMouseWrap)
                            SetCursorPos(pt.x, pt.y + warpLength);
                         else
-                           SetCursorPos(pt.x, screenHeight - warpLength);
+                           SetCursorPos(pt.x, screenBottom-warpLength);
                      }
                      warpMultiplier = 0;
                   }
@@ -579,21 +595,18 @@ LRESULT CALLBACK wndProc(HWND aHWnd, UINT message, WPARAM wParam, LPARAM lParam)
                case VW_MOUSEDOWN:
                   warpMultiplier++;
                   if((warpMultiplier >= configMultiplier)) {
-                     // Try to avoid switching if we press on the taskbar
-                     if(!(LOWORD(lParam) && (GetForegroundWindow() == FindWindow("Shell_traywnd", "")))) {
-                        int switchVal;
-                        isDragging = LOWORD(lParam);
-                        if(invertY)
-                           switchVal = stepUp();
+                     int switchVal;
+                     isDragging = LOWORD(lParam);
+                     if(invertY)
+                        switchVal = stepUp();
+                     else
+                        switchVal = stepDown();
+                     if(switchVal != 0) {
+                        isDragging = FALSE;
+                        if(noMouseWrap)
+                           SetCursorPos(pt.x, pt.y - warpLength);
                         else
-                           switchVal = stepDown();
-                        if(switchVal != 0) {
-                           isDragging = FALSE;
-                           if(noMouseWrap)
-                              SetCursorPos(pt.x, pt.y - warpLength);
-                           else
-                              SetCursorPos(pt.x, warpLength);
-                        }
+                           SetCursorPos(pt.x, screenTop+warpLength);
                      }
                      warpMultiplier = 0;
                   }
@@ -790,7 +803,7 @@ LRESULT CALLBACK wndProc(HWND aHWnd, UINT message, WPARAM wParam, LPARAM lParam)
       case VW_CURDESK:
          return currentDesk;
 
-      // End plugin messages
+         // End plugin messages
     
       case WM_CREATE:		       // when main window is created
          // set the timer in ms
@@ -1765,7 +1778,7 @@ void moveShowWindow( windowType* aWindow, BOOL show )
       // Notify taskbar of the change
       PostMessage( hwndTask, RM_Shellhook, 1, (LPARAM) aWindow->Handle );
       // Bring back to visible area, SWP_FRAMECHANGED makes it repaint 
-      SetWindowPos( aWindow->Handle, 0, aPosition.left, aPosition.top - screenHeight, 
+      SetWindowPos( aWindow->Handle, 0, aPosition.left, aPosition.top - screenBottom, 
                    0, 0, SWP_FRAMECHANGED | SWP_NOZORDER | SWP_NOSIZE | SWP_NOACTIVATE ); 
       // Notify taskbar of the change
       PostMessage( hwndTask, RM_Shellhook, 1, (LPARAM) aWindow->Handle );
@@ -1774,7 +1787,7 @@ void moveShowWindow( windowType* aWindow, BOOL show )
    else if( !show && !aWindow->Hidden ) // Move away window
    {
       // Move the window off visible area
-      SetWindowPos( aWindow->Handle, 0, aPosition.left, aPosition.top + screenHeight, 
+      SetWindowPos( aWindow->Handle, 0, aPosition.left, aPosition.top + screenBottom, 
                    0, 0, SWP_NOZORDER | SWP_NOSIZE | SWP_NOACTIVATE );
       // This removes window from taskbar and alt+tab list
       SetWindowLong( aWindow->Handle, GWL_EXSTYLE, 
@@ -1845,6 +1858,9 @@ void goGetTheTaskbarHandle()
 
 /*
  * $Log$
+ * Revision 1.17  2002/02/14 21:23:41  jopi
+ * Updated copyright header
+ *
  * Revision 1.16  2001/12/19 17:34:34  jopi
  * Classname will now always be "VirtuaWinMainClass" and not version dependent.
  *

@@ -114,8 +114,8 @@ extern UINT hotCycleUpMod;
 extern UINT hotCycleDown;
 extern UINT hotCycleDownMod;
 
-extern int screenWidth;	  // the width of screen
-extern int screenHeight;  // the height of screen
+extern int screenRight;	  // the width of screen, from VirtuaWin.h
+extern int screenBottom;  // the height of screen, from VirtuaWin.h
 
 extern int curDisabledMod; // how many disabled modules we have
 
@@ -135,6 +135,9 @@ extern LPSTR vwWindowsState;  // holds windowsata file name + path
 
 /*
  * $Log$
+ * Revision 1.6  2002/02/14 21:23:38  jopi
+ * Updated copyright header
+ *
  * Revision 1.5  2001/12/01 00:05:52  jopi
  * Added alternative window hiding for troublesome windows like InternetExplorer
  *

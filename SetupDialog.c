@@ -309,8 +309,8 @@ static BOOL APIENTRY keys(HWND hDlg, UINT message, UINT wParam, LONG lParam)
    switch (message) {
       case WM_INITDIALOG:
          GetWindowRect(GetParent(hDlg), &r);
-         SetWindowPos(GetParent(hDlg), 0, (screenWidth/2-((r.right-r.left)/2)),
-                      (screenHeight/2-((r.bottom-r.top)/2)), 0, 0, SWP_NOZORDER | SWP_NOSIZE | SWP_NOACTIVATE);
+         SetWindowPos(GetParent(hDlg), 0, (screenRight/2-((r.right-r.left)/2)),
+                      (screenBottom/2-((r.bottom-r.top)/2)), 0, 0, SWP_NOZORDER | SWP_NOSIZE | SWP_NOACTIVATE);
     
          /* Control keys */
          if(keyEnable) {
@@ -883,6 +883,9 @@ static BOOL APIENTRY modules(HWND hDlg, UINT message, UINT wParam, LONG lParam)
 
 /*
  * $Log$
+ * Revision 1.10  2002/02/14 21:23:40  jopi
+ * Updated copyright header
+ *
  * Revision 1.9  2001/12/24 10:11:01  jopi
  * Added doubleclick support in the module listbox for bringing up the config window.
  *
