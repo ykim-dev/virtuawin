@@ -843,6 +843,8 @@ static BOOL APIENTRY expert(HWND hDlg, UINT message, UINT wParam, LONG lParam)
             SendDlgItemMessage(hDlg, IDC_TRICKYSUPPORT, BM_SETCHECK, 1,0);
          if(!taskbarOffset)
             SendDlgItemMessage(hDlg, IDC_XPSTYLETASKBAR, BM_SETCHECK, 1,0);
+         if(permanentSticky)
+            SendDlgItemMessage(hDlg, IDC_PERMSTICKY, BM_SETCHECK, 1,0);
          return TRUE;
 
       case WM_NOTIFY:
@@ -891,6 +893,10 @@ static BOOL APIENTRY expert(HWND hDlg, UINT message, UINT wParam, LONG lParam)
                   taskbarOffset = 0;
                else
                   taskbarOffset = 3;
+               if(SendDlgItemMessage(hDlg, IDC_PERMSTICKY, BM_GETCHECK, 0, 0) == BST_CHECKED)
+                  permanentSticky = TRUE;
+               else
+                  permanentSticky = FALSE;
                if(SendDlgItemMessage(hDlg, IDC_DISPLAYICON, BM_GETCHECK, 0, 0) == BST_CHECKED)
                {
                   displayTaskbarIcon = FALSE;
@@ -917,7 +923,7 @@ static BOOL APIENTRY expert(HWND hDlg, UINT message, UINT wParam, LONG lParam)
             LOWORD(wParam) == IDC_DESKCYCLE  || LOWORD(wParam) == IDC_INVERTY ||
             LOWORD(wParam) == IDC_RECOVERY   || LOWORD(wParam) == IDC_DISPLAYICON ||
             LOWORD(wParam) == IDC_TASKBARDETECT || LOWORD(wParam) == IDC_TRICKYSUPPORT ||
-            LOWORD(wParam) == IDC_XPSTYLETASKBAR ) {
+            LOWORD(wParam) == IDC_XPSTYLETASKBAR || LOWORD(wParam) == IDC_PERMSTICKY ) {
             SendMessage(GetParent(hDlg), PSM_CHANGED, (WPARAM)hDlg, 0L);
          }
          if (LOWORD(wParam) == IDC_LASTACTIVE) {
@@ -936,6 +942,9 @@ static BOOL APIENTRY expert(HWND hDlg, UINT message, UINT wParam, LONG lParam)
 
 /*
  * $Log$
+ * Revision 1.22  2004/01/10 11:15:52  jopi
+ * Updated copyright for 2004
+ *
  * Revision 1.21  2003/09/25 16:41:03  jopi
  * SF770859 Window menu heading will not be displayed if only one meny is used
  *

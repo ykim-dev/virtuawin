@@ -210,6 +210,7 @@ BOOL cyclingKeysEnabled = FALSE;
 BOOL displayTaskbarIcon = TRUE;
 BOOL noTaskbarCheck = FALSE;
 BOOL trickyWindows = TRUE;
+BOOL permanentSticky = TRUE;
 
 UINT MOUSEKEY = 0;
 UINT VW_STICKY = 0;
@@ -277,6 +278,9 @@ LPSTR vwWindowsState;
 
 /*
  * $Log$
+ * Revision 1.25  2004/01/10 11:15:52  jopi
+ * Updated copyright for 2004
+ *
  * Revision 1.24  2003/09/24 19:26:28  jopi
  * SF770859 Window menu heading will not be displayed if only one meny is used
  *

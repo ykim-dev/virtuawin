@@ -438,6 +438,7 @@ void writeConfig()
       fprintf(fp, "Taskbar_detection# %i\n", noTaskbarCheck);
       fprintf(fp, "Use_trickywindows# %i\n", trickyWindows);
       fprintf(fp, "XPStyleTaskbar# %i\n", taskbarOffset);
+      fprintf(fp, "PermanentSticky# %i\n", permanentSticky);
       
       fclose(fp);
    }
@@ -532,6 +533,7 @@ void readConfig()
       fscanf(fp, "%s%i", &dummy, &noTaskbarCheck);
       fscanf(fp, "%s%i", &dummy, &trickyWindows);
       fscanf(fp, "%s%i", &dummy, &taskbarOffset);
+      fscanf(fp, "%s%i", &dummy, &permanentSticky);
 
       fclose(fp);
    }
@@ -607,6 +609,9 @@ BOOL tryToLock()
 
 /*
  * $Log$
+ * Revision 1.19  2004/01/10 11:15:52  jopi
+ * Updated copyright for 2004
+ *
  * Revision 1.18  2003/07/10 20:37:54  jopi
  * Made it possible to disable the multiuser config support with a registry value
  *

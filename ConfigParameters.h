@@ -74,6 +74,7 @@ extern BOOL cyclingKeysEnabled; // If we are using the cycling hotkeys
 extern BOOL displayTaskbarIcon; // Should we display the systray icon
 extern BOOL noTaskbarCheck;     // Should we skip the taskbar search
 extern BOOL trickyWindows;      // Use the alternate hiding technique
+extern BOOL permanentSticky;    // If a sticky classname should be permanent
 
 extern UINT MOUSEKEY;           // Holds the modifier for enabling mouse warp
 extern UINT VW_STICKY;
@@ -139,6 +140,9 @@ extern LPSTR vwWindowsState;  // holds windowsata file name + path
 
 /*
  * $Log$
+ * Revision 1.13  2004/01/10 11:15:52  jopi
+ * Updated copyright for 2004
+ *
  * Revision 1.12  2003/09/24 19:26:28  jopi
  * SF770859 Window menu heading will not be displayed if only one meny is used
  *

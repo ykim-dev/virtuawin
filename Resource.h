@@ -102,6 +102,7 @@
 #define IDC_TASKBARDETECT 1081
 #define IDC_TRICKYSUPPORT 1082
 #define IDC_XPSTYLETASKBAR 1083
+#define IDC_PERMSTICKY 1084
 
 #define	ID_SETUP	32771
 #define	ID_EXIT	        32772
@@ -113,6 +114,9 @@
 
 /*
  * $Log$
+ * Revision 1.9  2003/06/24 19:47:04  jopi
+ * SF693876 Fixed option to handle XP skinned style taskbars
+ *
  * Revision 1.8  2003/03/10 20:48:20  jopi
  * Changed so that doubleclick will bring up setup and added a disabled menu item instead.
  *

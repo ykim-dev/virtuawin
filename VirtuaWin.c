@@ -1341,8 +1341,11 @@ BOOL checkIfSavedSticky(HWND* hwnd)
    GetClassName(hwnd, className, 50);
    for(i = 0; i < curSticky; ++i) {
       if (!strncmp(stickyList[i].winClassName, className, 50)) {
-         free(stickyList[i].winClassName);
-         stickyList[i].winClassName = "\n"; // Remove this from list, it is used
+         if(!permanentSticky)
+         {
+            free(stickyList[i].winClassName);
+            stickyList[i].winClassName = "\n"; // Remove this from list, it is used
+         }
          return TRUE;
       }
    }
@@ -2135,6 +2138,9 @@ void assignWindow(HWND* theWin, int theDesk)
 
 /*
  * $Log$
+ * Revision 1.38  2004/01/10 11:23:43  jopi
+ * When assigning a visible window to the current desktop it would be lost
+ *
  * Revision 1.37  2004/01/10 11:15:52  jopi
  * Updated copyright for 2004
  *
