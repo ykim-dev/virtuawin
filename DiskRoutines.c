@@ -35,12 +35,19 @@ void loadFilePaths()
    HKEY hkey = NULL;
    DWORD dwType;
    DWORD cbData = 0;
+   DWORD dwUserNameLen=0;
+   LPSTR winCurrentUser;
    long lResult = RegOpenKeyEx(HKEY_LOCAL_MACHINE, "Software\\VirtuaWin\\Settings", 0,
                                KEY_READ, &hkey);
    if (hkey) {
       lResult = RegQueryValueEx(hkey, "Path", NULL, &dwType, NULL, &cbData);
       vwPath   = (LPSTR)malloc(cbData * sizeof(char));
-      vwConfig = (LPSTR)malloc(cbData * sizeof(char) + 13);
+      // Get current user data
+      lResult = GetUserName(NULL, &dwUserNameLen);
+      winCurrentUser = (LPSTR)malloc(dwUserNameLen * sizeof(char));
+      lResult = GetUserName((LPBYTE)winCurrentUser, &dwUserNameLen);
+
+      vwConfig = (LPSTR)malloc(cbData * sizeof(char) + dwUserNameLen * sizeof(char) + 14);
       vwList   = (LPSTR)malloc(cbData * sizeof(char) + 13);
       vwHelp   = (LPSTR)malloc(cbData * sizeof(char) + 10);
       vwSticky = (LPSTR)malloc(cbData * sizeof(char) + 11);
@@ -53,7 +60,7 @@ void loadFilePaths()
       lResult = RegQueryValueEx(hkey, "Path", NULL, &dwType,
                                 (LPBYTE)vwPath, &cbData);
 
-      sprintf(vwConfig, "%svwconfig.cfg", vwPath);
+      sprintf(vwConfig, "%svwconfig.%s.cfg", vwPath, winCurrentUser);
       sprintf(vwList, "%suserlist.cfg", vwPath);
       sprintf(vwHelp, "%svirtuawin", vwPath);
       sprintf(vwSticky, "%ssticky.cfg", vwPath);
@@ -258,6 +265,9 @@ int loadUserList(userType* theUserList)
 
 /*
  * $Log$
+ * Revision 1.2  2000/07/18 16:02:29  jopi
+ * Changed mail adress in error message
+ *
  * Revision 1.1.1.1  2000/06/03 15:38:05  jopi
  * Added first time
  *

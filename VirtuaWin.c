@@ -1739,7 +1739,11 @@ void readConfig()
    FILE* fp;
 
    if((fp = fopen(vwConfig, "r")) == NULL) {
-      MessageBox(NULL, "Error reading config file", NULL, MB_ICONWARNING);
+      MessageBox(NULL, "Error reading config file. This is probably due to new user setup.\nA new config file will be created.", NULL, MB_ICONWARNING);
+      // Try to create new file
+      if((fp = fopen(vwConfig, "w")) == NULL) {
+         MessageBox(NULL, "Error writing new config file. Check writepermissions.", NULL, MB_ICONWARNING);
+      }
    } else {   
       fscanf(fp, "%s%i", &dummy, &mouseEnable);
       fscanf(fp, "%s%i", &dummy, &configMultiplier);
@@ -1817,6 +1821,9 @@ void readConfig()
 
 /*
  * $Log$
+ * Revision 1.3  2000/08/18 23:43:08  jopi
+ *  Minor modifications by Matti Jagula <matti@proekspert.ee> List of modifications follows: Added window title sorting in popup menus (Assign, Direct, Sticky) Added some controls to Setup Misc tab and support for calling the popup menus from keyboard.
+ *
  * Revision 1.2  2000/08/18 21:41:31  jopi
  * Added the code again that removes closed windows, this will avoid having closed child windows reappearing again. Also updated the mail adress
  *
