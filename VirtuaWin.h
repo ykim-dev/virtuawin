@@ -76,11 +76,15 @@ BOOL checkIfSavedStickyString(char* className);
 void shutDown();
 void showSetup();
 int checkIfAssignedDesktop(HWND*);
-BOOL safeShowWindow(HWND*, int);
+void showHideWindow( windowType*, BOOL );
+BOOL safeShowWindow( HWND*, int );
+void moveShowWindow( windowType*, BOOL );
 void warningIcon();
 BOOL checkMouseState();
 HMENU createSortedWinList(int);
 void enableMouse(BOOL);
+BOOL isSpecialWindow( char* className );
+void goGetTheTaskbarHandle();
 
 // Variables
 HWND topWindow;        // holds the top window on a desktop
@@ -92,6 +96,7 @@ BOOL mouseEnabled = TRUE; // Status of the mouse thread, always running at start
 
 static int curAssigned = 0;   // how many predefined desktop belongings we have (saved)
 static int curSticky = 0;     // how many stickywindows we have (saved)
+static int curTricky = 0;     // how many tricky windows we have (saved)
 static int curUser = 0;       // how many user applications we have
 
 static UINT MODKEY;	      // Holds the switch key modifiers
@@ -128,6 +133,7 @@ int taskBarHeight;		// the height of the taskbar
 HINSTANCE hInst;		// current instance
 HWND hWnd;			// handle to VirtuaWin
 HWND releaseHnd;		// handle to the window to give focus on release focus
+HWND hwndTask;                  // handle to taskbar
 
 // vector holding icon handles for the systray
 HICON icons[10]; // 9 + 1 icons
@@ -225,6 +231,8 @@ int screenWidth;
 int screenHeight;
 int curDisabledMod = 0; 
 
+UINT RM_Shellhook;
+
 // Paths and filenames to various working/config files
 // See ConfigParameters.h for descriptions
 LPSTR vwPath;
@@ -232,6 +240,7 @@ LPSTR vwConfig;
 LPSTR vwList;
 LPSTR vwHelp;
 LPSTR vwSticky;
+LPSTR vwTricky;
 LPSTR vwState; 
 LPSTR vwLock; 
 LPSTR vwModules;
@@ -242,6 +251,9 @@ LPSTR vwWindowsState;
 
 /*
  * $Log$
+ * Revision 1.11  2001/11/12 21:39:41  jopi
+ * Added functionality for disabling the systray icon
+ *
  * Revision 1.10  2001/11/12 18:33:42  jopi
  * Fixed so that user windows are also checked if they are saved as sticky.
  *

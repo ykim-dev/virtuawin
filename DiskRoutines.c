@@ -54,6 +54,7 @@ void loadFilePaths()
       vwList   = (LPSTR)malloc(cbData * sizeof(char) + 13);
       vwHelp   = (LPSTR)malloc(cbData * sizeof(char) + 10);
       vwSticky = (LPSTR)malloc(cbData * sizeof(char) + 11);
+      vwTricky = (LPSTR)malloc(cbData * sizeof(char) + 11);
       vwState  = (LPSTR)malloc(cbData * sizeof(char) + 12);
       vwLock   = (LPSTR)malloc(cbData * sizeof(char) + 12);
       vwModules = (LPSTR)malloc(cbData * sizeof(char) + 15);
@@ -68,6 +69,7 @@ void loadFilePaths()
       sprintf(vwList, "%suserlist.cfg", vwPath);
       sprintf(vwHelp, "%svirtuawin", vwPath);
       sprintf(vwSticky, "%ssticky.cfg", vwPath);
+      sprintf(vwTricky, "%stricky.cfg", vwPath);
       sprintf(vwState, "%svwstate.cfg", vwPath);
       sprintf(vwLock, "%s.vwLock.cfg", vwPath);
       sprintf(vwModules, "%smodules\\*.exe", vwPath);
@@ -170,6 +172,56 @@ void saveStickyWindows(int* theNOfWin, windowType* theWinList)
       }
       fclose(fp);
    }
+}
+
+/*************************************************
+ * Loads window classnames from tricky file
+ */
+int loadTrickyList(stickyType* theTrickyList) 
+{
+   char dummy[80];
+   FILE* fp;
+   int nOfTricky = 0;
+   
+   if(fp = fopen(vwTricky, "r")) 
+   {
+      while(!feof(fp)) {
+         fscanf(fp, "%79s", &dummy);
+         strcpy(dummy, replace(dummy, "££", " "));
+         if( (strlen(dummy) != 0) && !feof(fp) ) 
+         {
+            theTrickyList[nOfTricky].winClassName = malloc( sizeof(char) * strlen(dummy) + 1 );
+            strcpy( theTrickyList[nOfTricky].winClassName, dummy );
+            nOfTricky++;
+         }
+      }
+      fclose(fp);
+   }
+   return nOfTricky;
+}
+
+/*************************************************
+ * Writes down the classnames on the tricky windows on file
+ */
+void saveTrickyWindows(int* theNOfWin, windowType* theWinList)
+{
+/*
+   char className[80];
+   FILE* fp;
+    
+   if(!(fp = fopen(vwTricky, "w"))) {
+      MessageBox(hWnd, "Error writing tricky file", NULL, MB_ICONWARNING);
+   } else {
+      int i;
+      for(i = 0; i < *theNOfWin; ++i) {
+         if (theWinList[i].Sticky) {
+            GetClassName(theWinList[i].Handle, className, 79);
+            fprintf(fp, "%s\n",  replace(className, " ", "££"));
+         }
+      }
+      fclose(fp);
+   }
+*/
 }
 
 /*************************************************
@@ -514,6 +566,9 @@ BOOL tryToLock()
 
 /*
  * $Log$
+ * Revision 1.9  2001/11/12 21:39:14  jopi
+ * Added functionality for disabling the systray icon
+ *
  * Revision 1.8  2001/11/12 18:21:52  jopi
  * Added support for classnames that contains spaces which will fix some
  * problems with desktop state save and sticky save.

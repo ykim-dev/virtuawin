@@ -45,9 +45,10 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
    int threadID;
    char *classname = appName;
    hInst = hInstance;
-   
+
    /* Only one instance may be started */
    CreateMutex(NULL, TRUE, "PreventSecondVirtuaWin");
+
    if(GetLastError() == ERROR_ALREADY_EXISTS)
    {
       // Display configuration window...
@@ -55,7 +56,10 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
       return 0; // ...and quit 
    }
    
-  
+   // Fix some things for the alternate hide method
+   RM_Shellhook = RegisterWindowMessage("SHELLHOOK");
+   goGetTheTaskbarHandle();
+
    /* Create a window class for the window that receives systray notifications.
       The window will never be displayed */
    wc.cbSize = sizeof(WNDCLASSEX);
@@ -89,7 +93,10 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
    
    readConfig();	// Read the config file
    loadIcons();
-    
+   
+   // Load tricky windows, must be done before the crashRecovery
+   curTricky   = loadTrickyList( trickyList );
+   
    /* Now, set the lock file */
    if(crashRecovery) {
       if(!tryToLock())
@@ -120,8 +127,9 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
    setMouseKey();
    
    /* Load some stuff */
-   curSticky = loadStickyList(stickyList);
-   curAssigned = loadAssignedList(assignedList);
+   curSticky   = loadStickyList( stickyList );
+   curAssigned = loadAssignedList( assignedList );
+
    initData();			      // init window list
    EnumWindows(enumWindowsProc, 0);   // get all windows
    saveDesktopState(&nWin, winList);  // Let's save them now
@@ -520,10 +528,6 @@ LRESULT CALLBACK wndProc(HWND aHWnd, UINT message, WPARAM wParam, LPARAM lParam)
                   if((warpMultiplier >= configMultiplier)) {
                      isDragging = LOWORD(lParam);
                      if(stepLeft() != 0) {
-                        if(isDragging) {
-                           ShowWindow(currentActive, SW_SHOWNA);
-                           ShowOwnedPopups(currentActive, SW_SHOWNA);
-                        }
                         isDragging = FALSE;
                         if(noMouseWrap)
                            SetCursorPos(pt.x + warpLength, pt.y);
@@ -540,10 +544,6 @@ LRESULT CALLBACK wndProc(HWND aHWnd, UINT message, WPARAM wParam, LPARAM lParam)
                   if((warpMultiplier >= configMultiplier)) {
                      isDragging = LOWORD(lParam);
                      if(stepRight() != 0) {
-                        if(isDragging) {
-                           ShowWindow(currentActive, SW_SHOWNA);
-                           ShowOwnedPopups(currentActive, SW_SHOWNA);
-                        }
                         isDragging = FALSE;
                         if(noMouseWrap)
                            SetCursorPos(pt.x - warpLength, pt.y);
@@ -565,10 +565,6 @@ LRESULT CALLBACK wndProc(HWND aHWnd, UINT message, WPARAM wParam, LPARAM lParam)
                      else
                         switchVal = stepUp();
                      if(switchVal != 0) {
-                        if(isDragging) {
-                           ShowWindow(currentActive, SW_SHOWNA);
-                           ShowOwnedPopups(currentActive, SW_SHOWNA);
-                        }
                         isDragging = FALSE;
                         if(noMouseWrap)
                            SetCursorPos(pt.x, pt.y + warpLength);
@@ -592,10 +588,6 @@ LRESULT CALLBACK wndProc(HWND aHWnd, UINT message, WPARAM wParam, LPARAM lParam)
                         else
                            switchVal = stepDown();
                         if(switchVal != 0) {
-                           if(isDragging) {
-                              ShowWindow(currentActive, SW_SHOWNA);
-                              ShowOwnedPopups(currentActive, SW_SHOWNA);
-                           }
                            isDragging = FALSE;
                            if(noMouseWrap)
                               SetCursorPos(pt.x, pt.y - warpLength);
@@ -675,13 +667,13 @@ LRESULT CALLBACK wndProc(HWND aHWnd, UINT message, WPARAM wParam, LPARAM lParam)
                         winList[retItem - MAXWIN].Sticky = FALSE;
                      else {
                         winList[retItem - MAXWIN].Sticky = TRUE; // mark sticky..
-                        safeShowWindow(winList[retItem - MAXWIN].Handle, SW_SHOWNA); //.. and show it now
+                        showHideWindow( &winList[retItem - MAXWIN], TRUE );
                      }
                   } else if(retItem < (MAXWIN * 3)) { // window access
                      gotoDesk(winList[retItem -  (2 * MAXWIN)].Desk);
                      forceForeground(winList[retItem - (2 * MAXWIN)].Handle);
                   } else { // Assign to this desktop
-                     safeShowWindow(winList[retItem - (3 * MAXWIN)].Handle, SW_SHOWNA);
+                     showHideWindow( &winList[retItem - (3 * MAXWIN)], TRUE );
                      forceForeground(winList[retItem - (3 * MAXWIN)].Handle);
                   }
                }
@@ -898,13 +890,13 @@ LRESULT CALLBACK wndProc(HWND aHWnd, UINT message, WPARAM wParam, LPARAM lParam)
                            winList[retItem - MAXWIN].Sticky = FALSE;
                         else {
                            winList[retItem - MAXWIN].Sticky = TRUE; // mark sticky..
-                           safeShowWindow(winList[retItem - MAXWIN].Handle, SW_SHOWNA); //.. and show it now
+                           showHideWindow( &winList[retItem - MAXWIN], TRUE );
                         }
                      } else if(retItem < (MAXWIN * 3)) { // window access
                         gotoDesk(winList[retItem -  (2 * MAXWIN)].Desk);
                         forceForeground(winList[retItem - (2 * MAXWIN)].Handle);
                      } else { // Assign to this desktop
-                        safeShowWindow(winList[retItem - (3 * MAXWIN)].Handle, SW_SHOWNA);
+                        showHideWindow( &winList[retItem - (3 * MAXWIN)], TRUE );
                         forceForeground(winList[retItem - (3 * MAXWIN)].Handle);
                      }
                   }
@@ -919,7 +911,10 @@ LRESULT CALLBACK wndProc(HWND aHWnd, UINT message, WPARAM wParam, LPARAM lParam)
       default:
          // If taskbar restarted
          if((message == taskbarRestart) && displayTaskbarIcon )
+         {
             Shell_NotifyIcon(NIM_ADD, &nIconD);	// This re-adds the icon
+            goGetTheTaskbarHandle();
+         }
          break;
    }
    return DefWindowProc(aHWnd, message, wParam, lParam);
@@ -1060,7 +1055,8 @@ void stepDesk()
    for (x = 0; x < nWin ; ++x) {
       // Show these windows
       if(winList[x].Desk == currentDesk) {
-         safeShowWindow(winList[x].Handle, SW_SHOWNA);
+         showHideWindow( &winList[x], TRUE );
+
          if(winList[x].Active && keepActive && !isDragging) {
             forceForeground(winList[x].Handle);
             topWindow = winList[x].Handle;
@@ -1068,11 +1064,11 @@ void stepDesk()
       }
       // Hide these, not iconic or sticky
       else if(!IsIconic(winList[x].Handle) && !winList[x].Sticky) {
-         safeShowWindow(winList[x].Handle, SW_HIDE);
+         showHideWindow( &winList[x], FALSE );
       }
       // Hide these, iconic but "Switch minimized" true
       else if(IsIconic(winList[x].Handle) && minSwitch && !winList[x].Sticky) {
-         safeShowWindow(winList[x].Handle, SW_HIDE);
+         showHideWindow( &winList[x], FALSE );
       }
    }
    
@@ -1299,6 +1295,9 @@ void initData()
     winList[x].Handle = NULL;
     winList[x].Active = FALSE;
     winList[x].Sticky = FALSE;
+    winList[x].Sticky = TRUE;
+    winList[x].Hidden = FALSE;
+    winList[x].StyleFlags = 0;
     winList[x].Desk = currentDesk;
   }
 }
@@ -1327,7 +1326,7 @@ BOOL checkIfSavedStickyString(char* className)
    for(i = 0; i < curSticky; ++i) {
       if (!strncmp(stickyList[i].winClassName, className, 50)) {
          // Typically user windows will loose their stickiness if
-         // minimized, therefore we don not remove their name from 
+         // minimized, therefore we do not remove their name from 
          // the list as done above.
          return TRUE;
       }
@@ -1350,17 +1349,29 @@ __inline void integrateWindow(HWND* hwnd)
        !(exstyle & WS_EX_TOOLWINDOW) //&&
        /*!GetWindow(hwnd, GW_OWNER)*/)
    {
-      char buf[99];
-      GetClassName(hwnd, buf, 0);
+      char buf[100];
+      GetClassName(hwnd, buf, 99);
+
+      if( isSpecialWindow( buf ) )
+      {
+         winList[nWin].NormalHide = FALSE;
+         winList[nWin].StyleFlags = exstyle;
+      }
+      else 
+         winList[nWin].NormalHide = TRUE;
       winList[nWin].Handle = hwnd;
-      if(useDeskAssignment) {
+      if(useDeskAssignment) 
+      {
          winList[nWin].Desk = checkIfAssignedDesktop(hwnd);
          if(winList[nWin].Desk != currentDesk)
-            ShowWindow(hwnd, SW_HIDE);
-      } else {
+            showHideWindow( &winList[nWin], FALSE );
+      } 
+      else 
+      {
          winList[nWin].Desk = currentDesk;
       } 
       winList[nWin].Sticky = checkIfSavedSticky(hwnd);
+      
       nWin++;
    }
 }
@@ -1388,6 +1399,7 @@ void findUserWindows()
       winList[nWin].Handle = tmpHnd;
       winList[nWin].Desk = currentDesk;
       winList[nWin].Sticky = checkIfSavedStickyString(userList[i].winNameClass);
+      winList[nWin].NormalHide = TRUE;
       nWin++;
     }
   }
@@ -1431,10 +1443,12 @@ __inline BOOL inWinList(HWND* hwnd)
 void showAll()
 {
   int x;
-  for (x = 0; x < MAXWIN; ++x) {
-    if (IsWindow(winList[x].Handle)) {
-      safeShowWindow(winList[x].Handle, SW_SHOWNA);
-    }
+  for (x = 0; x < MAXWIN; ++x) 
+  {
+     if (IsWindow(winList[x].Handle)) 
+     {
+        showHideWindow( &winList[x], TRUE );
+     }
   }
 }
 
@@ -1457,10 +1471,12 @@ void packList()
          nWin--;
          continue;
       }
-
-      if(IsWindowVisible(winList[i].Handle)) {
+      
+      // Update the current active window, only among the visible windows
+      if( !(winList[i].Hidden) ) 
+      {
          winList[i].Desk = currentDesk;
-         if(winList[i].Handle == currentActive)
+         if(winList[i].Handle == currentActive) // Is this the active one?
             winList[i].Active = TRUE;
          else
             winList[i].Active = FALSE;
@@ -1626,28 +1642,40 @@ void toggleActiveSticky()
  */
 void recoverWindows()
 {
-  char dummy[80];
-  int nOfRec = 0;
-  HWND tmpHnd;
-  char buff[27];
-  FILE* fp;
+   char dummy[80];
+   int nOfRec = 0;
+   HWND tmpHnd;
+   char buff[27];
+   FILE* fp;
     
-  if(fp = fopen(vwState, "r")) {
-    while(!feof(fp)) {
-      fscanf(fp, "%79s", &dummy);
-      if((strlen(dummy) != 0) && !feof(fp)) {
-        tmpHnd = FindWindow(dummy, NULL);
-        if(tmpHnd) {
-          if(safeShowWindow(tmpHnd, SW_SHOWNA) == TRUE)
-            nOfRec++;
-        }
+   if(fp = fopen(vwState, "r")) {
+      while(!feof(fp)) {
+         fscanf(fp, "%79s", &dummy);
+         if((strlen(dummy) != 0) && !feof(fp)) {
+            tmpHnd = FindWindow(dummy, NULL);
+            if(tmpHnd) {
+               if ( !isSpecialWindow( dummy ) ) // Hidden window
+               {
+                  if(safeShowWindow(tmpHnd, SW_SHOWNA) == TRUE)
+                     nOfRec++;
+               }
+               else // moved window
+               {
+                  // Move to an appropriate position
+                  SetWindowPos( tmpHnd, 0, 10, 10, 0, 0, 
+                                SWP_FRAMECHANGED | SWP_NOZORDER | SWP_NOSIZE | SWP_NOACTIVATE );
+                  // Notify taskbar of the change
+                  PostMessage( hwndTask, RM_Shellhook, 1, (LPARAM) tmpHnd );
+                  nOfRec++; // No way to tell if this went ok
+               }
+            }
+         }
       }
-    }
-    fclose(fp);
-  }
+      fclose(fp);
+   }
     
-  sprintf(buff, "%d windows was recovered.", nOfRec);
-  MessageBox(hWnd, buff, "VirtuaWin", 0); 
+   sprintf(buff, "%d windows was recovered.", nOfRec);
+   MessageBox(hWnd, buff, "VirtuaWin", 0); 
 }
 
 /*************************************************
@@ -1674,6 +1702,37 @@ int checkIfAssignedDesktop(HWND* aHwnd)
 }
 
 /************************************************
+ * This function decides what switching technique that should be used
+ * and calls the appropriate switching function
+ */
+void showHideWindow( windowType* aWindow, BOOL show )
+{
+   // Do nothing if we are dragging a window
+   if( isDragging && ( aWindow->Handle == currentActive ))
+      return;
+   
+   // Normal Case
+   if( aWindow->NormalHide )
+   {
+      if( show )
+      {
+         if( safeShowWindow(aWindow->Handle, SW_SHOWNA ))
+            aWindow->Hidden = FALSE;
+      }
+      else
+      {         
+         if( safeShowWindow(aWindow->Handle, SW_HIDE ))
+            aWindow->Hidden = TRUE;
+      }
+   }
+   // Tricky window
+   else
+   {
+      moveShowWindow( aWindow, show );
+   }
+}
+
+/************************************************
  * Wraps ShowWindow() and make sure that we won't hang on crashed applications
  * Instead we notify user by flashing the systray icon
  */
@@ -1687,6 +1746,42 @@ BOOL safeShowWindow(HWND* theHwnd, int theState)
       if( displayTaskbarIcon )
          warningIcon(); // Flash the systray icon
       return FALSE;     // Probably hanged
+   }
+}
+
+/************************************************
+ * Moves a window either away from the visible area or back again. Some applications
+ * needs this way of moving since they don't like to be hidden
+ */
+void moveShowWindow( windowType* aWindow, BOOL show )
+{
+   RECT aPosition;
+   GetWindowRect( aWindow->Handle, &aPosition );
+
+   if( show && aWindow->Hidden ) // Move window to visible area
+   {
+      // Restore the window mode
+      SetWindowLong( aWindow->Handle, GWL_EXSTYLE, aWindow->StyleFlags );  
+      // Notify taskbar of the change
+      PostMessage( hwndTask, RM_Shellhook, 1, (LPARAM) aWindow->Handle );
+      // Bring back to visible area, SWP_FRAMECHANGED makes it repaint 
+      SetWindowPos( aWindow->Handle, 0, aPosition.left, aPosition.top - screenHeight, 
+                   0, 0, SWP_FRAMECHANGED | SWP_NOZORDER | SWP_NOSIZE | SWP_NOACTIVATE ); 
+      // Notify taskbar of the change
+      PostMessage( hwndTask, RM_Shellhook, 1, (LPARAM) aWindow->Handle );
+      aWindow->Hidden = FALSE;
+   }
+   else if( !show && !aWindow->Hidden ) // Move away window
+   {
+      // Move the window off visible area
+      SetWindowPos( aWindow->Handle, 0, aPosition.left, aPosition.top + screenHeight, 
+                   0, 0, SWP_NOZORDER | SWP_NOSIZE | SWP_NOACTIVATE );
+      // This removes window from taskbar and alt+tab list
+      SetWindowLong( aWindow->Handle, GWL_EXSTYLE, 
+                     aWindow->StyleFlags & (~WS_EX_APPWINDOW) | WS_EX_TOOLWINDOW );
+      // Notify taskbar of the change
+      PostMessage( hwndTask, RM_Shellhook, 2, (LPARAM) aWindow->Handle);
+      aWindow->Hidden = TRUE;
    }
 }
 
@@ -1719,8 +1814,40 @@ VOID CALLBACK FlashProc(HWND hwnd, UINT uMsg, UINT idEvent, DWORD dwTime)
    }
 }
 
+/************************************************
+ * Checks if this window is saved as a tricky window that needs the 
+ * "move technique" to be hidden.
+ */
+BOOL isSpecialWindow( char* className )
+{
+   int i;
+   for( i = 0; i < curTricky; ++i ) 
+   {
+      if (!strncmp( trickyList[i].winClassName, className, 50 )) 
+      {
+         return TRUE;
+      }
+   }
+   return FALSE;  
+}
+
+/************************************************
+ * Tries to locate the handle to the taskbar
+ */
+void goGetTheTaskbarHandle()
+{
+   HWND hwndTray = FindWindowEx(NULL, NULL, "Shell_TrayWnd", NULL);
+   HWND hwndBar = FindWindowEx(hwndTray, NULL, "RebarWindow32", NULL );
+   hwndTask = FindWindowEx(hwndBar, NULL, "MSTaskSwWClass", NULL);
+   if( !hwndTask )
+      MessageBox(hWnd, "Could not locate handle to the taskbar.\n This will disable the ability to hide troublesome windows correctly.", "VirtuaWin", 0); 
+}
+
 /*
  * $Log$
+ * Revision 1.14  2001/11/12 21:39:15  jopi
+ * Added functionality for disabling the systray icon
+ *
  * Revision 1.13  2001/11/12 20:11:47  jopi
  * Display setup dialog if started a second time instead of just quit
  *

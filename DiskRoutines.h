@@ -29,6 +29,8 @@ void loadFilePaths();
 void writeDisabledList(int* theNOfModules, moduleType* theModList);
 int loadDisabledModules(disModules* theDisList);
 int loadStickyList(stickyType* theStickyList);
+void saveTrickyWindows(int* theNOfWin, windowType* theWinList);
+int loadTrickyList(stickyType* theTrickyList);
 void saveStickyWindows(int* theNOfWin, windowType* theWinList);
 void saveDesktopState(int* theNOfWin, windowType* theWinList);
 void saveDesktopConfiguration(int* theNOfWin, windowType* theWinList);
@@ -43,6 +45,10 @@ char *replace(char *g_string, char *replace_from, char *replace_to);
 
 /*
  * $Log$
+ * Revision 1.4  2001/11/12 18:23:05  jopi
+ * Added support for classnames that contains spaces which will fix some
+ * problems with desktop state save and sticky save.
+ *
  * Revision 1.3  2001/02/05 21:13:07  jopi
  * Updated copyright header
  *

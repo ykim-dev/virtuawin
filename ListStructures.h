@@ -34,15 +34,18 @@ typedef struct { // Holds user added windows
         BOOL isClass;
 } userType;
 
-typedef struct { // Holds saved sticky windows
+typedef struct { // Holds saved sticky and tricky windows
         char* winClassName;
 } stickyType;
 
 typedef struct { // Holds the windows in the list
-        HWND Handle;
-        BOOL Active;
-        BOOL Sticky;
-        int Desk;
+      HWND Handle;
+      BOOL Active;
+      BOOL Sticky;
+      BOOL NormalHide;
+      BOOL Hidden;
+      long StyleFlags;
+      int Desk;
 } windowType;
 
 typedef struct { // Holds data for modules
@@ -64,6 +67,7 @@ userType userList[MAXUSER];               // list for holding user added applica
 moduleType moduleList[MAXMODULES];        // list that holds modules
 disModules disabledModules[MAXMODULES*2]; // list with disabled modules
 stickyType stickyList[MAXWIN];            // list with saved sticky windows
+stickyType trickyList[MAXWIN];            // list with saved tricky windows
 assignedType assignedList[MAXWIN];        // list with all windows that have a predefined desktop
 windowType winList[MAXWIN];               // list for holding windows
 
@@ -71,6 +75,9 @@ windowType winList[MAXWIN];               // list for holding windows
 
 /*
  * $Log$
+ * Revision 1.2  2001/02/05 21:13:07  jopi
+ * Updated copyright header
+ *
  * Revision 1.1.1.1  2000/06/03 15:38:05  jopi
  * Added first time
  *

@@ -124,6 +124,7 @@ extern LPSTR vwConfig;        // holds config filename + path
 extern LPSTR vwList;          // holds userlist filename + path
 extern LPSTR vwHelp;          // holds help filename + path
 extern LPSTR vwSticky;        // holds sticky file + path
+extern LPSTR vwTricky;        // holds tricky file + path
 extern LPSTR vwState;         // holds sticky file + path
 extern LPSTR vwLock;          // holds desktop state file + path
 extern LPSTR vwModules;       // holds module search criteria
@@ -134,6 +135,9 @@ extern LPSTR vwWindowsState;  // holds windowsata file name + path
 
 /*
  * $Log$
+ * Revision 1.4  2001/11/12 21:39:15  jopi
+ * Added functionality for disabling the systray icon
+ *
  * Revision 1.3  2001/02/05 21:13:07  jopi
  * Updated copyright header
  *
