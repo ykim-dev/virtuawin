@@ -1,6 +1,18 @@
 ***   VirtuaWin Revision History   ***
 --------------------------------------
 
+Ver 2.6.1 2002/07/17 
+* Removed the MF_POPUP flag from the window menus since they shouldn't be created like this. 
+  Fixed by Ulf Jaenicke-Roesler.
+* Improved the window menus so that unnecessary menus and items won't show and they all 
+  have a label. Fixes by Ulf Jaencke-Roessler.
+* Fixed so that window coordinates are reloaded when resolution is changed, and also 
+  so that taskbar location is reloaded if moved.
+* Now we try to locate the MSTaskSwWClass even if it is a direct child of Shell_TrayWnd, 
+  this will make it work on more windows version and hopefully get rid of the startup error
+  some users have experienced.
+----------------------------
+
 Ver 2.6 2002/06/02 
 * Bugfix: Alternative way of hiding windows. This solves the disappearing 
   Explorer bug
