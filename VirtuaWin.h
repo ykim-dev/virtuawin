@@ -94,7 +94,7 @@ static int curUser = 0;       // how many user applications we have
 
 static UINT MODKEY;	      // Holds the switch key modifiers
 
-static char appName[] = "VirtuaWin 2.4 Build 1";   // application name
+static char appName[] = "VirtuaWin 2.4";   // application name
 
 ATOM stickyKey;
 ATOM vwLeft;
@@ -238,6 +238,9 @@ LPSTR vwWindowsState;
 
 /*
  * $Log$
+ * Revision 1.3  2000/08/18 23:43:08  jopi
+ *  Minor modifications by Matti Jagula <matti@proekspert.ee> List of modifications follows: Added window title sorting in popup menus (Assign, Direct, Sticky) Added some controls to Setup Misc tab and support for calling the popup menus from keyboard.
+ *
  * Revision 1.2  2000/08/18 21:41:32  jopi
  * Added the code again that removes closed windows, this will avoid having closed child windows reappearing again. Also updated the mail adress
  *
