@@ -265,8 +265,207 @@ int loadUserList(userType* theUserList)
    return curUser;
 }
 
+/************************************************
+ * Writes down the current configuration on file
+ */
+void writeConfig()
+{
+   FILE* fp;
+
+   if((fp = fopen(vwConfig, "w")) == NULL) {
+      MessageBox(NULL, "Error writing config file", NULL, MB_ICONWARNING);
+   } else {
+      fprintf(fp, "Mouse_warp# %i\n", mouseEnable);
+      fprintf(fp, "Mouse_delay# %i\n", configMultiplier);
+      fprintf(fp, "Key_support# %i\n", keyEnable);
+      fprintf(fp, "Release_focus# %i\n", releaseFocus);
+      fprintf(fp, "Keep_active# %i\n", keepActive);
+      fprintf(fp, "Control_key_alt# %i\n", modAlt);
+      fprintf(fp, "Control_key_shift# %i\n", modShift);
+      fprintf(fp, "Control_key_ctrl# %i\n", modCtrl);
+      fprintf(fp, "Control_key_win# %i\n", modWin);
+      fprintf(fp, "Warp_jump# %i\n", warpLength);
+      fprintf(fp, "Switch_minimized# %i\n", minSwitch);
+      fprintf(fp, "Taskbar_warp# %i\n", taskBarWarp);
+      fprintf(fp, "Desk_Ysize# %i\n", nDesksY);
+      fprintf(fp, "Desk_Xsize# %i\n", nDesksX);
+      fprintf(fp, "Hot_key_support# %i\n", hotKeyEnable);
+      fprintf(fp, "Hot_key_1# %i\n", hotkey1);
+      fprintf(fp, "Hot_key_Mod1# %i\n", hotkey1Mod);
+      fprintf(fp, "Hot_key_Win1# %i\n", hotkey1Win);
+      fprintf(fp, "Hot_key_2# %i\n", hotkey2);
+      fprintf(fp, "Hot_key_Mod2# %i\n", hotkey2Mod);
+      fprintf(fp, "Hot_key_Win2# %i\n", hotkey2Win);
+      fprintf(fp, "Hot_key_3# %i\n", hotkey3);
+      fprintf(fp, "Hot_key_Mod3# %i\n", hotkey3Mod);
+      fprintf(fp, "Hot_key_Win3# %i\n", hotkey3Win);
+      fprintf(fp, "Hot_key_4# %i\n", hotkey4);
+      fprintf(fp, "Hot_key_Mod4# %i\n", hotkey4Mod);
+      fprintf(fp, "Hot_key_Win4# %i\n", hotkey4Win);
+      fprintf(fp, "Hot_key_5# %i\n", hotkey5);
+      fprintf(fp, "Hot_key_Mod5# %i\n", hotkey5Mod);
+      fprintf(fp, "Hot_key_Win5# %i\n", hotkey5Win);
+      fprintf(fp, "Hot_key_6# %i\n", hotkey6);
+      fprintf(fp, "Hot_key_Mod6# %i\n", hotkey6Mod);
+      fprintf(fp, "Hot_key_Win6# %i\n", hotkey6Win);
+      fprintf(fp, "Hot_key_7# %i\n", hotkey7);
+      fprintf(fp, "Hot_key_Mod7# %i\n", hotkey7Mod);
+      fprintf(fp, "Hot_key_Win7# %i\n", hotkey7Win);
+      fprintf(fp, "Hot_key_8# %i\n", hotkey8);
+      fprintf(fp, "Hot_key_Mod8# %i\n", hotkey8Mod);
+      fprintf(fp, "Hot_key_Win8# %i\n", hotkey8Win);
+      fprintf(fp, "Hot_key_9# %i\n", hotkey9);
+      fprintf(fp, "Hot_key_Mod9# %i\n", hotkey9Mod);
+      fprintf(fp, "Hot_key_Win9# %i\n", hotkey9Win);
+      fprintf(fp, "Mouse_control_key_support# %i\n", useMouseKey);
+      fprintf(fp, "Mouse_key_alt# %i\n", mouseModAlt);
+      fprintf(fp, "Mouse_key_shift# %i\n", mouseModShift);
+      fprintf(fp, "Mouse_key_ctrl# %i\n", mouseModCtrl);
+      fprintf(fp, "Save_sticky_info# %i\n", saveSticky);
+      fprintf(fp, "Refresh_after_warp# %i\n", refreshOnWarp);
+      fprintf(fp, "No_mouse_wrap# %i\n", noMouseWrap);
+      fprintf(fp, "Sticky_modifier# %i\n", VW_STICKYMOD);
+      fprintf(fp, "Sticky_key# %i\n", VW_STICKY);
+      fprintf(fp, "Crash_recovery# %i\n", crashRecovery);
+      fprintf(fp, "Desktop_cycling# %i\n", deskWrap);
+      fprintf(fp, "Invert_Y# %i\n", invertY);
+      fprintf(fp, "WinMenu_sticky# %i\n", stickyMenu);
+      fprintf(fp, "WinMenu_assign# %i\n", assignMenu);
+      fprintf(fp, "WinMenu_direct# %i\n", directMenu);
+      fprintf(fp, "Desktop_assignment# %i\n", useDeskAssignment);
+      fprintf(fp, "Save_layout# %i\n", saveLayoutOnExit);
+      fprintf(fp, "Assign_first# %i\n", assignOnlyFirst);
+      fprintf(fp, "UseCyclingKeys# %i\n", cyclingKeysEnabled);
+      fprintf(fp, "CycleUp# %i\n", hotCycleUp);
+      fprintf(fp, "CycleUpMod# %i\n", hotCycleUpMod);
+      fprintf(fp, "CycleDown# %i\n", hotCycleDown);
+      fprintf(fp, "CycleDownMod# %i\n", hotCycleDownMod);
+      fprintf(fp, "Hot_key_Menu_Support# %i\n", hotkeyMenuEn);
+      fprintf(fp, "Hot_key_Menu# %i\n", hotkeyMenu);
+      fprintf(fp, "Hot_key_ModMenu# %i\n", hotkeyMenuMod);
+      fprintf(fp, "Hot_key_WinMenu# %i\n", hotkeyMenuWin);
+
+      fclose(fp);
+   }
+}
+
+/*************************************************
+ * Reads a saved configuration from file
+ */
+void readConfig()
+{
+   char dummy[80];
+   FILE* fp;
+
+   if((fp = fopen(vwConfig, "r")) == NULL) {
+      MessageBox(NULL, "Error reading config file. This is probably due to new user setup.\nA new config file will be created.", NULL, MB_ICONWARNING);
+      // Try to create new file
+      if((fp = fopen(vwConfig, "w")) == NULL) {
+         MessageBox(NULL, "Error writing new config file. Check writepermissions.", NULL, MB_ICONWARNING);
+      }
+   } else {   
+      fscanf(fp, "%s%i", &dummy, &mouseEnable);
+      fscanf(fp, "%s%i", &dummy, &configMultiplier);
+      fscanf(fp, "%s%i", &dummy, &keyEnable);
+      fscanf(fp, "%s%i", &dummy, &releaseFocus);
+      fscanf(fp, "%s%i", &dummy, &keepActive);
+      fscanf(fp, "%s%i", &dummy, &modAlt);
+      fscanf(fp, "%s%i", &dummy, &modShift);
+      fscanf(fp, "%s%i", &dummy, &modCtrl);
+      fscanf(fp, "%s%i", &dummy, &modWin);
+      fscanf(fp, "%s%i", &dummy, &warpLength);
+      fscanf(fp, "%s%i", &dummy, &minSwitch);
+      fscanf(fp, "%s%i", &dummy, &taskBarWarp);
+      fscanf(fp, "%s%i", &dummy, &nDesksY);
+      fscanf(fp, "%s%i", &dummy, &nDesksX);
+      fscanf(fp, "%s%i", &dummy, &hotKeyEnable);
+      fscanf(fp, "%s%i", &dummy, &hotkey1);
+      fscanf(fp, "%s%i", &dummy, &hotkey1Mod);
+      fscanf(fp, "%s%i", &dummy, &hotkey1Win);
+      fscanf(fp, "%s%i", &dummy, &hotkey2);
+      fscanf(fp, "%s%i", &dummy, &hotkey2Mod);
+      fscanf(fp, "%s%i", &dummy, &hotkey2Win);
+      fscanf(fp, "%s%i", &dummy, &hotkey3);
+      fscanf(fp, "%s%i", &dummy, &hotkey3Mod);
+      fscanf(fp, "%s%i", &dummy, &hotkey3Win);
+      fscanf(fp, "%s%i", &dummy, &hotkey4);
+      fscanf(fp, "%s%i", &dummy, &hotkey4Mod);
+      fscanf(fp, "%s%i", &dummy, &hotkey4Win);
+      fscanf(fp, "%s%i", &dummy, &hotkey5);
+      fscanf(fp, "%s%i", &dummy, &hotkey5Mod);
+      fscanf(fp, "%s%i", &dummy, &hotkey5Win);
+      fscanf(fp, "%s%i", &dummy, &hotkey6);
+      fscanf(fp, "%s%i", &dummy, &hotkey6Mod);
+      fscanf(fp, "%s%i", &dummy, &hotkey6Win);
+      fscanf(fp, "%s%i", &dummy, &hotkey7);
+      fscanf(fp, "%s%i", &dummy, &hotkey7Mod);
+      fscanf(fp, "%s%i", &dummy, &hotkey7Win);
+      fscanf(fp, "%s%i", &dummy, &hotkey8);
+      fscanf(fp, "%s%i", &dummy, &hotkey8Mod);
+      fscanf(fp, "%s%i", &dummy, &hotkey8Win);
+      fscanf(fp, "%s%i", &dummy, &hotkey9);
+      fscanf(fp, "%s%i", &dummy, &hotkey9Mod);
+      fscanf(fp, "%s%i", &dummy, &hotkey9Win);
+      fscanf(fp, "%s%i", &dummy, &useMouseKey);
+      fscanf(fp, "%s%i", &dummy, &mouseModAlt);
+      fscanf(fp, "%s%i", &dummy, &mouseModShift);
+      fscanf(fp, "%s%i", &dummy, &mouseModCtrl);
+      fscanf(fp, "%s%i", &dummy, &saveSticky);
+      fscanf(fp, "%s%i", &dummy, &refreshOnWarp);
+      fscanf(fp, "%s%i", &dummy, &noMouseWrap);
+      fscanf(fp, "%s%i", &dummy, &VW_STICKYMOD);
+      fscanf(fp, "%s%i", &dummy, &VW_STICKY);
+      fscanf(fp, "%s%i", &dummy, &crashRecovery);
+      fscanf(fp, "%s%i", &dummy, &deskWrap);
+      fscanf(fp, "%s%i", &dummy, &invertY);
+      fscanf(fp, "%s%i", &dummy, &stickyMenu);
+      fscanf(fp, "%s%i", &dummy, &assignMenu);
+      fscanf(fp, "%s%i", &dummy, &directMenu);
+      fscanf(fp, "%s%i", &dummy, &useDeskAssignment);
+      fscanf(fp, "%s%i", &dummy, &saveLayoutOnExit);
+      fscanf(fp, "%s%i", &dummy, &assignOnlyFirst);
+      fscanf(fp, "%s%i", &dummy, &cyclingKeysEnabled);
+      fscanf(fp, "%s%i", &dummy, &hotCycleUp);
+      fscanf(fp, "%s%i", &dummy, &hotCycleUpMod);
+      fscanf(fp, "%s%i", &dummy, &hotCycleDown);
+      fscanf(fp, "%s%i", &dummy, &hotCycleDownMod);
+      fscanf(fp, "%s%i", &dummy, &hotkeyMenuEn);
+      fscanf(fp, "%s%i", &dummy, &hotkeyMenu);
+      fscanf(fp, "%s%i", &dummy, &hotkeyMenuMod);
+      fscanf(fp, "%s%i", &dummy, &hotkeyMenuWin);
+      
+      fclose(fp);
+   }
+}
+
+/*************************************************
+ * Check if we have a previous lock file, otherwise it creates it
+ */
+BOOL tryToLock()
+{
+   if(access(vwLock, 0 == -1)) {
+      FILE* fp;
+      if(!(fp = fopen(vwLock, "wc"))) {
+         MessageBox(hWnd, "Error writing lock file", "VirtuaWin", MB_ICONWARNING);
+         return TRUE;
+      } else {
+         fprintf(fp, "%s", "VirtuaWin LockFile");
+      }
+    
+      fflush(fp); // Make sure the file is physically written to disk
+      fclose(fp);
+        
+      return TRUE;
+   } else {
+      return FALSE; // We already had a lock file, probably due to a previous crash
+   }
+}
+
 /*
  * $Log$
+ * Revision 1.4  2000/12/11 20:39:57  jopi
+ * Fixed a bug with the username lookup for config file, could go wrong sometimes
+ *
  * Revision 1.3  2000/08/19 15:00:26  jopi
  * Added multiple user setup support (Alasdair McCaig) and fixed creation of setup file if it don't exist
  *

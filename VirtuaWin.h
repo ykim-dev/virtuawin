@@ -70,14 +70,11 @@ HMENU createWinList();
 void setMouseKey();
 WORD hotKey2ModKey(BYTE);
 void toggleActiveSticky();
-BOOL tryToLock();
 void recoverWindows();
 BOOL checkIfSavedSticky(HWND* hwnd);
 void shutDown();
 void showSetup();
 int checkIfAssignedDesktop(HWND*);
-void writeConfig();
-void readConfig();
 BOOL safeShowWindow(HWND*, int);
 void warningIcon();
 BOOL checkMouseState();
@@ -241,6 +238,9 @@ LPSTR vwWindowsState;
 
 /*
  * $Log$
+ * Revision 1.6  2000/12/11 21:29:47  jopi
+ * Changed version number
+ *
  * Revision 1.5  2000/08/28 21:38:37  jopi
  * Added new functions for menu hot key registration. Fixed bug with needing to have hot keys enabled for menu keys to work and also better error message
  *

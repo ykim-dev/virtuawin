@@ -19,9 +19,15 @@ void saveDesktopState(int* theNOfWin, windowType* theWinList);
 void saveDesktopConfiguration(int* theNOfWin, windowType* theWinList);
 int loadAssignedList(assignedType* theAssignList);
 int loadUserList(userType* theUserList);
+void writeConfig();
+void readConfig();
+BOOL tryToLock();
 
 #endif
 
 /*
  * $Log$
+ * Revision 1.1.1.1  2000/06/03 15:38:05  jopi
+ * Added first time
+ *
  */
