@@ -1269,7 +1269,7 @@ __inline BOOL CALLBACK enumWindowsProc(HWND hwnd, LPARAM lParam)
   if(nWin >= MAXWIN) {
     KillTimer(hWnd, 0x29a);
     enabled = FALSE;
-    MessageBox(hWnd, "Oops! Maximum windows reached. \nVirtuaWin has been disabled. \nMail virtuawin@iname.com and tell me this.", "VirtuaWin", MB_ICONWARNING);
+    MessageBox(hWnd, "Oops! Maximum windows reached. \nVirtuaWin has been disabled. \nMail VirtuaWin@home.se and tell me this.", "VirtuaWin", MB_ICONWARNING);
     return FALSE;
   }
   
@@ -1313,17 +1313,11 @@ void packList()
 {
    int i;
    int j;
-   //char buff[31]; // Testing purposes
 
    for (i = 0; i < nWin; ++i) {
-      // For testing purposes
-      /*if(!IsWindowVisible(winList[i].Handle) && winList[i].Desk == currentDesk) {
-         GetWindowText(winList[i].Handle, buff, 30);
-         MessageBox(hWnd, buff, "VW Unexpected removal?",0);
-         }*/
       // remove killed windows
-      if(!IsWindow(winList[i].Handle)) {
-         //|| (!IsWindowVisible(winList[i].Handle) && winList[i].Desk == currentDesk))) {
+      if(!IsWindow(winList[i].Handle) || 
+         (!IsWindowVisible(winList[i].Handle) && winList[i].Desk == currentDesk)) {
          for (j = i; j < nWin - 1; ++j) {
             memcpy(&winList[j], &winList[j + 1], sizeof(windowType));
          }
@@ -1720,4 +1714,7 @@ void readConfig()
 
 /*
  * $Log$
+ * Revision 1.1.1.1  2000/06/03 15:38:05  jopi
+ * Added first time
+ *
  */

@@ -93,7 +93,7 @@ static int curUser = 0;       // how many user applications we have
 
 static UINT MODKEY;	      // Holds the switch key modifiers
 
-static char appName[] = "VirtuaWin 2.2.2 Build 4";   // application name
+static char appName[] = "VirtuaWin 2.4 Build 1";   // application name
 
 ATOM stickyKey;
 ATOM vwLeft;
@@ -232,4 +232,7 @@ LPSTR vwWindowsState;
 
 /*
  * $Log$
+ * Revision 1.1.1.1  2000/06/03 15:38:05  jopi
+ * Added first time
+ *
  */
