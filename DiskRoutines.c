@@ -63,7 +63,7 @@ void loadFilePaths()
       sprintf(vwDisabled, "%svwDisabled.cfg", vwPath);
       sprintf(vwWindowsState, "%svwWindowsState.cfg", vwPath);
    } else {
-      MessageBox(hWnd, "VirtuaWin is not correctly installed, try to reinstall.\nIf you still have problems, send a mail to \nvirtuawin@iname.com", "Registry Error", MB_ICONWARNING);
+      MessageBox(hWnd, "VirtuaWin is not correctly installed, try to reinstall.\nIf you still have problems, send a mail to \nvirtuawin@home.se", "Registry Error", MB_ICONWARNING);
       PostQuitMessage(0);
       //return 0;
    }
@@ -258,4 +258,7 @@ int loadUserList(userType* theUserList)
 
 /*
  * $Log$
+ * Revision 1.1.1.1  2000/06/03 15:38:05  jopi
+ * Added first time
+ *
  */

@@ -5,7 +5,7 @@
  * and the messages that VirtuaWin uses for module communication
  *
  * Created by jopi 1999
- * VirtuaWin@iname.com
+ * VirtuaWin@home.se
  * Feel free to use in any way you like
  *************************************************************************
  * All messages starting with VW_ is for controlling VirtuaWin 
@@ -64,4 +64,7 @@
 
 /*
  * $Log$
+ * Revision 1.1.1.1  2000/06/03 15:38:05  jopi
+ * Added first time
+ *
  */
