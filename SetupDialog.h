@@ -15,8 +15,13 @@ static BOOL APIENTRY misc(HWND, UINT, UINT, LONG);
 static BOOL APIENTRY modules(HWND, UINT, UINT, LONG);
 static BOOL APIENTRY about(HWND, UINT, UINT, LONG);
 
+BOOL configChanged;
+
 #endif
 
 /*
  * $Log$
+ * Revision 1.1.1.1  2000/06/03 15:38:05  jopi
+ * Added first time
+ *
  */

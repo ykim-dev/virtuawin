@@ -25,6 +25,7 @@
 #include "ListStructures.h"
 #include "Messages.h"
 #include "DiskRoutines.h"
+#include "ModuleRoutines.h"
 #include "ConfigParameters.h"
 
 // Standard includes
@@ -42,7 +43,11 @@ int createPropertySheet(HINSTANCE theHinst, HWND theHwndOwner)
 
    int xIcon = GetSystemMetrics(SM_CXSMICON);
    int yIcon = GetSystemMetrics(SM_CYSMICON);
+   
+   configChanged = FALSE;
 
+   // Load the current configuration
+   readConfig();
    psp[0].dwSize = sizeof(PROPSHEETPAGE);
    psp[0].dwFlags = PSP_USETITLE;
    psp[0].hInstance = theHinst;
@@ -226,6 +231,14 @@ static BOOL APIENTRY mouse(HWND hDlg, UINT message, UINT wParam, LONG lParam)
                } else {
                   useMouseKey = FALSE;
                }
+               if( configChanged )
+               {
+                  configChanged = FALSE;
+                  // Tell modules about the config change
+                  postModuleMessage(MOD_CFGCHANGE, 0, 0);
+                  // Save the current config
+                  writeConfig();
+               }
                break;
             case PSN_KILLACTIVE:
                SetWindowLong(hDlg, DWL_MSGRESULT, FALSE);
@@ -241,9 +254,10 @@ static BOOL APIENTRY mouse(HWND hDlg, UINT message, UINT wParam, LONG lParam)
             LOWORD(wParam) == IDC_JUMP || LOWORD(wParam) == IDC_KEYCONTROL || 
             LOWORD(wParam) == IDC_CTRL || LOWORD(wParam) == IDC_ALT || 
             LOWORD(wParam) == IDC_SHIFT || 
-            LOWORD(wParam) == IDC_MOUSEWRAP)
+            LOWORD(wParam) == IDC_MOUSEWRAP) {
             SendMessage(GetParent(hDlg), PSM_CHANGED, (WPARAM)hDlg, 0L); // Enable apply
-    
+            configChanged = TRUE;
+         }
          switch(LOWORD(wParam)) {
             case IDC_ALT:
                CheckDlgButton(hDlg, IDC_SHIFT, BST_UNCHECKED);
@@ -493,6 +507,14 @@ static BOOL APIENTRY keys(HWND hDlg, UINT message, UINT wParam, LONG lParam)
                }
       
                SetWindowLong(hDlg, DWL_MSGRESULT, TRUE);
+               if( configChanged )
+               {
+                  configChanged = FALSE;
+                  // Tell modules about the config change
+                  postModuleMessage(MOD_CFGCHANGE, 0, 0);
+                  // Save the current config
+                  writeConfig();
+               }
                break;
             case PSN_KILLACTIVE: // Switch tab sheet
                SetWindowLong(hDlg, DWL_MSGRESULT, FALSE);
@@ -515,8 +537,10 @@ static BOOL APIENTRY keys(HWND hDlg, UINT message, UINT wParam, LONG lParam)
             wPar == IDC_HOT4W || wPar == IDC_HOT5W || wPar == IDC_HOT6W ||
             wPar == IDC_HOT7W || wPar == IDC_HOT8W || wPar == IDC_HOT9W ||
             wPar == IDC_HOTSTICKY || wPar == IDC_CYCLINGKEYS || 
-            wPar == IDC_HOTCYCLEUP || wPar == IDC_HOTCYCLEDOWN )
+            wPar == IDC_HOTCYCLEUP || wPar == IDC_HOTCYCLEDOWN ) {
             SendMessage(GetParent(hDlg), PSM_CHANGED, (WPARAM)hDlg, 0L); // Enable apply button
+            configChanged = TRUE;
+         }
          break;
    }
    return (FALSE);
@@ -606,8 +630,10 @@ static BOOL APIENTRY misc(HWND hDlg, UINT message, UINT wParam, LONG lParam)
                   MessageBox(hDlg, "Note that you might need to run gather from the icon menu when you set fewer desktops", "VirtuaWin Reminder", MB_ICONWARNING);
                nDesksY = tmpDesksY;
                nDesksX = tmpDesksX;
-               reLoadIcons();
-
+               reLoadIcons();              
+               // Maybe we have a new desktop number now, tell the modules
+               postModuleMessage(MOD_CHANGEDESK, currentDesk, currentDesk);
+                  
                if(SendDlgItemMessage(hDlg, IDC_MINIMIZED, BM_GETCHECK, 0, 0) == BST_CHECKED)
                   minSwitch = TRUE;
                else
@@ -682,6 +708,14 @@ static BOOL APIENTRY misc(HWND hDlg, UINT message, UINT wParam, LONG lParam)
                 
                if((nDesksX * nDesksY) == 1)
                   MessageBox(hDlg, "Hey! No offense, but if you only want one desktop\nyou shouldn't use this software at all!", "Stupid user alert!", 0);
+               if( configChanged )
+               {
+                  configChanged = FALSE;
+                  // Tell modules about the config change
+                  postModuleMessage(MOD_CFGCHANGE, 0, 0);
+                  // Save the current config
+                  writeConfig();
+               }
                break;
             case PSN_KILLACTIVE:
                SetWindowLong(hDlg, DWL_MSGRESULT, FALSE);
@@ -701,8 +735,10 @@ static BOOL APIENTRY misc(HWND hDlg, UINT message, UINT wParam, LONG lParam)
             LOWORD(wParam) == IDC_MENUASSIGN || LOWORD(wParam) == IDC_USEASSIGN ||
             LOWORD(wParam) == IDC_FIRSTONLY  || LOWORD(wParam) == IDC_SAVEEXITSTATE ||
             LOWORD(wParam) == IDC_HOTMENUEN  || LOWORD(wParam) == IDC_HOTMENUW || 
-            LOWORD(wParam) == IDC_HOTMENU)
+            LOWORD(wParam) == IDC_HOTMENU) {
             SendMessage(GetParent(hDlg), PSM_CHANGED, (WPARAM)hDlg, 0L);
+            configChanged = TRUE;
+         }
     
          if (LOWORD(wParam) == IDC_SAVENOW) {
             saveDesktopConfiguration(&nWin, winList);
@@ -726,6 +762,7 @@ static BOOL APIENTRY misc(HWND hDlg, UINT message, UINT wParam, LONG lParam)
          
          if (LOWORD(wParam) == IDC_DESKX && spinPressed == 1) {
             SendMessage(GetParent(hDlg), PSM_CHANGED, (WPARAM)hDlg, 0L);
+            configChanged = TRUE;
             tmpDesksX = SendMessage(GetDlgItem(hDlg, IDC_SLIDERX), UDM_GETPOS, 0, 0);
             while ((tmpDesksX * tmpDesksY) > 9) {
                tmpDesksY--;
@@ -734,6 +771,7 @@ static BOOL APIENTRY misc(HWND hDlg, UINT message, UINT wParam, LONG lParam)
          }
          else if(LOWORD(wParam) == IDC_DESKY && spinPressed == 2) {
             SendMessage(GetParent(hDlg), PSM_CHANGED, (WPARAM)hDlg, 0L);
+            configChanged = TRUE;
             tmpDesksY = SendMessage(GetDlgItem(hDlg, IDC_SLIDERY), UDM_GETPOS, 0, 0);
             while ((tmpDesksY * tmpDesksX) > 9) {
                tmpDesksX--;
@@ -770,6 +808,14 @@ static BOOL APIENTRY modules(HWND hDlg, UINT message, UINT wParam, LONG lParam)
                break;
             case PSN_APPLY:
                SetWindowLong(hDlg, DWL_MSGRESULT, TRUE);
+               if( configChanged )
+               {
+                  configChanged = FALSE;
+                  // Tell modules about the config change
+                  postModuleMessage(MOD_CFGCHANGE, 0, 0);
+                  // Save the current config
+                  writeConfig();
+               }
                break;
             case PSN_KILLACTIVE:
                SetWindowLong(hDlg, DWL_MSGRESULT, FALSE);
@@ -840,6 +886,9 @@ static BOOL APIENTRY modules(HWND hDlg, UINT message, UINT wParam, LONG lParam)
 
 /*
  * $Log$
+ * Revision 1.2  2000/08/18 23:43:07  jopi
+ *  Minor modifications by Matti Jagula <matti@proekspert.ee> List of modifications follows: Added window title sorting in popup menus (Assign, Direct, Sticky) Added some controls to Setup Misc tab and support for calling the popup menus from keyboard.
+ *
  * Revision 1.1.1.1  2000/06/03 15:38:05  jopi
  * Added first time
  *
