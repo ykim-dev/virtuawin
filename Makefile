@@ -1,6 +1,6 @@
 # Wedit Makefile for project VirtuaWin
 INCLUDEPATH=d:\lcc\include
-CFLAGS=-I$(INCLUDEPATH) -O
+CFLAGS=-I$(INCLUDEPATH) -g5
 LINKFLAGS=-subsystem windows
 CC=lcc.exe
 TARGET=VirtuaWin.exe

@@ -1,7 +1,7 @@
 //
 //  VirtuaWin - Virtual Desktop Manager for Win9x/NT/Win2K
 // 
-//  Copyright (c) 1999, 2000, 2001 jopi
+//  Copyright (c) 1999, 2000, 2001, 2002 jopi
 // 
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -45,6 +45,9 @@ char *replace(char *g_string, char *replace_from, char *replace_to);
 
 /*
  * $Log$
+ * Revision 1.5  2001/12/01 00:05:53  jopi
+ * Added alternative window hiding for troublesome windows like InternetExplorer
+ *
  * Revision 1.4  2001/11/12 18:23:05  jopi
  * Added support for classnames that contains spaces which will fix some
  * problems with desktop state save and sticky save.

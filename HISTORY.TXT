@@ -1,6 +1,18 @@
 ***   VirtuaWin Revision History   ***
 --------------------------------------
 
+Ver 2.6 2001/12/xx 
+* Bugfix: Alternative way of hiding windows. This solves the disappearing 
+  Explorer bug
+* Bugfix: Saving of sticky state for "User windows" is now fixed
+* Bugfix: Problems with saving desktop and stickiness state of applications 
+  containing spaces in their classnames
+* Double click in the module list will bring up module config window (if any)
+* Option to hide the system tray icon
+* Trying to start-up a second VirtuaWin instance will bring up setup window
+* Classname will now always be "VirtuaWinMainClass" and not version dependent
+----------------------------
+
 Ver 2.5 2001/02/10
 * Bugfix: Too many modules would corrupt data and cause undefined behavior,
   also increased the maximum number of modules handled from 5 to 10

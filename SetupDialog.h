@@ -1,3 +1,7 @@
+//
+//  VirtuaWin - Virtual Desktop Manager for Win9x/NT/Win2K
+// 
+//  Copyright (c) 1999, 2000, 2001, 2002 jopi
 // 
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -42,6 +46,9 @@ int CALLBACK propCallBack(HWND hwndDlg, UINT uMsg, LPARAM lParam);
 
 /*
  * $Log$
+ * Revision 1.5  2001/02/10 11:11:54  jopi
+ * Removed the context help icon since there is no functionality for this
+ *
  * Revision 1.4  2001/02/05 21:13:08  jopi
  * Updated copyright header
  *

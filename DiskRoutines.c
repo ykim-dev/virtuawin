@@ -1,7 +1,7 @@
 //
 //  VirtuaWin - Virtual Desktop Manager for Win9x/NT/Win2K
 // 
-//  Copyright (c) 1999, 2000, 2001 jopi
+//  Copyright (c) 1999, 2000, 2001, 2002 jopi
 // 
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -566,6 +566,9 @@ BOOL tryToLock()
 
 /*
  * $Log$
+ * Revision 1.10  2001/12/01 00:05:52  jopi
+ * Added alternative window hiding for troublesome windows like InternetExplorer
+ *
  * Revision 1.9  2001/11/12 21:39:14  jopi
  * Added functionality for disabling the systray icon
  *

@@ -1,7 +1,7 @@
 //
 //  VirtuaWin - Virtual Desktop Manager for Win9x/NT/Win2K
 // 
-//  Copyright (c) 1999, 2000, 2001 jopi
+//  Copyright (c) 1999, 2000, 2001, 2002 jopi
 // 
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -883,6 +883,9 @@ static BOOL APIENTRY modules(HWND hDlg, UINT message, UINT wParam, LONG lParam)
 
 /*
  * $Log$
+ * Revision 1.9  2001/12/24 10:11:01  jopi
+ * Added doubleclick support in the module listbox for bringing up the config window.
+ *
  * Revision 1.8  2001/11/12 21:39:14  jopi
  * Added functionality for disabling the systray icon
  *
