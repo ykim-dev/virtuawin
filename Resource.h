@@ -91,6 +91,9 @@
 #define IDC_CYCLINGKEYS 1074
 #define IDC_HOTCYCLEUP 1075
 #define IDC_HOTCYCLEDOWN 1076
+#define IDC_HOTMENU 1077
+#define IDC_HOTMENUW 1078
+#define IDC_HOTMENUEN 1079
 
 #define	ID_SETUP	32771
 #define	ID_EXIT	        32772
@@ -99,4 +102,7 @@
 
 /*
  * $Log$
+ * Revision 1.1.1.1  2000/06/03 15:38:05  jopi
+ * Added first time
+ *
  */

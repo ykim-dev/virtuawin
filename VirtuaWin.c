@@ -319,60 +319,65 @@ void unRegisterKeys()
 }
 
 /*************************************************
- * Register the hotkeys to use for switching desktop 
+ * Register the hotkeys to use for switching desktop and the winlist hotkey
  */
 BOOL registerHotKeys()
 {
-  if(hotKeyEnable && !hotKeysRegistred) {
-    hotKeysRegistred = TRUE;
-    if(hotkey1) {
-      vw1 = GlobalAddAtom("atomKey1");
-      if((RegisterHotKey(hWnd, vw1, hotKey2ModKey(hotkey1Mod) | hotkey1Win, hotkey1) == FALSE))
-        return FALSE;
-    }
-    if(hotkey2) {
-      vw2 = GlobalAddAtom("atomKey2");
-      if((RegisterHotKey(hWnd, vw2, hotKey2ModKey(hotkey2Mod) | hotkey2Win, hotkey2) == FALSE))
-        return FALSE;
-    }
-    if(hotkey3) {
-      vw3 = GlobalAddAtom("atomKey3");
-      if((RegisterHotKey(hWnd, vw3, hotKey2ModKey(hotkey3Mod) | hotkey3Win, hotkey3) == FALSE))
-        return FALSE;
-    }
-    if(hotkey4) {
-      vw4 = GlobalAddAtom("atomKey4");
-      if((RegisterHotKey(hWnd, vw4, hotKey2ModKey(hotkey4Mod) | hotkey4Win, hotkey4) == FALSE))
-        return FALSE;
-    }
-    if(hotkey5) {
-      vw5 = GlobalAddAtom("atomKey5");
-      if((RegisterHotKey(hWnd, vw5, hotKey2ModKey(hotkey5Mod) | hotkey5Win, hotkey5) == FALSE))
-        return FALSE;
-    }
-    if(hotkey6) {
-      vw6 = GlobalAddAtom("atomKey6");
-      if((RegisterHotKey(hWnd, vw6, hotKey2ModKey(hotkey6Mod) | hotkey6Win, hotkey6) == FALSE))
-        return FALSE;
-    }
-    if(hotkey7) {
-      vw7 = GlobalAddAtom("atomKey7");
-      if((RegisterHotKey(hWnd, vw7, hotKey2ModKey(hotkey7Mod) | hotkey7Win, hotkey7) == FALSE))
-        return FALSE;
-    }
-    if(hotkey8) {
-      vw8 = GlobalAddAtom("atomKey8");
-      if((RegisterHotKey(hWnd, vw8, hotKey2ModKey(hotkey8Mod) | hotkey8Win, hotkey8) == FALSE))
-        return FALSE;
-    }
-    if(hotkey9) {
-      vw9 = GlobalAddAtom("atomKey9");
-      if((RegisterHotKey(hWnd, vw9, hotKey2ModKey(hotkey9Mod) | hotkey9Win, hotkey9) == FALSE))
-        return FALSE;
-    }
-    return TRUE;
-  }
-  return TRUE;
+   if(hotKeyEnable && !hotKeysRegistred) {
+      hotKeysRegistred = TRUE;
+      if(hotkey1) {
+         vw1 = GlobalAddAtom("atomKey1");
+         if((RegisterHotKey(hWnd, vw1, hotKey2ModKey(hotkey1Mod) | hotkey1Win, hotkey1) == FALSE))
+            return FALSE;
+      }
+      if(hotkey2) {
+         vw2 = GlobalAddAtom("atomKey2");
+         if((RegisterHotKey(hWnd, vw2, hotKey2ModKey(hotkey2Mod) | hotkey2Win, hotkey2) == FALSE))
+            return FALSE;
+      }
+      if(hotkey3) {
+         vw3 = GlobalAddAtom("atomKey3");
+         if((RegisterHotKey(hWnd, vw3, hotKey2ModKey(hotkey3Mod) | hotkey3Win, hotkey3) == FALSE))
+            return FALSE;
+      }
+      if(hotkey4) {
+         vw4 = GlobalAddAtom("atomKey4");
+         if((RegisterHotKey(hWnd, vw4, hotKey2ModKey(hotkey4Mod) | hotkey4Win, hotkey4) == FALSE))
+            return FALSE;
+      }
+      if(hotkey5) {
+         vw5 = GlobalAddAtom("atomKey5");
+         if((RegisterHotKey(hWnd, vw5, hotKey2ModKey(hotkey5Mod) | hotkey5Win, hotkey5) == FALSE))
+            return FALSE;
+      }
+      if(hotkey6) {
+         vw6 = GlobalAddAtom("atomKey6");
+         if((RegisterHotKey(hWnd, vw6, hotKey2ModKey(hotkey6Mod) | hotkey6Win, hotkey6) == FALSE))
+            return FALSE;
+      }
+      if(hotkey7) {
+         vw7 = GlobalAddAtom("atomKey7");
+         if((RegisterHotKey(hWnd, vw7, hotKey2ModKey(hotkey7Mod) | hotkey7Win, hotkey7) == FALSE))
+            return FALSE;
+      }
+      if(hotkey8) {
+         vw8 = GlobalAddAtom("atomKey8");
+         if((RegisterHotKey(hWnd, vw8, hotKey2ModKey(hotkey8Mod) | hotkey8Win, hotkey8) == FALSE))
+            return FALSE;
+      }
+      if(hotkey9) {
+         vw9 = GlobalAddAtom("atomKey9");
+         if((RegisterHotKey(hWnd, vw9, hotKey2ModKey(hotkey9Mod) | hotkey9Win, hotkey9) == FALSE))
+            return FALSE;
+      }
+      if(hotkeyMenu) {
+         vwMenu = GlobalAddAtom("atomKeyMenu");
+         if((RegisterHotKey(hWnd, vwMenu, hotKey2ModKey(hotkeyMenuMod) | hotkeyMenuWin, hotkeyMenu) == FALSE))
+            return FALSE;
+      }
+      return TRUE;
+   }
+   return TRUE;
 }
 
 /*************************************************
@@ -391,6 +396,7 @@ void unRegisterHotKeys()
     UnregisterHotKey(hWnd, vw7);
     UnregisterHotKey(hWnd, vw8);
     UnregisterHotKey(hWnd, vw9);
+    UnregisterHotKey(hWnd, vwMenu);
   }
 }
 
@@ -617,6 +623,38 @@ LRESULT CALLBACK wndProc(HWND aHWnd, UINT message, WPARAM wParam, LPARAM lParam)
          }
          else if(wParam == vw9) {
             gotoDesk(9);
+            break;
+         }
+         else if(wParam == vwMenu && hotkeyMenuEn == TRUE) {
+            if(enabled) {
+               hpopup = createSortedWinList(2);
+               GetCursorPos(&pt);
+               SetForegroundWindow(aHWnd);
+               
+               retItem = TrackPopupMenu(hpopup, TPM_RETURNCMD |  // Return menu code
+                                        TPM_LEFTBUTTON, (pt.x-2), (pt.y-2), // screen coordinates
+                                        0, aHWnd, NULL);
+               if(retItem) {
+                  if(retItem < (2 * MAXWIN)) { // Sticky toggle
+                     if(winList[retItem - MAXWIN].Sticky)
+                        winList[retItem - MAXWIN].Sticky = FALSE;
+                     else {
+                        winList[retItem - MAXWIN].Sticky = TRUE; // mark sticky..
+                        safeShowWindow(winList[retItem - MAXWIN].Handle, SW_SHOWNA); //.. and show it now
+                     }
+                  } else if(retItem < (MAXWIN * 3)) { // window access
+                     gotoDesk(winList[retItem -  (2 * MAXWIN)].Desk);
+                     forceForeground(winList[retItem - (2 * MAXWIN)].Handle);
+                  } else { // Assign to this desktop
+                     safeShowWindow(winList[retItem - (3 * MAXWIN)].Handle, SW_SHOWNA);
+                     forceForeground(winList[retItem - (3 * MAXWIN)].Handle);
+                  }
+               }
+               
+               PostMessage(aHWnd, 0, 0, 0);  // see above
+               DestroyMenu(hpopup);       // Delete loaded menu and reclaim its resources
+            }
+            
             break;
          }
          // Cycling hot keys
@@ -1345,40 +1383,22 @@ HMENU createWinList()
    HMENU        subSticky;     // sticky list
    HMENU        subAssign;     // assign list
    HMENU        subDirect;     // direct access list
-   char title[35];
-   char buff[31];
-   int i;
    int nOfMenus = 0;
    
    /* create the menus */
   
    if(stickyMenu) {
-      hMenu = subSticky = CreatePopupMenu();
-      for(i = 0; i < nWin; ++i) {
-         GetWindowText(winList[i].Handle, buff, 30);
-         sprintf(title, "%d - %s", winList[i].Desk, buff);
-         AppendMenu(subSticky, MF_STRING | (winList[i].Sticky ? MF_CHECKED: 0), MAXWIN + i, title );
-      }
+      hMenu = subSticky = createSortedWinList(1);
       nOfMenus++;
    }
    
    if(directMenu) {
-      hMenu = subDirect = CreatePopupMenu();
-      for(i = 0; i < nWin; ++i) {
-         GetWindowText(winList[i].Handle, buff, 30);
-         sprintf(title, "%d - %s", winList[i].Desk, buff);
-         AppendMenu(subDirect, MF_STRING | (winList[i].Sticky ? MF_CHECKED: 0), 2 * MAXWIN + i, title );
-      } 
+      hMenu = subDirect = createSortedWinList(2);
       nOfMenus++;
    }
    
    if(assignMenu) {
-      hMenu = subAssign = CreatePopupMenu();
-      for(i = 0; i < nWin; ++i) {
-         GetWindowText(winList[i].Handle, buff, 30);
-         sprintf(title, "%d - %s", winList[i].Desk, buff);
-         AppendMenu(subAssign, MF_STRING | (winList[i].Sticky ? MF_CHECKED: 0), 3 * MAXWIN + i, title );
-      } 
+      hMenu = subAssign = createSortedWinList(3);
       nOfMenus++;
    }
 
@@ -1393,6 +1413,81 @@ HMENU createWinList()
          AppendMenu( hMenu, MF_STRING | MF_POPUP, (DWORD)subAssign, "Assign" );
    }
 
+   return hMenu;
+}
+
+/*************************************************
+ * This function creates a sorted list of windows for direct access menu.
+ * If there are windows on more than one desktop than a separator is
+ * inserted into the list between desktops
+ * The parameter multiplier is the number the WINMAX is multiplied by to get
+ * the menu command ID.
+ *
+ * Author: Matti Jagula <matti@proekspert.ee>
+ * Date: 31.07.00
+ */
+HMENU createSortedWinList(int multiplier)
+{
+   typedef struct _MenuItems
+   {
+         char *name;
+         long id;
+         long desk;
+   } MenuItem;
+
+   HMENU        hMenu;         // menu bar handle
+   char title[35];
+   MenuItem *items[MAXWIN], *item;
+   char buff[31];
+   int i,x,y,c;
+
+   hMenu = NULL;
+
+   hMenu = CreatePopupMenu();
+
+   // create the window list
+   for(i = 0; i < nWin; ++i)
+   {
+      GetWindowText(winList[i].Handle, buff, 30);
+      sprintf(title, "%d - %s", winList[i].Desk, buff);
+      item = malloc( sizeof(MenuItem) );
+      item->name = strdup (title);
+      item->desk = winList[i].Desk;
+      item->id = i;
+      items [i]   = item;
+      items [i+1] = NULL;
+   }
+   items [i+2] = NULL; // just in case
+
+   // sorting using bubble sort
+   for (x = 0; x < i; x++ )
+   {
+      for (y = 0; y<i; y++)
+      {
+         if( strcmp(items[x]->name, items[y]->name) < 0 )
+         {
+            item = items [x];
+            items[x] = items[y];
+            items[y] = item;
+         }
+      }
+   }
+   y = 0; c = 0;
+   for (x=0; x < i; x++ )
+   {
+      if (!c || c != items[x]->desk)
+      {
+         if(c) AppendMenu(hMenu, MF_SEPARATOR, 0, NULL );
+         c = items [x]->desk;
+      }
+
+      AppendMenu( hMenu,
+                  MF_STRING | (winList[i].Sticky ? MF_CHECKED: 0),
+                  multiplier * MAXWIN + (items[x]->id), items[x]->name );
+      free ( items[x]->name );
+      free ( items[x]);
+      items [x] = NULL;
+   }
    return hMenu;
 }
 
@@ -1625,7 +1720,11 @@ void writeConfig()
       fprintf(fp, "CycleUpMod# %i\n", hotCycleUpMod);
       fprintf(fp, "CycleDown# %i\n", hotCycleDown);
       fprintf(fp, "CycleDownMod# %i\n", hotCycleDownMod);
-      
+      fprintf(fp, "Hot_key_Menu_Support# %i\n", hotkeyMenuEn);
+      fprintf(fp, "Hot_key_Menu# %i\n", hotkeyMenu);
+      fprintf(fp, "Hot_key_ModMenu# %i\n", hotkeyMenuMod);
+      fprintf(fp, "Hot_key_WinMenu# %i\n", hotkeyMenuWin);
+
       fclose(fp);
    }
    postModuleMessage(MOD_CFGCHANGE, 0, 0);
@@ -1707,13 +1806,20 @@ void readConfig()
       fscanf(fp, "%s%i", &dummy, &hotCycleUpMod);
       fscanf(fp, "%s%i", &dummy, &hotCycleDown);
       fscanf(fp, "%s%i", &dummy, &hotCycleDownMod);
-
+      fscanf(fp, "%s%i", &dummy, &hotkeyMenuEn);
+      fscanf(fp, "%s%i", &dummy, &hotkeyMenu);
+      fscanf(fp, "%s%i", &dummy, &hotkeyMenuMod);
+      fscanf(fp, "%s%i", &dummy, &hotkeyMenuWin);
+      
       fclose(fp);
    }
 }
 
 /*
  * $Log$
+ * Revision 1.2  2000/08/18 21:41:31  jopi
+ * Added the code again that removes closed windows, this will avoid having closed child windows reappearing again. Also updated the mail adress
+ *
  * Revision 1.1.1.1  2000/06/03 15:38:05  jopi
  * Added first time
  *

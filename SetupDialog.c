@@ -533,6 +533,7 @@ static BOOL APIENTRY misc(HWND hDlg, UINT message, UINT wParam, LONG lParam)
    static HWND xBuddy;
    static HWND yBuddy;
    static int spinPressed;
+   WORD wRawHotKey;
    
    switch (message) {
       case WM_INITDIALOG:
@@ -585,7 +586,11 @@ static BOOL APIENTRY misc(HWND hDlg, UINT message, UINT wParam, LONG lParam)
             SendDlgItemMessage(hDlg, IDC_SAVEEXITSTATE, BM_SETCHECK, 1,0);
          if(assignOnlyFirst)
             SendDlgItemMessage(hDlg, IDC_FIRSTONLY, BM_SETCHECK, 1,0);
-         
+         if(hotkeyMenuEn) 
+            SendDlgItemMessage(hDlg, IDC_HOTMENUEN, BM_SETCHECK, 1,0);
+         if(hotkeyMenuWin)
+            SendDlgItemMessage(hDlg, IDC_HOTMENUW, BM_SETCHECK, 1,0);
+         SendDlgItemMessage(hDlg, IDC_HOTMENU, HKM_SETHOTKEY, MAKEWORD(hotkeyMenu, hotkeyMenuMod), 0);
          return TRUE;
 
       case WM_NOTIFY:
@@ -660,6 +665,21 @@ static BOOL APIENTRY misc(HWND hDlg, UINT message, UINT wParam, LONG lParam)
                else
                   saveLayoutOnExit= FALSE;
 
+               if(SendDlgItemMessage(hDlg, IDC_HOTMENUEN, BM_GETCHECK, 0, 0) == BST_CHECKED) {
+                  hotkeyMenuEn = TRUE;
+                  wRawHotKey = (WORD)SendDlgItemMessage(hDlg, IDC_HOTMENU, HKM_GETHOTKEY, 0, 0);
+                  hotkeyMenu = LOBYTE(wRawHotKey);
+                  hotkeyMenuMod = HIBYTE(wRawHotKey);
+                  if(SendDlgItemMessage(hDlg, IDC_HOTMENUW, BM_GETCHECK, 0, 0) == BST_CHECKED)
+                     hotkeyMenuWin = MOD_WIN;
+                  else
+                     hotkeyMenuWin = FALSE;
+               }
+               else
+               {
+                  hotkeyMenuEn = FALSE;
+               }
+                
                if((nDesksX * nDesksY) == 1)
                   MessageBox(hDlg, "Hey! No offense, but if you only want one desktop\nyou shouldn't use this software at all!", "Stupid user alert!", 0);
                break;
@@ -679,7 +699,9 @@ static BOOL APIENTRY misc(HWND hDlg, UINT message, UINT wParam, LONG lParam)
             LOWORD(wParam) == IDC_DESKCYCLE  || LOWORD(wParam) == IDC_INVERTY ||
             LOWORD(wParam) == IDC_MENUSTICKY || LOWORD(wParam) == IDC_MENUACCESS ||
             LOWORD(wParam) == IDC_MENUASSIGN || LOWORD(wParam) == IDC_USEASSIGN ||
-            LOWORD(wParam) == IDC_FIRSTONLY  || LOWORD(wParam) == IDC_SAVEEXITSTATE)
+            LOWORD(wParam) == IDC_FIRSTONLY  || LOWORD(wParam) == IDC_SAVEEXITSTATE ||
+            LOWORD(wParam) == IDC_HOTMENUEN  || LOWORD(wParam) == IDC_HOTMENUW || 
+            LOWORD(wParam) == IDC_HOTMENU)
             SendMessage(GetParent(hDlg), PSM_CHANGED, (WPARAM)hDlg, 0L);
     
          if (LOWORD(wParam) == IDC_SAVENOW) {
@@ -818,4 +840,7 @@ static BOOL APIENTRY modules(HWND hDlg, UINT message, UINT wParam, LONG lParam)
 
 /*
  * $Log$
+ * Revision 1.1.1.1  2000/06/03 15:38:05  jopi
+ * Added first time
+ *
  */

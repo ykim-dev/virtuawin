@@ -102,6 +102,12 @@ extern UINT hotkey8Win;
 extern UINT hotkey9;
 extern UINT hotkey9Mod;
 extern UINT hotkey9Win;
+
+extern UINT hotkeyMenu;
+extern UINT hotkeyMenuMod;
+extern UINT hotkeyMenuWin;
+extern UINT hotkeyMenuEn;
+
 extern UINT hotCycleUp;
 extern UINT hotCycleUpMod;
 extern UINT hotCycleDown;
@@ -127,4 +133,7 @@ extern LPSTR vwWindowsState;  // holds windowsata file name + path
 
 /*
  * $Log$
+ * Revision 1.1.1.1  2000/06/03 15:38:05  jopi
+ * Added first time
+ *
  */

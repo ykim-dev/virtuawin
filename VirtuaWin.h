@@ -79,6 +79,7 @@ void readConfig();
 BOOL safeShowWindow(HWND*, int);
 void warningIcon();
 BOOL checkMouseState();
+HMENU createSortedWinList(int);
 
 // Variables
 HWND topWindow;        // holds the top window on a desktop
@@ -111,6 +112,7 @@ ATOM vw8;
 ATOM vw9;
 ATOM cyclingKeyUp;
 ATOM cyclingKeyDown;
+ATOM vwMenu;
 
 BOOL keysRegistred = FALSE;	// if the switch keys are registrered
 BOOL hotKeysRegistred = FALSE;	// if the switch hot keys are registrered
@@ -210,6 +212,10 @@ UINT hotCycleUp = 0;
 UINT hotCycleUpMod = 0;
 UINT hotCycleDown = 0;
 UINT hotCycleDownMod = 0;
+UINT hotkeyMenu = 0;
+UINT hotkeyMenuMod = 0;
+UINT hotkeyMenuWin = 0;
+UINT hotkeyMenuEn = 0;
 
 int screenWidth;
 int screenHeight;
@@ -232,6 +238,9 @@ LPSTR vwWindowsState;
 
 /*
  * $Log$
+ * Revision 1.2  2000/08/18 21:41:32  jopi
+ * Added the code again that removes closed windows, this will avoid having closed child windows reappearing again. Also updated the mail adress
+ *
  * Revision 1.1.1.1  2000/06/03 15:38:05  jopi
  * Added first time
  *
