@@ -96,7 +96,7 @@ static int curUser = 0;       // how many user applications we have
 
 static UINT MODKEY;	      // Holds the switch key modifiers
 
-static char appName[] = "VirtuaWin 2.4";   // application name
+static char appName[] = "VirtuaWin 2.5";   // application name
 
 ATOM stickyKey;
 ATOM vwLeft;
@@ -241,6 +241,9 @@ LPSTR vwWindowsState;
 
 /*
  * $Log$
+ * Revision 1.5  2000/08/28 21:38:37  jopi
+ * Added new functions for menu hot key registration. Fixed bug with needing to have hot keys enabled for menu keys to work and also better error message
+ *
  * Revision 1.4  2000/08/19 00:02:13  jopi
  * Changed version number
  *
