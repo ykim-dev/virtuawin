@@ -278,23 +278,6 @@ static BOOL APIENTRY mouse(HWND hDlg, UINT message, UINT wParam, LONG lParam)
             LOWORD(wParam) == IDC_MOUSEWRAP) {
             SendMessage(GetParent(hDlg), PSM_CHANGED, (WPARAM)hDlg, 0L); // Enable apply
          }
-         switch(LOWORD(wParam)) {
-            case IDC_ALT:
-               CheckDlgButton(hDlg, IDC_SHIFT, BST_UNCHECKED);
-               CheckDlgButton(hDlg, IDC_WIN, BST_UNCHECKED);
-               CheckDlgButton(hDlg, IDC_CTRL, BST_UNCHECKED);
-               break;
-            case IDC_SHIFT:
-               CheckDlgButton(hDlg, IDC_WIN, BST_UNCHECKED);
-               CheckDlgButton(hDlg, IDC_ALT, BST_UNCHECKED);
-               CheckDlgButton(hDlg, IDC_CTRL, BST_UNCHECKED);
-               break;
-            case IDC_CTRL:
-               CheckDlgButton(hDlg, IDC_SHIFT, BST_UNCHECKED);
-               CheckDlgButton(hDlg, IDC_ALT, BST_UNCHECKED);
-               CheckDlgButton(hDlg, IDC_WIN, BST_UNCHECKED);
-               break;
-         }
          break;
   
       case WM_HSCROLL:
@@ -946,6 +929,9 @@ static BOOL APIENTRY expert(HWND hDlg, UINT message, UINT wParam, LONG lParam)
 
 /*
  * $Log$
+ * Revision 1.16  2003/04/09 17:46:20  jopi
+ * Small error made a checkbox work incorrectly, introduced with the "expert" tab.
+ *
  * Revision 1.15  2003/01/27 20:22:58  jopi
  * Updated copyright header for 2003
  *
