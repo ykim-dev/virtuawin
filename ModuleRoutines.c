@@ -30,6 +30,7 @@
 #include "ConfigParameters.h"
 #include "Defines.h"
 #include "ListStructures.h"
+#include "DiskRoutines.h"
 
 
 /*************************************************
@@ -49,8 +50,12 @@ void loadModules()
    struct _finddata_t exe_file;
    long hFile;
   
+
+   char VWModulesFiles[MAX_PATH];
+   GetFilename(vwMODULES, VWModulesFiles);
+
    // Find first .exe file in modules directory
-   if( (hFile = _findfirst(vwModules, &exe_file )) == -1L )
+   if( (hFile = _findfirst(VWModulesFiles, &exe_file )) == -1L )
       return;
    else {
       addModule(&exe_file);
@@ -68,12 +73,15 @@ void loadModules()
  */
 void addModule(struct _finddata_t* aModule)
 {
+  char VirtuawinEXEPath[MAX_PATH];
+  GetFilename(vwPATH, VirtuawinEXEPath);
+
    char errMsg[150];
    HWND myModule;
    char tmpPath[100];
    STARTUPINFO si;
    PROCESS_INFORMATION pi;  
-   sprintf(tmpPath, "%smodules\\", vwPath);
+   sprintf(tmpPath, "%smodules\\", VirtuawinEXEPath);
    int retVal = 1;
 
    if(nOfModules >= MAXMODULES) {
@@ -170,6 +178,9 @@ void postModuleMessage(UINT Msg, WPARAM wParam, LPARAM lParam)
 
 /*
  * $Log$
+ * Revision 1.10  2004/04/10 10:20:01  jopi
+ * Updated to compile with gcc/mingw
+ *
  * Revision 1.9  2004/01/10 11:15:52  jopi
  * Updated copyright for 2004
  *
