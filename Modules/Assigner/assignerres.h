@@ -1,3 +1,4 @@
+#define	IDC_STATIC	-1
 #define	IDD_MAINDIALOG	100
 #define	ID_WINLIST	101
 #define	IDUNDO	103

@@ -5,7 +5,7 @@
 //  for moving the current active window to next or previous desktop
 //  
 // 
-//  Copyright (c) 1999, 2000, 2001, 2002, 2003 Johan Piculell
+//  Copyright (c) 1999, 2000, 2001, 2002, 2003, 2004 Johan Piculell
 // 
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -26,6 +26,7 @@
 #include <windows.h>
 #include <string.h>
 #include <stdio.h>
+#include <commctrl.h>
 
 #include "assignerres.h"
 #include "../../Messages.h"
@@ -80,7 +81,6 @@ LRESULT CALLBACK MainWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
    HWND theActive = NULL;
    int theCurDesk;
-   LPTSTR  lpszLastErrorMsg; 
    InitCommonControls();
    switch (msg) {
       case WM_HOTKEY:
@@ -234,17 +234,18 @@ void unregisterAssignment()
 
 void loadSettings()
 {
-   char dummy[80];
+   char* dummy = malloc(sizeof(char) * 80);
    FILE* fp;
    
    if((fp = fopen(configFile, "r")))
    {
-      fscanf(fp, "%s%i", &dummy, &HOT_NEXT_MOD);
-      fscanf(fp, "%s%i", &dummy, &HOT_NEXT);
-      fscanf(fp, "%s%i", &dummy, &HOT_PREV_MOD);
-      fscanf(fp, "%s%i", &dummy, &HOT_PREV);
+      fscanf(fp, "%s%i", dummy, &HOT_NEXT_MOD);
+      fscanf(fp, "%s%i", dummy, &HOT_NEXT);
+      fscanf(fp, "%s%i", dummy, &HOT_PREV_MOD);
+      fscanf(fp, "%s%i", dummy, &HOT_PREV);
       fclose(fp);
    }
+   free(dummy);
 }
 
 //*************************************************
@@ -254,7 +255,7 @@ void saveSettings()
    FILE* fp;
    if(!(fp = fopen(configFile, "w"))) 
    {
-      MessageBox("Assigner", "Error writing config file", NULL, MB_ICONWARNING);
+      MessageBox(hwndMain, "Assigner", "Error writing config file", MB_ICONWARNING);
    } 
    else 
    {
@@ -307,4 +308,7 @@ WORD hotKey2ModKey(BYTE vModifiers)
 
 /*
  * $Log$
+ * Revision 1.1  2003/06/26 19:27:40  jopi
+ * Added new VWAssigner module
+ *
  */

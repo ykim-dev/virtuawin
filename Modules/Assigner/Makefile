@@ -1,27 +1,41 @@
-# Wedit Makefile for project Assigner
-CFLAGS=-IC:\lcc\include -O
-LINKFLAGS=-s -subsystem windows
-CC=lcc.exe
-TARGET=VWAssigner.exe
-OBJS= assigner.obj assigner.res
+# MINGW Makefile for project WVAssigner
+OSTYPE   = $(shell uname -msr)
 
-LIBS=
+ifeq ($(findstring CYGWIN,$(OSTYPE)),CYGWIN)
+CC      = gcc
+CFLAGS	= -mno-cygwin -Wall -O2
+LDFLAGS	= -mwindows -mno-cygwin -O2
+RC      = windres 
+endif
 
-VWAssigner.exe:	$(OBJS) Makefile
-	lcclnk	$(LINKFLAGS) -o $(TARGET) $(OBJS) $(LIBS)
+ifeq ($(findstring MINGW32,$(OSTYPE)),MINGW32)
+CC      = gcc
+CFLAGS	= -Wall -O2
+LDFLAGS	= -mwindows -O2
+RC      = windres 
+endif
 
-# Build assigner.res
-ASSIGNER_RC=  assignerres.h
+ifeq ($(findstring Linux,$(OSTYPE)),Linux)
+CC      = i586-mingw32msvc-gcc
+CFLAGS  = -Wall -O2
+LDFLAGS = -mwindows -O2
+RC	= i586-mingw32msvc-windres
+endif
 
-assigner.res:	$(ASSIGNER_RC) assigner.rc
-	lrc -Ic:\Assigner -IC:\lcc\include  assigner.rc
+TARGET	= VWAssigner.exe
+OBJS	= assigner.o assigner.coff
+LIBS	= -lcomctl32
 
-# Build Assigner.c
+.c.o:
+	$(CC) $(CFLAGS) -c -o $@ $<
 
-Assigner.obj: $(ASSIGNER_C) assigner.c
-	$(CC) -c $(CFLAGS) assigner.c
+$(TARGET): $(OBJS)
+	$(CC) $(LDFLAGS) -o $(TARGET) $(OBJS) $(LIBS)
+
+assigner.coff: assigner.rc
+	$(RC) --input-format rc --output-format coff -o $@ -i $<
 
 clean: 
-	@rm $(OBJS)
+	rm -f $(OBJS)
 
-all: clean $(TARGET)
+all:    clean $(TARGET)
