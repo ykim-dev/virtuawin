@@ -1309,6 +1309,20 @@ BOOL checkIfSavedSticky(HWND* hwnd)
    return FALSE;
 }
 
+BOOL checkIfSavedStickyString(char* className)
+{
+   int i;
+   for(i = 0; i < curSticky; ++i) {
+      if (!strncmp(stickyList[i].winClassName, className, 50)) {
+         // Typically user windows will loose their stickiness if
+         // minimized, therefore we don not remove their name from 
+         // the list as done above.
+         return TRUE;
+      }
+   }
+   return FALSE;
+}
+
 /*************************************************
  * Add a window in the list
  */
@@ -1361,6 +1375,7 @@ void findUserWindows()
     if(!inWinList(tmpHnd)) {
       winList[nWin].Handle = tmpHnd;
       winList[nWin].Desk = currentDesk;
+      winList[nWin].Sticky = checkIfSavedStickyString(userList[i].winNameClass);
       nWin++;
     }
   }
@@ -1693,6 +1708,9 @@ VOID CALLBACK FlashProc(HWND hwnd, UINT uMsg, UINT idEvent, DWORD dwTime)
 
 /*
  * $Log$
+ * Revision 1.11  2001/02/05 21:13:08  jopi
+ * Updated copyright header
+ *
  * Revision 1.10  2001/01/28 16:26:56  jopi
  * Configuration behaviour change. It is now possible to test all settings by using apply and all changes will be rollbacked if cancel is pressed
  *

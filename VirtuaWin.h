@@ -72,6 +72,7 @@ WORD hotKey2ModKey(BYTE);
 void toggleActiveSticky();
 void recoverWindows();
 BOOL checkIfSavedSticky(HWND* hwnd);
+BOOL checkIfSavedStickyString(char* className);
 void shutDown();
 void showSetup();
 int checkIfAssignedDesktop(HWND*);
@@ -95,7 +96,7 @@ static int curUser = 0;       // how many user applications we have
 
 static UINT MODKEY;	      // Holds the switch key modifiers
 
-static char appName[] = "VirtuaWin 2.5";   // application name
+static char appName[] = "VirtuaWin 2.6";   // application name
 
 ATOM stickyKey;
 ATOM vwLeft;
@@ -240,6 +241,9 @@ LPSTR vwWindowsState;
 
 /*
  * $Log$
+ * Revision 1.9  2001/02/05 21:13:08  jopi
+ * Updated copyright header
+ *
  * Revision 1.8  2001/01/28 16:26:56  jopi
  * Configuration behaviour change. It is now possible to test all settings by using apply and all changes will be rollbacked if cancel is pressed
  *
