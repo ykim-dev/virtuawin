@@ -140,7 +140,9 @@ int loadStickyList(stickyType* theStickyList)
    if(fp = fopen(vwSticky, "r")) {
       while(!feof(fp)) {
          fscanf(fp, "%79s", &dummy);
-         strcpy(dummy, replace(dummy, "££", " "));
+         char* theReplaceString = replace(dummy, "££", " ");
+         strcpy(dummy, theReplaceString);
+         free(theReplaceString);
          if((strlen(dummy) != 0) && !feof(fp)) {
             theStickyList[nOfSticky].winClassName = malloc(sizeof(char) * strlen(dummy) + 1);
             strcpy(theStickyList[nOfSticky].winClassName, dummy);
@@ -167,7 +169,10 @@ void saveStickyWindows(int* theNOfWin, windowType* theWinList)
       for(i = 0; i < *theNOfWin; ++i) {
          if (theWinList[i].Sticky) {
             GetClassName(theWinList[i].Handle, className, 79);
-            fprintf(fp, "%s\n",  replace(className, " ", "££"));
+            char* theReplaceString = replace(className, " ", "££");
+            fprintf(fp, "%s\n",  theReplaceString);
+            free(theReplaceString);
+
          }
       }
       fclose(fp);
@@ -186,8 +191,10 @@ int loadTrickyList(stickyType* theTrickyList)
    if(fp = fopen(vwTricky, "r")) 
    {
       while(!feof(fp)) {
-         fscanf(fp, "%79s", &dummy);
-         strcpy(dummy, replace(dummy, "££", " "));
+         fscanf(fp, "%79s", &dummy); 
+         char* theReplaceString = replace(dummy, "££", " ");
+         strcpy(dummy, theReplaceString);
+         free(theReplaceString);
          if( (strlen(dummy) != 0) && !feof(fp) ) 
          {
             theTrickyList[nOfTricky].winClassName = malloc( sizeof(char) * strlen(dummy) + 1 );
@@ -216,7 +223,9 @@ void saveTrickyWindows(int* theNOfWin, windowType* theWinList)
       for(i = 0; i < *theNOfWin; ++i) {
          if (theWinList[i].Sticky) {
             GetClassName(theWinList[i].Handle, className, 79);
-            fprintf(fp, "%s\n",  replace(className, " ", "££"));
+            char* theReplaceString = replace(className, " ", "££");
+            fprintf(fp, "%s\n",  theReplaceString);
+            free(theReplaceString);
          }
       }
       fclose(fp);
@@ -240,7 +249,9 @@ void saveDesktopState(int* theNOfWin, windowType* theWinList)
       int i;
       for(i = 0; i < *theNOfWin; ++i) {
          GetClassName(theWinList[i].Handle, className, 50);
-         fprintf(fp, "%s\n", replace(className, " ", "££"));
+         char* theReplaceString = replace(className, " ", "££");
+         fprintf(fp, "%s\n",  theReplaceString);
+         free(theReplaceString);
       }
       fflush(fp); // Make sure the file is physically written to disk
       fclose(fp);
@@ -262,7 +273,9 @@ void saveDesktopConfiguration(int* theNOfWin, windowType* theWinList)
       int i;
       for(i = 0; i < *theNOfWin; ++i) {
          GetClassName(theWinList[i].Handle, className, 50);
-         fprintf(fp, "%s %d\n", replace(className, " ", "££"), theWinList[i].Desk);
+         char* theReplaceString = replace(className, " ", "££");
+         fprintf(fp, "%s %d\n", theReplaceString, theWinList[i].Desk);
+         free(theReplaceString);
       }
       fclose(fp);
    }
@@ -280,7 +293,9 @@ int loadAssignedList(assignedType* theAssignList)
    if(fp = fopen(vwWindowsState, "r")) {
       while(!feof(fp)) {
          fscanf(fp, "%s%i", &dummy, &theAssignList[curAssigned].desktop);
-         strcpy(dummy, replace(dummy, "££", " ")); 
+         char* theReplaceString = replace(dummy, "££", " ");
+         strcpy(dummy, theReplaceString);
+         free(theReplaceString);
          if((strlen(dummy) != 0) && !feof(fp)) {
             theAssignList[curAssigned].winClassName = malloc(sizeof(char) * strlen(dummy) + 1);
             strcpy(theAssignList[curAssigned].winClassName, dummy);
@@ -568,6 +583,9 @@ BOOL tryToLock()
 
 /*
  * $Log$
+ * Revision 1.13  2002/08/08 21:13:02  jopi
+ * Fixed so that the recovery file is written with correct endlines.
+ *
  * Revision 1.12  2002/06/01 21:15:23  jopi
  * Multiple fixes by Christian Storm.
  *
