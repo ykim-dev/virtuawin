@@ -240,7 +240,7 @@ void saveDesktopState(int* theNOfWin, windowType* theWinList)
       int i;
       for(i = 0; i < *theNOfWin; ++i) {
          GetClassName(theWinList[i].Handle, className, 50);
-         fprintf(fp, "%s\r", replace(className, " ", "££"));
+         fprintf(fp, "%s\n", replace(className, " ", "££"));
       }
       fflush(fp); // Make sure the file is physically written to disk
       fclose(fp);
@@ -568,6 +568,9 @@ BOOL tryToLock()
 
 /*
  * $Log$
+ * Revision 1.12  2002/06/01 21:15:23  jopi
+ * Multiple fixes by Christian Storm.
+ *
  * Revision 1.11  2002/02/14 21:23:39  jopi
  * Updated copyright header
  *
