@@ -60,7 +60,7 @@ else
     if ( $< == 'y' ) then
         echo Creating source package
         cd ../$1
-        /cygdrive/c/Program\ Files/WinZip/wzzip source$1.zip -P @filelist
+        /cygdrive/c/Program\ Files/WinZip/wzzip source$1.zip -P @../tmp/filelist
         echo Done!
     endif
 
@@ -93,4 +93,7 @@ endif
 
 #
 # $Log$
+# Revision 1.2  2005/03/15 06:58:22  jopi
+# Minor update
+#
 #
