@@ -1,16 +1,38 @@
-# Wedit Makefile for project SwitchPling
-CFLAGS=-Ic:\lcc\include 
-CC=lcc.exe
-OBJS=\
-	SwitchPling.obj 
+# MINGW Makefile for project SwitchPling
+OSTYPE   = $(shell uname -msr)
 
-LIBS=winmm.lib
+ifeq ($(findstring CYGWIN,$(OSTYPE)),CYGWIN)
+CC      = gcc
+CFLAGS	= -mno-cygwin -Wall -O2
+LDFLAGS	= -mwindows -mno-cygwin -O2
+RC      = windres 
+endif
 
-SwitchPling.exe:	$(OBJS) Makefile
-	c:\lcc\bin\lcclnk  -subsystem windows -o SwitchPling.exe $(OBJS) $(LIBS)
+ifeq ($(findstring MINGW32,$(OSTYPE)),MINGW32)
+CC      = gcc
+CFLAGS	= -Wall -O2
+LDFLAGS	= -mwindows -O2
+RC      = windres 
+endif
 
-# Build SwitchPling.c
+ifeq ($(findstring Linux,$(OSTYPE)),Linux)
+CC      = i586-mingw32msvc-gcc
+CFLAGS  = -Wall -O2
+LDFLAGS = -mwindows -O2
+RC	= i586-mingw32msvc-windres
+endif
 
-SwitchPling.obj: $(SWITCHPLING_C) SwitchPling.c
-	$(CC) -c $(CFLAGS) SwitchPling.c
+TARGET	= SwitchPling.exe
+OBJS	= SwitchPling.o
+LIBS	= -lwinmm
 
+.c.o:
+	$(CC) $(CFLAGS) -c -o $@ $<
+
+$(TARGET): $(OBJS)
+	$(CC) $(LDFLAGS) -o $(TARGET) $(OBJS) $(LIBS)
+
+clean: 
+	rm -f $(OBJS)
+
+all:    clean $(TARGET)

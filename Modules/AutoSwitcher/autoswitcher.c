@@ -183,14 +183,15 @@ static BOOL CALLBACK DialogFunc(HWND hwndDlg, UINT msg, WPARAM wParam, LPARAM lP
 
 void loadSettings()
 {
-   char dummy[80];
-   FILE* fp;
+    char* dummy = malloc(sizeof(char) * 80);
+    FILE* fp;
    
-   if((fp = fopen(configFile, "r")))
-   {
-      fscanf(fp, "%s%i", &dummy, &myInterval);
-      fclose(fp);
-   }
+    if((fp = fopen(configFile, "r")))
+    {
+        fscanf(fp, "%s%i", dummy, &myInterval);
+        fclose(fp);
+    }
+    free(dummy);
 }
 
 //*************************************************
@@ -200,7 +201,7 @@ void saveSettings()
    FILE* fp;
    if(!(fp = fopen(configFile, "w"))) 
    {
-      MessageBox("AutoSwitcher", "Error writing config file", NULL, MB_ICONWARNING);
+      MessageBox(NULL, "AutoSwitcher, Error writing config file", NULL, MB_ICONWARNING);
    } 
    else 
    {
@@ -235,5 +236,8 @@ void getConfigDir()
 
 /*
  * $Log$
+ * Revision 1.1  2003/07/08 21:01:51  jopi
+ * Added new module AutoSwitcher
+ *
  *
  */

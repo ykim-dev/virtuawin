@@ -1,27 +1,41 @@
-# Wedit Makefile for project Assigner
-CFLAGS=-IC:\lcc\include -O
-LINKFLAGS=-s -subsystem windows
-CC=lcc.exe
-TARGET=AutoSwitcher.exe
-OBJS= autoswitcher.obj autoswitcher.res
+# MINGW Makefile for project AutoSwitcher
+OSTYPE   = $(shell uname -msr)
 
-LIBS=
+ifeq ($(findstring CYGWIN,$(OSTYPE)),CYGWIN)
+CC      = gcc
+CFLAGS	= -mno-cygwin -Wall -O2
+LDFLAGS	= -mwindows -mno-cygwin -O2
+RC      = windres 
+endif
 
-AutoSwitcher.exe:	$(OBJS) Makefile
-	lcclnk	$(LINKFLAGS) -o $(TARGET) $(OBJS) $(LIBS)
+ifeq ($(findstring MINGW32,$(OSTYPE)),MINGW32)
+CC      = gcc
+CFLAGS	= -Wall -O2
+LDFLAGS	= -mwindows -O2
+RC      = windres 
+endif
 
-# Build autoswitcher.res
-AUTOSWITCHER_RC=  autoswitcherres.h
+ifeq ($(findstring Linux,$(OSTYPE)),Linux)
+CC      = i586-mingw32msvc-gcc
+CFLAGS  = -Wall -O2
+LDFLAGS = -mwindows -O2
+RC	= i586-mingw32msvc-windres
+endif
 
-autoswitcher.res:	$(AUTOSWITCHER_RC) autoswitcher.rc
-	lrc -Ic:\Autoswitcher -IC:\lcc\include  autoswitcher.rc
+TARGET	= AutoSwitcher.exe
+OBJS	= autoswitcher.o autoswitcher.coff
+LIBS	= 
 
-# Build Autoswitcher.c
+.c.o:
+	$(CC) $(CFLAGS) -c -o $@ $<
 
-Autoswitcher.obj: $(AUTOSWITCHER_C) autoswitcher.c
-	$(CC) -c $(CFLAGS) autoswitcher.c
+$(TARGET): $(OBJS)
+	$(CC) $(LDFLAGS) -o $(TARGET) $(OBJS) $(LIBS)
+
+autoswitcher.coff: autoswitcher.rc
+	$(RC) --input-format rc --output-format coff -o $@ -i $<
 
 clean: 
-	@rm $(OBJS)
+	rm -f $(OBJS)
 
-all: clean $(TARGET)
+all:    clean $(TARGET)

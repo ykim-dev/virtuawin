@@ -1,27 +1,41 @@
-# Wedit Makefile for project WinList
-CFLAGS=-IC:\lcc\include -O
-LINKFLAGS=-s -subsystem windows
-CC=lcc.exe
-TARGET=WinList.exe
-OBJS= WinList.obj WinList.res
+# MINGW Makefile for project WinList
+OSTYPE   = $(shell uname -msr)
 
-LIBS=
+ifeq ($(findstring CYGWIN,$(OSTYPE)),CYGWIN)
+CC      = gcc
+CFLAGS	= -mno-cygwin -Wall -O2
+LDFLAGS	= -mwindows -mno-cygwin -O2
+RC      = windres 
+endif
 
-WinList.exe:	$(OBJS) Makefile
-	lcclnk	$(LINKFLAGS) -o $(TARGET) $(OBJS) $(LIBS)
+ifeq ($(findstring MINGW32,$(OSTYPE)),MINGW32)
+CC      = gcc
+CFLAGS	= -Wall -O2
+LDFLAGS	= -mwindows -O2
+RC      = windres 
+endif
 
-# Build WinList.res
-WINLIST_RC=  WinListres.h
+ifeq ($(findstring Linux,$(OSTYPE)),Linux)
+CC      = i586-mingw32msvc-gcc
+CFLAGS  = -Wall -O2
+LDFLAGS = -mwindows -O2
+RC	= i586-mingw32msvc-windres
+endif
 
-WinList.res:	$(WINLIST_RC) WinList.rc
-	lrc -Ic:\WinList -IC:\lcc\include  WinList.rc
+TARGET	= WinList.exe
+OBJS	= winlist.o WinList.coff
+LIBS	=
 
-# Build WinList.c
+.c.o:
+	$(CC) $(CFLAGS) -c -o $@ $<
 
-WinList.obj: $(WINLIST_C) WinList.c
-	$(CC) -c $(CFLAGS) WinList.c
+$(TARGET): $(OBJS)
+	$(CC) $(LDFLAGS) -o $(TARGET) $(OBJS) $(LIBS)
+
+WinList.coff: WinList.rc
+	$(RC) --input-format rc --output-format coff -o $@ -i $<
 
 clean: 
-	@rm $(OBJS)
+	rm -f $(OBJS)
 
-all: clean $(TARGET)
+all:    clean $(TARGET)
