@@ -3,7 +3,7 @@
 #define MAXWIN 100  // max number of windows to handle
 #define MAXUSER 10  // max number of user windows to search for
 #define UWM_SYSTRAY (WM_USER + 1) // Sent to us by the systray
-#define MAXMODULES 5 // max number of modules to handle
+#define MAXMODULES 10 // max number of modules to handle
 
 // Internal messages for mouse controlling
 #define VW_MOUSEWARP WM_USER + 90
@@ -15,4 +15,7 @@
 
 /*
  * $Log$
+ * Revision 1.1.1.1  2000/06/03 15:38:05  jopi
+ * Added first time
+ *
  */

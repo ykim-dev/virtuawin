@@ -75,7 +75,7 @@ void addModule(struct _finddata_t* aModule)
    PROCESS_INFORMATION pi;  
    sprintf(tmpPath, "%smodules\\", vwPath);
   
-   if(nOfModules > MAXMODULES) {
+   if(nOfModules >= MAXMODULES) {
       sprintf(errMsg, "Max number of modules where added.\n'%s' won't be loaded.", aModule->name);
       MessageBox(hWnd, errMsg, "Warning",0 );
       return;
@@ -168,6 +168,9 @@ void postModuleMessage(UINT Msg, WPARAM wParam, LPARAM lParam)
 
 /*
  * $Log$
+ * Revision 1.2  2000/07/11 17:45:42  jopi
+ * Added check for running modules. Modules will be re-used if already running
+ *
  * Revision 1.1.1.1  2000/06/03 15:38:05  jopi
  * Added first time
  *
