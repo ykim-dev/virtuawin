@@ -119,8 +119,21 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 
    strcpy(nIconD.szTip, appName);		// Tooltip
    if( displayTaskbarIcon )
-      Shell_NotifyIcon(NIM_ADD, &nIconD);	// This adds the icon
-
+   {
+      // This adds the icon
+      if(Shell_NotifyIcon(NIM_ADD, &nIconD) == 0)
+      {
+         BOOL retry = 1;
+         do
+         {
+            sleep(2000);
+            // Maybe Systray process hasn't started yet, try again
+            retry = Shell_NotifyIcon(NIM_ADD, &nIconD);  // This adds the icon
+         }
+         while(retry != 0);
+      }
+   }
+   
    /* Register the keys */
    registerAllKeys();
    setMouseKey();
@@ -2102,6 +2115,9 @@ void releaseMutex()
 
 /*
  * $Log$
+ * Revision 1.28  2003/02/27 19:57:01  jopi
+ * Old taskbar position was not deleted if taskbar position moved during operation. Also improved left/right/up/down taskbar position detection, seems like we can have negative coordinates on the position.
+ *
  * Revision 1.27  2003/01/27 20:22:59  jopi
  * Updated copyright header for 2003
  *
