@@ -36,7 +36,7 @@ HWND vwHandle;     // Handle to VirtuaWin
 
 typedef struct {
       HWND handle;
-      char winName[100];
+      char winName[104];
 } winType;
 
 winType windowList[999]; // should be enough
@@ -102,7 +102,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
    if (!InitApplication())
       return 0;
   
-   // In this example, the window is never shown
+   // the window is never shown
    if ((hwndMain = CreateWindow("WinList.exe", 
                                 "WinList", 
                                 WS_POPUP,
@@ -132,15 +132,19 @@ __inline BOOL CALLBACK enumWindowsProc(HWND hwnd, LPARAM lParam)
 {
    int style = GetWindowLong(hwnd, GWL_STYLE);
    int exstyle = GetWindowLong(hwnd, GWL_EXSTYLE);
-
+   
    if (!(style & WS_CHILD) && (!GetParent(hwnd) || GetParent(hwnd) == GetDesktopWindow()) &&
        !(exstyle & WS_EX_TOOLWINDOW))
    {
+      char tmpString[50];
+      char tmpString2[50];
       // Add window to the windowlist
-      if(!GetWindowText(hwnd, windowList[noOfWin].winName, 99))
-      {
-         GetClassName(hwnd, windowList[noOfWin].winName, 99);
-      }
+      if(!GetWindowText(hwnd, tmpString, 49))
+         strcpy(tmpString, "<None>");
+      
+      GetClassName(hwnd, tmpString2, 49);
+      sprintf( windowList[noOfWin].winName, "%s : (%s)", tmpString, tmpString2);
+      
       windowList[noOfWin].handle = hwnd;
       noOfWin++;
    }
@@ -155,6 +159,7 @@ static int InitializeApp(HWND hDlg, WPARAM wParam, LPARAM lParam)
    int index = 0;
    noOfWin = 0;
    EnumWindows(enumWindowsProc, 0);   // get all windows
+   SendDlgItemMessage(hDlg, ID_WINLIST, LB_SETHORIZONTALEXTENT, 110, 0);
    for(;index < noOfWin; index++)
    {
       SendDlgItemMessage(hDlg, ID_WINLIST, LB_ADDSTRING, 0, (LONG)windowList[index].winName);
@@ -202,3 +207,8 @@ static BOOL CALLBACK DialogFunc(HWND hwndDlg, UINT msg, WPARAM wParam, LPARAM lP
    }
    return FALSE;
 }
+
+/*
+ * $Log$
+ *
+ */
