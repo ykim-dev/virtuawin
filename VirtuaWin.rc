@@ -160,7 +160,7 @@ FONT 8, "MS Sans Serif"
 BEGIN
     GROUPBOX        "VirtuaWin  V2.x test", IDC_STATIC, 6, 2, 165, 81, 0x0300
     ICON            IDI_LARGEAPP, IDC_STATIC, 78, 14, 20, 20
-    CTEXT           "Copyright (c) 1999-2003 and 2004 Johan Piculell", IDC_STATIC, 9, 38, 158, 8
+    CTEXT           "Copyright (c) 1999-2004 and 2005 Johan Piculell", IDC_STATIC, 9, 38, 158, 8
     CTEXT           "virtuawin@home.se", IDC_MAILTO, 9, 48, 158, 8, 0x0100
     CTEXT           "Latest version, info, source, etc. visit:", IDC_STATIC, 9, 62, 158, 8
     CTEXT           "http://virtuawin.sourceforge.net/", IDC_HTTP, 9, 72, 158, 10, 0x0100
