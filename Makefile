@@ -1,12 +1,14 @@
 # Wedit Makefile for project VirtuaWin
-CFLAGS=-IC:\lcc\include  -O
+CFLAGS=-IC:\lcc\include -O
+LINKFLAGS=-s -subsystem windows
 CC=lcc.exe
+TARGET=VirtuaWin.exe
 OBJS = VirtuaWin.res VirtuaWin.obj DiskRoutines.obj SetupDialog.obj ModuleRoutines.obj
 
 LIBS = shell32.lib
 
-VirtuaWin.exe:	$(OBJS) Makefile
-	lcclnk  -s -subsystem windows -o VirtuaWin.exe $(OBJS) $(LIBS)
+$(TARGET):	$(OBJS) Makefile
+	lcclnk $(LINKFLAGS) -o $(TARGET) $(OBJS) $(LIBS)
 
 # Build VirtuaWin.res
 VIRTUAWIN_RC=\
@@ -49,3 +51,8 @@ SetupDialog.obj: $(SETUPDIALOG_C) Setupdialog.c
 
 ModuleRoutines.obj: $(MODULEROUTINES_C) ModuleRoutines.c
 	$(CC) -c $(CFLAGS) ModuleRoutines.c 
+
+clean: 
+	@rm $(OBJS)
+
+all: clean $(TARGET)
