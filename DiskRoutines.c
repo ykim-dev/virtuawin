@@ -22,6 +22,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <lmcons.h>
 #include "DiskRoutines.h"
 #include "ConfigParameters.h"
 
@@ -35,7 +36,7 @@ void loadFilePaths()
    HKEY hkey = NULL;
    DWORD dwType;
    DWORD cbData = 0;
-   DWORD dwUserNameLen=0;
+   DWORD dwUserNameLen = 0;
    LPSTR winCurrentUser;
    long lResult = RegOpenKeyEx(HKEY_LOCAL_MACHINE, "Software\\VirtuaWin\\Settings", 0,
                                KEY_READ, &hkey);
@@ -43,9 +44,9 @@ void loadFilePaths()
       lResult = RegQueryValueEx(hkey, "Path", NULL, &dwType, NULL, &cbData);
       vwPath   = (LPSTR)malloc(cbData * sizeof(char));
       // Get current user data
-      lResult = GetUserName(NULL, &dwUserNameLen);
-      winCurrentUser = (LPSTR)malloc(dwUserNameLen * sizeof(char));
-      lResult = GetUserName((LPBYTE)winCurrentUser, &dwUserNameLen);
+      dwUserNameLen = ( (UNLEN + 1) * sizeof(char) );
+      winCurrentUser = (LPSTR)malloc( dwUserNameLen );
+      lResult = GetUserName( (LPBYTE) winCurrentUser, &dwUserNameLen );
 
       vwConfig = (LPSTR)malloc(cbData * sizeof(char) + dwUserNameLen * sizeof(char) + 14);
       vwList   = (LPSTR)malloc(cbData * sizeof(char) + 13);
@@ -61,6 +62,7 @@ void loadFilePaths()
                                 (LPBYTE)vwPath, &cbData);
 
       sprintf(vwConfig, "%svwconfig.%s.cfg", vwPath, winCurrentUser);
+      free(winCurrentUser);
       sprintf(vwList, "%suserlist.cfg", vwPath);
       sprintf(vwHelp, "%svirtuawin", vwPath);
       sprintf(vwSticky, "%ssticky.cfg", vwPath);
@@ -265,6 +267,9 @@ int loadUserList(userType* theUserList)
 
 /*
  * $Log$
+ * Revision 1.3  2000/08/19 15:00:26  jopi
+ * Added multiple user setup support (Alasdair McCaig) and fixed creation of setup file if it don't exist
+ *
  * Revision 1.2  2000/07/18 16:02:29  jopi
  * Changed mail adress in error message
  *
