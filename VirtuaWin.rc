@@ -148,7 +148,7 @@ IDD_PROPPAGE_ABOUT DIALOG 0, 0, 150, 150
 STYLE DS_3DLOOK | WS_CHILD | WS_DISABLED | WS_BORDER
 FONT 8, "MS Sans Serif"
 BEGIN
-    GROUPBOX        "VirtuaWin  V2.5 Prerelease", IDC_STATIC, 6, 6, 165, 85, 0x0300
+    GROUPBOX        "VirtuaWin  V2.5", IDC_STATIC, 6, 6, 165, 85, 0x0300
     ICON            IDI_LARGEAPP, IDC_STATIC, 78, 18, 20, 20
     CTEXT           "Copyright (c) 1999, 2000, 2001 jopi", IDC_STATIC, 9, 42, 158, 8
     CTEXT           "virtuawin@home.se", IDC_MAILTO, 9, 52, 158, 8, 0x0100
