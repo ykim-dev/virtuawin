@@ -134,7 +134,7 @@ static BOOL APIENTRY about(HWND hDlg, UINT message, UINT wParam, LONG lParam)
             }  
          }
          else if(LOWORD(wParam) == IDC_HTTP) {
-            HINSTANCE h = ShellExecute(NULL, "open", "http://www.student.hk-r.se/~pt96jpi", 
+            HINSTANCE h = ShellExecute(NULL, "open", "http://w1.457.telia.com/~u45706979", 
                                        NULL, NULL, SW_SHOWNORMAL);
             if ((UINT)h < 33) {
                MessageBox(hDlg, "Error open web link.", "VirtuawWin", MB_ICONWARNING);
@@ -849,6 +849,9 @@ static BOOL APIENTRY modules(HWND hDlg, UINT message, UINT wParam, LONG lParam)
 
 /*
  * $Log$
+ * Revision 1.4  2001/01/28 16:26:56  jopi
+ * Configuration behaviour change. It is now possible to test all settings by using apply and all changes will be rollbacked if cancel is pressed
+ *
  * Revision 1.3  2001/01/12 18:14:34  jopi
  * Modules will now get a notification when desktop layout has changed since we might have a new current desktop number after a change. Also fixed so that config update notification is sent upon apply and only when something has changed upon hitting ok. Config file will also be written upon every apply and not if cancel is selected
  *
