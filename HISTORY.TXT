@@ -1,5 +1,15 @@
 ***   VirtuaWin Revision History   ***
 --------------------------------------
+Ver 2.10 2005/02/16
+* Changed compiler to gcc, maybe fixes some reported crashes?
+* SF904069 Added possibility to choose if sticky should be permanent for all instances 
+  of the same classname.
+* SF905625, Added module message for changing the sticky state of a window
+* SF936865, use virtual sceensize for mouse switching instead since multimonitor 
+  setups would switch desktop prematurely otherwise.
+* SF1053738, added application icons to the window list
+----------------------------
+
 Ver 2.9 2004/01/10
 * SF770859, Window menu heading will not be displayed if only one meny is used
 * Bugfix: When assigning a visible window to current desktop (by module message) the window was lost.
