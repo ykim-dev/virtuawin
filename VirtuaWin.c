@@ -1464,6 +1464,7 @@ HMENU createSortedWinList(int multiplier)
          char *name;
          long id;
          long desk;
+         BOOL sticky;
    } MenuItem;
 
    HMENU        hMenu;         // menu bar handle
@@ -1484,6 +1485,7 @@ HMENU createSortedWinList(int multiplier)
       item = malloc( sizeof(MenuItem) );
       item->name = strdup (title);
       item->desk = winList[i].Desk;
+      item->sticky = winList[i].Sticky;
       item->id = i;
       items [i]   = item;
       items [i+1] = NULL;
@@ -1511,9 +1513,9 @@ HMENU createSortedWinList(int multiplier)
          if(c) AppendMenu(hMenu, MF_SEPARATOR, 0, NULL );
          c = items [x]->desk;
       }
-
+      
       AppendMenu( hMenu,
-                  MF_STRING | (winList[i].Sticky ? MF_CHECKED: 0),
+                  MF_STRING | (items[x]->sticky ? MF_CHECKED: 0),
                   multiplier * MAXWIN + (items[x]->id), items[x]->name );
       free ( items[x]->name );
       free ( items[x]);
@@ -1852,6 +1854,9 @@ void readConfig()
 
 /*
  * $Log$
+ * Revision 1.5  2000/08/28 21:38:37  jopi
+ * Added new functions for menu hot key registration. Fixed bug with needing to have hot keys enabled for menu keys to work and also better error message
+ *
  * Revision 1.4  2000/08/19 15:00:26  jopi
  * Added multiple user setup support (Alasdair McCaig) and fixed creation of setup file if it don't exist
  *
