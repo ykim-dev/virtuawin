@@ -1,6 +1,6 @@
 
                        VirtuaWin
-	<http://www.student.hk-r.se/~pt96jpi/>
+          <http://w1.457.telia.com/~u45706979/>
 	
                   by jopi
                  <virtuawin@home.se>
@@ -43,7 +43,7 @@ Please include version number.
 
 Copyright
 --------------------------------------------------------------
-VirtuaWin is copyright (c) 1999, 2000 by jopi and is 
+VirtuaWin is copyright (c) 1999, 2000, 2001 by jopi and is 
 licensed through the GNU General Public License. Read the 
 COPYING.TXT file for the complete license.
 
