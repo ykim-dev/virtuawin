@@ -23,6 +23,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <lmcons.h>
+#include <io.h>
+
 #include "DiskRoutines.h"
 #include "ConfigParameters.h"
 
@@ -463,6 +465,9 @@ BOOL tryToLock()
 
 /*
  * $Log$
+ * Revision 1.5  2001/01/12 18:11:26  jopi
+ * Moved some disk stuff from VirtuaWin to DiskRoutines
+ *
  * Revision 1.4  2000/12/11 20:39:57  jopi
  * Fixed a bug with the username lookup for config file, could go wrong sometimes
  *

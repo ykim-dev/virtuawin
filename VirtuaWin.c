@@ -33,7 +33,6 @@
 #include <string.h>
 #include <commctrl.h>
 #include <math.h>
-#include <io.h>
 
 /*************************************************
  * VirtuaWin start point
@@ -1658,6 +1657,9 @@ VOID CALLBACK FlashProc(HWND hwnd, UINT uMsg, UINT idEvent, DWORD dwTime)
 
 /*
  * $Log$
+ * Revision 1.8  2001/01/12 18:11:25  jopi
+ * Moved some disk stuff from VirtuaWin to DiskRoutines
+ *
  * Revision 1.7  2001/01/12 16:58:11  jopi
  * Added module message for getting the current desktop number
  *
