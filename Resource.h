@@ -1,4 +1,6 @@
-/* Weditres generated include file. Do NOT edit */
+#ifndef _RESOURCE_H_
+#define _RESOURCE_H
+
 #define	IDC_STATIC	-1
 #define	IDD_PROPPAGE_KEYS	102
 #define	IDS_APP_TITLE	103
@@ -100,8 +102,13 @@
 #define	ID_GATHER	32775
 #define	ID_HELP	        32777
 
+#endif
+
 /*
  * $Log$
+ * Revision 1.2  2000/08/18 23:43:07  jopi
+ *  Minor modifications by Matti Jagula <matti@proekspert.ee> List of modifications follows: Added window title sorting in popup menus (Assign, Direct, Sticky) Added some controls to Setup Misc tab and support for calling the popup menus from keyboard.
+ *
  * Revision 1.1.1.1  2000/06/03 15:38:05  jopi
  * Added first time
  *
