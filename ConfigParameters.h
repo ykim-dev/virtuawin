@@ -1,7 +1,7 @@
 //
 //  VirtuaWin - Virtual Desktop Manager for Win9x/NT/Win2K
 // 
-//  Copyright (c) 1999, 2000, 2001, 2002 jopi
+//  Copyright (c) 1999, 2000, 2001, 2002 Johan Piculell
 // 
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -71,7 +71,9 @@ extern BOOL useDeskAssignment;  // if we have desktop assignment
 extern BOOL saveLayoutOnExit;   // save the desktop layout upon exit
 extern BOOL assignOnlyFirst;    // only assign the first window to a saved desktop 
 extern BOOL cyclingKeysEnabled; // If we are using the cycling hotkeys
-extern BOOL displayTaskbarIcon;// Should we display the systray icon
+extern BOOL displayTaskbarIcon; // Should we display the systray icon
+extern BOOL noTaskbarCheck;     // Should we skip the taskbar search
+extern BOOL trickyWindows;      // Use the alternate hiding technique
 
 extern UINT MOUSEKEY;           // Holds the modifier for enabling mouse warp
 extern UINT VW_STICKY;
@@ -136,25 +138,28 @@ extern LPSTR vwWindowsState;  // holds windowsata file name + path
 
 /*
  * $Log$
- * Revision 1.7  2002/06/01 19:33:33  jopi
+ * Revision 1.8  2002/06/01 21:15:23  Johan Piculell
+ * Multiple fixes by Christian Storm.
+ *
+ * Revision 1.7  2002/06/01 19:33:33  Johan Piculell
  * *** empty log message ***
  *
- * Revision 1.6  2002/02/14 21:23:38  jopi
+ * Revision 1.6  2002/02/14 21:23:38  Johan Piculell
  * Updated copyright header
  *
- * Revision 1.5  2001/12/01 00:05:52  jopi
+ * Revision 1.5  2001/12/01 00:05:52  Johan Piculell
  * Added alternative window hiding for troublesome windows like InternetExplorer
  *
- * Revision 1.4  2001/11/12 21:39:15  jopi
+ * Revision 1.4  2001/11/12 21:39:15  Johan Piculell
  * Added functionality for disabling the systray icon
  *
- * Revision 1.3  2001/02/05 21:13:07  jopi
+ * Revision 1.3  2001/02/05 21:13:07  Administrator
  * Updated copyright header
  *
- * Revision 1.2  2000/08/18 23:43:07  jopi
+ * Revision 1.2  2000/08/18 23:43:07  Administrator
  *  Minor modifications by Matti Jagula <matti@proekspert.ee> List of modifications follows: Added window title sorting in popup menus (Assign, Direct, Sticky) Added some controls to Setup Misc tab and support for calling the popup menus from keyboard.
  *
- * Revision 1.1.1.1  2000/06/03 15:38:05  jopi
+ * Revision 1.1.1.1  2000/06/03 15:38:05  Administrator
  * Added first time
  *
  */

@@ -1,7 +1,7 @@
 //
 //  VirtuaWin - Virtual Desktop Manager for Win9x/NT/Win2K
 // 
-//  Copyright (c) 1999, 2000, 2001, 2002 jopi
+//  Copyright (c) 1999, 2000, 2001, 2002 Johan Piculell
 // 
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -417,6 +417,8 @@ void writeConfig()
       fprintf(fp, "Hot_key_WinMenu# %i\n", hotkeyMenuWin);
       fprintf(fp, "Display_systray_icon# %i\n", displayTaskbarIcon);
       fprintf(fp, "Sticky_Win# %i\n", VW_STICKYWIN);
+      fprintf(fp, "Taskbar_detection# %i\n", noTaskbarCheck);
+      fprintf(fp, "Use_trickywindows# %i\n", trickyWindows);
 
       fclose(fp);
    }
@@ -508,7 +510,9 @@ void readConfig()
       fscanf(fp, "%s%i", &dummy, &hotkeyMenuWin);
       fscanf(fp, "%s%i", &dummy, &displayTaskbarIcon);
       fscanf(fp, "%s%i", &dummy, &VW_STICKYWIN);
-      
+      fscanf(fp, "%s%i", &dummy, &noTaskbarCheck);
+      fscanf(fp, "%s%i", &dummy, &trickyWindows);
+
       fclose(fp);
    }
 }
@@ -583,44 +587,47 @@ BOOL tryToLock()
 
 /*
  * $Log$
- * Revision 1.13  2002/08/08 21:13:02  jopi
+ * Revision 1.14  2002/10/01 19:52:48  Johan Piculell
+ * Fixed a memory leak
+ *
+ * Revision 1.13  2002/08/08 21:13:02  Johan Piculell
  * Fixed so that the recovery file is written with correct endlines.
  *
- * Revision 1.12  2002/06/01 21:15:23  jopi
+ * Revision 1.12  2002/06/01 21:15:23  Johan Piculell
  * Multiple fixes by Christian Storm.
  *
- * Revision 1.11  2002/02/14 21:23:39  jopi
+ * Revision 1.11  2002/02/14 21:23:39  Johan Piculell
  * Updated copyright header
  *
- * Revision 1.10  2001/12/01 00:05:52  jopi
+ * Revision 1.10  2001/12/01 00:05:52  Johan Piculell
  * Added alternative window hiding for troublesome windows like InternetExplorer
  *
- * Revision 1.9  2001/11/12 21:39:14  jopi
+ * Revision 1.9  2001/11/12 21:39:14  Johan Piculell
  * Added functionality for disabling the systray icon
  *
- * Revision 1.8  2001/11/12 18:21:52  jopi
+ * Revision 1.8  2001/11/12 18:21:52  Johan Piculell
  * Added support for classnames that contains spaces which will fix some
  * problems with desktop state save and sticky save.
  *
- * Revision 1.7  2001/02/05 21:13:07  jopi
+ * Revision 1.7  2001/02/05 21:13:07  Administrator
  * Updated copyright header
  *
- * Revision 1.6  2001/01/14 16:27:42  jopi
+ * Revision 1.6  2001/01/14 16:27:42  Administrator
  * Moved io.h include to DiskRoutines.c
  *
- * Revision 1.5  2001/01/12 18:11:26  jopi
+ * Revision 1.5  2001/01/12 18:11:26  Administrator
  * Moved some disk stuff from VirtuaWin to DiskRoutines
  *
- * Revision 1.4  2000/12/11 20:39:57  jopi
+ * Revision 1.4  2000/12/11 20:39:57  Administrator
  * Fixed a bug with the username lookup for config file, could go wrong sometimes
  *
- * Revision 1.3  2000/08/19 15:00:26  jopi
+ * Revision 1.3  2000/08/19 15:00:26  Administrator
  * Added multiple user setup support (Alasdair McCaig) and fixed creation of setup file if it don't exist
  *
- * Revision 1.2  2000/07/18 16:02:29  jopi
+ * Revision 1.2  2000/07/18 16:02:29  Administrator
  * Changed mail adress in error message
  *
- * Revision 1.1.1.1  2000/06/03 15:38:05  jopi
+ * Revision 1.1.1.1  2000/06/03 15:38:05  Administrator
  * Added first time
  *
  */

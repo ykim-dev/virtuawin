@@ -99,6 +99,8 @@
 #define IDC_HOTMENUW 1078
 #define IDC_HOTMENUEN 1079
 #define IDC_DISPLAYICON 1080
+#define IDC_TASKBARDETECT 1081
+#define IDC_TRICKYSUPPORT 1082
 
 #define	ID_SETUP	32771
 #define	ID_EXIT	        32772
@@ -109,6 +111,9 @@
 
 /*
  * $Log$
+ * Revision 1.6  2002/12/23 14:16:47  jopi
+ * Added a new setup tab, "expert" and moved some settings from misc.
+ *
  * Revision 1.5  2002/06/01 21:15:23  Johan Piculell
  * Multiple fixes by Christian Storm.
  *

@@ -58,10 +58,6 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
       return 0; // ...and quit 
    }
    
-   // Fix some things for the alternate hide method
-   RM_Shellhook = RegisterWindowMessage("SHELLHOOK");
-   goGetTheTaskbarHandle();
-
    /* Create a window class for the window that receives systray notifications.
       The window will never be displayed */
    wc.cbSize = sizeof(WNDCLASSEX);
@@ -88,12 +84,17 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
    releaseHnd = GetDesktopWindow();
   
    loadFilePaths();
-   
    readConfig();	// Read the config file
+   
+   // Fix some things for the alternate hide method
+   RM_Shellhook = RegisterWindowMessage("SHELLHOOK");
+   goGetTheTaskbarHandle();
+
    loadIcons();
    
    // Load tricky windows, must be done before the crashRecovery
-   curTricky   = loadTrickyList( trickyList );
+   if(trickyWindows)
+      curTricky   = loadTrickyList( trickyList );
    
    /* Now, set the lock file */
    if(crashRecovery) {
@@ -1384,7 +1385,7 @@ __inline void integrateWindow(HWND* hwnd)
       char buf[100];
       GetClassName(hwnd, buf, 99);
 
-      if( isSpecialWindow( buf ) )
+      if( isSpecialWindow( buf ) && trickyList)
       {
          winList[nWin].NormalHide = FALSE;
          winList[nWin].StyleFlags = exstyle;
@@ -1893,8 +1894,8 @@ void showHideWindow( windowType* aWindow, BOOL show )
    if( isDragging && ( aWindow->Handle == currentActive ))
       return;
    
-   // Normal Case
-   if( aWindow->NormalHide )
+   // Normal Case || alternative method disabled
+   if( aWindow->NormalHide || !trickyWindows)
    {
       if( show )
       {
@@ -2018,17 +2019,20 @@ BOOL isSpecialWindow( char* className )
  */
 void goGetTheTaskbarHandle()
 {
-   HWND hwndTray = FindWindowEx(NULL, NULL, "Shell_TrayWnd", NULL);
-   HWND hwndBar = FindWindowEx(hwndTray, NULL, "ReBarWindow32", NULL );
-
-   // Maybe "RebarWindow32" is not a child to "Shell_TrayWnd", then try this
-   if( hwndBar == NULL )
-      hwndBar = hwndTray;
-   
-   hwndTask = FindWindowEx(hwndBar, NULL, "MSTaskSwWClass", NULL);
-
-   if( hwndTask == NULL )
-      MessageBox(hWnd, "Could not locate handle to the taskbar.\n This will disable the ability to hide troublesome windows correctly.", "VirtuaWin", 0); 
+   if(!noTaskbarCheck)
+   {
+      HWND hwndTray = FindWindowEx(NULL, NULL, "Shell_TrayWnd", NULL);
+      HWND hwndBar = FindWindowEx(hwndTray, NULL, "ReBarWindow32", NULL );
+      
+      // Maybe "RebarWindow32" is not a child to "Shell_TrayWnd", then try this
+      if( hwndBar == NULL )
+         hwndBar = hwndTray;
+      
+      hwndTask = FindWindowEx(hwndBar, NULL, "MSTaskSwWClass", NULL);
+      
+      if( hwndTask == NULL )
+         MessageBox(hWnd, "Could not locate handle to the taskbar.\n This will disable the ability to hide troublesome windows correctly.", "VirtuaWin", 0); 
+   }
 }
 
 /************************************************
@@ -2050,20 +2054,23 @@ void getScreenSize()
  */
 void getTaskbarLocation()
 {
-   RECT r;
-   /* Get the height of the task bar */
-   GetWindowRect(FindWindow("Shell_traywnd", ""), &r);
-   /* Determine position of task bar */
-   if ((r.bottom + r.top) == (screenBottom - screenTop)) // task bar is on side
-      if (r.left == screenLeft)                          // task bar is on left
-         taskBarLeftWarp   = r.right - r.left - 3;
-      else                                               // task bar is on right
-         taskBarRightWarp  = r.right - r.left - 3;
-   else                                                  // task bar is on top/bottom
-      if (r.top == screenTop)                            // task bar is on top
-         taskBarTopWarp    = r.bottom - r.top - 3;
-      else                                               // task bar is on bottom
-         taskBarBottomWarp = r.bottom - r.top - 3;
+   if(!noTaskbarCheck)
+   {
+      RECT r;
+      /* Get the height of the task bar */
+      GetWindowRect(FindWindow("Shell_traywnd", ""), &r);
+      /* Determine position of task bar */
+      if ((r.bottom + r.top) == (screenBottom - screenTop)) // task bar is on side
+         if (r.left == screenLeft)                          // task bar is on left
+            taskBarLeftWarp   = r.right - r.left - 3;
+         else                                               // task bar is on right
+            taskBarRightWarp  = r.right - r.left - 3;
+      else                                                  // task bar is on top/bottom
+         if (r.top == screenTop)                            // task bar is on top
+            taskBarTopWarp    = r.bottom - r.top - 3;
+         else                                               // task bar is on bottom
+            taskBarBottomWarp = r.bottom - r.top - 3;
+   }
 }
 
 /************************************************
@@ -2086,6 +2093,9 @@ void releaseMutex()
 
 /*
  * $Log$
+ * Revision 1.25  2002/12/21 08:44:20  jopi
+ * The "tricky" windows was not moved away far enough from the screen so you could see a small grey bar at the screen bottom.
+ *
  * Revision 1.24  2002/09/26 21:00:50  Johan Piculell
  * Added mutex protection for the window list
  *

@@ -1,7 +1,7 @@
 //
 //  VirtuaWin - Virtual Desktop Manager for Win9x/NT/Win2K
 // 
-//  Copyright (c) 1999, 2000, 2001, 2002 jopi
+//  Copyright (c) 1999, 2000, 2001, 2002 Johan Piculell
 // 
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -206,6 +206,8 @@ BOOL saveLayoutOnExit = FALSE;
 BOOL assignOnlyFirst = FALSE;
 BOOL cyclingKeysEnabled = FALSE;
 BOOL displayTaskbarIcon = TRUE;
+BOOL noTaskbarCheck = FALSE;
+BOOL trickyWindows = TRUE;
 
 UINT MOUSEKEY = 0;
 UINT VW_STICKY = 0;
@@ -273,52 +275,55 @@ LPSTR vwWindowsState;
 
 /*
  * $Log$
- * Revision 1.16  2002/06/15 11:17:50  jopi
+ * Revision 1.17  2002/09/27 16:45:12  Johan Piculell
+ * Added mutex protection for the window list
+ *
+ * Revision 1.16  2002/06/15 11:17:50  Johan Piculell
  * Fixed so that window coordinates are reloaded when resolution is changed, and also so that taskbar location is reloaded if moved.
  *
- * Revision 1.15  2002/06/01 21:15:22  jopi
+ * Revision 1.15  2002/06/01 21:15:22  Johan Piculell
  * Multiple fixes by Christian Storm.
  *
- * Revision 1.14  2002/06/01 19:33:33  jopi
+ * Revision 1.14  2002/06/01 19:33:33  Johan Piculell
  * *** empty log message ***
  *
- * Revision 1.13  2002/02/14 21:23:41  jopi
+ * Revision 1.13  2002/02/14 21:23:41  Johan Piculell
  * Updated copyright header
  *
- * Revision 1.12  2001/12/01 00:05:52  jopi
+ * Revision 1.12  2001/12/01 00:05:52  Johan Piculell
  * Added alternative window hiding for troublesome windows like InternetExplorer
  *
- * Revision 1.11  2001/11/12 21:39:41  jopi
+ * Revision 1.11  2001/11/12 21:39:41  Johan Piculell
  * Added functionality for disabling the systray icon
  *
- * Revision 1.10  2001/11/12 18:33:42  jopi
+ * Revision 1.10  2001/11/12 18:33:42  Johan Piculell
  * Fixed so that user windows are also checked if they are saved as sticky.
  *
- * Revision 1.9  2001/02/05 21:13:08  jopi
+ * Revision 1.9  2001/02/05 21:13:08  Administrator
  * Updated copyright header
  *
- * Revision 1.8  2001/01/28 16:26:56  jopi
+ * Revision 1.8  2001/01/28 16:26:56  Administrator
  * Configuration behaviour change. It is now possible to test all settings by using apply and all changes will be rollbacked if cancel is pressed
  *
- * Revision 1.7  2001/01/12 18:11:25  jopi
+ * Revision 1.7  2001/01/12 18:11:25  Administrator
  * Moved some disk stuff from VirtuaWin to DiskRoutines
  *
- * Revision 1.6  2000/12/11 21:29:47  jopi
+ * Revision 1.6  2000/12/11 21:29:47  Administrator
  * Changed version number
  *
- * Revision 1.5  2000/08/28 21:38:37  jopi
+ * Revision 1.5  2000/08/28 21:38:37  Administrator
  * Added new functions for menu hot key registration. Fixed bug with needing to have hot keys enabled for menu keys to work and also better error message
  *
- * Revision 1.4  2000/08/19 00:02:13  jopi
+ * Revision 1.4  2000/08/19 00:02:13  Administrator
  * Changed version number
  *
- * Revision 1.3  2000/08/18 23:43:08  jopi
+ * Revision 1.3  2000/08/18 23:43:08  Administrator
  *  Minor modifications by Matti Jagula <matti@proekspert.ee> List of modifications follows: Added window title sorting in popup menus (Assign, Direct, Sticky) Added some controls to Setup Misc tab and support for calling the popup menus from keyboard.
  *
- * Revision 1.2  2000/08/18 21:41:32  jopi
+ * Revision 1.2  2000/08/18 21:41:32  Administrator
  * Added the code again that removes closed windows, this will avoid having closed child windows reappearing again. Also updated the mail adress
  *
- * Revision 1.1.1.1  2000/06/03 15:38:05  jopi
+ * Revision 1.1.1.1  2000/06/03 15:38:05  Administrator
  * Added first time
  *
  */

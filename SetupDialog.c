@@ -854,6 +854,10 @@ static BOOL APIENTRY expert(HWND hDlg, UINT message, UINT wParam, LONG lParam)
             SendDlgItemMessage(hDlg, IDC_INVERTY, BM_SETCHECK, 1,0);
          if(!displayTaskbarIcon)
             SendDlgItemMessage(hDlg, IDC_DISPLAYICON, BM_SETCHECK, 1,0);
+         if(noTaskbarCheck)
+            SendDlgItemMessage(hDlg, IDC_TASKBARDETECT, BM_SETCHECK, 1,0);
+         if(trickyWindows)
+            SendDlgItemMessage(hDlg, IDC_TRICKYSUPPORT, BM_SETCHECK, 1,0);
          return TRUE;
 
       case WM_NOTIFY:
@@ -890,6 +894,14 @@ static BOOL APIENTRY expert(HWND hDlg, UINT message, UINT wParam, LONG lParam)
                   invertY = TRUE;
                else
                   invertY = FALSE;
+               if(SendDlgItemMessage(hDlg, IDC_TASKBARDETECT, BM_GETCHECK, 0, 0) == BST_CHECKED)
+                  noTaskbarCheck = TRUE;
+               else
+                  noTaskbarCheck = FALSE;
+               if(SendDlgItemMessage(hDlg, IDC_TRICKYSUPPORT, BM_GETCHECK, 0, 0) == BST_CHECKED)
+                  trickyWindows = TRUE;
+               else
+                  trickyWindows = FALSE;
                if(SendDlgItemMessage(hDlg, IDC_DISPLAYICON, BM_GETCHECK, 0, 0) == BST_CHECKED)
                {
                   displayTaskbarIcon = FALSE;
@@ -914,7 +926,8 @@ static BOOL APIENTRY expert(HWND hDlg, UINT message, UINT wParam, LONG lParam)
          if(LOWORD(wParam) == IDC_FOCUS      || LOWORD(wParam) == IDC_LASTACTIVE ||
             LOWORD(wParam) == IDC_MINIMIZED  || LOWORD(wParam) == IDC_REFRESH ||
             LOWORD(wParam) == IDC_DESKCYCLE  || LOWORD(wParam) == IDC_INVERTY ||
-            LOWORD(wParam) == IDC_RECOVERY   || LOWORD(wParam) == IDC_DISPLAYICON ) {
+            LOWORD(wParam) == IDC_RECOVERY   || LOWORD(wParam) == IDC_DISPLAYICON ||
+            LOWORD(wParam) == IDC_TASKBARDETECT || LOWORD(wParam) == IDC_TRICKYSUPPORT ) {
             SendMessage(GetParent(hDlg), PSM_CHANGED, (WPARAM)hDlg, 0L);
          }
          else if (LOWORD(wParam) == IDC_LASTACTIVE) {
@@ -933,6 +946,9 @@ static BOOL APIENTRY expert(HWND hDlg, UINT message, UINT wParam, LONG lParam)
 
 /*
  * $Log$
+ * Revision 1.13  2002/12/23 14:16:47  jopi
+ * Added a new setup tab, "expert" and moved some settings from misc.
+ *
  * Revision 1.12  2002/06/01 21:15:22  Johan Piculell
  * Multiple fixes by Christian Storm.
  *
