@@ -930,7 +930,7 @@ static BOOL APIENTRY expert(HWND hDlg, UINT message, UINT wParam, LONG lParam)
             LOWORD(wParam) == IDC_TASKBARDETECT || LOWORD(wParam) == IDC_TRICKYSUPPORT ) {
             SendMessage(GetParent(hDlg), PSM_CHANGED, (WPARAM)hDlg, 0L);
          }
-         else if (LOWORD(wParam) == IDC_LASTACTIVE) {
+         if (LOWORD(wParam) == IDC_LASTACTIVE) {
             if(SendDlgItemMessage(hDlg, IDC_LASTACTIVE, BM_GETCHECK, 0, 0) == BST_CHECKED) {
                SendDlgItemMessage(hDlg, IDC_FOCUS, BM_SETCHECK, 0,0);
                EnableWindow(focus, FALSE);
@@ -946,6 +946,9 @@ static BOOL APIENTRY expert(HWND hDlg, UINT message, UINT wParam, LONG lParam)
 
 /*
  * $Log$
+ * Revision 1.15  2003/01/27 20:22:58  jopi
+ * Updated copyright header for 2003
+ *
  * Revision 1.14  2002/12/23 15:42:27  jopi
  * Added config options to disable taskbar detection and the alternative hiding technique.
  *
