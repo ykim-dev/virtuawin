@@ -1546,7 +1546,7 @@ HMENU createSortedWinList_cos()
    char title[35];
    MenuItem *items[MAXWIN], *item;
    char buff[31];
-   int i,x,y,c;
+   int i,x,y,c,d,e;
 
    BOOL menuBreak;				// indicates if vertical seperator is neesed
    hMenu = NULL;
@@ -1583,65 +1583,91 @@ HMENU createSortedWinList_cos()
       }
    }
    
-   c = 0; menuBreak = FALSE;
+   c = 0; d=1; e=0; menuBreak = FALSE;
    if(stickyMenu) {
       for (x=0; x < i; x++ )
       {
-         if (!c || c != items[x]->desk)
+         if ((!c || c != items[x]->desk) &&d )
          {
             if(c) AppendMenu(hMenu, MF_SEPARATOR, 0, NULL );
-            c = items [x]->desk;
+            c = items [x]->desk; d=0;
+         }
+         if (!e) {
+            AppendMenu(hMenu, MF_STRING, 0, "Sticky" );
+            AppendMenu(hMenu, MF_SEPARATOR, 0, NULL );
+            AppendMenu(hMenu, MF_SEPARATOR, 0, NULL );
+	    e=1;
          }
          AppendMenu( hMenu,
                      MF_STRING | (items[x]->sticky ? MF_CHECKED: 0),
                      MAXWIN + (items[x]->id), items[x]->name );
+	 d=1;
       }
    }
 
-   c=0; 
+   c=0; d=1; e=0;
    if(directMenu) {
       if (stickyMenu) menuBreak = TRUE;
       for (x=0; x < i; x++ )
       {
-         if (!c || c != items[x]->desk)
+         if ((!c || c != items[x]->desk)&&d)
          {
             if(c) AppendMenu(hMenu, MF_SEPARATOR, 0, NULL );
-            c = items [x]->desk;
+            c = items [x]->desk; d=0;
          }
-      
-         if (menuBreak) {
-            AppendMenu( hMenu,
-                        MF_STRING | (items[x]->sticky ? MF_CHECKED: 0) | MF_MENUBARBREAK,
-                        2 * MAXWIN + (items[x]->id), items[x]->name );
-            menuBreak = FALSE;
-         }
-         else
+
+//accessing current desk - direct assign makes no sense
+         if (items[x]->desk!=calculateDesk()) {
+	    if (!e) {
+               if (menuBreak) {
+                  AppendMenu( hMenu,
+                              MF_STRING | MF_MENUBARBREAK, 0, "Access" );
+                  menuBreak = FALSE;
+               }
+	       else
+                  AppendMenu(hMenu, MF_STRING, 0, "Access" );
+
+               AppendMenu(hMenu, MF_SEPARATOR, 0, NULL );
+               AppendMenu(hMenu, MF_SEPARATOR, 0, NULL );
+	       e=1;
+            }
             AppendMenu( hMenu,
                         MF_STRING | (items[x]->sticky ? MF_CHECKED: 0),
                         2 * MAXWIN + (items[x]->id), items[x]->name );
-
+	    d=1;
+         }
       }
    }
 
-   c=0;
+   c=0; d=1; e=0;
    if(assignMenu) {
       if (stickyMenu || directMenu) menuBreak=TRUE;
       for (x=0; x < i; x++ )
       {
-         if (!c || c != items[x]->desk)
+         if ((!c || c != items[x]->desk)&&d)
          {
             if(c) AppendMenu(hMenu, MF_SEPARATOR, 0, NULL );
-            c = items [x]->desk;
+            c = items [x]->desk; d=0;
          }
       
-         //sticky windows can't be assignes cause they're sticky :-) so leave them.out..
-         if (!items[x]->sticky)
-            if ( menuBreak ) {
-               AppendMenu( hMenu, MF_STRING | MF_MENUBARBREAK, 3 * MAXWIN + (items[x]->id), items[x]->name );
-               menuBreak = FALSE;
-            }
-            else
-               AppendMenu( hMenu, MF_STRING, 3 * MAXWIN + (items[x]->id), items[x]->name );
+         //sticky windows can't be assigned cause they're sticky :-) so leave them.out..
+	 //cannot assign to current Desktop
+         if ((!items[x]->sticky)&&(items[x]->desk!=calculateDesk())) {
+	    if (!e) {
+               if ( menuBreak ) {
+                  AppendMenu( hMenu, MF_STRING | MF_MENUBARBREAK, 0, "Assign" );
+                  menuBreak = FALSE; d=1;
+               }
+	       else
+                  AppendMenu(hMenu, MF_STRING, 0, "Assign" );
+
+               AppendMenu(hMenu, MF_SEPARATOR, 0, NULL );
+               AppendMenu(hMenu, MF_SEPARATOR, 0, NULL );
+	       e=1;
+	    }
+            AppendMenu( hMenu, MF_STRING, 3 * MAXWIN + (items[x]->id), items[x]->name );
+	    d=1;
+         }
       }
    }
 
@@ -1974,6 +2000,9 @@ void goGetTheTaskbarHandle()
 
 /*
  * $Log$
+ * Revision 1.20  2002/06/11 19:43:57  jopi
+ * Removed the MF_POPUP flag from the window menus since they shouldn't be created like this. Fixed by Ulf Jaenicke-Roessler.
+ *
  * Revision 1.19  2002/06/01 21:15:22  jopi
  * Multiple fixes by Christian Storm.
  *
