@@ -1,59 +1,41 @@
-# Wedit Makefile for project VirtuaWin
-INCLUDEPATH=c:\lcc\include
-CFLAGS=-I$(INCLUDEPATH) -O
-LINKFLAGS=-subsystem windows
-CC=lcc.exe
-TARGET=VirtuaWin.exe
-OBJS = VirtuaWin.res VirtuaWin.obj DiskRoutines.obj SetupDialog.obj ModuleRoutines.obj
+# MINGW Makefile for project VirtuaWin
+OSTYPE   = $(shell uname -msr)
 
-LIBS = shell32.lib
+ifeq ($(findstring CYGWIN,$(OSTYPE)),CYGWIN)
+CC      = gcc
+CFLAGS	= -mno-cygwin -Wall -O2
+LDFLAGS	= -mno-cygwin -O2
+RC      = windres 
+endif
 
-$(TARGET):	$(OBJS) Makefile
-	lcclnk $(LINKFLAGS) -o $(TARGET) $(OBJS) $(LIBS)
+ifeq ($(findstring MINGW32,$(OSTYPE)),MINGW32)
+CC      = gcc
+CFLAGS	= -Wall -O2
+LDFLAGS	= -O2
+RC      = windres 
+endif
 
-# Build VirtuaWin.res
-VIRTUAWIN_RC=\
-	$(INCLUDEPATH)\windows.h \
-	$(INCLUDEPATH)\win.h \
-	$(INCLUDEPATH)\limits.h \
-	$(INCLUDEPATH)\stdarg.h \
-	resource.h \
+ifeq ($(findstring Linux,$(OSTYPE)),Linux)
+CC      = i586-mingw32msvc-gcc
+CFLAGS  = -Wall -O2
+LDFLAGS = -O2
+RC	= i586-mingw32msvc-windres
+endif
 
-VirtuaWin.res:	$(VIRTUAWIN_RC) VirtuaWin.rc
-	lrc -Ic:\VirtuaWin -Ic:\lcc\include  VirtuaWin.rc
+TARGET	= VirtuaWin.exe
+OBJS	= VirtuaWin.o DiskRoutines.o SetupDialog.o ModuleRoutines.o VirtuaWin.coff
+LIBS	= -lshell32 -lcomctl32 -lgdi32 -lmsvcrt
 
-# Build VIRTUAWIN.C
-VIRTUAWIN_C=\
-	VirtuaWin.h \
-	Resource.h \
-	$(INCLUDEPATH)\windows.h \
-	$(INCLUDEPATH)\win.h\
-	$(INCLUDEPATH)\limits.h\
-	$(INCLUDEPATH)\stdarg.h\
-	$(INCLUDEPATH)\shellapi.h\
-	$(INCLUDEPATH)\stdio.h\
-	$(INCLUDEPATH)\_syslist.h\
-	$(INCLUDEPATH)\stdlib.h\
-	$(INCLUDEPATH)\stddef.h\
-	$(INCLUDEPATH)\string.h\
-	$(INCLUDEPATH)\commctrl.h\
-	$(INCLUDEPATH)\math.h\
-	$(INCLUDEPATH)\io.h\
-	$(INCLUDEPATH)\sys\stat.h\
+.c.o:
+	$(CC) $(CFLAGS) -c -o $@ $<
 
-VirtuaWin.obj: $(VIRTUAWIN_C) VirtuaWin.c 
-	$(CC) -c $(CFLAGS) VirtuaWin.c 
+$(TARGET): $(OBJS)
+	$(CC) $(LDFLAGS) -o $(TARGET) $(OBJS) $(LIBS)
 
-DiskRoutines.obj: $(DISKROUTINES_C) DiskRoutines.c
-	$(CC) -c $(CFLAGS) DiskRoutines.c 
-
-SetupDialog.obj: $(SETUPDIALOG_C) Setupdialog.c
-	$(CC) -c $(CFLAGS) Setupdialog.c 
-
-ModuleRoutines.obj: $(MODULEROUTINES_C) ModuleRoutines.c
-	$(CC) -c $(CFLAGS) ModuleRoutines.c 
+VirtuaWin.coff: VirtuaWin.rc
+	$(RC) --input-format rc --output-format coff -o $@ -i $<
 
 clean: 
-	@rm $(OBJS)
+	rm -f $(OBJS)
 
-all: clean $(TARGET)
+all:    clean $(TARGET)
