@@ -76,7 +76,6 @@ void forceForeground(HWND*);
 void findUserWindows();
 void loadIcons();
 void reLoadIcons();
-HMENU createWinList();
 void setMouseKey();
 WORD hotKey2ModKey(BYTE);
 void toggleActiveSticky();
@@ -276,6 +275,9 @@ LPSTR vwWindowsState;
 
 /*
  * $Log$
+ * Revision 1.20  2003/03/10 20:48:17  jopi
+ * Changed so that doubleclick will bring up setup and added a disabled menu item instead.
+ *
  * Revision 1.19  2003/01/27 20:23:54  jopi
  * Updated copyright header for 2003
  *

@@ -668,7 +668,7 @@ LRESULT CALLBACK wndProc(HWND aHWnd, UINT message, WPARAM wParam, LPARAM lParam)
          }
          else if(wParam == vwMenu && hotkeyMenuEn == TRUE) {
             if(enabled) {
-               hpopup = createWinList();
+               hpopup = createSortedWinList_cos();
                GetCursorPos(&pt);
                SetForegroundWindow(aHWnd);
                
@@ -873,7 +873,7 @@ LRESULT CALLBACK wndProc(HWND aHWnd, UINT message, WPARAM wParam, LPARAM lParam)
       
             case WM_LBUTTONDOWN: // Show the window list
                if(enabled) {
-                  hpopup = createWinList();
+                  hpopup = createSortedWinList_cos();
                   GetCursorPos(&pt);
                   SetForegroundWindow(aHWnd);
         
@@ -1514,41 +1514,6 @@ void packList()
 }
 
 /*************************************************
- * Creates the window list popup
- */
-HMENU createWinList()
-{
-   HMENU        hMenu;         // menu bar handle
-   HMENU        subSticky;     // sticky list
-   HMENU        subAssign;     // assign list
-   HMENU        subDirect;     // direct access list
-   int nOfMenus = 0;
-   
-   /* create the menus */
-  
-   if(stickyMenu) {
-      hMenu = subSticky = createSortedWinList(1);
-      nOfMenus++;
-   }
-   
-   if(directMenu) {
-      hMenu = subDirect = createSortedWinList(2);
-      nOfMenus++;
-   }
-   
-   if(assignMenu) {
-      hMenu = subAssign = createSortedWinList(3);
-      nOfMenus++;
-   }
-   
-   if( nOfMenus > 1 ) {
-      hMenu = createSortedWinList_cos();
-   }
-
-   return hMenu;
-}
-
-/*************************************************
  * createSortedWinList_cos creates a popup menu for the window-hotkey
  * which displays all windows in one list vertically seperated by a line.
  * first column is stiky, second is direct access and third is assign.
@@ -1633,7 +1598,7 @@ HMENU createSortedWinList_cos()
             c = items [x]->desk; d=0;
          }
 
-//accessing current desk - direct assign makes no sense
+         // accessing current desk - direct assign makes no sense
          if (items[x]->desk!=calculateDesk()) {
 	    if (!e) {
                if (menuBreak) {
@@ -2132,6 +2097,9 @@ void disableAll(HWND* aHWnd)
 
 /*
  * $Log$
+ * Revision 1.30  2003/03/10 20:48:18  jopi
+ * Changed so that doubleclick will bring up setup and added a disabled menu item instead.
+ *
  * Revision 1.29  2003/03/10 19:23:43  jopi
  * Fixed so that we retry to add the systray icon incase of failure, we might be in a position where we try to add the icon before the systray process is started.
  *
