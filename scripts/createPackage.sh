@@ -38,8 +38,9 @@ else
     cp ./$1/userlist.cfg ./tmp/
     cp ./$1/tricky.cfg ./tmp/
     cp ./$1/Help/virtuawin.* ./tmp/
-    cp ./virtuawin.iss ./tmp/
-    cp ./VirtuaWin5.0.ISL ./tmp/
+    cp ./$1/scripts/virtuawin.iss ./tmp/
+    cp ./$1/scripts/VirtuaWin5.0.ISL ./tmp/
+    cp ./$1/scripts/filelist ./tmp/
     
     echo compiling helpfile
     cd ./tmp/
@@ -59,7 +60,7 @@ else
     if ( $< == 'y' ) then
         echo Creating source package
         cd ../$1
-        /cygdrive/c/Program\ Files/WinZip/wzzip source$1.zip -P @../filelist
+        /cygdrive/c/Program\ Files/WinZip/wzzip source$1.zip -P @filelist
         echo Done!
     endif
 
@@ -89,3 +90,7 @@ else
 
     echo Packages created!
 endif
+
+#
+# $Log$
+#
