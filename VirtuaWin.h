@@ -97,11 +97,15 @@ BOOL isSpecialWindow( char* className );
 void goGetTheTaskbarHandle();
 void getScreenSize();
 void getTaskbarLocation();
+void lockMutex();
+void releaseMutex();
 
 // Variables
 HWND topWindow;        // holds the top window on a desktop
 HWND currentActive;    // holds the current active window
 BOOL userDefinedWin = FALSE;  // if we have any user defined
+
+extern HANDLE hMutex;
 
 HANDLE mouseThread;       // Handle to the mouse thread
 BOOL mouseEnabled = TRUE; // Status of the mouse thread, always running at startup 
@@ -113,7 +117,7 @@ static int curUser = 0;       // how many user applications we have
 
 static UINT MODKEY;	      // Holds the switch key modifiers
 
-static char appName[] = "VirtuaWin 2.6 Pre4";   // application name
+static char appName[] = "VirtuaWin 2.6.2 Testversion";   // application name
 
 ATOM stickyKey;
 ATOM vwLeft;
@@ -269,6 +273,9 @@ LPSTR vwWindowsState;
 
 /*
  * $Log$
+ * Revision 1.16  2002/06/15 11:17:50  jopi
+ * Fixed so that window coordinates are reloaded when resolution is changed, and also so that taskbar location is reloaded if moved.
+ *
  * Revision 1.15  2002/06/01 21:15:22  jopi
  * Multiple fixes by Christian Storm.
  *
