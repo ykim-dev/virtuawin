@@ -95,6 +95,8 @@ HMENU createSortedWinList(int);
 void enableMouse(BOOL);
 BOOL isSpecialWindow( char* className );
 void goGetTheTaskbarHandle();
+void getScreenSize();
+void getTaskbarLocation();
 
 // Variables
 HWND topWindow;        // holds the top window on a desktop
@@ -267,6 +269,9 @@ LPSTR vwWindowsState;
 
 /*
  * $Log$
+ * Revision 1.15  2002/06/01 21:15:22  jopi
+ * Multiple fixes by Christian Storm.
+ *
  * Revision 1.14  2002/06/01 19:33:33  jopi
  * *** empty log message ***
  *

@@ -78,26 +78,9 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 
    RegisterClassEx(&wc);
 
-   /* Get screen width and height */
-   GetClientRect(GetDesktopWindow(), &r);
-   screenLeft = r.left;
-   screenRight = r.right;
-   screenTop = r.top;
-   screenBottom = r.bottom;
-   /* Get the height of the task bar */
-   GetWindowRect(FindWindow("Shell_traywnd", ""), &r);
-   /* Determine position of task bar */
-   printf("Values: %d %d %d %d\n", r.bottom, r.top, screenBottom, screenTop);
-   if ((r.bottom + r.top) == (screenBottom - screenTop)) // task bar is on side
-      if (r.left == screenLeft)                          // task bar is on left
-         taskBarLeftWarp   = r.right - r.left - 3;
-      else                                               // task bar is on right
-         taskBarRightWarp  = r.right - r.left - 3;
-   else                                                  // task bar is on top/bottom
-      if (r.top == screenTop)                            // task bar is on top
-         taskBarTopWarp    = r.bottom - r.top - 3;
-      else                                               // task bar is on bottom
-         taskBarBottomWarp = r.bottom - r.top - 3;
+   getScreenSize();
+
+   getTaskbarLocation();
 
    /* set the window to give focus to when releasing focus on switch also used to refresh */
    releaseHnd = GetDesktopWindow();
@@ -920,7 +903,14 @@ LRESULT CALLBACK wndProc(HWND aHWnd, UINT message, WPARAM wParam, LPARAM lParam)
                break;
          }
          return TRUE;
-         
+
+      case WM_DISPLAYCHANGE:
+         getScreenSize();
+         return TRUE;
+      case WM_SETTINGCHANGE:
+         getTaskbarLocation();
+         return TRUE;
+
       default:
          // If taskbar restarted
          if((message == taskbarRestart) && displayTaskbarIcon )
@@ -1998,8 +1988,43 @@ void goGetTheTaskbarHandle()
       MessageBox(hWnd, "Could not locate handle to the taskbar.\n This will disable the ability to hide troublesome windows correctly.", "VirtuaWin", 0); 
 }
 
+/************************************************
+ * Get screen width and height and store values in
+ * global variables
+ */
+void getScreenSize()
+{
+   RECT r;
+   GetClientRect(GetDesktopWindow(), &r);
+   screenLeft = r.left;
+   screenRight = r.right;
+   screenTop = r.top;
+   screenBottom = r.bottom;
+}
+
+void getTaskbarLocation()
+{
+   RECT r;
+   /* Get the height of the task bar */
+   GetWindowRect(FindWindow("Shell_traywnd", ""), &r);
+   /* Determine position of task bar */
+   if ((r.bottom + r.top) == (screenBottom - screenTop)) // task bar is on side
+      if (r.left == screenLeft)                          // task bar is on left
+         taskBarLeftWarp   = r.right - r.left - 3;
+      else                                               // task bar is on right
+         taskBarRightWarp  = r.right - r.left - 3;
+   else                                                  // task bar is on top/bottom
+      if (r.top == screenTop)                            // task bar is on top
+         taskBarTopWarp    = r.bottom - r.top - 3;
+      else                                               // task bar is on bottom
+         taskBarBottomWarp = r.bottom - r.top - 3;
+}
+
 /*
  * $Log$
+ * Revision 1.21  2002/06/11 20:10:27  jopi
+ * Improved the window menus so that unnecessary menus and items won't show and they all have a lable. Fixes by Ulf Jaenicke-Roessler.
+ *
  * Revision 1.20  2002/06/11 19:43:57  jopi
  * Removed the MF_POPUP flag from the window menus since they shouldn't be created like this. Fixed by Ulf Jaenicke-Roessler.
  *
