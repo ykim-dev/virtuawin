@@ -100,6 +100,7 @@ void lockMutex();
 void releaseMutex();
 void disableAll(HWND*);
 void assignWindow(HWND*, int);
+void setSticky(HWND*, int);
 
 // Variables
 HWND topWindow;        // holds the top window on a desktop
@@ -278,6 +279,9 @@ LPSTR vwWindowsState;
 
 /*
  * $Log$
+ * Revision 1.26  2004/02/28 18:54:01  jopi
+ * SF904069 Added possibility to choose if sticky should be permanent for all instances of the same classname.
+ *
  * Revision 1.25  2004/01/10 11:15:52  jopi
  * Updated copyright for 2004
  *

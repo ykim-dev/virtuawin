@@ -811,6 +811,10 @@ LRESULT CALLBACK wndProc(HWND aHWnd, UINT message, WPARAM wParam, LPARAM lParam)
          assignWindow((HWND*)wParam, (int)lParam);
          return TRUE;
          
+      case VW_SETSTICKY:
+         setSticky((HWND*)wParam, (int)lParam);
+         return TRUE;
+         
          // End plugin messages
     
       case WM_CREATE:		       // when main window is created
@@ -2136,8 +2140,47 @@ void assignWindow(HWND* theWin, int theDesk)
       }
 }
 
+/************************************************
+ * Changes sticky state of a window
+ * Used by the module message VW_SETSTICKY
+ */
+void setSticky(HWND* theWin, int state)
+{
+   int index;
+
+   for (index = 0; index < nWin; ++index)
+      if (winList[index].Handle == theWin)
+      {
+         lockMutex();
+         // found
+         if(state == 0) // disable
+         {
+            winList[index].Sticky = FALSE;
+         }
+         else if(state == 1) // enable
+         {
+            winList[index].Sticky = TRUE; 
+            showHideWindow( &winList[index], TRUE );
+         }
+         else if(state == -1) // toggle
+         {
+            if(winList[index].Sticky)
+               winList[index].Sticky = FALSE;
+            else
+            {
+               winList[index].Sticky = TRUE;
+               showHideWindow( &winList[index], TRUE );
+            }
+         }
+         releaseMutex();
+      }
+}
+
 /*
  * $Log$
+ * Revision 1.39  2004/02/28 18:54:01  jopi
+ * SF904069 Added possibility to choose if sticky should be permanent for all instances of the same classname.
+ *
  * Revision 1.38  2004/01/10 11:23:43  jopi
  * When assigning a visible window to the current desktop it would be lost
  *

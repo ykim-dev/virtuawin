@@ -44,9 +44,12 @@
 /* Message, returns the current desktop number */
 #define VW_CURDESK    (WM_USER + 24)
 /* Message, assign a window to the specified desktop 
-   wParam is the window handle (HWND) and lParam is the desktop number 
-*/
+   wParam is the window handle (HWND) and lParam is the desktop number */
 #define VW_ASSIGNWIN  (WM_USER + 25)
+/* Message, set the sticky state of a window. wParam is the 
+   window handle (HWND) and lParam should be -1 for toggle, 0 for unset
+   and 1 for set sticky state. */
+#define VW_SETSTICKY (WM_USER + 26)
 
 /* Message, sent by VirtuaWin after a switch. lParam will contain current desktop number 
    if wParam isn't one of the following, then wParam will also contain current desktop.
@@ -73,6 +76,9 @@
 
 /*
  * $Log$
+ * Revision 1.6  2003/11/05 15:46:34  jopi
+ * Better description of ASSIGNWIN
+ *
  * Revision 1.5  2003/06/26 19:56:52  jopi
  * Added module support for assigning a window to specified desktop
  *
