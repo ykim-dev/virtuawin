@@ -33,12 +33,15 @@
 typedef struct _MenuItems
 {
       char *name;
+      HBITMAP icon; 
       long id;
       long desk;
       BOOL sticky;
 } MenuItem;
 
 HMENU createSortedWinList_cos();
+HBITMAP createBitmapIcon(HICON);
+void clearBitmapVector();
 
 // Forward declarations of callbacks
 LRESULT CALLBACK wndProc(HWND, UINT, WPARAM, LPARAM);	// main window
@@ -90,7 +93,6 @@ BOOL safeShowWindow( HWND, int );
 void moveShowWindow( windowType*, BOOL );
 void warningIcon();
 inline BOOL checkMouseState();
-HMENU createSortedWinList(int);
 void enableMouse(BOOL);
 BOOL isSpecialWindow( char* className );
 void goGetTheTaskbarHandle();
@@ -160,6 +162,9 @@ HWND hwndTask;                  // handle to taskbar
 // vector holding icon handles for the systray
 HICON icons[10]; // 9 + 1 icons
 NOTIFYICONDATA nIconD;
+
+HBITMAP iconReferenceVector[MAXWIN];
+int vectorPosition = 0;
 
 // Config parameters, see ConfigParameters.h for descriptions
 int saveInterval = 0;
@@ -279,6 +284,9 @@ LPSTR vwWindowsState;
 
 /*
  * $Log$
+ * Revision 1.28  2004/04/10 10:20:01  jopi
+ * Updated to compile with gcc/mingw
+ *
  * Revision 1.27  2004/02/28 23:50:26  jopi
  * SF905625 Added module message for changing the sticky state of a window
  *

@@ -694,6 +694,7 @@ LRESULT CALLBACK wndProc(HWND aHWnd, UINT message, WPARAM wParam, LPARAM lParam)
                
                PostMessage(aHWnd, 0, 0, 0);  // see above
                DestroyMenu(hpopup);       // Delete loaded menu and reclaim its resources
+               clearBitmapVector();
             }
             
             break;
@@ -907,6 +908,7 @@ LRESULT CALLBACK wndProc(HWND aHWnd, UINT message, WPARAM wParam, LPARAM lParam)
         
                   PostMessage(aHWnd, 0, 0, 0);  // see above
                   DestroyMenu(hpopup);	      // Delete loaded menu and reclaim its resources
+                  clearBitmapVector();
                }
                break;
          }
@@ -1529,235 +1531,206 @@ void packList()
 /*************************************************
  * createSortedWinList_cos creates a popup menu for the window-hotkey
  * which displays all windows in one list vertically seperated by a line.
- * first column is stiky, second is direct access and third is assign.
+ * first column is sticky, second is direct access and third is assign.
  * so you don't have to step through submenus.
  * 
  * Author: Christian Storm aka cosmic (Christian.Storm@Informatik.Uni-Oldenburg.de)
  */
 HMENU createSortedWinList_cos()
 {
-   HMENU        hMenu;         // menu bar handle
-   char title[35];
-   MenuItem *items[MAXWIN], *item;
-   char buff[31];
-   int i,x,y,c,d,e;
-   BOOL useTitle;    // Only use title if we have more than one menu
-   BOOL menuBreak;   // indicates if vertical seperator is needed
-   hMenu = NULL;
+    HMENU        hMenu;         // menu bar handle
+    char title[35];
+    MenuItem *items[MAXWIN], *item;
+    char buff[31];
+    int i,x,y,c,d,e;
+    BOOL useTitle;    // Only use title if we have more than one menu
+    BOOL menuBreak;   // indicates if vertical seperator is needed
+    hMenu = NULL;
+
+    hMenu = CreatePopupMenu();
    
-   hMenu = CreatePopupMenu();
+    // Don't show titles if only one menu is enabled
+    if((stickyMenu+directMenu+assignMenu) == 1)
+        useTitle = FALSE;
+    else
+        useTitle = TRUE;
+
+    // create the window list
+    lockMutex();
+    for(i = 0; i < nWin; ++i)
+    {
+        GetWindowText(winList[i].Handle, buff, 30);
+        sprintf(title, "%d - %s", winList[i].Desk, buff);
+        item = malloc( sizeof(MenuItem) );
+        item->name = strdup (title);
+        
+        HICON hSmallIcon = (HICON)GetClassLong(winList[i].Handle, GCL_HICON);
+        item->icon = createBitmapIcon(hSmallIcon);
+
+        item->desk = winList[i].Desk;
+        item->sticky = winList[i].Sticky;
+        item->id = i;
+        items [i]   = item;
+        items [i+1] = NULL;
+    }
+    items [i+2] = NULL; // just in case
+    releaseMutex();
+
+    // sorting using bubble sort
+    for (x = 0; x < i; x++ )
+    {
+        for (y = 0; y<i; y++)
+        {
+            if( strcmp(items[x]->name, items[y]->name) < 0 )
+            {
+                item = items [x];
+                items[x] = items[y];
+                items[y] = item;
+            }
+        }
+    }
    
-   // Don't show titles if only one menu is enabled
-   if((stickyMenu+directMenu+assignMenu) == 1)
-      useTitle = FALSE;
-   else
-      useTitle = TRUE;
-
-   // create the window list
-   lockMutex();
-   for(i = 0; i < nWin; ++i)
-   {
-      GetWindowText(winList[i].Handle, buff, 30);
-      sprintf(title, "%d - %s", winList[i].Desk, buff);
-      item = malloc( sizeof(MenuItem) );
-      item->name = strdup (title);
-      item->desk = winList[i].Desk;
-      item->sticky = winList[i].Sticky;
-      item->id = i;
-      items [i]   = item;
-      items [i+1] = NULL;
-   }
-   items [i+2] = NULL; // just in case
-   releaseMutex();
-
-   // sorting using bubble sort
-   for (x = 0; x < i; x++ )
-   {
-      for (y = 0; y<i; y++)
-      {
-         if( strcmp(items[x]->name, items[y]->name) < 0 )
-         {
-            item = items [x];
-            items[x] = items[y];
-            items[y] = item;
-         }
-      }
-   }
-   
-   c = 0; d=1; e=0; menuBreak = FALSE;
-   if(stickyMenu) {
-      for (x=0; x < i; x++ )
-      {
-         if ((!c || c != items[x]->desk) &&d )
-         {
-            if(c) AppendMenu(hMenu, MF_SEPARATOR, 0, NULL );
-            c = items [x]->desk; d=0;
-         }
-         if (!e && useTitle ) {
-            AppendMenu(hMenu, MF_STRING, 0, "Sticky" );
-            AppendMenu(hMenu, MF_SEPARATOR, 0, NULL );
-            AppendMenu(hMenu, MF_SEPARATOR, 0, NULL );
-	    e=1;
-         }
-         AppendMenu( hMenu,
-                     MF_STRING | (items[x]->sticky ? MF_CHECKED: 0),
-                     MAXWIN + (items[x]->id), items[x]->name );
-	 d=1;
-      }
-   }
-
-   c=0; d=1; e=0;
-   if(directMenu) {
-      if (stickyMenu) menuBreak = TRUE;
-      for (x=0; x < i; x++ )
-      {
-         if ((!c || c != items[x]->desk)&&d)
-         {
-            if(c) AppendMenu(hMenu, MF_SEPARATOR, 0, NULL );
-            c = items [x]->desk; d=0;
-         }
-
-         // accessing current desk - direct assign makes no sense
-         if (items[x]->desk!=calculateDesk()) {
-	    if (!e && useTitle) {
-               if (menuBreak) {
-                  AppendMenu( hMenu,
-                              MF_STRING | MF_MENUBARBREAK, 0, "Access" );
-                  menuBreak = FALSE;
-               }
-	       else
-                  AppendMenu(hMenu, MF_STRING, 0, "Access" );
-
-               AppendMenu(hMenu, MF_SEPARATOR, 0, NULL );
-               AppendMenu(hMenu, MF_SEPARATOR, 0, NULL );
-	       e=1;
+    c = 0; d=1; e=0; menuBreak = FALSE;
+    if(stickyMenu) {
+        for (x=0; x < i; x++ )
+        {
+            if ((!c || c != items[x]->desk) &&d )
+            {
+                if(c) AppendMenu(hMenu, MF_SEPARATOR, 0, NULL );
+                c = items [x]->desk; d=0;
+            }
+            if (!e && useTitle ) {
+                AppendMenu(hMenu, MF_STRING, 0, "Sticky" );
+                AppendMenu(hMenu, MF_SEPARATOR, 0, NULL );
+                AppendMenu(hMenu, MF_SEPARATOR, 0, NULL );
+                e=1;
             }
             AppendMenu( hMenu,
                         MF_STRING | (items[x]->sticky ? MF_CHECKED: 0),
-                        2 * MAXWIN + (items[x]->id), items[x]->name );
-	    d=1;
-         }
-      }
-   }
+                        MAXWIN + (items[x]->id), items[x]->name );
+            SetMenuItemBitmaps(hMenu, MAXWIN + (items[x]->id), MF_BYCOMMAND, items[x]->icon, 0);
+            d=1;
+        }
+    }
 
-   c=0; d=1; e=0;
-   if(assignMenu) {
-      if (stickyMenu || directMenu) menuBreak=TRUE;
-      for (x=0; x < i; x++ )
-      {
-         if ((!c || c != items[x]->desk)&&d)
-         {
-            if(c) AppendMenu(hMenu, MF_SEPARATOR, 0, NULL );
-            c = items [x]->desk; d=0;
-         }
+    c=0; d=1; e=0;
+    if(directMenu) {
+        if (stickyMenu) menuBreak = TRUE;
+        for (x=0; x < i; x++ )
+        {
+            if ((!c || c != items[x]->desk)&&d)
+            {
+                if(c) AppendMenu(hMenu, MF_SEPARATOR, 0, NULL );
+                c = items [x]->desk; d=0;
+            }
+
+            // accessing current desk - direct assign makes no sense
+            if (items[x]->desk!=calculateDesk()) {
+                if (!e && useTitle) {
+                    if (menuBreak) {
+                        AppendMenu( hMenu,
+                                    MF_STRING | MF_MENUBARBREAK, 0, "Access" );
+                        menuBreak = FALSE;
+                    }
+                    else
+                        AppendMenu(hMenu, MF_STRING, 0, "Access" );
+
+                    AppendMenu(hMenu, MF_SEPARATOR, 0, NULL );
+                    AppendMenu(hMenu, MF_SEPARATOR, 0, NULL );
+                    e=1;
+                }
+                AppendMenu( hMenu,
+                            MF_STRING | (items[x]->sticky ? MF_CHECKED: 0),
+                            2 * MAXWIN + (items[x]->id), items[x]->name );
+                SetMenuItemBitmaps(hMenu, 2 * MAXWIN + (items[x]->id), MF_BYCOMMAND, items[x]->icon, 0);
+                d=1;
+            }
+        }
+    }
+
+    c=0; d=1; e=0;
+    if(assignMenu) {
+        if (stickyMenu || directMenu) menuBreak=TRUE;
+        for (x=0; x < i; x++ )
+        {
+            if ((!c || c != items[x]->desk)&&d)
+            {
+                if(c) AppendMenu(hMenu, MF_SEPARATOR, 0, NULL );
+                c = items [x]->desk; d=0;
+            }
       
-         //sticky windows can't be assigned cause they're sticky :-) so leave them.out..
-	 //cannot assign to current Desktop
-         if ((!items[x]->sticky)&&(items[x]->desk!=calculateDesk())) {
-	    if (!e && useTitle) {
-               if ( menuBreak ) {
-                  AppendMenu( hMenu, MF_STRING | MF_MENUBARBREAK, 0, "Assign" );
-                  menuBreak = FALSE; d=1;
-               }
-	       else
-                  AppendMenu(hMenu, MF_STRING, 0, "Assign" );
+            //sticky windows can't be assigned cause they're sticky :-) so leave them.out..
+            //cannot assign to current Desktop
+            if ((!items[x]->sticky)&&(items[x]->desk!=calculateDesk())) {
+                if (!e && useTitle) {
+                    if ( menuBreak ) {
+                        AppendMenu( hMenu, MF_STRING | MF_MENUBARBREAK, 0, "Assign" );
+                        menuBreak = FALSE; d=1;
+                    }
+                    else
+                        AppendMenu(hMenu, MF_STRING, 0, "Assign" );
 
-               AppendMenu(hMenu, MF_SEPARATOR, 0, NULL );
-               AppendMenu(hMenu, MF_SEPARATOR, 0, NULL );
-	       e=1;
-	    }
-            AppendMenu( hMenu, MF_STRING, 3 * MAXWIN + (items[x]->id), items[x]->name );
-	    d=1;
-         }
-      }
-   }
+                    AppendMenu(hMenu, MF_SEPARATOR, 0, NULL );
+                    AppendMenu(hMenu, MF_SEPARATOR, 0, NULL );
+                    e=1;
+                }
+                AppendMenu( hMenu, MF_STRING, 3 * MAXWIN + (items[x]->id), items[x]->name );
+                SetMenuItemBitmaps(hMenu, 3 * MAXWIN + (items[x]->id), MF_BYCOMMAND, items[x]->icon, 0);
+                d=1;
+            }
+        }
+    }
 
-   // destroy the generated window-list
-   for (x=0; x<i; x++){
-      free ( items[x]->name );
-      free ( items[x]);
-      items [x] = NULL;
-   }
+    // destroy the generated window-list
+    for (x=0; x<i; x++){
+        free ( items[x]->name );
+        free ( items[x]);
+        items [x] = NULL;
+    }
 
-   return hMenu;
+    return hMenu;
 }
 
 /*************************************************
- * This function creates a sorted list of windows for direct access menu.
- * If there are windows on more than one desktop than a separator is
- * inserted into the list between desktops
- * The parameter multiplier is the number the WINMAX is multiplied by to get
- * the menu command ID.
- *
- * Author: Matti Jagula <matti@proekspert.ee>
- * Date: 31.07.00
+ * Converts an icon to a bitmap representation
  */
-HMENU createSortedWinList(int multiplier)
+HBITMAP createBitmapIcon(HICON anIcon)
 {
-   typedef struct _MenuItems
-   {
-         char *name;
-         long id;
-         long desk;
-         BOOL sticky;
-   } MenuItem;
+    if(anIcon != NULL)
+    {
+        HDC aHDC = GetDC(hWnd);
+        HDC aCHDC = CreateCompatibleDC(aHDC);
+        HBITMAP hBMP = CreateCompatibleBitmap(aHDC, 16, 16);
+        hBMP = SelectObject(aCHDC, hBMP);
+        if(DrawIconEx(aCHDC, 0, 0, anIcon, 16, 16, 0, 0, DI_NORMAL) == 0)
+        {
+            DeleteObject(hBMP);
+            hBMP = 0;
+        }
+        else
+        {
+            hBMP = SelectObject(aCHDC, hBMP);
+            iconReferenceVector[vectorPosition] = hBMP;
+            vectorPosition++;
+        }
+        DeleteDC(aCHDC);
+        ReleaseDC(hWnd, aHDC);
+        
+        return hBMP;
+    }
+    return 0;
+}
 
-   HMENU        hMenu;         // menu bar handle
-   char title[35];
-   MenuItem *items[MAXWIN], *item;
-   char buff[31];
-   int i,x,y,c;
-
-   hMenu = NULL;
-
-   hMenu = CreatePopupMenu();
-   lockMutex();
-   // create the window list
-   for(i = 0; i < nWin; ++i)
-   {
-      GetWindowText(winList[i].Handle, buff, 30);
-      sprintf(title, "%d - %s", winList[i].Desk, buff);
-      item = malloc( sizeof(MenuItem) );
-      item->name = strdup (title);
-      item->desk = winList[i].Desk;
-      item->sticky = winList[i].Sticky;
-      item->id = i;
-      items [i]   = item;
-      items [i+1] = NULL;
-   }
-   items [i+2] = NULL; // just in case
-   releaseMutex();
-
-   // sorting using bubble sort
-   for (x = 0; x < i; x++ )
-   {
-      for (y = 0; y<i; y++)
-      {
-         if( strcmp(items[x]->name, items[y]->name) < 0 )
-         {
-            item = items [x];
-            items[x] = items[y];
-            items[y] = item;
-         }
-      }
-   }
-   y = 0; c = 0;
-   for (x=0; x < i; x++ )
-   {
-      if (!c || c != items[x]->desk)
-      {
-         if(c) AppendMenu(hMenu, MF_SEPARATOR, 0, NULL );
-         c = items [x]->desk;
-      }
-      
-      AppendMenu( hMenu,
-                  MF_STRING | (items[x]->sticky ? MF_CHECKED: 0),
-                  multiplier * MAXWIN + (items[x]->id), items[x]->name );
-      free ( items[x]->name );
-      free ( items[x]);
-      items [x] = NULL;
-   }
-   return hMenu;
+/*************************************************
+ * Deletes bitmaps allocated when displaying window menu
+ */
+void clearBitmapVector()
+{
+    while(vectorPosition > 0)
+    {
+        vectorPosition--;
+        DeleteObject(iconReferenceVector[vectorPosition]);
+    }
 }
 
 /*************************************************
@@ -2177,6 +2150,9 @@ void setSticky(HWND theWin, int state)
 
 /*
  * $Log$
+ * Revision 1.41  2004/04/10 10:20:01  jopi
+ * Updated to compile with gcc/mingw
+ *
  * Revision 1.40  2004/02/28 23:50:26  jopi
  * SF905625 Added module message for changing the sticky state of a window
  *
