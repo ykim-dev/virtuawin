@@ -1,5 +1,5 @@
 # Wedit Makefile for project VirtuaWin
-INCLUDEPATH=d:\lcc\include
+INCLUDEPATH=c:\lcc\include
 CFLAGS=-I$(INCLUDEPATH) -O
 LINKFLAGS=-subsystem windows
 CC=lcc.exe
@@ -20,7 +20,7 @@ VIRTUAWIN_RC=\
 	resource.h \
 
 VirtuaWin.res:	$(VIRTUAWIN_RC) VirtuaWin.rc
-	lrc -ID:\VirtuaWin -ID:\lcc\include  VirtuaWin.rc
+	lrc -Ic:\VirtuaWin -Ic:\lcc\include  VirtuaWin.rc
 
 # Build VIRTUAWIN.C
 VIRTUAWIN_C=\
