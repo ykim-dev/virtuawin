@@ -2057,19 +2057,28 @@ void getTaskbarLocation()
    if(!noTaskbarCheck)
    {
       RECT r;
+      taskBarLeftWarp   = 0;
+      taskBarRightWarp  = 0;
+      taskBarTopWarp    = 0;
+      taskBarBottomWarp = 0;
+      
       /* Get the height of the task bar */
       GetWindowRect(FindWindow("Shell_traywnd", ""), &r);
       /* Determine position of task bar */
       if ((r.bottom + r.top) == (screenBottom - screenTop)) // task bar is on side
-         if (r.left == screenLeft)                          // task bar is on left
+      {
+         if (r.left <= screenLeft)                          // task bar is on left
             taskBarLeftWarp   = r.right - r.left - 3;
          else                                               // task bar is on right
             taskBarRightWarp  = r.right - r.left - 3;
+      }
       else                                                  // task bar is on top/bottom
-         if (r.top == screenTop)                            // task bar is on top
+      {
+         if (r.top <= screenTop)                            // task bar is on top
             taskBarTopWarp    = r.bottom - r.top - 3;
          else                                               // task bar is on bottom
             taskBarBottomWarp = r.bottom - r.top - 3;
+      }
    }
 }
 
@@ -2093,6 +2102,9 @@ void releaseMutex()
 
 /*
  * $Log$
+ * Revision 1.27  2003/01/27 20:22:59  jopi
+ * Updated copyright header for 2003
+ *
  * Revision 1.26  2002/12/23 15:42:24  jopi
  * Added config options to disable taskbar detection and the alternative hiding technique.
  *
