@@ -1373,11 +1373,12 @@ __inline void integrateWindow(HWND* hwnd)
 
    /* Criterias for a window to be handeled by VirtuaWin */
    if (nWin < MAXWIN-1 &&
-       !(style & WS_CHILD) &&
-       IsWindowVisible(hwnd) &&
-       (!GetParent(hwnd) || GetParent(hwnd) == GetDesktopWindow()) &&
-       !(exstyle & WS_EX_TOOLWINDOW) &&
-       !((exstyle & WS_EX_CONTROLPARENT) && !(exstyle & WS_EX_APPWINDOW)))
+       !(style & WS_CHILD) &&                                          // No child windows
+       IsWindowVisible(hwnd) &&                                        // Must be visible
+       (!GetParent(hwnd) || GetParent(hwnd) == GetDesktopWindow()) &&  // Only toplevel or owned by desktop
+       !(exstyle & WS_EX_TOOLWINDOW) &&                                // No toolwindows
+       (!GetWindow(hwnd, GW_OWNER) ||                                  // No windows that are owned by others, 
+        !IsWindowVisible(GetWindow(hwnd, GW_OWNER))))                  // if the owner is not hidden
    {
       char buf[100];
       GetClassName(hwnd, buf, 99);
@@ -1536,7 +1537,6 @@ HMENU createSortedWinList_cos()
    int i,x,y,c,d,e;
    BOOL useTitle;    // Only use title if we have more than one menu
    BOOL menuBreak;   // indicates if vertical seperator is needed
-   int menuNumber = 0;
    hMenu = NULL;
    
    hMenu = CreatePopupMenu();
@@ -2135,6 +2135,9 @@ void assignWindow(HWND* theWin, int theDesk)
 
 /*
  * $Log$
+ * Revision 1.35  2003/09/24 19:26:28  jopi
+ * SF770859 Window menu heading will not be displayed if only one meny is used
+ *
  * Revision 1.34  2003/07/08 21:10:28  jopi
  * SF745820, excluded some special types of windows from beeing handled by VirtuaWin
  *
