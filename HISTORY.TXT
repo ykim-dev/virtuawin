@@ -1,5 +1,20 @@
 ***   VirtuaWin Revision History   ***
 --------------------------------------
+Ver 2.7 2003/04/09
+* Double click on the icon will bring up setup, a select "disable" instead for disabling.
+* Added config options to disable taskbar detection and the alternative hiding technique.
+* Bugfix: All windows was shown in the window menu if only one menu was used
+* Bugfix: Added retries to add the systray icon incase VirtuaWin starts up before 
+  the sytray process.
+* Added a new setup tab, "expert" and moved some settings from misc.
+* Bugfix: Old taskbar position was not deleted if taskbar position moved during operation. 
+  Also improved left/right/up/down taskbar position detection
+* Bugfix: The "tricky" windows was not moved away far enough from the screen so you could 
+  see a small grey bar at the screen bottom.
+* Bugfix: Changed the wait time for module startup timeout to 10 secs instead of 5 to avoid 
+  module errors during startup.
+----------------------------
+
 Ver 2.6.2 2002/10/01
 * Bugfix: Fixed a memory leak
 * Bugfix: Added mutex protection for the window list to increase robustness

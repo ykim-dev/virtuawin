@@ -1,15 +1,15 @@
 
                        VirtuaWin
-          <http://w1.457.telia.com/~u45706979/>
+               <http://www.virtuawin.com>
 	
-                  by jopi
+                  by Johan Piculell
                  <virtuawin@home.se>
 
 
 Description
 --------------------------------------------------------------
 This is a small, fast and easy to use virtual desktop manager for 
-Windows9x/NT/2000/XP with no unnecessary features. 
+Windows9x/ME/NT/2000/XP with no unnecessary features. 
 It indicates current desktop in the system tray for saving space. 
 A lot of configuration possibilities for both mouse and key control.
 It also supports modules for adding features without decreasing performance 
@@ -36,8 +36,9 @@ COPYING.TXT     GNU General Public License Version 2.
 
 Bugs
 --------------------------------------------------------------
-If you discover any bugs in this software, please send a 
-bugreport to virtuawin@home.se and describe the problem.
+If you discover any bugs in this software, please register a bug 
+in SourceForge tracking system, http://sourceforge.net/projects/virtuawin/
+or send a bugreport to virtuawin@home.se and describe the problem.
 Please include version number.
 
 There is also a discussion forum available.
@@ -49,7 +50,6 @@ Post a message to the list by sending a mail to virtuawin@caedmon.net.
 
 Copyright
 --------------------------------------------------------------
-VirtuaWin is copyright (c) 1999, 2000, 2001, and 2002 by jopi and is 
+VirtuaWin is copyright (c) 1999-2002, and 2003 by Johan Piculell and is 
 licensed through the GNU General Public License. Read the 
 COPYING.TXT file for the complete license.
-
