@@ -49,13 +49,9 @@ int getConfigPath(char* path, BOOL multiUser)
 
    if( (multiUser!=FALSE) && SUCCEEDED(SHGetFolderPath(NULL, CSIDL_LOCAL_APPDATA, NULL, 0, userSettingsPath)) /* && (strncmp(userSettingsPath, "", MAX_PATH) == 0) */ )
    {
-fprintf(stderr, userSettingsPath);
       if(userSettingsPath[ (strlen(userSettingsPath) - 1)] != '\\') strcat(userSettingsPath, "\\");
-fprintf(stderr, userSettingsPath);
       strncat(userSettingsPath, VIRTUAWIN_SUBDIR, MAX_PATH - strlen(userSettingsPath));
-fprintf(stderr, userSettingsPath);
       strncpy(path, userSettingsPath, MAX_PATH);
-fprintf(stderr, path);
 
       while(_access(path, 6) == -1)
       {
@@ -756,6 +752,9 @@ void clearLock()
 
 /*
  * $Log$
+ * Revision 1.22  2005/03/10 08:02:10  rexkerr
+ * Added multi-user support
+ *
  * Revision 1.21  2004/04/10 10:20:01  jopi
  * Updated to compile with gcc/mingw
  *
