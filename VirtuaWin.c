@@ -49,7 +49,12 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
    /* Only one instance may be started */
    CreateMutex(NULL, TRUE, "PreventSecondVirtuaWin");
    if(GetLastError() == ERROR_ALREADY_EXISTS)
-      return 0; // just quit 
+   {
+      // Display configuration window...
+      PostMessage( FindWindow(classname, NULL), VW_SETUP, 0, 0);
+      return 0; // ...and quit 
+   }
+   
   
    /* Create a window class for the window that receives systray notifications.
       The window will never be displayed */
@@ -1708,6 +1713,9 @@ VOID CALLBACK FlashProc(HWND hwnd, UINT uMsg, UINT idEvent, DWORD dwTime)
 
 /*
  * $Log$
+ * Revision 1.12  2001/11/12 18:33:42  jopi
+ * Fixed so that user windows are also checked if they are saved as sticky.
+ *
  * Revision 1.11  2001/02/05 21:13:08  jopi
  * Updated copyright header
  *
