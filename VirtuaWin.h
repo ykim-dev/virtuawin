@@ -30,6 +30,16 @@
 #include <windows.h>
 #include <shellapi.h>
 
+typedef struct _MenuItems
+{
+      char *name;
+      long id;
+      long desk;
+      BOOL sticky;
+} MenuItem;
+
+HMENU createSortedWinList_cos();
+
 // Forward declarations of callbacks
 LRESULT CALLBACK wndProc(HWND, UINT, WPARAM, LPARAM);	// main window
 BOOL CALLBACK enumWindowsProc(HWND, LPARAM);            // for collecting windows
@@ -101,7 +111,7 @@ static int curUser = 0;       // how many user applications we have
 
 static UINT MODKEY;	      // Holds the switch key modifiers
 
-static char appName[] = "VirtuaWin 2.6 Pre3";   // application name
+static char appName[] = "VirtuaWin 2.6 Pre4";   // application name
 
 ATOM stickyKey;
 ATOM vwLeft;
@@ -191,9 +201,10 @@ BOOL assignOnlyFirst = FALSE;
 BOOL cyclingKeysEnabled = FALSE;
 BOOL displayTaskbarIcon = TRUE;
 
-UINT MOUSEKEY;                  
+UINT MOUSEKEY = 0;
 UINT VW_STICKY = 0;
 UINT VW_STICKYMOD = 0;
+UINT VW_STICKYWIN = 0;
 UINT hotkey1 = 0;
 UINT hotkey1Mod = 0;
 UINT hotkey1Win = 0;
@@ -256,6 +267,9 @@ LPSTR vwWindowsState;
 
 /*
  * $Log$
+ * Revision 1.14  2002/06/01 19:33:33  jopi
+ * *** empty log message ***
+ *
  * Revision 1.13  2002/02/14 21:23:41  jopi
  * Updated copyright header
  *

@@ -46,6 +46,7 @@
 #define	IDD_PROPPAGE_MODULES	172
 #define	IDC_RECOVERY	173
 #define	IDC_DESKCYCLE	174
+#define IDC_HOTSKW      175
 #define	IDC_MOUSWARP	1001
 #define	IDC_KEYS	1002
 #define	IDC_TIME	1006
@@ -107,6 +108,9 @@
 
 /*
  * $Log$
+ * Revision 1.4  2001/11/12 21:39:14  jopi
+ * Added functionality for disabling the systray icon
+ *
  * Revision 1.3  2001/01/28 16:10:00  jopi
  * Added #ifndef/#define
  *

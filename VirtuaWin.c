@@ -435,15 +435,15 @@ void unRegisterHotKeys()
  */
 BOOL registerStickyKey()
 {
-  if(!stickyKeyRegistered && VW_STICKYMOD && VW_STICKY) {
-    stickyKeyRegistered = TRUE;
-    stickyKey = GlobalAddAtom("VWStickyKey");
-    if((RegisterHotKey(hWnd, stickyKey, hotKey2ModKey(VW_STICKYMOD), VW_STICKY) == FALSE))
-      return FALSE;
-    else
-      return TRUE;
-  }
-  return TRUE;
+   if(!stickyKeyRegistered && (VW_STICKYMOD || VW_STICKYWIN) && VW_STICKY) {
+      stickyKeyRegistered = TRUE;
+      stickyKey = GlobalAddAtom("VWStickyKey");
+      if((RegisterHotKey(hWnd, stickyKey, hotKey2ModKey(VW_STICKYMOD) | VW_STICKYWIN, VW_STICKY) == FALSE))
+         return FALSE;
+      else
+         return TRUE;
+   }
+   return TRUE;
 }
 
 /*************************************************
@@ -667,7 +667,7 @@ LRESULT CALLBACK wndProc(HWND aHWnd, UINT message, WPARAM wParam, LPARAM lParam)
          }
          else if(wParam == vwMenu && hotkeyMenuEn == TRUE) {
             if(enabled) {
-               hpopup = createSortedWinList(2);
+               hpopup = createWinList();
                GetCursorPos(&pt);
                SetForegroundWindow(aHWnd);
                
@@ -1524,16 +1524,132 @@ HMENU createWinList()
       hMenu = subAssign = createSortedWinList(3);
       nOfMenus++;
    }
-
+   
    if( nOfMenus > 1 ) {
-      // Add lists to submenu holder. 
-      hMenu     = CreatePopupMenu();
-      if(stickyMenu)
-         AppendMenu( hMenu, MF_STRING | MF_POPUP, (DWORD)subSticky, "Sticky" );
-      if(directMenu)
-         AppendMenu( hMenu, MF_STRING | MF_POPUP, (DWORD)subDirect, "Access" );
-      if(assignMenu)
-         AppendMenu( hMenu, MF_STRING | MF_POPUP, (DWORD)subAssign, "Assign" );
+      hMenu = createSortedWinList_cos();
+   }
+
+   return hMenu;
+}
+
+/*************************************************
+ * createSortedWinList_cos creates a popup menu for the window-hotkey
+ * which displays all windows in one list vertically seperated by a line.
+ * first column is stiky, second is direct access and third is assign.
+ * so you don't have to step through submenus.
+ * 
+ * Author: Christian Storm aka cosmic (Christian.Storm@Informatik.Uni-Oldenburg.de)
+ */
+HMENU createSortedWinList_cos()
+{
+   HMENU        hMenu;         // menu bar handle
+   char title[35];
+   MenuItem *items[MAXWIN], *item;
+   char buff[31];
+   int i,x,y,c;
+
+   BOOL menuBreak;				// indicates if vertical seperator is neesed
+   hMenu = NULL;
+
+   hMenu = CreatePopupMenu();
+
+   // create the window list
+   for(i = 0; i < nWin; ++i)
+   {
+      GetWindowText(winList[i].Handle, buff, 30);
+      sprintf(title, "%d - %s", winList[i].Desk, buff);
+      item = malloc( sizeof(MenuItem) );
+      item->name = strdup (title);
+      item->desk = winList[i].Desk;
+      item->sticky = winList[i].Sticky;
+      item->id = i;
+      items [i]   = item;
+      items [i+1] = NULL;
+   }
+   items [i+2] = NULL; // just in case
+
+
+   // sorting using bubble sort
+   for (x = 0; x < i; x++ )
+   {
+      for (y = 0; y<i; y++)
+      {
+         if( strcmp(items[x]->name, items[y]->name) < 0 )
+         {
+            item = items [x];
+            items[x] = items[y];
+            items[y] = item;
+         }
+      }
+   }
+   
+   c = 0; menuBreak = FALSE;
+   if(stickyMenu) {
+      for (x=0; x < i; x++ )
+      {
+         if (!c || c != items[x]->desk)
+         {
+            if(c) AppendMenu(hMenu, MF_SEPARATOR | MF_POPUP, 0, NULL );
+            c = items [x]->desk;
+         }
+         AppendMenu( hMenu,
+                     MF_STRING | (items[x]->sticky ? MF_CHECKED: 0) | MF_POPUP,
+                     MAXWIN + (items[x]->id), items[x]->name );
+      }
+   }
+
+   c=0; 
+   if(directMenu) {
+      if (stickyMenu) menuBreak = TRUE;
+      for (x=0; x < i; x++ )
+      {
+         if (!c || c != items[x]->desk)
+         {
+            if(c) AppendMenu(hMenu, MF_SEPARATOR | MF_POPUP, 0, NULL );
+            c = items [x]->desk;
+         }
+      
+         if (menuBreak) {
+            AppendMenu( hMenu,
+                        MF_STRING | (items[x]->sticky ? MF_CHECKED: 0) | MF_POPUP | MF_MENUBARBREAK,
+                        2 * MAXWIN + (items[x]->id), items[x]->name );
+            menuBreak = FALSE;
+         }
+         else
+            AppendMenu( hMenu,
+                        MF_STRING | (items[x]->sticky ? MF_CHECKED: 0) | MF_POPUP,
+                        2 * MAXWIN + (items[x]->id), items[x]->name );
+
+      }
+   }
+
+   c=0;
+   if(assignMenu) {
+      if (directMenu) menuBreak=TRUE;
+      for (x=0; x < i; x++ )
+      {
+         if (!c || c != items[x]->desk)
+         {
+            if(c) AppendMenu(hMenu, MF_SEPARATOR | MF_POPUP, 0, NULL );
+            c = items [x]->desk;
+         }
+      
+         //sticky windows can't be assignes cause they're sticky :-) so leave them.out..
+         if (!items[x]->sticky)
+            if ( menuBreak ) {
+               AppendMenu( hMenu, MF_STRING  | MF_POPUP | MF_MENUBARBREAK, 3 * MAXWIN + (items[x]->id), items[x]->name );
+               menuBreak = FALSE;
+            }
+            else
+               AppendMenu( hMenu, MF_STRING  | MF_POPUP, 3 * MAXWIN + (items[x]->id), items[x]->name );
+      }
+   }
+
+   // destroy the generated window-list
+   for (x=0; x<i; x++){
+      free ( items[x]->name );
+      free ( items[x]);
+      items [x] = NULL;
    }
 
    return hMenu;
@@ -1858,6 +1974,9 @@ void goGetTheTaskbarHandle()
 
 /*
  * $Log$
+ * Revision 1.18  2002/06/01 19:33:33  jopi
+ * *** empty log message ***
+ *
  * Revision 1.17  2002/02/14 21:23:41  jopi
  * Updated copyright header
  *

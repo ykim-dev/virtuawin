@@ -365,7 +365,9 @@ static BOOL APIENTRY keys(HWND hDlg, UINT message, UINT wParam, LONG lParam)
          if(hotkey9Win)
             SendDlgItemMessage(hDlg, IDC_HOT9W, BM_SETCHECK, 1,0);
          SendDlgItemMessage(hDlg, IDC_HOT9, HKM_SETHOTKEY, MAKEWORD(hotkey9, hotkey9Mod), 0);
-    
+         if(VW_STICKYWIN)
+            SendDlgItemMessage(hDlg, IDC_HOTSKW, BM_SETCHECK, 1,0);
+         SendDlgItemMessage(hDlg, IDC_HOTSKW, HKM_SETHOTKEY, MAKEWORD(VW_STICKY, VW_STICKYMOD), 0);    
          return (TRUE);
 
       case WM_NOTIFY:
@@ -379,7 +381,10 @@ static BOOL APIENTRY keys(HWND hDlg, UINT message, UINT wParam, LONG lParam)
                wRawHotKey = (WORD)SendDlgItemMessage(hDlg, IDC_HOTSTICKY, HKM_GETHOTKEY, 0, 0);
                VW_STICKY = LOBYTE(wRawHotKey);
                VW_STICKYMOD = HIBYTE(wRawHotKey);
-               
+               if(SendDlgItemMessage(hDlg, IDC_HOTSKW, BM_GETCHECK, 0, 0) == BST_CHECKED)
+                  VW_STICKYWIN = MOD_WIN;
+               else
+                  VW_STICKYWIN = FALSE;               
                // Cycle hot keys
                if(SendDlgItemMessage(hDlg, IDC_CYCLINGKEYS, BM_GETCHECK, 0, 0) == BST_CHECKED) {
                   cyclingKeysEnabled = TRUE;
@@ -541,7 +546,7 @@ static BOOL APIENTRY keys(HWND hDlg, UINT message, UINT wParam, LONG lParam)
             wPar == IDC_HOT1W || wPar == IDC_HOT2W || wPar == IDC_HOT3W ||
             wPar == IDC_HOT4W || wPar == IDC_HOT5W || wPar == IDC_HOT6W ||
             wPar == IDC_HOT7W || wPar == IDC_HOT8W || wPar == IDC_HOT9W ||
-            wPar == IDC_HOTSTICKY || wPar == IDC_CYCLINGKEYS || 
+            wPar == IDC_HOTSTICKY || wPar == IDC_CYCLINGKEYS || wPar == IDC_HOTSKW ||
             wPar == IDC_HOTCYCLEUP || wPar == IDC_HOTCYCLEDOWN ) {
             SendMessage(GetParent(hDlg), PSM_CHANGED, (WPARAM)hDlg, 0L); // Enable apply button
          }
@@ -883,6 +888,9 @@ static BOOL APIENTRY modules(HWND hDlg, UINT message, UINT wParam, LONG lParam)
 
 /*
  * $Log$
+ * Revision 1.11  2002/06/01 19:33:34  jopi
+ * *** empty log message ***
+ *
  * Revision 1.10  2002/02/14 21:23:40  jopi
  * Updated copyright header
  *

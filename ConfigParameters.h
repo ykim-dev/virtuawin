@@ -76,6 +76,7 @@ extern BOOL displayTaskbarIcon;// Should we display the systray icon
 extern UINT MOUSEKEY;           // Holds the modifier for enabling mouse warp
 extern UINT VW_STICKY;
 extern UINT VW_STICKYMOD;
+extern UINT VW_STICKYWIN;
 extern UINT hotkey1;
 extern UINT hotkey1Mod;
 extern UINT hotkey1Win;
@@ -135,6 +136,9 @@ extern LPSTR vwWindowsState;  // holds windowsata file name + path
 
 /*
  * $Log$
+ * Revision 1.7  2002/06/01 19:33:33  jopi
+ * *** empty log message ***
+ *
  * Revision 1.6  2002/02/14 21:23:38  jopi
  * Updated copyright header
  *

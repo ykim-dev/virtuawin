@@ -401,7 +401,8 @@ void writeConfig()
       fprintf(fp, "Hot_key_ModMenu# %i\n", hotkeyMenuMod);
       fprintf(fp, "Hot_key_WinMenu# %i\n", hotkeyMenuWin);
       fprintf(fp, "Display_systray_icon# %i\n", displayTaskbarIcon);
-      
+      fprintf(fp, "Sticky_Win# %i\n", VW_STICKYWIN);
+
       fclose(fp);
    }
 }
@@ -491,7 +492,8 @@ void readConfig()
       fscanf(fp, "%s%i", &dummy, &hotkeyMenuMod);
       fscanf(fp, "%s%i", &dummy, &hotkeyMenuWin);
       fscanf(fp, "%s%i", &dummy, &displayTaskbarIcon);
-
+      fscanf(fp, "%s%i", &dummy, &VW_STICKYWIN);
+      
       fclose(fp);
    }
 }
@@ -566,6 +568,9 @@ BOOL tryToLock()
 
 /*
  * $Log$
+ * Revision 1.11  2002/02/14 21:23:39  jopi
+ * Updated copyright header
+ *
  * Revision 1.10  2001/12/01 00:05:52  jopi
  * Added alternative window hiding for troublesome windows like InternetExplorer
  *
