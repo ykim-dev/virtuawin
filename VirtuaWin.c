@@ -110,21 +110,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
    Shell_NotifyIcon(NIM_ADD, &nIconD);		// This adds the icon
 
    /* Register the keys */
-   if(!registerKeys())
-      MessageBox(hWnd, "Invalid key modifier combination, check control keys!", 
-                 NULL, MB_ICONWARNING);
-   if(!registerHotKeys())
-      MessageBox(hWnd, "Invalid key modifier combination, check hot keys!", 
-                 NULL, MB_ICONWARNING);
-   if(!registerStickyKey())
-      MessageBox(hWnd, "Invalid key modifier combination, check sticky hot key!", 
-                 NULL, MB_ICONWARNING);
-   if(!registerCyclingKeys())
-      MessageBox(hWnd, "Invalid key modifier combination, check cycling hot keys!", 
-                 NULL, MB_ICONWARNING);
-   if(!registerMenuHotKey())
-      MessageBox(hWnd, "Invalid key modifier combination, check menu hot key!", 
-                 NULL, MB_ICONWARNING);
+   registerAllKeys();
    setMouseKey();
    
    /* Load some stuff */
@@ -147,7 +133,8 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
    /* Create the thread responsible for mouse monitoring */   
    mouseThread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)MouseProc, NULL, 0, &threadID); 	
    if(!mouseEnable) // Suspend the thread if no mouse support
-      SuspendThread(mouseThread);
+      enableMouse(FALSE);
+      //SuspendThread(mouseThread);
    
    /* Main message loop */
    while (GetMessage(&msg, NULL, 0, 0)) {
@@ -212,6 +199,26 @@ __inline BOOL checkMouseState()
       return TRUE;
    else
       return FALSE;
+}
+
+/************************ *************************
+ * Turns on/off the mouse thread. Makes sure that the the thread functions
+ * only is called if needed.
+ */
+void enableMouse( BOOL turnOn )
+{
+   // Try to turn on thread if not already running
+   if( turnOn && !mouseEnabled )
+   {
+      ResumeThread(mouseThread);
+      mouseEnabled = TRUE;
+   }
+   // Try to turn of thread if already not stopped
+   else if( !turnOn && mouseEnabled )
+   {
+      SuspendThread(mouseThread);
+      mouseEnabled = FALSE;
+   }
 }
 
 /************************ *************************
@@ -913,30 +920,63 @@ LRESULT CALLBACK wndProc(HWND aHWnd, UINT message, WPARAM wParam, LPARAM lParam)
  */
 void showSetup()
 {
-  if(!setupOpen) { // Stupid fix, can't get this modal
-    setupOpen = TRUE;
-    if(mouseEnable) // Suspend mouse if running
-       SuspendThread(mouseThread);
-    unRegisterStickyKey();
-    unRegisterHotKeys();
-    unRegisterKeys();
-    unRegisterCyclingKeys();
-    unRegisterMenuHotKey();
-    createPropertySheet(hInst, hWnd); // Show the actual dialog
-    if(!registerKeys())
-      MessageBox(hWnd, "Invalid key modifier combination, check control keys!", NULL, MB_ICONWARNING);
-    if(!registerHotKeys())
-      MessageBox(hWnd, "Invalid key modifier combination, check hot keys!", NULL, MB_ICONWARNING);
-    if(!registerStickyKey())
-      MessageBox(hWnd, "Invalid key modifier combination, check sticky hot key!", NULL, MB_ICONWARNING);
-    if(!registerCyclingKeys())
-       MessageBox(hWnd, "Invalid key modifier combination, check cycling hot keys!", NULL, MB_ICONWARNING);
-    if(!registerMenuHotKey())
-       MessageBox(hWnd, "Invalid key modifier combination, check menu hot key!", NULL, MB_ICONWARNING);
-    if(mouseEnable) // Start again, if enabled
-       ResumeThread(mouseThread);
-    setupOpen = FALSE;
-  }
+   if(!setupOpen) { // Stupid fix, can't get this modal
+      setupOpen = TRUE;
+      // reload load current config
+      readConfig();
+      if(createPropertySheet(hInst, hWnd)) // Show the actual dialog
+      {
+         // User pressed OK, make changes persistent
+         // Save the current config
+         writeConfig();
+         // Tell modules about the config change
+         postModuleMessage(MOD_CFGCHANGE, 0, 0);
+      }
+      // Note! The setup dialog is responible for resetting all 
+      // values if cancel is pressed
+
+      // make sure that keys are alright
+      unRegisterAllKeys();
+      registerAllKeys();
+      setMouseKey();
+      // Set the mouse thread in correct state
+      enableMouse(mouseEnable);
+      setupOpen = FALSE;
+   }
+}
+
+/************************************************
+ * Convinient function for registering all hotkeys
+ */
+void registerAllKeys()
+{
+   if(!registerKeys())
+      MessageBox(hWnd, "Invalid key modifier combination, check control keys!", 
+                 NULL, MB_ICONWARNING);
+   if(!registerHotKeys())
+      MessageBox(hWnd, "Invalid key modifier combination, check hot keys!", 
+                 NULL, MB_ICONWARNING);
+   if(!registerStickyKey())
+      MessageBox(hWnd, "Invalid key modifier combination, check sticky hot key!", 
+                 NULL, MB_ICONWARNING);
+   if(!registerCyclingKeys())
+      MessageBox(hWnd, "Invalid key modifier combination, check cycling hot keys!", 
+                 NULL, MB_ICONWARNING);
+   if(!registerMenuHotKey())
+      MessageBox(hWnd, "Invalid key modifier combination, check menu hot key!", 
+                 NULL, MB_ICONWARNING);
+}
+
+/************************************************
+ * Convinient function for unregistering all hotkeys
+ */
+void unRegisterAllKeys()
+{
+   unRegisterStickyKey();
+   unRegisterHotKeys();
+   unRegisterKeys();
+   unRegisterCyclingKeys();
+   unRegisterMenuHotKey();
 }
 
 /************************************************
@@ -971,11 +1011,7 @@ void shutDown()
    unloadModules();
    showAll();	        // gather all windows on exit
    remove(vwLock);       // Remove the lock file, don't bother if this fails
-   unRegisterKeys();
-   unRegisterHotKeys();
-   unRegisterStickyKey();
-   unRegisterCyclingKeys();
-   unRegisterMenuHotKey();
+   unRegisterAllKeys();
    Shell_NotifyIcon(NIM_DELETE, &nIconD); // This removes the icon
    if(saveSticky)
       saveStickyWindows(&nWin, winList);
@@ -1657,6 +1693,9 @@ VOID CALLBACK FlashProc(HWND hwnd, UINT uMsg, UINT idEvent, DWORD dwTime)
 
 /*
  * $Log$
+ * Revision 1.9  2001/01/14 16:27:42  jopi
+ * Moved io.h include to DiskRoutines.c
+ *
  * Revision 1.8  2001/01/12 18:11:25  jopi
  * Moved some disk stuff from VirtuaWin to DiskRoutines
  *

@@ -44,10 +44,6 @@ int createPropertySheet(HINSTANCE theHinst, HWND theHwndOwner)
    int xIcon = GetSystemMetrics(SM_CXSMICON);
    int yIcon = GetSystemMetrics(SM_CYSMICON);
    
-   configChanged = FALSE;
-
-   // Load the current configuration
-   readConfig();
    psp[0].dwSize = sizeof(PROPSHEETPAGE);
    psp[0].dwFlags = PSP_USETITLE;
    psp[0].hInstance = theHinst;
@@ -217,28 +213,20 @@ static BOOL APIENTRY mouse(HWND hDlg, UINT message, UINT wParam, LONG lParam)
                   mouseModAlt = FALSE;
                   mouseModCtrl = FALSE;
                   if(SendDlgItemMessage(hDlg, IDC_ALT, BM_GETCHECK, 0, 0) == BST_CHECKED) {
-                     MOUSEKEY = VK_MENU;
                      mouseModAlt = TRUE;
                   }
                   else if(SendDlgItemMessage(hDlg, IDC_SHIFT, BM_GETCHECK, 0, 0) == BST_CHECKED) {
-                     MOUSEKEY = VK_SHIFT;
                      mouseModShift = TRUE;
                   }
                   else if(SendDlgItemMessage(hDlg, IDC_CTRL, BM_GETCHECK, 0, 0) == BST_CHECKED) {
-                     MOUSEKEY = VK_CONTROL;
                      mouseModCtrl = TRUE;
                   }
                } else {
                   useMouseKey = FALSE;
                }
-               if( configChanged )
-               {
-                  configChanged = FALSE;
-                  // Tell modules about the config change
-                  postModuleMessage(MOD_CFGCHANGE, 0, 0);
-                  // Save the current config
-                  writeConfig();
-               }
+               enableMouse(mouseEnable);
+               setMouseKey();
+               SetWindowLong(hDlg, DWL_MSGRESULT, TRUE);
                break;
             case PSN_KILLACTIVE:
                SetWindowLong(hDlg, DWL_MSGRESULT, FALSE);
@@ -246,6 +234,8 @@ static BOOL APIENTRY mouse(HWND hDlg, UINT message, UINT wParam, LONG lParam)
                break;
             case PSN_RESET:
                // Reset to the original values.
+               readConfig();
+               SetWindowLong(hDlg, DWL_MSGRESULT, FALSE);
                break;
          }
     
@@ -256,7 +246,6 @@ static BOOL APIENTRY mouse(HWND hDlg, UINT message, UINT wParam, LONG lParam)
             LOWORD(wParam) == IDC_SHIFT || 
             LOWORD(wParam) == IDC_MOUSEWRAP) {
             SendMessage(GetParent(hDlg), PSM_CHANGED, (WPARAM)hDlg, 0L); // Enable apply
-            configChanged = TRUE;
          }
          switch(LOWORD(wParam)) {
             case IDC_ALT:
@@ -505,16 +494,9 @@ static BOOL APIENTRY keys(HWND hDlg, UINT message, UINT wParam, LONG lParam)
                else {
                   hotKeyEnable = FALSE;
                }
-      
+               unRegisterAllKeys();
+               registerAllKeys();
                SetWindowLong(hDlg, DWL_MSGRESULT, TRUE);
-               if( configChanged )
-               {
-                  configChanged = FALSE;
-                  // Tell modules about the config change
-                  postModuleMessage(MOD_CFGCHANGE, 0, 0);
-                  // Save the current config
-                  writeConfig();
-               }
                break;
             case PSN_KILLACTIVE: // Switch tab sheet
                SetWindowLong(hDlg, DWL_MSGRESULT, FALSE);
@@ -522,6 +504,7 @@ static BOOL APIENTRY keys(HWND hDlg, UINT message, UINT wParam, LONG lParam)
                break;
             case PSN_RESET: // Cancel
                // Reset to the original values.
+               readConfig();
                SetWindowLong(hDlg, DWL_MSGRESULT, FALSE);
                break;
          }
@@ -539,7 +522,6 @@ static BOOL APIENTRY keys(HWND hDlg, UINT message, UINT wParam, LONG lParam)
             wPar == IDC_HOTSTICKY || wPar == IDC_CYCLINGKEYS || 
             wPar == IDC_HOTCYCLEUP || wPar == IDC_HOTCYCLEDOWN ) {
             SendMessage(GetParent(hDlg), PSM_CHANGED, (WPARAM)hDlg, 0L); // Enable apply button
-            configChanged = TRUE;
          }
          break;
    }
@@ -623,7 +605,6 @@ static BOOL APIENTRY misc(HWND hDlg, UINT message, UINT wParam, LONG lParam)
                // Initialize the controls.
                break;
             case PSN_APPLY:
-               SetWindowLong(hDlg, DWL_MSGRESULT, TRUE);
                tmpDesksY = GetDlgItemInt(hDlg, IDC_DESKY, NULL, FALSE);
                tmpDesksX = GetDlgItemInt(hDlg, IDC_DESKX, NULL, FALSE);
                if((tmpDesksX * tmpDesksY) <  (nDesksX * nDesksY))
@@ -708,14 +689,7 @@ static BOOL APIENTRY misc(HWND hDlg, UINT message, UINT wParam, LONG lParam)
                 
                if((nDesksX * nDesksY) == 1)
                   MessageBox(hDlg, "Hey! No offense, but if you only want one desktop\nyou shouldn't use this software at all!", "Stupid user alert!", 0);
-               if( configChanged )
-               {
-                  configChanged = FALSE;
-                  // Tell modules about the config change
-                  postModuleMessage(MOD_CFGCHANGE, 0, 0);
-                  // Save the current config
-                  writeConfig();
-               }
+               SetWindowLong(hDlg, DWL_MSGRESULT, TRUE);
                break;
             case PSN_KILLACTIVE:
                SetWindowLong(hDlg, DWL_MSGRESULT, FALSE);
@@ -737,7 +711,6 @@ static BOOL APIENTRY misc(HWND hDlg, UINT message, UINT wParam, LONG lParam)
             LOWORD(wParam) == IDC_HOTMENUEN  || LOWORD(wParam) == IDC_HOTMENUW || 
             LOWORD(wParam) == IDC_HOTMENU) {
             SendMessage(GetParent(hDlg), PSM_CHANGED, (WPARAM)hDlg, 0L);
-            configChanged = TRUE;
          }
     
          if (LOWORD(wParam) == IDC_SAVENOW) {
@@ -762,7 +735,6 @@ static BOOL APIENTRY misc(HWND hDlg, UINT message, UINT wParam, LONG lParam)
          
          if (LOWORD(wParam) == IDC_DESKX && spinPressed == 1) {
             SendMessage(GetParent(hDlg), PSM_CHANGED, (WPARAM)hDlg, 0L);
-            configChanged = TRUE;
             tmpDesksX = SendMessage(GetDlgItem(hDlg, IDC_SLIDERX), UDM_GETPOS, 0, 0);
             while ((tmpDesksX * tmpDesksY) > 9) {
                tmpDesksY--;
@@ -771,7 +743,6 @@ static BOOL APIENTRY misc(HWND hDlg, UINT message, UINT wParam, LONG lParam)
          }
          else if(LOWORD(wParam) == IDC_DESKY && spinPressed == 2) {
             SendMessage(GetParent(hDlg), PSM_CHANGED, (WPARAM)hDlg, 0L);
-            configChanged = TRUE;
             tmpDesksY = SendMessage(GetDlgItem(hDlg, IDC_SLIDERY), UDM_GETPOS, 0, 0);
             while ((tmpDesksY * tmpDesksX) > 9) {
                tmpDesksX--;
@@ -808,14 +779,6 @@ static BOOL APIENTRY modules(HWND hDlg, UINT message, UINT wParam, LONG lParam)
                break;
             case PSN_APPLY:
                SetWindowLong(hDlg, DWL_MSGRESULT, TRUE);
-               if( configChanged )
-               {
-                  configChanged = FALSE;
-                  // Tell modules about the config change
-                  postModuleMessage(MOD_CFGCHANGE, 0, 0);
-                  // Save the current config
-                  writeConfig();
-               }
                break;
             case PSN_KILLACTIVE:
                SetWindowLong(hDlg, DWL_MSGRESULT, FALSE);
@@ -886,6 +849,9 @@ static BOOL APIENTRY modules(HWND hDlg, UINT message, UINT wParam, LONG lParam)
 
 /*
  * $Log$
+ * Revision 1.3  2001/01/12 18:14:34  jopi
+ * Modules will now get a notification when desktop layout has changed since we might have a new current desktop number after a change. Also fixed so that config update notification is sent upon apply and only when something has changed upon hitting ok. Config file will also be written upon every apply and not if cancel is selected
+ *
  * Revision 1.2  2000/08/18 23:43:07  jopi
  *  Minor modifications by Matti Jagula <matti@proekspert.ee> List of modifications follows: Added window title sorting in popup menus (Assign, Direct, Sticky) Added some controls to Setup Misc tab and support for calling the popup menus from keyboard.
  *

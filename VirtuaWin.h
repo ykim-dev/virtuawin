@@ -79,13 +79,15 @@ BOOL safeShowWindow(HWND*, int);
 void warningIcon();
 BOOL checkMouseState();
 HMENU createSortedWinList(int);
+void enableMouse(BOOL);
 
 // Variables
 HWND topWindow;        // holds the top window on a desktop
 HWND currentActive;    // holds the current active window
 BOOL userDefinedWin = FALSE;  // if we have any user defined
 
-HANDLE mouseThread; // Handle to the mouse thread
+HANDLE mouseThread;       // Handle to the mouse thread
+BOOL mouseEnabled = TRUE; // Status of the mouse thread, always running at startup 
 
 static int curAssigned = 0;   // how many predefined desktop belongings we have (saved)
 static int curSticky = 0;     // how many stickywindows we have (saved)
@@ -238,6 +240,9 @@ LPSTR vwWindowsState;
 
 /*
  * $Log$
+ * Revision 1.7  2001/01/12 18:11:25  jopi
+ * Moved some disk stuff from VirtuaWin to DiskRoutines
+ *
  * Revision 1.6  2000/12/11 21:29:47  jopi
  * Changed version number
  *
