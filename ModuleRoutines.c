@@ -83,26 +83,31 @@ void addModule(struct _finddata_t* aModule)
   
    // Is the module disabled
    if(!checkDisabledList(aModule->name)) {
-      // Startup the module
-      memset(&si, 0, sizeof(si)); 
-      si.cb = sizeof(si); 
-      if(!CreateProcess(strcat(tmpPath, aModule->name), NULL, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi)) {
-         LPTSTR  lpszLastErrorMsg; 
-         FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM, NULL, 
-                       GetLastError(), 
-                       MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), //The user default language 
-                       (LPTSTR) &lpszLastErrorMsg, 
-                       0, 
-                       NULL ); 
-      
-         sprintf(errMsg, "Failed to load module '%s'.\n %s", aModule->name, lpszLastErrorMsg);
-         MessageBox(hWnd, errMsg, "Module error",0 );
-         return;
+      if(myModule = FindWindow(aModule->name, NULL)) {
+         sprintf(errMsg, "The module '%s' seems to already be running and will be re-used. \nThis is probably due to incorrect shutdown of VirtuaWin" , aModule->name);
+         MessageBox(hWnd, errMsg, "Module warning", 0);
+      } else {
+         // Startup the module
+         memset(&si, 0, sizeof(si)); 
+         si.cb = sizeof(si); 
+         if(!CreateProcess(strcat(tmpPath, aModule->name), NULL, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi)) {
+            LPTSTR  lpszLastErrorMsg; 
+            FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM, NULL, 
+                          GetLastError(), 
+                          MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), //The user default language 
+                          (LPTSTR) &lpszLastErrorMsg, 
+                          0, 
+                          NULL ); 
+            
+            sprintf(errMsg, "Failed to load module '%s'.\n %s", aModule->name, lpszLastErrorMsg);
+            MessageBox(hWnd, errMsg, "Module error",0 );
+            return;
+         }
+         // Wait max 5 sec for the module to initialize itself
+         WaitForInputIdle( pi.hProcess, 5000); 
+         // Find the module with classname 
+         myModule = FindWindow(aModule->name, NULL);
       }
-      // Wait max 5 sec for the module to initialize itself
-      WaitForInputIdle( pi.hProcess, 5000); 
-      // Find the module with classname 
-      myModule = FindWindow(aModule->name, NULL);
       if(!myModule) {
          sprintf(errMsg, "Failed to load module '%s'.\n Maybe wrong class/filename.", aModule->name);
          MessageBox(hWnd, errMsg, "Module error",0 );
@@ -163,4 +168,7 @@ void postModuleMessage(UINT Msg, WPARAM wParam, LPARAM lParam)
 
 /*
  * $Log$
+ * Revision 1.1.1.1  2000/06/03 15:38:05  jopi
+ * Added first time
+ *
  */
