@@ -789,7 +789,7 @@ static BOOL APIENTRY modules(HWND hDlg, UINT message, UINT wParam, LONG lParam)
                      SendDlgItemMessage(hDlg, IDC_MODLIST, LB_ADDSTRING, 0, (LONG)tmpName);
                   }
                } else { // let's enable
-                  MessageBox(hDlg, "The module will be enabled upon restart of VirtuaWin", "Note!", 0);
+                  MessageBox(hDlg, "Press reload or restart VirtuaWin to enable the module", "Note!", 0);
                   moduleList[curSel].Disabled = FALSE;
                   SendDlgItemMessage(hDlg, IDC_MODLIST, LB_RESETCONTENT, 0, 0);
                   for(index = 0; index < nOfModules; index ++) {
@@ -936,6 +936,9 @@ static BOOL APIENTRY expert(HWND hDlg, UINT message, UINT wParam, LONG lParam)
 
 /*
  * $Log$
+ * Revision 1.18  2003/06/24 19:49:08  jopi
+ * SF693876 Fixed option to handle XP skinned style taskbars
+ *
  * Revision 1.17  2003/04/23 19:36:01  jopi
  * SF723880, Changed the mouse control checkboxes to radiobuttons.
  *
