@@ -622,17 +622,17 @@ static BOOL APIENTRY misc(HWND hDlg, UINT message, UINT wParam, LONG lParam)
                else
                   saveSticky = FALSE;
                if(SendDlgItemMessage(hDlg, IDC_MENUSTICKY, BM_GETCHECK, 0, 0) == BST_CHECKED)
-                  stickyMenu = TRUE;
+                  stickyMenu = 1;
                else 
-                  stickyMenu = FALSE;
+                  stickyMenu = 0;
                if(SendDlgItemMessage(hDlg, IDC_MENUACCESS, BM_GETCHECK, 0, 0) == BST_CHECKED)
-                  directMenu = TRUE;
+                  directMenu = 1;
                else
-                  directMenu = FALSE;
+                  directMenu = 0;
                if(SendDlgItemMessage(hDlg, IDC_MENUASSIGN, BM_GETCHECK, 0, 0) == BST_CHECKED)
-                  assignMenu = TRUE;
+                  assignMenu = 1;
                else
-                  assignMenu = FALSE;
+                  assignMenu = 0;
                if(SendDlgItemMessage(hDlg, IDC_USEASSIGN, BM_GETCHECK, 0, 0) == BST_CHECKED)
                   useDeskAssignment = TRUE;
                else
@@ -936,6 +936,9 @@ static BOOL APIENTRY expert(HWND hDlg, UINT message, UINT wParam, LONG lParam)
 
 /*
  * $Log$
+ * Revision 1.20  2003/07/08 21:24:24  jopi
+ * Corrected the web link
+ *
  * Revision 1.19  2003/07/08 21:18:11  jopi
  * Changed the module enable message
  *
