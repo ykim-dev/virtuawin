@@ -1,5 +1,10 @@
 ***   VirtuaWin Revision History   ***
 --------------------------------------
+Ver 2.9 2004/01/10
+* SF770859, Window menu heading will not be displayed if only one meny is used
+* Bugfix: When assigning a visible window to current desktop (by module message) the window was lost.
+* Bugfix: Some windows refused to be moved, such as MSN and AIM.
+----------------------------
 
 Ver 2.8 2003/07/10
 * Added possibility to disable the use of one config file for each user
