@@ -1589,11 +1589,11 @@ HMENU createSortedWinList_cos()
       {
          if (!c || c != items[x]->desk)
          {
-            if(c) AppendMenu(hMenu, MF_SEPARATOR | MF_POPUP, 0, NULL );
+            if(c) AppendMenu(hMenu, MF_SEPARATOR, 0, NULL );
             c = items [x]->desk;
          }
          AppendMenu( hMenu,
-                     MF_STRING | (items[x]->sticky ? MF_CHECKED: 0) | MF_POPUP,
+                     MF_STRING | (items[x]->sticky ? MF_CHECKED: 0),
                      MAXWIN + (items[x]->id), items[x]->name );
       }
    }
@@ -1605,19 +1605,19 @@ HMENU createSortedWinList_cos()
       {
          if (!c || c != items[x]->desk)
          {
-            if(c) AppendMenu(hMenu, MF_SEPARATOR | MF_POPUP, 0, NULL );
+            if(c) AppendMenu(hMenu, MF_SEPARATOR, 0, NULL );
             c = items [x]->desk;
          }
       
          if (menuBreak) {
             AppendMenu( hMenu,
-                        MF_STRING | (items[x]->sticky ? MF_CHECKED: 0) | MF_POPUP | MF_MENUBARBREAK,
+                        MF_STRING | (items[x]->sticky ? MF_CHECKED: 0) | MF_MENUBARBREAK,
                         2 * MAXWIN + (items[x]->id), items[x]->name );
             menuBreak = FALSE;
          }
          else
             AppendMenu( hMenu,
-                        MF_STRING | (items[x]->sticky ? MF_CHECKED: 0) | MF_POPUP,
+                        MF_STRING | (items[x]->sticky ? MF_CHECKED: 0),
                         2 * MAXWIN + (items[x]->id), items[x]->name );
 
       }
@@ -1625,23 +1625,23 @@ HMENU createSortedWinList_cos()
 
    c=0;
    if(assignMenu) {
-      if (directMenu) menuBreak=TRUE;
+      if (stickyMenu || directMenu) menuBreak=TRUE;
       for (x=0; x < i; x++ )
       {
          if (!c || c != items[x]->desk)
          {
-            if(c) AppendMenu(hMenu, MF_SEPARATOR | MF_POPUP, 0, NULL );
+            if(c) AppendMenu(hMenu, MF_SEPARATOR, 0, NULL );
             c = items [x]->desk;
          }
       
          //sticky windows can't be assignes cause they're sticky :-) so leave them.out..
          if (!items[x]->sticky)
             if ( menuBreak ) {
-               AppendMenu( hMenu, MF_STRING  | MF_POPUP | MF_MENUBARBREAK, 3 * MAXWIN + (items[x]->id), items[x]->name );
+               AppendMenu( hMenu, MF_STRING | MF_MENUBARBREAK, 3 * MAXWIN + (items[x]->id), items[x]->name );
                menuBreak = FALSE;
             }
             else
-               AppendMenu( hMenu, MF_STRING  | MF_POPUP, 3 * MAXWIN + (items[x]->id), items[x]->name );
+               AppendMenu( hMenu, MF_STRING, 3 * MAXWIN + (items[x]->id), items[x]->name );
       }
    }
 
@@ -1974,6 +1974,9 @@ void goGetTheTaskbarHandle()
 
 /*
  * $Log$
+ * Revision 1.19  2002/06/01 21:15:22  jopi
+ * Multiple fixes by Christian Storm.
+ *
  * Revision 1.18  2002/06/01 19:33:33  jopi
  * *** empty log message ***
  *
