@@ -1,6 +1,7 @@
 # Wedit Makefile for project VirtuaWin
-CFLAGS=-IC:\lcc\include -O
-LINKFLAGS=-s -subsystem windows
+INCLUDEPATH=d:\lcc\include
+CFLAGS=-I$(INCLUDEPATH) -O
+LINKFLAGS=-subsystem windows
 CC=lcc.exe
 TARGET=VirtuaWin.exe
 OBJS = VirtuaWin.res VirtuaWin.obj DiskRoutines.obj SetupDialog.obj ModuleRoutines.obj
@@ -12,33 +13,33 @@ $(TARGET):	$(OBJS) Makefile
 
 # Build VirtuaWin.res
 VIRTUAWIN_RC=\
-	C:\lcc\include\windows.h\
-	C:\lcc\include\win.h\
-	C:\lcc\include\limits.h\
-	C:\lcc\include\stdarg.h\
-	resource.h\
+	$(INCLUDEPATH)\windows.h \
+	$(INCLUDEPATH)\win.h \
+	$(INCLUDEPATH)\limits.h \
+	$(INCLUDEPATH)\stdarg.h \
+	resource.h \
 
 VirtuaWin.res:	$(VIRTUAWIN_RC) VirtuaWin.rc
-	lrc -Ic:\VirtuaWin -IC:\lcc\include  VirtuaWin.rc
+	lrc -ID:\VirtuaWin -ID:\lcc\include  VirtuaWin.rc
 
 # Build VIRTUAWIN.C
 VIRTUAWIN_C=\
-	VirtuaWin.h\
-	Resource.h\
-	C:\lcc\include\windows.h\
-	C:\lcc\include\win.h\
-	C:\lcc\include\limits.h\
-	C:\lcc\include\stdarg.h\
-	C:\lcc\include\shellapi.h\
-	C:\lcc\include\stdio.h\
-	C:\lcc\include\_syslist.h\
-	C:\lcc\include\stdlib.h\
-	C:\lcc\include\stddef.h\
-	C:\lcc\include\string.h\
-	C:\lcc\include\commctrl.h\
-	C:\lcc\include\math.h\
-	C:\lcc\include\io.h\
-	C:\lcc\include\sys\stat.h\
+	VirtuaWin.h \
+	Resource.h \
+	$(INCLUDEPATH)\windows.h \
+	$(INCLUDEPATH)\win.h\
+	$(INCLUDEPATH)\limits.h\
+	$(INCLUDEPATH)\stdarg.h\
+	$(INCLUDEPATH)\shellapi.h\
+	$(INCLUDEPATH)\stdio.h\
+	$(INCLUDEPATH)\_syslist.h\
+	$(INCLUDEPATH)\stdlib.h\
+	$(INCLUDEPATH)\stddef.h\
+	$(INCLUDEPATH)\string.h\
+	$(INCLUDEPATH)\commctrl.h\
+	$(INCLUDEPATH)\math.h\
+	$(INCLUDEPATH)\io.h\
+	$(INCLUDEPATH)\sys\stat.h\
 
 VirtuaWin.obj: $(VIRTUAWIN_C) VirtuaWin.c 
 	$(CC) -c $(CFLAGS) VirtuaWin.c 
