@@ -74,7 +74,8 @@ void addModule(struct _finddata_t* aModule)
    STARTUPINFO si;
    PROCESS_INFORMATION pi;  
    sprintf(tmpPath, "%smodules\\", vwPath);
-  
+   DWORD retVal = 1;
+
    if(nOfModules >= MAXMODULES) {
       sprintf(errMsg, "Max number of modules where added.\n'%s' won't be loaded.", aModule->name);
       MessageBox(hWnd, errMsg, "Warning",0 );
@@ -104,12 +105,13 @@ void addModule(struct _finddata_t* aModule)
             return;
          }
          // Wait max 5 sec for the module to initialize itself
-         WaitForInputIdle( pi.hProcess, 5000); 
+         retVal = WaitForInputIdle( pi.hProcess, 10000); 
+         
          // Find the module with classname 
          myModule = FindWindow(aModule->name, NULL);
       }
       if(!myModule) {
-         sprintf(errMsg, "Failed to load module '%s'.\n Maybe wrong class/filename.", aModule->name);
+         sprintf(errMsg, "Failed to load module '%s'.\n Maybe wrong class/filename.\nErrcode %d", aModule->name, retVal);
          MessageBox(hWnd, errMsg, "Module error",0 );
       } else {
          moduleList[nOfModules].Handle = myModule;
@@ -168,6 +170,9 @@ void postModuleMessage(UINT Msg, WPARAM wParam, LPARAM lParam)
 
 /*
  * $Log$
+ * Revision 1.7  2003/01/27 20:22:56  jopi
+ * Updated copyright header for 2003
+ *
  * Revision 1.6  2002/12/29 15:20:38  jopi
  * Fixed copyright info.
  *
