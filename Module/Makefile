@@ -1,5 +1,5 @@
 # Wedit Makefile for project module
-CFLAGS=-Ic:\lcc\include 
+CFLAGS=-Id:\lcc\include 
 CC=lcc.exe
 OBJS=\
 	module.obj
@@ -7,7 +7,7 @@ OBJS=\
 LIBS=
 
 module.exe:	$(OBJS) Makefile
-	c:\lcc\bin\lcclnk  -subsystem windows -o module.exe $(OBJS) $(LIBS)
+	d:\lcc\bin\lcclnk  -subsystem windows -o module.exe $(OBJS) $(LIBS)
 
 # Build module.c
 
