@@ -2,7 +2,7 @@
 
 [Setup]
 AppName=VirtuaWin
-AppVerName=VirtuaWin 2.7.1
+AppVerName=VirtuaWin 2.X
 DefaultDirName={pf}\VirtuaWin
 DefaultGroupName=VirtuaWin
 MinVersion=4,4
@@ -18,7 +18,6 @@ Name: "en"; MessagesFile: "VirtuaWin5.0.ISL"
 
 [Tasks]
 Name: autostart; Description: "Autostart upon boot";
-Name: multi; Description: "Enable multi user configuration files";
 
 [Dirs] 
 Name: "{app}\icons"; Flags: uninsalwaysuninstall 
@@ -41,10 +40,6 @@ Name: "{group}\Help"; Filename: "{app}\VirtuaWin.hlp"
 Name: "{group}\Readme"; Filename: "{app}\README.TXT"
 Name: "{group}\History"; Filename: "{app}\HISTORY.TXT"
 Name: "{group}\Uninstall"; Filename: "{uninstallexe}"
-
-[Registry]
-Root: HKLM; Subkey: "Software\VirtuaWin\Settings"; ValueType: string; ValueName: "Path"; ValueData: "{app}\"; Flags: uninsdeletekey
-Root: HKLM; Subkey: "Software\VirtuaWin\Settings"; ValueType: binary; ValueName: "Multi"; ValueData: "00"; Tasks: multi; Flags: uninsdeletekey
 
 [UninstallDelete] 
 Type: files; Name: "{app}\VWCONFIG.CFG"
