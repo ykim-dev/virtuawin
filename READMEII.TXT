@@ -32,15 +32,9 @@ in SourceForge tracking system, http://sourceforge.net/projects/virtuawin/
 or send a bugreport to virtuawin@home.se and describe the problem.
 Please include version number.
 
-There is also a discussion forum available.
-To subscribe, send a mail to majordomo@caedmon.net, in the message body enter: 
-subscribe virtuawin 
-and then just follow the instructions. 
-Post a message to the list by sending a mail to virtuawin@caedmon.net. 
-
 Copyright
 --------------------------------------------------------------
-VirtuaWin is copyright (c) 1999-2003, and 2004 by Johan Piculell and is 
+VirtuaWin is copyright (c) 1999-2004, and 2005 by Johan Piculell and is 
 licensed through the GNU General Public License. Read the 
 COPYING.TXT file for the complete license.
 
