@@ -121,6 +121,7 @@ extern int screenRight;	  // the width of screen, from VirtuaWin.h
 extern int screenBottom;  // the height of screen, from VirtuaWin.h
 
 extern int curDisabledMod; // how many disabled modules we have
+extern int taskbarOffset;  // Default 3, 0 if XP skinned taskbar is used.
 
 extern LPSTR vwPath;          // holds path to VirtuaWin directory
 extern LPSTR vwConfig;        // holds config filename + path
@@ -138,6 +139,9 @@ extern LPSTR vwWindowsState;  // holds windowsata file name + path
 
 /*
  * $Log$
+ * Revision 1.10  2003/01/27 20:23:52  jopi
+ * Updated copyright header for 2003
+ *
  * Revision 1.9  2002/12/23 15:42:30  jopi
  * Added config options to disable taskbar detection and the alternative hiding technique.
  *

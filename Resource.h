@@ -101,6 +101,7 @@
 #define IDC_DISPLAYICON 1080
 #define IDC_TASKBARDETECT 1081
 #define IDC_TRICKYSUPPORT 1082
+#define IDC_XPSTYLETASKBAR 1083
 
 #define	ID_SETUP	32771
 #define	ID_EXIT	        32772
@@ -112,6 +113,9 @@
 
 /*
  * $Log$
+ * Revision 1.8  2003/03/10 20:48:20  jopi
+ * Changed so that doubleclick will bring up setup and added a disabled menu item instead.
+ *
  * Revision 1.7  2002/12/23 15:42:28  jopi
  * Added config options to disable taskbar detection and the alternative hiding technique.
  *

@@ -78,13 +78,12 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 
    getScreenSize();
 
-   getTaskbarLocation();
-
    /* set the window to give focus to when releasing focus on switch also used to refresh */
    releaseHnd = GetDesktopWindow();
   
    loadFilePaths();
    readConfig();	// Read the config file
+   getTaskbarLocation(); // This is dependent on the config
    
    // Fix some things for the alternate hide method
    RM_Shellhook = RegisterWindowMessage("SHELLHOOK");
@@ -941,6 +940,8 @@ void showSetup()
          writeConfig();
          // Tell modules about the config change
          postModuleMessage(MOD_CFGCHANGE, 0, 0);
+         // Reload taskbar if any changes to those settings
+         getTaskbarLocation();
       }
       // Note! The setup dialog is responible for resetting all 
       // values if cancel is pressed
@@ -2024,16 +2025,16 @@ void getTaskbarLocation()
       if ((r.bottom + r.top) == (screenBottom - screenTop)) // task bar is on side
       {
          if (r.left <= screenLeft)                          // task bar is on left
-            taskBarLeftWarp   = r.right - r.left - 3;
+            taskBarLeftWarp   = r.right - r.left - taskbarOffset;
          else                                               // task bar is on right
-            taskBarRightWarp  = r.right - r.left - 3;
+            taskBarRightWarp  = r.right - r.left - taskbarOffset;
       }
       else                                                  // task bar is on top/bottom
       {
          if (r.top <= screenTop)                            // task bar is on top
-            taskBarTopWarp    = r.bottom - r.top - 3;
+            taskBarTopWarp    = r.bottom - r.top - taskbarOffset;
          else                                               // task bar is on bottom
-            taskBarBottomWarp = r.bottom - r.top - 3;
+            taskBarBottomWarp = r.bottom - r.top - taskbarOffset;
       }
    }
 }
@@ -2097,6 +2098,9 @@ void disableAll(HWND* aHWnd)
 
 /*
  * $Log$
+ * Revision 1.31  2003/04/09 16:47:58  jopi
+ * SF710500, removed all the old menu handling code to make menus work the same independently of numner of menus used.
+ *
  * Revision 1.30  2003/03/10 20:48:18  jopi
  * Changed so that doubleclick will bring up setup and added a disabled menu item instead.
  *

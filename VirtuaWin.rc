@@ -139,7 +139,7 @@ IDD_PROPPAGE_EXPERT DIALOG 0, 0, 150, 150
 STYLE DS_3DLOOK | WS_CHILD | WS_DISABLED | WS_BORDER
 FONT 8, "MS Sans Serif"
 BEGIN
-    GROUPBOX        "Extras", IDC_STATIC, 0, 2, 165, 106
+    GROUPBOX        "Extras", IDC_STATIC, 0, 2, 165, 116
     AUTOCHECKBOX    "Keep last active", IDC_LASTACTIVE,  6, 15, 65, 10
     AUTOCHECKBOX    "Release focus", IDC_FOCUS,         74, 15, 61, 10
     AUTOCHECKBOX    "Switch minimized", IDC_MINIMIZED,   6, 25, 69, 10
@@ -150,6 +150,7 @@ BEGIN
     AUTOCHECKBOX    "Hide system tray icon", IDC_DISPLAYICON, 6, 75, 80, 10
     AUTOCHECKBOX    "Disable taskbar detection", IDC_TASKBARDETECT, 6, 85, 100, 10
     AUTOCHECKBOX    "Use alternate hiding", IDC_TRICKYSUPPORT, 6, 95, 90, 10
+    AUTOCHECKBOX    "XP taskbar patch", IDC_XPSTYLETASKBAR, 6, 105, 90, 10
 END
 
 IDD_PROPPAGE_ABOUT DIALOG 0, 0, 150, 150

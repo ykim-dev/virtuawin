@@ -148,6 +148,7 @@ int taskBarLeftWarp   = 0;      // the warp size for Left taskbar
 int taskBarRightWarp  = 0;      // the warp size for Right taskbar
 int taskBarTopWarp    = 0;      // the warp size for Top taskbar
 int taskBarBottomWarp = 0;      // the warp size for Bottom taskbar
+int taskbarOffset     = 3;      // Default 3, 0 if XP skinned taskbar is used.
 
 HINSTANCE hInst;		// current instance
 HWND hWnd;			// handle to VirtuaWin
@@ -275,6 +276,9 @@ LPSTR vwWindowsState;
 
 /*
  * $Log$
+ * Revision 1.21  2003/04/09 16:47:59  jopi
+ * SF710500, removed all the old menu handling code to make menus work the same independently of numner of menus used.
+ *
  * Revision 1.20  2003/03/10 20:48:17  jopi
  * Changed so that doubleclick will bring up setup and added a disabled menu item instead.
  *

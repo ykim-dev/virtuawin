@@ -841,6 +841,8 @@ static BOOL APIENTRY expert(HWND hDlg, UINT message, UINT wParam, LONG lParam)
             SendDlgItemMessage(hDlg, IDC_TASKBARDETECT, BM_SETCHECK, 1,0);
          if(trickyWindows)
             SendDlgItemMessage(hDlg, IDC_TRICKYSUPPORT, BM_SETCHECK, 1,0);
+         if(!taskbarOffset)
+            SendDlgItemMessage(hDlg, IDC_XPSTYLETASKBAR, BM_SETCHECK, 1,0);
          return TRUE;
 
       case WM_NOTIFY:
@@ -885,6 +887,10 @@ static BOOL APIENTRY expert(HWND hDlg, UINT message, UINT wParam, LONG lParam)
                   trickyWindows = TRUE;
                else
                   trickyWindows = FALSE;
+               if(SendDlgItemMessage(hDlg, IDC_XPSTYLETASKBAR, BM_GETCHECK, 0, 0) == BST_CHECKED)
+                  taskbarOffset = 0;
+               else
+                  taskbarOffset = 3;
                if(SendDlgItemMessage(hDlg, IDC_DISPLAYICON, BM_GETCHECK, 0, 0) == BST_CHECKED)
                {
                   displayTaskbarIcon = FALSE;
@@ -910,7 +916,8 @@ static BOOL APIENTRY expert(HWND hDlg, UINT message, UINT wParam, LONG lParam)
             LOWORD(wParam) == IDC_MINIMIZED  || LOWORD(wParam) == IDC_REFRESH ||
             LOWORD(wParam) == IDC_DESKCYCLE  || LOWORD(wParam) == IDC_INVERTY ||
             LOWORD(wParam) == IDC_RECOVERY   || LOWORD(wParam) == IDC_DISPLAYICON ||
-            LOWORD(wParam) == IDC_TASKBARDETECT || LOWORD(wParam) == IDC_TRICKYSUPPORT ) {
+            LOWORD(wParam) == IDC_TASKBARDETECT || LOWORD(wParam) == IDC_TRICKYSUPPORT ||
+            LOWORD(wParam) == IDC_XPSTYLETASKBAR ) {
             SendMessage(GetParent(hDlg), PSM_CHANGED, (WPARAM)hDlg, 0L);
          }
          if (LOWORD(wParam) == IDC_LASTACTIVE) {
@@ -929,6 +936,9 @@ static BOOL APIENTRY expert(HWND hDlg, UINT message, UINT wParam, LONG lParam)
 
 /*
  * $Log$
+ * Revision 1.17  2003/04/23 19:36:01  jopi
+ * SF723880, Changed the mouse control checkboxes to radiobuttons.
+ *
  * Revision 1.16  2003/04/09 17:46:20  jopi
  * Small error made a checkbox work incorrectly, introduced with the "expert" tab.
  *

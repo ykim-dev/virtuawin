@@ -419,7 +419,8 @@ void writeConfig()
       fprintf(fp, "Sticky_Win# %i\n", VW_STICKYWIN);
       fprintf(fp, "Taskbar_detection# %i\n", noTaskbarCheck);
       fprintf(fp, "Use_trickywindows# %i\n", trickyWindows);
-
+      fprintf(fp, "XPStyleTaskbar# %i\n", taskbarOffset);
+      
       fclose(fp);
    }
 }
@@ -512,6 +513,7 @@ void readConfig()
       fscanf(fp, "%s%i", &dummy, &VW_STICKYWIN);
       fscanf(fp, "%s%i", &dummy, &noTaskbarCheck);
       fscanf(fp, "%s%i", &dummy, &trickyWindows);
+      fscanf(fp, "%s%i", &dummy, &taskbarOffset);
 
       fclose(fp);
    }
@@ -587,6 +589,9 @@ BOOL tryToLock()
 
 /*
  * $Log$
+ * Revision 1.16  2003/01/27 20:22:56  jopi
+ * Updated copyright header for 2003
+ *
  * Revision 1.15  2002/12/23 15:42:29  jopi
  * Added config options to disable taskbar detection and the alternative hiding technique.
  *
