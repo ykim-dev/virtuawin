@@ -139,17 +139,17 @@ IDD_PROPPAGE_EXPERT DIALOG 0, 0, 150, 150
 STYLE DS_3DLOOK | WS_CHILD | WS_DISABLED | WS_BORDER
 FONT 8, "MS Sans Serif"
 BEGIN
-    GROUPBOX        "Extras", IDC_STATIC, 0, 2, 165, 96
+    GROUPBOX        "Extras", IDC_STATIC, 0, 2, 165, 106
     AUTOCHECKBOX    "Keep last active", IDC_LASTACTIVE,  6, 15, 65, 10
     AUTOCHECKBOX    "Release focus", IDC_FOCUS,         74, 15, 61, 10
     AUTOCHECKBOX    "Switch minimized", IDC_MINIMIZED,   6, 25, 69, 10
-    AUTOCHECKBOX    "Refresh after switch", IDC_REFRESH, 6, 25, 79, 10
-    AUTOCHECKBOX    "Crash recovery", IDC_RECOVERY,      6, 35, 73, 10
-    AUTOCHECKBOX    "Desktop cycling", IDC_DESKCYCLE,    6, 45, 74, 10
-    AUTOCHECKBOX    "Invert Up/Down", IDC_INVERTY,       6, 55, 74, 10
-    AUTOCHECKBOX    "Hide system tray icon", IDC_DISPLAYICON, 6, 65, 80, 10
-    AUTOCHECKBOX    "Disable taskbar detection", IDC_TASKBARDETECT, 6, 75, 100, 10
-    AUTOCHECKBOX    "Use alternate hiding", IDC_TRICKYSUPPORT, 6, 85, 90, 10
+    AUTOCHECKBOX    "Refresh after switch", IDC_REFRESH, 6, 35, 79, 10
+    AUTOCHECKBOX    "Crash recovery", IDC_RECOVERY,      6, 45, 73, 10
+    AUTOCHECKBOX    "Desktop cycling", IDC_DESKCYCLE,    6, 55, 74, 10
+    AUTOCHECKBOX    "Invert Up/Down", IDC_INVERTY,       6, 65, 74, 10
+    AUTOCHECKBOX    "Hide system tray icon", IDC_DISPLAYICON, 6, 75, 80, 10
+    AUTOCHECKBOX    "Disable taskbar detection", IDC_TASKBARDETECT, 6, 85, 100, 10
+    AUTOCHECKBOX    "Use alternate hiding", IDC_TRICKYSUPPORT, 6, 95, 90, 10
 END
 
 IDD_PROPPAGE_ABOUT DIALOG 0, 0, 150, 150
