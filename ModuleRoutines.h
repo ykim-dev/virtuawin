@@ -24,8 +24,10 @@
 
 #include <windows.h>
 
+typedef struct _finddata_t _finddata_t;
+ 
 void loadModules();
-void addModule(struct _finddata_t*);
+void addModule(struct _finddata_t* aModule);
 void unloadModules();
 BOOL checkDisabledList(char*);
 void sendModuleMessage(UINT Msg, WPARAM wParam, LPARAM lParam);
@@ -35,6 +37,9 @@ void postModuleMessage(UINT Msg, WPARAM wParam, LPARAM lParam);
 
 /*
  * $Log$
+ * Revision 1.6  2004/01/10 11:15:52  jopi
+ * Updated copyright for 2004
+ *
  * Revision 1.5  2003/01/27 20:23:53  jopi
  * Updated copyright header for 2003
  *
