@@ -1,7 +1,7 @@
 ***   VirtuaWin Revision History   ***
 --------------------------------------
 
-Ver 2.6 2002/xx/xx 
+Ver 2.6 2002/06/02 
 * Bugfix: Alternative way of hiding windows. This solves the disappearing 
   Explorer bug
 * Bugfix: Saving of sticky state for "User windows" is now fixed
