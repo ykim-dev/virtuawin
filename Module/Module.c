@@ -6,7 +6,7 @@
  * Note that the classname must be the same as the filename including the '.exe'
  *
  * Created by jopi 1999
- * VirtuaWin@iname.com
+ * VirtuaWin@home.se
  * Feel free to use in any way you like(well, almost)
  */
 #include <windows.h>
@@ -98,4 +98,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
 /*
  * $Log$
+ * Revision 1.1.1.1  2000/06/03 15:44:50  jopi
+ * Added first time
+ *
  */
