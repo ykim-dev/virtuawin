@@ -99,6 +99,7 @@ void getTaskbarLocation();
 void lockMutex();
 void releaseMutex();
 void disableAll(HWND*);
+void assignWindow(HWND*, int);
 
 // Variables
 HWND topWindow;        // holds the top window on a desktop
@@ -276,6 +277,9 @@ LPSTR vwWindowsState;
 
 /*
  * $Log$
+ * Revision 1.22  2003/06/24 19:52:05  jopi
+ * SF693876 Fixed option to handle XP skinned style taskbars
+ *
  * Revision 1.21  2003/04/09 16:47:59  jopi
  * SF710500, removed all the old menu handling code to make menus work the same independently of numner of menus used.
  *

@@ -43,6 +43,8 @@
 #define VW_WINLIST    (WM_USER + 23)
 /* Message, returns the current desktop number */
 #define VW_CURDESK    (WM_USER + 24)
+/* Message, assign a window to the specified desktop */
+#define VW_ASSIGNWIN  (WM_USER + 25)
 
 /* Message, sent by VirtuaWin after a switch. lParam will contain current desktop number 
    if wParam isn't one of the following, then wParam will also contain current desktop.
@@ -69,6 +71,9 @@
 
 /*
  * $Log$
+ * Revision 1.4  2001/11/12 21:39:15  jopi
+ * Added functionality for disabling the systray icon
+ *
  * Revision 1.3  2001/01/12 16:58:11  jopi
  * Added module message for getting the current desktop number
  *

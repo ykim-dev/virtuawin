@@ -807,6 +807,10 @@ LRESULT CALLBACK wndProc(HWND aHWnd, UINT message, WPARAM wParam, LPARAM lParam)
       case VW_CURDESK:
          return currentDesk;
 
+      case VW_ASSIGNWIN:
+         assignWindow((HWND*)wParam, (int)lParam);
+         return TRUE;
+         
          // End plugin messages
     
       case WM_CREATE:		       // when main window is created
@@ -2096,8 +2100,36 @@ void disableAll(HWND* aHWnd)
    }
 }
 
+/************************************************
+ * Assigns a window to the specified desktop
+ * Used by the module message VW_ASSIGNWIN
+ */
+void assignWindow(HWND* theWin, int theDesk)
+{
+   int index;
+   
+   if((theDesk > (nDesksY * nDesksX)) || (theDesk < 1)) // Invalid desk
+      return;
+
+   for (index = 0; index < nWin; ++index)
+      if (winList[index].Handle == theWin)
+      {
+         // found
+         if(winList[index].Desk != theDesk)
+         {
+            lockMutex();
+            showHideWindow( &winList[index], FALSE );
+            winList[index].Desk = theDesk;
+            releaseMutex();
+         }
+      }
+}
+
 /*
  * $Log$
+ * Revision 1.32  2003/06/24 19:52:04  jopi
+ * SF693876 Fixed option to handle XP skinned style taskbars
+ *
  * Revision 1.31  2003/04/09 16:47:58  jopi
  * SF710500, removed all the old menu handling code to make menus work the same independently of numner of menus used.
  *
