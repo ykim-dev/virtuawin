@@ -1,7 +1,7 @@
 //
 //  VirtuaWin - Virtual Desktop Manager for Win9x/NT/Win2K
 // 
-//  Copyright (c) 1999, 2000 jopi
+//  Copyright (c) 1999, 2000, 2001 jopi
 // 
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -1693,6 +1693,9 @@ VOID CALLBACK FlashProc(HWND hwnd, UINT uMsg, UINT idEvent, DWORD dwTime)
 
 /*
  * $Log$
+ * Revision 1.10  2001/01/28 16:26:56  jopi
+ * Configuration behaviour change. It is now possible to test all settings by using apply and all changes will be rollbacked if cancel is pressed
+ *
  * Revision 1.9  2001/01/14 16:27:42  jopi
  * Moved io.h include to DiskRoutines.c
  *

@@ -1,7 +1,7 @@
 //
 //  VirtuaWin - Virtual Desktop Manager for Win9x/NT/Win2K
 // 
-//  Copyright (c) 1999, 2000 jopi
+//  Copyright (c) 1999, 2000, 2001 jopi
 // 
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -168,6 +168,9 @@ void postModuleMessage(UINT Msg, WPARAM wParam, LPARAM lParam)
 
 /*
  * $Log$
+ * Revision 1.3  2000/08/21 20:54:32  jopi
+ * More than MAXMODULES modules would corrupt data and cause undefined behaviour, also increased value from 5 to 10
+ *
  * Revision 1.2  2000/07/11 17:45:42  jopi
  * Added check for running modules. Modules will be re-used if already running
  *
