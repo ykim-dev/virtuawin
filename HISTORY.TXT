@@ -7,7 +7,7 @@ Ver 2.6 2002/xx/xx
 * Bugfix: Saving of sticky state for "User windows" is now fixed
 * Bugfix: Problems with saving desktop and stickiness state of applications 
   containing spaces in their classnames
-* Bugfix: Only direct access menu worked with "Access menu key". Thanks to Christian Storm
+* Now the "Access menu key" works with all three menu types. Thanks to Christian Storm
 * Improved Window menu, no need to step through submenus. Thanks to Christian Storm
 * Sticky-toggle now works in combination with the win-key. Thanks to Christian Storm
 * Taskbar warp now works for all locations of the taskbar. Thanks to Philip Walford
