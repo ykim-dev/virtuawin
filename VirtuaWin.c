@@ -56,7 +56,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
       PostMessage( FindWindow(classname, NULL), VW_SETUP, 0, 0);
       return 0; // ...and quit 
    }
-   
+
    /* Create a window class for the window that receives systray notifications.
       The window will never be displayed */
    wc.cbSize = sizeof(WNDCLASSEX);
@@ -80,7 +80,6 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
    /* set the window to give focus to when releasing focus on switch also used to refresh */
    releaseHnd = GetDesktopWindow();
   
-   loadFilePaths();
    readConfig();	// Read the config file
    getTaskbarLocation(); // This is dependent on the config
    
@@ -1041,7 +1040,7 @@ void shutDown()
    writeDisabledList(&nOfModules, moduleList);
    unloadModules();
    showAll();	        // gather all windows on exit
-   remove(vwLock);       // Remove the lock file, don't bother if this fails
+   clearLock();       // Remove the lock file, don't bother if this fails
    unRegisterAllKeys();
    Shell_NotifyIcon(NIM_DELETE, &nIconD); // This removes the icon
    if(saveSticky)
@@ -1779,7 +1778,11 @@ void recoverWindows()
    char buff[27];
    FILE* fp;
     
-   if((fp = fopen(vwState, "r"))) {
+
+   char VirtuaWinStateFile[MAX_PATH];
+   GetFilename(vwSTATE, VirtuaWinStateFile);
+
+   if((fp = fopen(VirtuaWinStateFile, "r"))) {
       while(!feof(fp)) {
          fscanf(fp, "%79s", dummy);
          if((strlen(dummy) != 0) && !feof(fp)) {
@@ -2148,6 +2151,9 @@ void setSticky(HWND theWin, int state)
 
 /*
  * $Log$
+ * Revision 1.44  2005/02/16 07:44:20  jopi
+ * Removed unused variable
+ *
  * Revision 1.43  2005/02/04 11:04:41  jopi
  * SF936865, use virtual sceensize for mouse switching instead since multimonitor setups would switch desktop prematurely otherwise.
  *

@@ -275,7 +275,6 @@ LPSTR vwHelp;
 LPSTR vwSticky;
 LPSTR vwTricky;
 LPSTR vwState; 
-LPSTR vwLock; 
 LPSTR vwModules;
 LPSTR vwDisabled; 
 LPSTR vwWindowsState;
@@ -284,6 +283,9 @@ LPSTR vwWindowsState;
 
 /*
  * $Log$
+ * Revision 1.29  2004/12/07 19:18:42  jopi
+ * SF1053738, added application icons to the window list
+ *
  * Revision 1.28  2004/04/10 10:20:01  jopi
  * Updated to compile with gcc/mingw
  *

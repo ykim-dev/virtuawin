@@ -124,22 +124,13 @@ extern int screenBottom;  // the height of screen, from VirtuaWin.h
 extern int curDisabledMod; // how many disabled modules we have
 extern int taskbarOffset;  // Default 3, 0 if XP skinned taskbar is used.
 
-extern LPSTR vwPath;          // holds path to VirtuaWin directory
-extern LPSTR vwConfig;        // holds config filename + path
-extern LPSTR vwList;          // holds userlist filename + path
-extern LPSTR vwHelp;          // holds help filename + path
-extern LPSTR vwSticky;        // holds sticky file + path
-extern LPSTR vwTricky;        // holds tricky file + path
-extern LPSTR vwState;         // holds sticky file + path
-extern LPSTR vwLock;          // holds desktop state file + path
-extern LPSTR vwModules;       // holds module search criteria
-extern LPSTR vwDisabled;      // holds disabled module file + path
-extern LPSTR vwWindowsState;  // holds windowsata file name + path
-
 #endif
 
 /*
  * $Log$
+ * Revision 1.14  2004/02/28 18:54:01  jopi
+ * SF904069 Added possibility to choose if sticky should be permanent for all instances of the same classname.
+ *
  * Revision 1.13  2004/01/10 11:15:52  jopi
  * Updated copyright for 2004
  *

@@ -25,7 +25,9 @@
 #ifndef _DISKROUTINES_H_
 #define _DISKROUTINES_H_
 
-void loadFilePaths();
+typedef enum { vwPATH, vwCONFIG, vwLIST, vwHELP, vwSTICKY, vwTRICKY, vwSTATE, vwMODULES, vwDISABLED, vwWINDOWS_STATE, LAST_FILE } eFileNames;
+
+int GetFilename(eFileNames filetype, char* outStr);
 void writeDisabledList(int* theNOfModules, moduleType* theModList);
 int loadDisabledModules(disModules* theDisList);
 int loadStickyList(stickyType* theStickyList);
@@ -39,12 +41,16 @@ int loadUserList(userType* theUserList);
 void writeConfig();
 void readConfig();
 BOOL tryToLock();
+void clearLock();
 char *replace(char *g_string, char *replace_from, char *replace_to);
 
 #endif
 
 /*
  * $Log$
+ * Revision 1.10  2004/04/10 14:33:14  jopi
+ * Updated for gcc/mingw
+ *
  * Revision 1.9  2004/01/10 11:15:52  jopi
  * Updated copyright for 2004
  *

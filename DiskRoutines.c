@@ -24,81 +24,165 @@
 #include <string.h>
 #include <lmcons.h>
 #include <io.h>
+#include <errno.h>
+#include <assert.h>
+#include <shlobj.h>  // for SHGetFolderPath
+#include <winbase.h> // for GetTempPath
+#include <stddef.h>  // for size_t
+#include <direct.h>  // for mkdir
+#include <winreg.h>  // For regisry calls
 
 #include "DiskRoutines.h"
 #include "ConfigParameters.h"
 
+#define VIRTUAWIN_SUBDIR      "VirtuaWin"
+#define LOCK_FILENAME         ".vwLock.cfg"
+#define VIRTUAWIN_REGLOC "Software\\VirtuaWin\\Settings"
 
-/*************************************************
- * Routines for getting VirtuaWin path from the registry 
- * and fixup the different filenames
+/************************************************** 
+ * Gets the local application settings path for the current user.
+ * Calling function MUST pre-allocate the return string!
  */
-void loadFilePaths()
+int getConfigPath(char* path, BOOL multiUser)
 {
-   HKEY hkey = NULL;
-   DWORD dwType;
-   DWORD cbData = 0;
-   DWORD dwUserNameLen = 0;
-   LPSTR winCurrentUser = 0;
-   LONG multiUser = 0;
+   TCHAR userSettingsPath[MAX_PATH];
 
-   long lResult = RegOpenKeyEx(HKEY_LOCAL_MACHINE, "Software\\VirtuaWin\\Settings", 0,
-                               KEY_READ, &hkey);
-   if (hkey) {
-      lResult = RegQueryValueEx(hkey, "Path", NULL, &dwType, NULL, &cbData);
-      multiUser = RegQueryValueEx(hkey, "Multi", NULL, &dwType, NULL, 0);
-      
-      vwPath   = (LPSTR)malloc(cbData * sizeof(char));
-      // Get current user data
-      if(multiUser == ERROR_SUCCESS)
-      {
-         dwUserNameLen = ( (UNLEN + 1) * sizeof(char) );
-         winCurrentUser = (LPSTR)malloc( dwUserNameLen );
-         lResult = GetUserName( (LPBYTE) winCurrentUser, &dwUserNameLen );
-         vwConfig = (LPSTR)malloc(cbData * sizeof(char) + dwUserNameLen * sizeof(char) + 14);
-      }
-      else
-      {
-         vwConfig = (LPSTR)malloc(cbData * sizeof(char) + 14);
-      }
-      vwList   = (LPSTR)malloc(cbData * sizeof(char) + 13);
-      vwHelp   = (LPSTR)malloc(cbData * sizeof(char) + 10);
-      vwSticky = (LPSTR)malloc(cbData * sizeof(char) + 11);
-      vwTricky = (LPSTR)malloc(cbData * sizeof(char) + 11);
-      vwState  = (LPSTR)malloc(cbData * sizeof(char) + 12);
-      vwLock   = (LPSTR)malloc(cbData * sizeof(char) + 12);
-      vwModules = (LPSTR)malloc(cbData * sizeof(char) + 15);
-      vwDisabled = (LPSTR)malloc(cbData * sizeof(char) + 15);
-      vwWindowsState = (LPSTR)malloc(cbData * sizeof(char) + 19);
-      /* Get the key value. */
-      lResult = RegQueryValueEx(hkey, "Path", NULL, &dwType,
-                                (LPBYTE)vwPath, &cbData);
+   if( (multiUser!=FALSE) && SUCCEEDED(SHGetFolderPath(NULL, CSIDL_LOCAL_APPDATA, NULL, 0, userSettingsPath)) /* && (strncmp(userSettingsPath, "", MAX_PATH) == 0) */ )
+   {
+fprintf(stderr, userSettingsPath);
+      if(userSettingsPath[ (strlen(userSettingsPath) - 1)] != '\\') strcat(userSettingsPath, "\\");
+fprintf(stderr, userSettingsPath);
+      strncat(userSettingsPath, VIRTUAWIN_SUBDIR, MAX_PATH - strlen(userSettingsPath));
+fprintf(stderr, userSettingsPath);
+      strncpy(path, userSettingsPath, MAX_PATH);
+fprintf(stderr, path);
 
-      if(multiUser == ERROR_SUCCESS)
+      while(_access(path, 6) == -1)
       {
-         sprintf(vwConfig, "%svwconfig.%s.cfg", vwPath, winCurrentUser);
-         free(winCurrentUser);
+         switch(errno)
+         {
+            case ENOENT:
+               _mkdir(path);
+               break;
+            case EACCES:
+               MessageBox(hWnd, "VirtuaWin cannot create its config directory.\nIf you continue to have problems, send e-mail to \nvirtuawin@home.se", "General Error", MB_ICONWARNING);
+               PostQuitMessage(0);
+               break;
+         }
       }
-      else
-      {
-         sprintf(vwConfig, "%svwconfig.cfg", vwPath);
-      }
-
-      sprintf(vwList, "%suserlist.cfg", vwPath);
-      sprintf(vwHelp, "%svirtuawin", vwPath);
-      sprintf(vwSticky, "%ssticky.cfg", vwPath);
-      sprintf(vwTricky, "%stricky.cfg", vwPath);
-      sprintf(vwState, "%svwstate.cfg", vwPath);
-      sprintf(vwLock, "%s.vwLock.cfg", vwPath);
-      sprintf(vwModules, "%smodules\\*.exe", vwPath);
-      sprintf(vwDisabled, "%svwDisabled.cfg", vwPath);
-      sprintf(vwWindowsState, "%svwWindowsState.cfg", vwPath);
-   } else {
-      MessageBox(hWnd, "VirtuaWin is not correctly installed, try to reinstall.\nIf you still have problems, send a mail to \nvirtuawin@home.se", "Registry Error", MB_ICONWARNING);
-      PostQuitMessage(0);
-      //return 0;
    }
+   else
+   {
+      HKEY hkey = NULL;
+
+      RegOpenKeyEx(HKEY_LOCAL_MACHINE, "Software\\VirtuaWin\\Settings", 0, KEY_READ, &hkey);
+
+      if (hkey) 
+      {
+         DWORD dwType;
+         DWORD cbData = 0;
+         RegQueryValueEx(hkey, "Path", NULL, &dwType, (LPBYTE)path, &cbData);
+      }
+      else
+      {
+         MessageBox(hWnd, "VirtuaWin is not correctly installed, try to reinstall.\nIf you still have problems, send a mail to \nvirtuawin@home.se", "Registry Error", MB_ICONWARNING);
+         PostQuitMessage(0);
+      }
+   }
+   
+   return strlen(path); // , MAX_PATH);
 }
+
+/************************************************
+ * Generates a path + username for the requested file type, fills in
+ * the supplied string parameter, that MUST be pre-allocated.  Caller
+ * is responsible for memory allocation.  It is suggested that the
+ * caller allocate the string on the stack, not dynamically on the
+ * heap so that it is cleaned up automatically.  Strings can be up to
+ * MAX_PATH in length.
+ *
+ * Return is 1 if successful, 0 otherwise.  (suggestion, convert to
+ * type bool after porting to cpp)
+ */
+
+int GetFilename(eFileNames filetype, char* outStr)
+{
+   int retvalue = 1;
+
+   char VirtuaWinPath[MAX_PATH];
+   HKEY hkey = NULL;
+   DWORD PathLength = MAX_PATH;
+
+   RegOpenKeyEx(HKEY_LOCAL_MACHINE, VIRTUAWIN_REGLOC, 0, KEY_QUERY_VALUE, &hkey);
+   if (hkey) 
+   {
+     if(RegQueryValueEx(hkey, "Path", NULL, NULL, VirtuaWinPath, &PathLength) != ERROR_SUCCESS)
+     {
+       // Uh oh! TODO:  Handle this!
+     }
+
+     RegCloseKey(hkey);
+   }
+   else
+   {
+     // Uh oh!! TODO:  handle this!
+   }
+  if(VirtuaWinPath[(strlen(VirtuaWinPath) - 1)] != '\\') strcat(VirtuaWinPath, "\\");
+  int VirtuaWinPathRemaining = MAX_PATH - strlen(VirtuaWinPath);
+
+  char UserAppPath[MAX_PATH];
+  getConfigPath(UserAppPath, TRUE);  // for now I only want multiuser, we'll probably get rid of the registry entry
+  if(UserAppPath[ (strlen(UserAppPath) - 1)] != '\\') strcat(UserAppPath, "\\");
+  int UserAppPathRemaining = MAX_PATH - strlen(UserAppPath);
+
+  switch(filetype)
+  {
+    case vwPATH:
+      strncpy(outStr, VirtuaWinPath, MAX_PATH);
+      break;
+    case vwCONFIG:
+      strncpy(outStr, UserAppPath, MAX_PATH);
+      strncat(outStr, "vwconfig.cfg", UserAppPathRemaining);
+      break;
+    case vwLIST:
+      strncpy(outStr, VirtuaWinPath, MAX_PATH);
+      strncat(outStr, "userlist.cfg", VirtuaWinPathRemaining);
+      break;
+    case vwHELP:
+      strncpy(outStr, VirtuaWinPath, MAX_PATH);
+      strncat(outStr, "virtuawin", VirtuaWinPathRemaining);
+      break;
+    case vwSTICKY:
+      strncpy(outStr, UserAppPath, MAX_PATH);
+      strncat(outStr, "sticky.cfg", UserAppPathRemaining);
+      break;
+    case vwTRICKY:
+      strncpy(outStr, VirtuaWinPath, MAX_PATH);
+      strncat(outStr, "tricky.cfg", VirtuaWinPathRemaining);
+      break;
+    case vwSTATE:
+      strncpy(outStr, UserAppPath, MAX_PATH);
+      strncat(outStr, "vwstate.cfg", UserAppPathRemaining);
+      break;
+    case vwMODULES:
+      strncpy(outStr, VirtuaWinPath, MAX_PATH);
+      strncat(outStr, "modules\\*.exe", VirtuaWinPathRemaining);
+      break;
+    case vwDISABLED:
+      strncpy(outStr, UserAppPath, MAX_PATH);
+      strncat(outStr, "vwDisabled.cfg", UserAppPathRemaining);
+      break;
+    case vwWINDOWS_STATE:
+      strncpy(outStr, UserAppPath, MAX_PATH);
+      strncat(outStr, "vwWindowsState.cfg", UserAppPathRemaining);
+      break;
+    default:
+      retvalue = 0;
+  }
+
+  return retvalue;
+}
+
 
 /*************************************************
  * Write out the disabled modules
@@ -107,7 +191,10 @@ void writeDisabledList(int* theNOfModules, moduleType* theModList)
 {
    FILE* fp;
    
-   if(!(fp = fopen(vwDisabled, "w"))) {
+   char DisabledFileList[MAX_PATH];
+   GetFilename(vwDISABLED, DisabledFileList);
+
+   if(!(fp = fopen(DisabledFileList, "w"))) {
       MessageBox(hWnd, "Error saving disabled module state", NULL, MB_ICONWARNING);
    } else {
       int i;
@@ -129,7 +216,10 @@ int loadDisabledModules(disModules* theDisList)
    FILE* fp;
    int nOfDisMod = 0;
    
-   if((fp = fopen(vwDisabled, "r"))) {
+   char vwDisabledModuleList[MAX_PATH];
+   GetFilename(vwDISABLED, vwDisabledModuleList);
+
+   if((fp = fopen(vwDisabledModuleList, "r"))) {
       while(!feof(fp)) {
          fgets(dummy, 80, fp);
          // Remove the newline
@@ -155,7 +245,10 @@ int loadStickyList(stickyType* theStickyList)
    FILE* fp;
    int nOfSticky = 0;
    
-   if((fp = fopen(vwSticky, "r"))) {
+   char vwStickyList[MAX_PATH];
+   GetFilename(vwSTICKY, vwStickyList);
+   
+   if((fp = fopen(vwStickyList, "r"))) {
       while(!feof(fp)) {
          fscanf(fp, "%79s", dummy);
          char* theReplaceString = replace(dummy, "££", " ");
@@ -180,8 +273,11 @@ void saveStickyWindows(int* theNOfWin, windowType* theWinList)
 {
    char className[80];
    FILE* fp;
+
+   char vwStickyList[MAX_PATH];
+   GetFilename(vwSTICKY, vwStickyList);
     
-   if(!(fp = fopen(vwSticky, "w"))) {
+   if(!(fp = fopen(vwStickyList, "w"))) {
       MessageBox(hWnd, "Error writing sticky file", NULL, MB_ICONWARNING);
    } else {
       int i;
@@ -206,8 +302,11 @@ int loadTrickyList(stickyType* theTrickyList)
    char* dummy = malloc(sizeof(char) * 80);
    FILE* fp;
    int nOfTricky = 0;
+
+   char vwTrickyWindowList[MAX_PATH];
+   GetFilename(vwTRICKY, vwTrickyWindowList);
    
-   if((fp = fopen(vwTricky, "r"))) 
+   if((fp = fopen(vwTrickyWindowList, "r"))) 
    {
       while(!feof(fp)) {
          fscanf(fp, "%79s", dummy); 
@@ -263,8 +362,11 @@ void saveDesktopState(int* theNOfWin, windowType* theWinList)
 {
    char className[51];
    FILE* fp;
+
+   char vwStateFile[MAX_PATH];
+   GetFilename(vwSTATE, vwStateFile);
     
-   if(!(fp = fopen(vwState, "wc"))) {
+   if(!(fp = fopen(vwStateFile, "wc"))) {
       MessageBox(hWnd, "Error writing state file", NULL, MB_ICONWARNING);
    } else {
       int i;
@@ -288,7 +390,10 @@ void saveDesktopConfiguration(int* theNOfWin, windowType* theWinList)
    char className[51];
    FILE* fp;
     
-   if(!(fp = fopen(vwWindowsState, "w"))) {
+   char VWWindowsState[MAX_PATH];
+   GetFilename(vwWINDOWS_STATE, VWWindowsState);
+
+   if(!(fp = fopen(VWWindowsState, "w"))) {
       MessageBox(hWnd, "Error writing desktop configuration file", NULL, MB_ICONWARNING);
    } else {
       int i;
@@ -311,7 +416,10 @@ int loadAssignedList(assignedType* theAssignList)
    FILE* fp;
    int curAssigned = 0;
    
-   if((fp = fopen(vwWindowsState, "r"))) {
+   char VWWindowsState[MAX_PATH];
+   GetFilename(vwWINDOWS_STATE, VWWindowsState);
+
+   if((fp = fopen(VWWindowsState, "r"))) {
       while(!feof(fp)) {
          fscanf(fp, "%s%i", dummy, &theAssignList[curAssigned].desktop);
          char* theReplaceString = replace(dummy, "££", " ");
@@ -337,8 +445,11 @@ int loadUserList(userType* theUserList)
    char* dummy = malloc(sizeof(char) * 100);
    FILE* fp;
    int curUser = 0;
+
+   char VWListFile[MAX_PATH];
+   GetFilename(vwLIST, VWListFile);
    
-   if((fp = fopen(vwList, "r"))) {
+   if((fp = fopen(VWListFile, "r"))) {
       while(!feof(fp)) {
          fgets(dummy, 99, fp);
          // Remove the newline
@@ -366,7 +477,10 @@ void writeConfig()
 {
    FILE* fp;
 
-   if((fp = fopen(vwConfig, "w")) == NULL) {
+   char VWConfigFile[MAX_PATH];
+   GetFilename(vwCONFIG, VWConfigFile);
+
+   if((fp = fopen(VWConfigFile, "w")) == NULL) {
       MessageBox(NULL, "Error writing config file", NULL, MB_ICONWARNING);
    } else {
       fprintf(fp, "Mouse_warp# %i\n", mouseEnable);
@@ -457,10 +571,13 @@ void readConfig()
    char* dummy = malloc(sizeof(char) * 80);
    FILE* fp;
 
-   if((fp = fopen(vwConfig, "r")) == NULL) {
+   char VWConfigFile[MAX_PATH];
+   GetFilename(vwCONFIG, VWConfigFile);
+
+   if((fp = fopen(VWConfigFile, "r")) == NULL) {
       MessageBox(NULL, "Error reading config file. This is probably due to new user setup.\nA new config file will be created.", NULL, MB_ICONWARNING);
       // Try to create new file
-      if((fp = fopen(vwConfig, "w")) == NULL) {
+      if((fp = fopen(VWConfigFile, "w")) == NULL) {
          MessageBox(NULL, "Error writing new config file. Check writepermissions.", NULL, MB_ICONWARNING);
       }
    } else {   
@@ -594,26 +711,54 @@ char* replace(char *g_string, char *replace_from, char *replace_to)
  */
 BOOL tryToLock()
 {
-   if(access(vwLock, 0 == -1)) {
-      FILE* fp;
-      if(!(fp = fopen(vwLock, "wc"))) {
-         MessageBox(hWnd, "Error writing lock file", "VirtuaWin", MB_ICONWARNING);
-         return TRUE;
-      } else {
-         fprintf(fp, "%s", "VirtuaWin LockFile");
+   BOOL retval = FALSE;
+   TCHAR lockFile[MAX_PATH];
+   if(GetTempPath(MAX_PATH, lockFile))
+   {
+      strncat(lockFile, LOCK_FILENAME, MAX_PATH - strlen(lockFile));
+
+      if(access(lockFile, 0 == -1)) 
+      {
+         FILE* fp;
+         if(!(fp = fopen(lockFile, "wc"))) {
+            MessageBox(hWnd, "Error writing lock file", "VirtuaWin", MB_ICONWARNING);
+            return TRUE;
+         } 
+         else 
+         {
+            fprintf(fp, "%s", "VirtuaWin LockFile");
+         }
+
+         fflush(fp); // Make sure the file is physically written to disk
+         fclose(fp);
+
+         retval = TRUE;
+      } 
+      else 
+      {
+         retval = FALSE; // We already had a lock file, probably due to a previous crash
       }
-    
-      fflush(fp); // Make sure the file is physically written to disk
-      fclose(fp);
-        
-      return TRUE;
-   } else {
-      return FALSE; // We already had a lock file, probably due to a previous crash
+   }
+
+   return retval;
+}
+
+void clearLock()
+{
+   // returns void because there's not much that we can do if it fails anyhow.
+   TCHAR lockFile[MAX_PATH];
+   if(GetTempPath(MAX_PATH, lockFile))
+   {
+      strncat(lockFile, LOCK_FILENAME, MAX_PATH - strlen(lockFile));
+      remove(lockFile);
    }
 }
 
 /*
  * $Log$
+ * Revision 1.21  2004/04/10 10:20:01  jopi
+ * Updated to compile with gcc/mingw
+ *
  * Revision 1.20  2004/02/28 18:54:01  jopi
  * SF904069 Added possibility to choose if sticky should be permanent for all instances of the same classname.
  *
