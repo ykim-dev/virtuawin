@@ -4,7 +4,7 @@
 //  This is a module for VirtuaWin that are used for 
 //  restoring lost windows. 
 // 
-//  Copyright (c) 1999, 2000 jopi
+//  Copyright (c) 1999, 2000, 2001 jopi
 // 
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -210,5 +210,8 @@ static BOOL CALLBACK DialogFunc(HWND hwndDlg, UINT msg, WPARAM wParam, LPARAM lP
 
 /*
  * $Log$
+ * Revision 1.2  2000/12/11 19:59:26  jopi
+ * Added classname for all applications
+ *
  *
  */
