@@ -29,7 +29,7 @@ void loadFilePaths();
 void writeDisabledList(int* theNOfModules, moduleType* theModList);
 int loadDisabledModules(disModules* theDisList);
 int loadStickyList(stickyType* theStickyList);
-void saveTrickyWindows(int* theNOfWin, windowType* theWinList);
+//void saveTrickyWindows(int* theNOfWin, windowType* theWinList);
 int loadTrickyList(stickyType* theTrickyList);
 void saveStickyWindows(int* theNOfWin, windowType* theWinList);
 void saveDesktopState(int* theNOfWin, windowType* theWinList);
@@ -45,6 +45,9 @@ char *replace(char *g_string, char *replace_from, char *replace_to);
 
 /*
  * $Log$
+ * Revision 1.9  2004/01/10 11:15:52  jopi
+ * Updated copyright for 2004
+ *
  * Revision 1.8  2003/01/27 20:23:53  jopi
  * Updated copyright header for 2003
  *
