@@ -153,7 +153,7 @@ BEGIN
     CTEXT           "Copyright (c) 1999, 2000 jopi", IDC_STATIC, 9, 42, 158, 8
     CTEXT           "virtuawin@home.se", IDC_MAILTO, 9, 52, 158, 8, 0x0100
     CTEXT           "Latest version, info, source, etc. visit:", IDC_STATIC, 9, 66, 158, 8
-    CTEXT           "www.student.hk-r.se/~pt96jpi", IDC_HTTP, 9, 76, 158, 10, 0x0100
+    CTEXT           "http://w1.457.telia.com/~u45706979/", IDC_HTTP, 9, 76, 158, 10, 0x0100
     GROUPBOX        "License", IDC_STATIC, 6, 95, 165, 140, 0x0300
     EDITTEXT        IDC_LICENSE, 11, 105, 155, 125, ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY |NOT WS_TABSTOP | NOT WS_BORDER
 END
