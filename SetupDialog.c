@@ -825,7 +825,7 @@ static BOOL APIENTRY modules(HWND hDlg, UINT message, UINT wParam, LONG lParam)
          }
 
       case WM_COMMAND:
-         if(LOWORD((wParam) == IDC_MODCONFIG)) { // Show config
+         if(LOWORD((wParam) == IDC_MODCONFIG || HIWORD(wParam) == LBN_DBLCLK )) { // Show config
             int curSel = SendDlgItemMessage(hDlg, IDC_MODLIST, LB_GETCURSEL, 0, 0);
             if(curSel != LB_ERR)
                PostMessage(moduleList[curSel].Handle, MOD_SETUP, 0, 0);
@@ -883,6 +883,9 @@ static BOOL APIENTRY modules(HWND hDlg, UINT message, UINT wParam, LONG lParam)
 
 /*
  * $Log$
+ * Revision 1.8  2001/11/12 21:39:14  jopi
+ * Added functionality for disabling the systray icon
+ *
  * Revision 1.7  2001/02/10 11:11:53  jopi
  * Removed the context help icon since there is no functionality for this
  *
