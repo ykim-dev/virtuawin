@@ -1,7 +1,7 @@
 //
-//  VirtuaWin - Virtual Desktop Manager for Win9x/NT/Win2K
+//  VirtuaWin - Virtual Desktop Manager for Win9x/NT/Win2K/XP
 // 
-//  Copyright (c) 1999, 2000, 2001, 2002 Johan Piculell
+//  Copyright (c) 1999, 2000, 2001, 2002, 2003 Johan Piculell
 // 
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -2093,6 +2093,9 @@ void releaseMutex()
 
 /*
  * $Log$
+ * Revision 1.26  2002/12/23 15:42:24  jopi
+ * Added config options to disable taskbar detection and the alternative hiding technique.
+ *
  * Revision 1.25  2002/12/21 08:44:20  jopi
  * The "tricky" windows was not moved away far enough from the screen so you could see a small grey bar at the screen bottom.
  *

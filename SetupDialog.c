@@ -1,7 +1,7 @@
 //
-//  VirtuaWin - Virtual Desktop Manager for Win9x/NT/Win2K
+//  VirtuaWin - Virtual Desktop Manager for Win9x/NT/Win2K/XP
 // 
-//  Copyright (c) 1999, 2000, 2001, 2002 Johan Piculell
+//  Copyright (c) 1999, 2000, 2001, 2002, 2003 Johan Piculell
 // 
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -946,6 +946,9 @@ static BOOL APIENTRY expert(HWND hDlg, UINT message, UINT wParam, LONG lParam)
 
 /*
  * $Log$
+ * Revision 1.14  2002/12/23 15:42:27  jopi
+ * Added config options to disable taskbar detection and the alternative hiding technique.
+ *
  * Revision 1.13  2002/12/23 14:16:47  jopi
  * Added a new setup tab, "expert" and moved some settings from misc.
  *

@@ -1,7 +1,7 @@
 //
-//  VirtuaWin - Virtual Desktop Manager for Win9x/NT/Win2K
+//  VirtuaWin - Virtual Desktop Manager for Win9x/NT/Win2K/XP
 // 
-//  Copyright (c) 1999, 2000, 2001, 2002 Johan Piculell
+//  Copyright (c) 1999, 2000, 2001, 2002, 2003 Johan Piculell
 // 
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -47,6 +47,9 @@ int CALLBACK propCallBack(HWND hwndDlg, UINT uMsg, LPARAM lParam);
 
 /*
  * $Log$
+ * Revision 1.7  2002/12/23 14:16:48  jopi
+ * Added a new setup tab, "expert" and moved some settings from misc.
+ *
  * Revision 1.6  2002/02/14 21:23:40  Johan Piculell
  * Updated copyright header
  *
