@@ -1370,13 +1370,14 @@ __inline void integrateWindow(HWND* hwnd)
 {
    int style = GetWindowLong(hwnd, GWL_STYLE);
    int exstyle = GetWindowLong(hwnd, GWL_EXSTYLE);
+
    /* Criterias for a window to be handeled by VirtuaWin */
    if (nWin < MAXWIN-1 &&
        !(style & WS_CHILD) &&
        IsWindowVisible(hwnd) &&
        (!GetParent(hwnd) || GetParent(hwnd) == GetDesktopWindow()) &&
-       !(exstyle & WS_EX_TOOLWINDOW) //&&
-       /*!GetWindow(hwnd, GW_OWNER)*/)
+       !(exstyle & WS_EX_TOOLWINDOW) &&
+       !((exstyle & WS_EX_CONTROLPARENT) && !(exstyle & WS_EX_APPWINDOW)))
    {
       char buf[100];
       GetClassName(hwnd, buf, 99);
@@ -2127,6 +2128,9 @@ void assignWindow(HWND* theWin, int theDesk)
 
 /*
  * $Log$
+ * Revision 1.33  2003/06/26 19:56:52  jopi
+ * Added module support for assigning a window to specified desktop
+ *
  * Revision 1.32  2003/06/24 19:52:04  jopi
  * SF693876 Fixed option to handle XP skinned style taskbars
  *
