@@ -123,8 +123,11 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
    if(!registerCyclingKeys())
       MessageBox(hWnd, "Invalid key modifier combination, check cycling hot keys!", 
                  NULL, MB_ICONWARNING);
+   if(!registerMenuHotKey())
+      MessageBox(hWnd, "Invalid key modifier combination, check menu hot key!", 
+                 NULL, MB_ICONWARNING);
    setMouseKey();
-
+   
    /* Load some stuff */
    curSticky = loadStickyList(stickyList);
    curAssigned = loadAssignedList(assignedList);
@@ -370,11 +373,6 @@ BOOL registerHotKeys()
          if((RegisterHotKey(hWnd, vw9, hotKey2ModKey(hotkey9Mod) | hotkey9Win, hotkey9) == FALSE))
             return FALSE;
       }
-      if(hotkeyMenu) {
-         vwMenu = GlobalAddAtom("atomKeyMenu");
-         if((RegisterHotKey(hWnd, vwMenu, hotKey2ModKey(hotkeyMenuMod) | hotkeyMenuWin, hotkeyMenu) == FALSE))
-            return FALSE;
-      }
       return TRUE;
    }
    return TRUE;
@@ -396,7 +394,6 @@ void unRegisterHotKeys()
     UnregisterHotKey(hWnd, vw7);
     UnregisterHotKey(hWnd, vw8);
     UnregisterHotKey(hWnd, vw9);
-    UnregisterHotKey(hWnd, vwMenu);
   }
 }
 
@@ -453,6 +450,32 @@ void unRegisterCyclingKeys()
       cyclingKeysRegistered = FALSE;
       UnregisterHotKey(hWnd, cyclingKeyUp);
       UnregisterHotKey(hWnd, cyclingKeyDown);
+   }
+}
+
+/*************************************************
+ * Register the window menu hot key, if defined
+ */
+BOOL registerMenuHotKey()
+{
+   if(!menuHotKeyRegistered && hotkeyMenu) {
+      menuHotKeyRegistered = TRUE;
+      vwMenu = GlobalAddAtom("atomKeyMenu");
+      if((RegisterHotKey(hWnd, vwMenu, hotKey2ModKey(hotkeyMenuMod) | 
+                         hotkeyMenuWin, hotkeyMenu) == FALSE))
+         return FALSE;
+   }
+   return TRUE;
+}
+
+/*************************************************
+ * Unregister the window menu hot key, if previosly registred
+ */
+void unRegisterMenuHotKey()
+{
+   if(menuHotKeyRegistered) {
+      menuHotKeyRegistered = FALSE;
+      UnregisterHotKey(hWnd, vwMenu);
    }
 }
 
@@ -815,6 +838,7 @@ LRESULT CALLBACK wndProc(HWND aHWnd, UINT message, WPARAM wParam, LPARAM lParam)
                   unRegisterHotKeys();
                   unRegisterStickyKey();
                   unRegisterCyclingKeys();
+                  unRegisterMenuHotKey();
                   KillTimer(aHWnd, 0x29a);
                   enabled = FALSE;
                } else {			        // Enable VirtuaWin
@@ -831,6 +855,9 @@ LRESULT CALLBACK wndProc(HWND aHWnd, UINT message, WPARAM wParam, LPARAM lParam)
                                 NULL, MB_ICONWARNING);
                   if(!registerCyclingKeys())
                      MessageBox(aHWnd, "Invalid key modifier combination, check cycling hot keys!", 
+                                NULL, MB_ICONWARNING);
+                  if(!registerMenuHotKey())
+                     MessageBox(aHWnd, "Invalid key modifier combination, check menu hot key!", 
                                 NULL, MB_ICONWARNING);
                   SetTimer(aHWnd, 0x29a, 250, TimerProc);  // Set the timer in ms
                   enabled = TRUE;
@@ -892,6 +919,7 @@ void showSetup()
     unRegisterHotKeys();
     unRegisterKeys();
     unRegisterCyclingKeys();
+    unRegisterMenuHotKey();
     readConfig();
     createPropertySheet(hInst, hWnd); // Show the actual dialog
     writeConfig();
@@ -903,6 +931,8 @@ void showSetup()
       MessageBox(hWnd, "Invalid key modifier combination, check sticky hot key!", NULL, MB_ICONWARNING);
     if(!registerCyclingKeys())
        MessageBox(hWnd, "Invalid key modifier combination, check cycling hot keys!", NULL, MB_ICONWARNING);
+    if(!registerMenuHotKey())
+       MessageBox(hWnd, "Invalid key modifier combination, check menu hot key!", NULL, MB_ICONWARNING);
     if(mouseEnable) // Start again, if enabled
        ResumeThread(mouseThread);
     setupOpen = FALSE;
@@ -945,6 +975,7 @@ void shutDown()
    unRegisterHotKeys();
    unRegisterStickyKey();
    unRegisterCyclingKeys();
+   unRegisterMenuHotKey();
    Shell_NotifyIcon(NIM_DELETE, &nIconD); // This removes the icon
    if(saveSticky)
       saveStickyWindows(&nWin, winList);
@@ -1821,6 +1852,9 @@ void readConfig()
 
 /*
  * $Log$
+ * Revision 1.4  2000/08/19 15:00:26  jopi
+ * Added multiple user setup support (Alasdair McCaig) and fixed creation of setup file if it don't exist
+ *
  * Revision 1.3  2000/08/18 23:43:08  jopi
  *  Minor modifications by Matti Jagula <matti@proekspert.ee> List of modifications follows: Added window title sorting in popup menus (Assign, Direct, Sticky) Added some controls to Setup Misc tab and support for calling the popup menus from keyboard.
  *

@@ -57,6 +57,8 @@ BOOL registerStickyKey();
 void unRegisterStickyKey();
 BOOL registerCyclingKeys();
 void unRegisterCyclingKeys();
+BOOL registerMenuHotKey();
+void unRegisterMenuHotKey();
 void setKeyMod();
 void setHotKeyMod();
 void packList();
@@ -119,6 +121,7 @@ BOOL hotKeysRegistred = FALSE;	// if the switch hot keys are registrered
 BOOL enabled = TRUE;		// if VirtuaWin enabled or not
 BOOL isDragging = FALSE;	// if we are currently dragging a window
 BOOL cyclingKeysRegistered = FALSE; // if the cycling keys are registrered
+BOOL menuHotKeyRegistered = FALSE;  // if the menu hotkey is registered
 
 int taskBarHeight;		// the height of the taskbar
 
@@ -238,6 +241,9 @@ LPSTR vwWindowsState;
 
 /*
  * $Log$
+ * Revision 1.4  2000/08/19 00:02:13  jopi
+ * Changed version number
+ *
  * Revision 1.3  2000/08/18 23:43:08  jopi
  *  Minor modifications by Matti Jagula <matti@proekspert.ee> List of modifications follows: Added window title sorting in popup menus (Assign, Direct, Sticky) Added some controls to Setup Misc tab and support for calling the popup menus from keyboard.
  *
