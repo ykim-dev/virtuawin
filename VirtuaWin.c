@@ -1,7 +1,7 @@
 //
 //  VirtuaWin - Virtual Desktop Manager for Win9x/NT/Win2K
 // 
-//  Copyright (c) 1999, 2000, 2001, 2002 jopi
+//  Copyright (c) 1999, 2000, 2001, 2002 Johan Piculell
 // 
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -1947,7 +1947,7 @@ void moveShowWindow( windowType* aWindow, BOOL show )
       // Notify taskbar of the change
       PostMessage( hwndTask, RM_Shellhook, 1, (LPARAM) aWindow->Handle );
       // Bring back to visible area, SWP_FRAMECHANGED makes it repaint 
-      SetWindowPos( aWindow->Handle, 0, aPosition.left, aPosition.top - screenBottom, 
+      SetWindowPos( aWindow->Handle, 0, aPosition.left, aPosition.top - screenBottom - 10, 
                    0, 0, SWP_FRAMECHANGED | SWP_NOZORDER | SWP_NOSIZE | SWP_NOACTIVATE ); 
       // Notify taskbar of the change
       PostMessage( hwndTask, RM_Shellhook, 1, (LPARAM) aWindow->Handle );
@@ -1956,7 +1956,7 @@ void moveShowWindow( windowType* aWindow, BOOL show )
    else if( !show && !aWindow->Hidden ) // Move away window
    {
       // Move the window off visible area
-      SetWindowPos( aWindow->Handle, 0, aPosition.left, aPosition.top + screenBottom, 
+      SetWindowPos( aWindow->Handle, 0, aPosition.left, aPosition.top + screenBottom + 10, 
                    0, 0, SWP_NOZORDER | SWP_NOSIZE | SWP_NOACTIVATE );
       // This removes window from taskbar and alt+tab list
       SetWindowLong( aWindow->Handle, GWL_EXSTYLE, 
@@ -2086,73 +2086,76 @@ void releaseMutex()
 
 /*
  * $Log$
- * Revision 1.23  2002/06/15 11:25:13  jopi
+ * Revision 1.24  2002/09/26 21:00:50  Johan Piculell
+ * Added mutex protection for the window list
+ *
+ * Revision 1.23  2002/06/15 11:25:13  Johan Piculell
  * Now we try to locate the MSTaskSwWClass even if it is a direct child of Shell_TrayWnd, this will make it work on more windows version since this differs sometimes.
  *
- * Revision 1.22  2002/06/15 11:17:50  jopi
+ * Revision 1.22  2002/06/15 11:17:50  Johan Piculell
  * Fixed so that window coordinates are reloaded when resolution is changed, and also so that taskbar location is reloaded if moved.
  *
- * Revision 1.21  2002/06/11 20:10:27  jopi
+ * Revision 1.21  2002/06/11 20:10:27  Johan Piculell
  * Improved the window menus so that unnecessary menus and items won't show and they all have a lable. Fixes by Ulf Jaenicke-Roessler.
  *
- * Revision 1.20  2002/06/11 19:43:57  jopi
+ * Revision 1.20  2002/06/11 19:43:57  Johan Piculell
  * Removed the MF_POPUP flag from the window menus since they shouldn't be created like this. Fixed by Ulf Jaenicke-Roessler.
  *
- * Revision 1.19  2002/06/01 21:15:22  jopi
+ * Revision 1.19  2002/06/01 21:15:22  Johan Piculell
  * Multiple fixes by Christian Storm.
  *
- * Revision 1.18  2002/06/01 19:33:33  jopi
+ * Revision 1.18  2002/06/01 19:33:33  Johan Piculell
  * *** empty log message ***
  *
- * Revision 1.17  2002/02/14 21:23:41  jopi
+ * Revision 1.17  2002/02/14 21:23:41  Johan Piculell
  * Updated copyright header
  *
- * Revision 1.16  2001/12/19 17:34:34  jopi
+ * Revision 1.16  2001/12/19 17:34:34  Johan Piculell
  * Classname will now always be "VirtuaWinMainClass" and not version dependent.
  *
- * Revision 1.15  2001/12/01 00:05:52  jopi
+ * Revision 1.15  2001/12/01 00:05:52  Johan Piculell
  * Added alternative window hiding for troublesome windows like InternetExplorer
  *
- * Revision 1.14  2001/11/12 21:39:15  jopi
+ * Revision 1.14  2001/11/12 21:39:15  Johan Piculell
  * Added functionality for disabling the systray icon
  *
- * Revision 1.13  2001/11/12 20:11:47  jopi
+ * Revision 1.13  2001/11/12 20:11:47  Johan Piculell
  * Display setup dialog if started a second time instead of just quit
  *
- * Revision 1.12  2001/11/12 18:33:42  jopi
+ * Revision 1.12  2001/11/12 18:33:42  Johan Piculell
  * Fixed so that user windows are also checked if they are saved as sticky.
  *
- * Revision 1.11  2001/02/05 21:13:08  jopi
+ * Revision 1.11  2001/02/05 21:13:08  Administrator
  * Updated copyright header
  *
- * Revision 1.10  2001/01/28 16:26:56  jopi
+ * Revision 1.10  2001/01/28 16:26:56  Administrator
  * Configuration behaviour change. It is now possible to test all settings by using apply and all changes will be rollbacked if cancel is pressed
  *
- * Revision 1.9  2001/01/14 16:27:42  jopi
+ * Revision 1.9  2001/01/14 16:27:42  Administrator
  * Moved io.h include to DiskRoutines.c
  *
- * Revision 1.8  2001/01/12 18:11:25  jopi
+ * Revision 1.8  2001/01/12 18:11:25  Administrator
  * Moved some disk stuff from VirtuaWin to DiskRoutines
  *
- * Revision 1.7  2001/01/12 16:58:11  jopi
+ * Revision 1.7  2001/01/12 16:58:11  Administrator
  * Added module message for getting the current desktop number
  *
- * Revision 1.6  2000/12/11 21:28:41  jopi
+ * Revision 1.6  2000/12/11 21:28:41  Administrator
  * Fixed the sticky symbol in the winlist again, got lost during some changes
  *
- * Revision 1.5  2000/08/28 21:38:37  jopi
+ * Revision 1.5  2000/08/28 21:38:37  Administrator
  * Added new functions for menu hot key registration. Fixed bug with needing to have hot keys enabled for menu keys to work and also better error message
  *
- * Revision 1.4  2000/08/19 15:00:26  jopi
+ * Revision 1.4  2000/08/19 15:00:26  Administrator
  * Added multiple user setup support (Alasdair McCaig) and fixed creation of setup file if it don't exist
  *
- * Revision 1.3  2000/08/18 23:43:08  jopi
+ * Revision 1.3  2000/08/18 23:43:08  Administrator
  *  Minor modifications by Matti Jagula <matti@proekspert.ee> List of modifications follows: Added window title sorting in popup menus (Assign, Direct, Sticky) Added some controls to Setup Misc tab and support for calling the popup menus from keyboard.
  *
- * Revision 1.2  2000/08/18 21:41:31  jopi
+ * Revision 1.2  2000/08/18 21:41:31  Administrator
  * Added the code again that removes closed windows, this will avoid having closed child windows reappearing again. Also updated the mail adress
  *
- * Revision 1.1.1.1  2000/06/03 15:38:05  jopi
+ * Revision 1.1.1.1  2000/06/03 15:38:05  Administrator
  * Added first time
  *
  */
