@@ -138,6 +138,7 @@ int loadStickyList(stickyType* theStickyList)
    if(fp = fopen(vwSticky, "r")) {
       while(!feof(fp)) {
          fscanf(fp, "%79s", &dummy);
+         strcpy(dummy, replace(dummy, "££", " "));
          if((strlen(dummy) != 0) && !feof(fp)) {
             theStickyList[nOfSticky].winClassName = malloc(sizeof(char) * strlen(dummy) + 1);
             strcpy(theStickyList[nOfSticky].winClassName, dummy);
@@ -164,7 +165,7 @@ void saveStickyWindows(int* theNOfWin, windowType* theWinList)
       for(i = 0; i < *theNOfWin; ++i) {
          if (theWinList[i].Sticky) {
             GetClassName(theWinList[i].Handle, className, 79);
-            fprintf(fp, "%s\r", &className);
+            fprintf(fp, "%s\n",  replace(className, " ", "££"));
          }
       }
       fclose(fp);
@@ -187,7 +188,7 @@ void saveDesktopState(int* theNOfWin, windowType* theWinList)
       int i;
       for(i = 0; i < *theNOfWin; ++i) {
          GetClassName(theWinList[i].Handle, className, 50);
-         fprintf(fp, "%s\r", &className);
+         fprintf(fp, "%s\r", replace(className, " ", "££"));
       }
       fflush(fp); // Make sure the file is physically written to disk
       fclose(fp);
@@ -209,7 +210,7 @@ void saveDesktopConfiguration(int* theNOfWin, windowType* theWinList)
       int i;
       for(i = 0; i < *theNOfWin; ++i) {
          GetClassName(theWinList[i].Handle, className, 50);
-         fprintf(fp, "%s %d\n", &className, theWinList[i].Desk);
+         fprintf(fp, "%s %d\n", replace(className, " ", "££"), theWinList[i].Desk);
       }
       fclose(fp);
    }
@@ -227,6 +228,7 @@ int loadAssignedList(assignedType* theAssignList)
    if(fp = fopen(vwWindowsState, "r")) {
       while(!feof(fp)) {
          fscanf(fp, "%s%i", &dummy, &theAssignList[curAssigned].desktop);
+         strcpy(dummy, replace(dummy, "££", " ")); 
          if((strlen(dummy) != 0) && !feof(fp)) {
             theAssignList[curAssigned].winClassName = malloc(sizeof(char) * strlen(dummy) + 1);
             strcpy(theAssignList[curAssigned].winClassName, dummy);
@@ -441,6 +443,51 @@ void readConfig()
 }
 
 /*************************************************
+ * Replaces parts of a string with a new string
+ */
+char* replace(char *g_string, char *replace_from, char *replace_to)
+{
+   char *p, *p1, *return_str;
+   int  i_diff;
+
+   // the margin between the replace_from and replace_to;
+   i_diff=strlen(replace_from) - strlen(replace_to); 
+   return_str = (char*) malloc(strlen(g_string)+1); // Changed line
+
+   if(return_str == NULL) 
+      return g_string;
+   return_str[0] = 0;
+
+   p = g_string;
+
+   for( ;; ) 
+   {
+      p1 = p;		           // old position
+      p = strstr(p, replace_from); // next position
+      if(p == NULL) 
+      {
+         strcat(return_str, p1);
+         break;
+      }
+      while(p > p1) 
+      {
+         sprintf(return_str, "%s%c", return_str, *p1);
+         p1++;
+      }
+      if(i_diff > 0)
+      {
+         // the changed length can be larger than _MAXLENGTH_(1000);
+         return_str = (char*)realloc(return_str,strlen(g_string) + i_diff+1); 
+         if (return_str == NULL) 
+            return g_string;
+      }
+      strcat(return_str, replace_to);
+      p += strlen(replace_from);	// new point position
+   }
+   return return_str;
+}
+
+/*************************************************
  * Check if we have a previous lock file, otherwise it creates it
  */
 BOOL tryToLock()
@@ -465,6 +512,9 @@ BOOL tryToLock()
 
 /*
  * $Log$
+ * Revision 1.7  2001/02/05 21:13:07  jopi
+ * Updated copyright header
+ *
  * Revision 1.6  2001/01/14 16:27:42  jopi
  * Moved io.h include to DiskRoutines.c
  *

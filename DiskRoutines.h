@@ -37,11 +37,15 @@ int loadUserList(userType* theUserList);
 void writeConfig();
 void readConfig();
 BOOL tryToLock();
+char *replace(char *g_string, char *replace_from, char *replace_to);
 
 #endif
 
 /*
  * $Log$
+ * Revision 1.3  2001/02/05 21:13:07  jopi
+ * Updated copyright header
+ *
  * Revision 1.2  2001/01/12 18:11:25  jopi
  * Moved some disk stuff from VirtuaWin to DiskRoutines
  *
