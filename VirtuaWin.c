@@ -778,7 +778,10 @@ LRESULT CALLBACK wndProc(HWND aHWnd, UINT message, WPARAM wParam, LPARAM lParam)
          sendModuleMessage(WM_COPYDATA, 0, (LPARAM)&cds); 
          return TRUE;
       }
-    
+      
+      case VW_CURDESK:
+         return currentDesk;
+
       // End plugin messages
     
       case WM_CREATE:		       // when main window is created
@@ -1854,6 +1857,9 @@ void readConfig()
 
 /*
  * $Log$
+ * Revision 1.6  2000/12/11 21:28:41  jopi
+ * Fixed the sticky symbol in the winlist again, got lost during some changes
+ *
  * Revision 1.5  2000/08/28 21:38:37  jopi
  * Added new functions for menu hot key registration. Fixed bug with needing to have hot keys enabled for menu keys to work and also better error message
  *

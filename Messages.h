@@ -13,7 +13,8 @@
  * 
  * For example if you want to step one desktop to the left:
  * PostMessage(VirtuaWin HWND, VW_CHANGEDESK, VW_STEPLEFT, 0);
- *
+ * For messages where you expect a return value, use the SendMessage
+ * function instead, see some win32 documentation for more info.
  *************************************************************************/
 
 /* Message, switch to a specified desktop, sent with following lParam or 1..9 */
@@ -38,6 +39,8 @@
 #define VW_DESKY      (WM_USER + 21)
 /* Message, require the window list from VirtuaWin. List will be returned with WM_COPYDATA */
 #define VW_WINLIST    (WM_USER + 22)
+/* Message, returns the current desktop number */
+#define VW_CURDESK    (WM_USER + 23)
 
 /* Message, sent by VirtuaWin after a switch. lParam will contain current desktop number 
    if wParam isn't one of the following, then wParam will also contain current desktop.
@@ -64,6 +67,9 @@
 
 /*
  * $Log$
+ * Revision 1.2  2000/07/18 16:03:34  jopi
+ * Changed mail adress in error message
+ *
  * Revision 1.1.1.1  2000/06/03 15:38:05  jopi
  * Added first time
  *
