@@ -43,7 +43,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
    MSG msg;
    WNDCLASSEX wc;
    int threadID;
-   char *classname = appName;
+   char *classname = "VirtuaWinMainClass";
    hInst = hInstance;
 
    /* Only one instance may be started */
@@ -1845,6 +1845,9 @@ void goGetTheTaskbarHandle()
 
 /*
  * $Log$
+ * Revision 1.15  2001/12/01 00:05:52  jopi
+ * Added alternative window hiding for troublesome windows like InternetExplorer
+ *
  * Revision 1.14  2001/11/12 21:39:15  jopi
  * Added functionality for disabling the systray icon
  *
