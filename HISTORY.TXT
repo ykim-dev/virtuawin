@@ -1,6 +1,21 @@
 ***   VirtuaWin Revision History   ***
 --------------------------------------
 
+Ver 2.5 2001/01/xx
+* Bugfix: Too many modules would corrupt data and cause undefined behaviour,
+  also increased the maximum number of modules handled from 5 to 10
+* Bugfix: Fixed a bug with the username lookup for config file, could go wrong sometimes
+* Bugfix: Fixed so that config update notification is sent upon apply and 
+  only when something has changed upon hitting ok
+* Bugfix: Fixed the sticky symbol in the winlist again, got lost during some changes
+* Bugfix: Fixed bug with needing to have hot keys enabled for menu keys to work and 
+  also better error message
+* The winList module now has classname for all applications
+* Config file will also be written upon every apply and not if cancel is selected
+* Added module message for getting the current desktop number
+* Modules will now get a notification when desktop layout has changed since we 
+  might have a new current desktop number after a change
+----------------------------
 
 Ver 2.4 2000/08/19
 * Bugfix: Added the code again that removes closed windows, this will avoid having closed 
