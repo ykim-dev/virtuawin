@@ -64,9 +64,9 @@ extern BOOL crashRecovery;      // Should we use recovery functionality
 extern BOOL deskWrap;           // If we want to have desktop cycling
 extern BOOL setupOpen;          // if setup dialog is visible
 extern BOOL invertY;            // if up/down should be inverted
-extern BOOL stickyMenu;         // if sticky window menu should be shown
-extern BOOL assignMenu;         // if assign window menu should be shown
-extern BOOL directMenu;         // if direct access window menu should be shown
+extern short stickyMenu;         // if sticky window menu should be shown
+extern short assignMenu;         // if assign window menu should be shown
+extern short directMenu;         // if direct access window menu should be shown
 extern BOOL useDeskAssignment;  // if we have desktop assignment 
 extern BOOL saveLayoutOnExit;   // save the desktop layout upon exit
 extern BOOL assignOnlyFirst;    // only assign the first window to a saved desktop 
@@ -139,6 +139,9 @@ extern LPSTR vwWindowsState;  // holds windowsata file name + path
 
 /*
  * $Log$
+ * Revision 1.11  2003/06/24 19:49:08  jopi
+ * SF693876 Fixed option to handle XP skinned style taskbars
+ *
  * Revision 1.10  2003/01/27 20:23:52  jopi
  * Updated copyright header for 2003
  *

@@ -1534,11 +1534,18 @@ HMENU createSortedWinList_cos()
    MenuItem *items[MAXWIN], *item;
    char buff[31];
    int i,x,y,c,d,e;
-
-   BOOL menuBreak;				// indicates if vertical seperator is neesed
+   BOOL useTitle;    // Only use title if we have more than one menu
+   BOOL menuBreak;   // indicates if vertical seperator is needed
+   int menuNumber = 0;
    hMenu = NULL;
-
+   
    hMenu = CreatePopupMenu();
+   
+   // Don't show titles if only one menu is enabled
+   if((stickyMenu+directMenu+assignMenu) == 1)
+      useTitle = FALSE;
+   else
+      useTitle = TRUE;
 
    // create the window list
    lockMutex();
@@ -1580,7 +1587,7 @@ HMENU createSortedWinList_cos()
             if(c) AppendMenu(hMenu, MF_SEPARATOR, 0, NULL );
             c = items [x]->desk; d=0;
          }
-         if (!e) {
+         if (!e && useTitle ) {
             AppendMenu(hMenu, MF_STRING, 0, "Sticky" );
             AppendMenu(hMenu, MF_SEPARATOR, 0, NULL );
             AppendMenu(hMenu, MF_SEPARATOR, 0, NULL );
@@ -1606,7 +1613,7 @@ HMENU createSortedWinList_cos()
 
          // accessing current desk - direct assign makes no sense
          if (items[x]->desk!=calculateDesk()) {
-	    if (!e) {
+	    if (!e && useTitle) {
                if (menuBreak) {
                   AppendMenu( hMenu,
                               MF_STRING | MF_MENUBARBREAK, 0, "Access" );
@@ -1641,7 +1648,7 @@ HMENU createSortedWinList_cos()
          //sticky windows can't be assigned cause they're sticky :-) so leave them.out..
 	 //cannot assign to current Desktop
          if ((!items[x]->sticky)&&(items[x]->desk!=calculateDesk())) {
-	    if (!e) {
+	    if (!e && useTitle) {
                if ( menuBreak ) {
                   AppendMenu( hMenu, MF_STRING | MF_MENUBARBREAK, 0, "Assign" );
                   menuBreak = FALSE; d=1;
@@ -2128,6 +2135,9 @@ void assignWindow(HWND* theWin, int theDesk)
 
 /*
  * $Log$
+ * Revision 1.34  2003/07/08 21:10:28  jopi
+ * SF745820, excluded some special types of windows from beeing handled by VirtuaWin
+ *
  * Revision 1.33  2003/06/26 19:56:52  jopi
  * Added module support for assigning a window to specified desktop
  *

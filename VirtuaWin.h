@@ -118,7 +118,7 @@ static int curUser = 0;       // how many user applications we have
 
 static UINT MODKEY;	      // Holds the switch key modifiers
 
-static char appName[] = "VirtuaWin 2.6.2 Testversion";   // application name
+static char appName[] = "VirtuaWin 2.x Testversion";   // application name
 
 ATOM stickyKey;
 ATOM vwLeft;
@@ -200,9 +200,9 @@ BOOL crashRecovery = TRUE;
 BOOL deskWrap = FALSE;          
 BOOL setupOpen = FALSE;         
 BOOL invertY = FALSE;           
-BOOL stickyMenu = TRUE;         
-BOOL assignMenu = FALSE;
-BOOL directMenu = FALSE;
+short stickyMenu = 1;         
+short assignMenu = 0;
+short directMenu = 0;
 BOOL useDeskAssignment = FALSE;
 BOOL saveLayoutOnExit = FALSE;
 BOOL assignOnlyFirst = FALSE;
@@ -277,6 +277,9 @@ LPSTR vwWindowsState;
 
 /*
  * $Log$
+ * Revision 1.23  2003/06/26 19:56:52  jopi
+ * Added module support for assigning a window to specified desktop
+ *
  * Revision 1.22  2003/06/24 19:52:05  jopi
  * SF693876 Fixed option to handle XP skinned style taskbars
  *
