@@ -1,7 +1,7 @@
 //
 //  VirtuaWin - Virtual Desktop Manager for Win9x/NT/Win2K/XP
 // 
-//  Copyright (c) 1999, 2000, 2001, 2002, 2003 Johan Piculell
+//  Copyright (c) 1999-2003, 2004 Johan Piculell
 // 
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -139,6 +139,9 @@ extern LPSTR vwWindowsState;  // holds windowsata file name + path
 
 /*
  * $Log$
+ * Revision 1.12  2003/09/24 19:26:28  jopi
+ * SF770859 Window menu heading will not be displayed if only one meny is used
+ *
  * Revision 1.11  2003/06/24 19:49:08  jopi
  * SF693876 Fixed option to handle XP skinned style taskbars
  *

@@ -40,7 +40,7 @@ Post a message to the list by sending a mail to virtuawin@caedmon.net.
 
 Copyright
 --------------------------------------------------------------
-VirtuaWin is copyright (c) 1999-2002, and 2003 by Johan Piculell and is 
+VirtuaWin is copyright (c) 1999-2003, and 2004 by Johan Piculell and is 
 licensed through the GNU General Public License. Read the 
 COPYING.TXT file for the complete license.
 

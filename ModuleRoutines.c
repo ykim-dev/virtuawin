@@ -1,7 +1,7 @@
 //
 //  VirtuaWin - Virtual Desktop Manager for Win9x/NT/Win2K/XP
 // 
-//  Copyright (c) 1999, 2000, 2001, 2002, 2003 Johan Piculell
+//  Copyright (c) 1999-2003, 2004 Johan Piculell
 // 
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -170,6 +170,9 @@ void postModuleMessage(UINT Msg, WPARAM wParam, LPARAM lParam)
 
 /*
  * $Log$
+ * Revision 1.8  2003/02/28 16:59:43  jopi
+ * Changed the wait time for module startup timeout to 10 secs instead of 5.
+ *
  * Revision 1.7  2003/01/27 20:22:56  jopi
  * Updated copyright header for 2003
  *

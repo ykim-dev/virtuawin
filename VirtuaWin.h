@@ -1,7 +1,7 @@
 //
 //  VirtuaWin - Virtual Desktop Manager for Win9x/NT/Win2K/XP
 // 
-//  Copyright (c) 1999, 2000, 2001, 2002, 2003 Johan Piculell
+//  Copyright (c) 1999-2003, 2004 Johan Piculell
 // 
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -277,6 +277,9 @@ LPSTR vwWindowsState;
 
 /*
  * $Log$
+ * Revision 1.24  2003/09/24 19:26:28  jopi
+ * SF770859 Window menu heading will not be displayed if only one meny is used
+ *
  * Revision 1.23  2003/06/26 19:56:52  jopi
  * Added module support for assigning a window to specified desktop
  *

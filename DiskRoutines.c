@@ -1,7 +1,7 @@
 //
 //  VirtuaWin - Virtual Desktop Manager for Win9x/NT/Win2K/XP
 // 
-//  Copyright (c) 1999, 2000, 2001, 2002, 2003 Johan Piculell
+//  Copyright (c) 1999-2003, 2004 Johan Piculell
 // 
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -607,6 +607,9 @@ BOOL tryToLock()
 
 /*
  * $Log$
+ * Revision 1.18  2003/07/10 20:37:54  jopi
+ * Made it possible to disable the multiuser config support with a registry value
+ *
  * Revision 1.17  2003/06/24 19:49:08  jopi
  * SF693876 Fixed option to handle XP skinned style taskbars
  *
