@@ -40,17 +40,27 @@ void loadFilePaths()
    DWORD cbData = 0;
    DWORD dwUserNameLen = 0;
    LPSTR winCurrentUser;
+   LONG multiUser = 0;
+
    long lResult = RegOpenKeyEx(HKEY_LOCAL_MACHINE, "Software\\VirtuaWin\\Settings", 0,
                                KEY_READ, &hkey);
    if (hkey) {
       lResult = RegQueryValueEx(hkey, "Path", NULL, &dwType, NULL, &cbData);
+      multiUser = RegQueryValueEx(hkey, "Multi", NULL, &dwType, NULL, 0);
+      
       vwPath   = (LPSTR)malloc(cbData * sizeof(char));
       // Get current user data
-      dwUserNameLen = ( (UNLEN + 1) * sizeof(char) );
-      winCurrentUser = (LPSTR)malloc( dwUserNameLen );
-      lResult = GetUserName( (LPBYTE) winCurrentUser, &dwUserNameLen );
-
-      vwConfig = (LPSTR)malloc(cbData * sizeof(char) + dwUserNameLen * sizeof(char) + 14);
+      if(multiUser == ERROR_SUCCESS)
+      {
+         dwUserNameLen = ( (UNLEN + 1) * sizeof(char) );
+         winCurrentUser = (LPSTR)malloc( dwUserNameLen );
+         lResult = GetUserName( (LPBYTE) winCurrentUser, &dwUserNameLen );
+         vwConfig = (LPSTR)malloc(cbData * sizeof(char) + dwUserNameLen * sizeof(char) + 14);
+      }
+      else
+      {
+         vwConfig = (LPSTR)malloc(cbData * sizeof(char) + 14);
+      }
       vwList   = (LPSTR)malloc(cbData * sizeof(char) + 13);
       vwHelp   = (LPSTR)malloc(cbData * sizeof(char) + 10);
       vwSticky = (LPSTR)malloc(cbData * sizeof(char) + 11);
@@ -64,8 +74,16 @@ void loadFilePaths()
       lResult = RegQueryValueEx(hkey, "Path", NULL, &dwType,
                                 (LPBYTE)vwPath, &cbData);
 
-      sprintf(vwConfig, "%svwconfig.%s.cfg", vwPath, winCurrentUser);
-      free(winCurrentUser);
+      if(multiUser == ERROR_SUCCESS)
+      {
+         sprintf(vwConfig, "%svwconfig.%s.cfg", vwPath, winCurrentUser);
+         free(winCurrentUser);
+      }
+      else
+      {
+         sprintf(vwConfig, "%svwconfig.cfg", vwPath);
+      }
+
       sprintf(vwList, "%suserlist.cfg", vwPath);
       sprintf(vwHelp, "%svirtuawin", vwPath);
       sprintf(vwSticky, "%ssticky.cfg", vwPath);
@@ -95,7 +113,7 @@ void writeDisabledList(int* theNOfModules, moduleType* theModList)
       int i;
       for(i = 0; i < *theNOfModules; ++i) {
          if (theModList[i].Disabled) {
-            fprintf(fp, "%s\n", &theModList[i].description);
+            fprintf(fp, "%s\n", (char*)&theModList[i].description);
          }
       }
       fclose(fp);
@@ -589,6 +607,9 @@ BOOL tryToLock()
 
 /*
  * $Log$
+ * Revision 1.17  2003/06/24 19:49:08  jopi
+ * SF693876 Fixed option to handle XP skinned style taskbars
+ *
  * Revision 1.16  2003/01/27 20:22:56  jopi
  * Updated copyright header for 2003
  *
