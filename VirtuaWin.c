@@ -1496,6 +1496,7 @@ void showAll()
 
 /*************************************************
  * Compact the window list, removes any destroyed windows
+ * and makes sure that moved windows stays away from the taskbar
  */
 void packList()
 {
@@ -1503,6 +1504,11 @@ void packList()
    int j;
    lockMutex();
    for (i = 0; i < nWin; ++i) {
+      // Windows can pop back into taksbar, make sure they keep away
+      if(winList[i].NormalHide == FALSE && winList[i].Hidden == TRUE)
+      {
+         PostMessage( hwndTask, RM_Shellhook, 2, (LPARAM) winList[i].Handle);
+      }
       // remove killed windows
       if(!IsWindow(winList[i].Handle) || 
          (!IsWindowVisible(winList[i].Handle) && winList[i].Desk == currentDesk)) {
@@ -2151,6 +2157,9 @@ void setSticky(HWND theWin, int state)
 
 /*
  * $Log$
+ * Revision 1.45  2005/03/10 08:02:11  rexkerr
+ * Added multi-user support
+ *
  * Revision 1.44  2005/02/16 07:44:20  jopi
  * Removed unused variable
  *
