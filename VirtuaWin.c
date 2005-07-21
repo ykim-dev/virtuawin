@@ -519,7 +519,8 @@ LRESULT CALLBACK wndProc(HWND aHWnd, UINT message, WPARAM wParam, LPARAM lParam)
    HMENU hmenu, hpopup;
    int retItem;
    static UINT taskbarRestart; 
-    
+   char virtuaWinHelpFile[MAX_PATH];
+   
    switch (message) {
       case VW_MOUSEWARP:
          // Try to avoid switching if we press on the taskbar
@@ -777,7 +778,8 @@ LRESULT CALLBACK wndProc(HWND aHWnd, UINT message, WPARAM wParam, LPARAM lParam)
          return TRUE;
 
       case VW_HELP:
-         WinHelp(aHWnd, vwHelp, HELP_CONTENTS, 0);
+         GetFilename(vwHELP, virtuaWinHelpFile);
+         WinHelp(aHWnd, virtuaWinHelpFile, HELP_CONTENTS, 0);
          return TRUE;
     
       case VW_GATHER:
@@ -863,7 +865,8 @@ LRESULT CALLBACK wndProc(HWND aHWnd, UINT message, WPARAM wParam, LPARAM lParam)
                      showAll();
                      break;
                   case ID_HELP:	// show help
-                     WinHelp(aHWnd, vwHelp, HELP_CONTENTS, 0);
+                     GetFilename(vwHELP, virtuaWinHelpFile);
+                     WinHelp(aHWnd, virtuaWinHelpFile, HELP_CONTENTS, 0);
                      break;
                   case ID_DISABLE:
                      disableAll(aHWnd);
@@ -2157,6 +2160,9 @@ void setSticky(HWND theWin, int state)
 
 /*
  * $Log$
+ * Revision 1.46  2005/06/11 20:59:48  jopi
+ * SF1205908, periodic check that moved application doesn't reappear in the taskbar
+ *
  * Revision 1.45  2005/03/10 08:02:11  rexkerr
  * Added multi-user support
  *
