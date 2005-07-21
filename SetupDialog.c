@@ -661,9 +661,6 @@ BOOL APIENTRY misc(HWND hDlg, UINT message, UINT wParam, LONG lParam)
                {
                   hotkeyMenuEn = FALSE;
                }
-                
-               if((nDesksX * nDesksY) == 1)
-                  MessageBox(hDlg, "Hey! No offense, but if you only want one desktop\nyou shouldn't use this software at all!", "Stupid user alert!", 0);
                SetWindowLong(hDlg, DWL_MSGRESULT, TRUE);
                break;
             case PSN_KILLACTIVE:
@@ -944,6 +941,9 @@ BOOL APIENTRY expert(HWND hDlg, UINT message, UINT wParam, LONG lParam)
 
 /*
  * $Log$
+ * Revision 1.24  2004/04/10 10:20:01  jopi
+ * Updated to compile with gcc/mingw
+ *
  * Revision 1.23  2004/02/28 18:54:01  jopi
  * SF904069 Added possibility to choose if sticky should be permanent for all instances of the same classname.
  *
