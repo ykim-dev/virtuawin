@@ -178,27 +178,85 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
  */
 DWORD WINAPI MouseProc(LPVOID lpParameter)
 {
+   // in this function I'm using int for bool & 0,1 rather than
+   // false,true since the file extension is .c and it's being compiled
+   // as C rather than C++ ... this should change when we port to C++
+  
+   int mousekeyPressed = 0;
+   POINT firstPoint;
    POINT pt;
-   
+
+   // infinite loop
    while(1) {
-      Sleep(50);
+      // If the useMouseKey function is turned on (the function
+      // that requires a modifier key to be pressed to change
+      // desktops using the mouse) and that key is pressed, then
+      // we need to get the position at which the modifier key was
+      // pressed.  Later we'll use that first position to see if
+      // there's a motion tendency towards the edge of the screen that
+      // we're switching to.  If they're not moving the mouse in that
+      // general direction then we don't want to make the switch
+      // because that sometimes causes the screen to switch when the
+      // user presses the modifier key for some other purpose if the
+      // mouse is near the edge of the screen.  Checking for their
+      // general motion tendency feels natural and prevents accidental
+      // switching
+
+      if(useMouseKey) { // Are we using a mouse key
+        if(HIWORD(GetAsyncKeyState(MOUSEKEY))) {
+          if(!mousekeyPressed) {
+             mousekeyPressed = 1;
+             GetCursorPos(&firstPoint);
+          }
+        }
+        else {
+          mousekeyPressed = 0;
+        }
+      }
+
+      // sleep between iterations of this function.  If we're using
+      // modifier keys it loops more often to be sure to watch the
+      // tendency.
+      if(useMouseKey) {
+         Sleep(4);
+      }
+      else {
+        Sleep(50); 
+      }
+
+      // Now get the second point
       GetCursorPos(&pt);
-      if(     pt.x < (screenLeft   + 3 + (taskBarWarp * taskBarLeftWarp   * checkMouseState()))) {
+
+      // Now figure out the motion tendency
+      int xDelta = pt.x - firstPoint.x;
+      int yDelta = pt.y - firstPoint.y;
+
+      // If they're not using the modifier keys we'll just set all of
+      // these to true to simplify the logic later on
+      int movingLeft  = !useMouseKey || (mousekeyPressed && (xDelta < -25)); // && (yDelta > -30 && yDelta < 30);
+      int movingRight = !useMouseKey || (mousekeyPressed && (xDelta >  25)); // && (yDelta > -30 && yDelta < 30);
+      int movingUp    = !useMouseKey || (mousekeyPressed && (yDelta < -25)); // && (xDelta > -30 && xDelta < 30);
+      int movingDown  = !useMouseKey || (mousekeyPressed && (yDelta >  25)); // && (xDelta > -30 && xDelta < 30);
+
+      // ...and if we're moving in the right direction and close
+      // enough to the side of the screen, send the message to switch
+      // desktops
+      if( movingLeft  &&  pt.x < (screenLeft   + 3 + (taskBarWarp * taskBarLeftWarp   * checkMouseState()))) {
          // switch left
          SendNotifyMessage(hWnd, VW_MOUSEWARP, 0, 
                            MAKELPARAM(checkMouseState(), VW_MOUSELEFT));
       }
-      else if(pt.x > (screenRight  - 3 - (taskBarWarp * taskBarRightWarp  * checkMouseState()))) { 
+      else if( movingRight && pt.x > (screenRight  - 3 - (taskBarWarp * taskBarRightWarp  * checkMouseState()))) { 
          // switch right
          SendNotifyMessage(hWnd, VW_MOUSEWARP, 0, 
                            MAKELPARAM(checkMouseState(), VW_MOUSERIGHT));
       }
-      else if(pt.y < (screenTop    + 3 + (taskBarWarp * taskBarTopWarp    * checkMouseState()))) { 
+      else if( movingUp && pt.y < (screenTop    + 3 + (taskBarWarp * taskBarTopWarp    * checkMouseState()))) { 
          // switch up
          SendNotifyMessage(hWnd, VW_MOUSEWARP, 0, 
                            MAKELPARAM(checkMouseState(), VW_MOUSEUP));
       }
-      else if(pt.y > (screenBottom - 3 - (taskBarWarp * taskBarBottomWarp * checkMouseState()))) {
+      else if( movingDown && pt.y > (screenBottom - 3 - (taskBarWarp * taskBarBottomWarp * checkMouseState()))) {
          // switch down
          SendNotifyMessage(hWnd, VW_MOUSEWARP, 0, 
                            MAKELPARAM(checkMouseState(), VW_MOUSEDOWN));
@@ -207,6 +265,7 @@ DWORD WINAPI MouseProc(LPVOID lpParameter)
          SendNotifyMessage(hWnd, VW_MOUSEWARP, 0, MAKELPARAM(0, VW_MOUSERESET));
       }
    }
+
    return TRUE;
 }
 
@@ -2160,6 +2219,9 @@ void setSticky(HWND theWin, int state)
 
 /*
  * $Log$
+ * Revision 1.47  2005/07/21 19:55:11  jopi
+ * SF 1204278, Help path was not initialized correctly after the multi user changes.
+ *
  * Revision 1.46  2005/06/11 20:59:48  jopi
  * SF1205908, periodic check that moved application doesn't reappear in the taskbar
  *
