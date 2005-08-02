@@ -1876,7 +1876,7 @@ void recoverWindows()
       fclose(fp);
    }
    free(dummy);
-   sprintf(buff, "%d windows was recovered.", nOfRec);
+   sprintf(buff, "%d window%s recovered.", nOfRec, (nOfRec == 1)?" was":"s were");
    MessageBox(hWnd, buff, "VirtuaWin", 0); 
 }
 
@@ -2219,6 +2219,9 @@ void setSticky(HWND theWin, int state)
 
 /*
  * $Log$
+ * Revision 1.48  2005/07/29 06:37:59  rexkerr
+ * Updated mousekeys functionality to require a motion tendency towards the edge of the screen to prevent the desktop from swapping unintentionally just because the mouse is near the end of the screen when the meta key is pressed.
+ *
  * Revision 1.47  2005/07/21 19:55:11  jopi
  * SF 1204278, Help path was not initialized correctly after the multi user changes.
  *
