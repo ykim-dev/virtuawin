@@ -2060,10 +2060,23 @@ void goGetTheTaskbarHandle()
  */
 void getScreenSize()
 {
-   screenLeft = GetSystemMetrics(SM_XVIRTUALSCREEN);
-   screenRight = GetSystemMetrics(SM_CXVIRTUALSCREEN);
-   screenTop = GetSystemMetrics(SM_YVIRTUALSCREEN);
-   screenBottom = GetSystemMetrics(SM_CYVIRTUALSCREEN);
+   if(0) // TODO:  make a user configured flag to specify whether to only act on the primary display or not
+   {
+      // TODO:  Figure out how to get the size of JUST the primary
+      // monitor... I have the width, but dont' know what to do to get
+      // the origin w/o using the GetDeviceCaps functions that don't
+      // seem to work in MingW
+      screenLeft   = GetSystemMetrics(SM_XVIRTUALSCREEN);
+      screenRight  = GetSystemMetrics(SM_CXVIRTUALSCREEN) + screenLeft;
+      screenTop    = GetSystemMetrics(SM_YVIRTUALSCREEN);
+      screenBottom = GetSystemMetrics(SM_CYVIRTUALSCREEN) + screenTop;
+   }
+   {
+      screenLeft   = GetSystemMetrics(SM_XVIRTUALSCREEN);
+      screenRight  = GetSystemMetrics(SM_CXVIRTUALSCREEN) + screenLeft;
+      screenTop    = GetSystemMetrics(SM_YVIRTUALSCREEN);
+      screenBottom = GetSystemMetrics(SM_CYVIRTUALSCREEN) + screenTop;
+   }
 }
 
 /************************************************
@@ -2219,6 +2232,9 @@ void setSticky(HWND theWin, int state)
 
 /*
  * $Log$
+ * Revision 1.49  2005/08/02 22:05:34  rexkerr
+ * Fixed grammar error when recovering windows.  It now properly says "# windows were recovered" or "1 window was recovered"
+ *
  * Revision 1.48  2005/07/29 06:37:59  rexkerr
  * Updated mousekeys functionality to require a motion tendency towards the edge of the screen to prevent the desktop from swapping unintentionally just because the mouse is near the end of the screen when the meta key is pressed.
  *
