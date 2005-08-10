@@ -296,15 +296,32 @@ BOOL APIENTRY mouse(HWND hDlg, UINT message, UINT wParam, LONG lParam)
  */
 BOOL APIENTRY keys(HWND hDlg, UINT message, UINT wParam, LONG lParam)
 {
-   RECT r;
    WORD wRawHotKey;
    WORD wPar;
+   RECT config_dlg_rect;
   
    switch (message) {
       case WM_INITDIALOG:
-         GetWindowRect(GetParent(hDlg), &r);
-         SetWindowPos(GetParent(hDlg), 0, (screenRight/2-((r.right-r.left)/2)),
-                      (screenBottom/2-((r.bottom-r.top)/2)), 0, 0, SWP_NOZORDER | SWP_NOSIZE | SWP_NOACTIVATE);
+
+         GetWindowRect(GetParent(hDlg), &config_dlg_rect);
+
+         // Reposition the dialog to the center of the monitor that
+         // was selected
+            
+         // GetSystemMetrics returns the primary monitor for backward
+         // compatiblity.  I used this rather than GetMonitorInfo
+         // because some versions of MingW don't have that function
+         // and because those other functions only work on 98+ and
+         // 2000+
+         int monitor_width  = GetSystemMetrics(SM_CXSCREEN); // get the width of the PRIMARY display monitor
+         int monitor_height = GetSystemMetrics(SM_CYSCREEN); // get the height of the PRIMARY display monitor
+         int dialog_width   = config_dlg_rect.right  - config_dlg_rect.left;
+         int dialog_height  = config_dlg_rect.bottom - config_dlg_rect.top;
+
+         config_dlg_rect.left = (monitor_width  - dialog_width)  / 2;
+         config_dlg_rect.top  = (monitor_height - dialog_height) / 2;
+
+         SetWindowPos(GetParent(hDlg), 0, config_dlg_rect.left, config_dlg_rect.top, 0, 0, SWP_NOZORDER | SWP_NOSIZE | SWP_NOACTIVATE);
     
          /* Control keys */
          if(keyEnable) {
@@ -941,6 +958,9 @@ BOOL APIENTRY expert(HWND hDlg, UINT message, UINT wParam, LONG lParam)
 
 /*
  * $Log$
+ * Revision 1.25  2005/07/21 19:34:47  jopi
+ * Removed popup message when configuring only one desktop
+ *
  * Revision 1.24  2004/04/10 10:20:01  jopi
  * Updated to compile with gcc/mingw
  *
