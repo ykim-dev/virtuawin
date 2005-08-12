@@ -1,13 +1,13 @@
 #include <windows.h>
-#include "resource.h"
+#include "Resource.h"
 
-107 ICON icons/APPICONSMALL.ICO
-108 ICON icons/SMALLNE.ICO
-109 ICON icons/APPICONLARGE.ICO
-110 ICON icons/SMALLSW.ICO
-111 ICON icons/SMALLSE.ICO
-112 ICON icons/SMALL.ICO
-113 ICON icons/SMALLNW.ICO
+107 ICON Icons/APPICONSMALL.ICO
+108 ICON Icons/SMALLNE.ICO
+109 ICON Icons/APPICONLARGE.ICO
+110 ICON Icons/SMALLSW.ICO
+111 ICON Icons/SMALLSE.ICO
+112 ICON Icons/SMALL.ICO
+113 ICON Icons/SMALLNW.ICO
 
 IDD_PROPPAGE_KEYS DIALOG 0, 0, 150, 250
 STYLE DS_3DLOOK | WS_CHILD | WS_DISABLED | WS_BORDER
@@ -180,16 +180,16 @@ BEGIN
     GROUPBOX        "Module list", IDC_STATIC, 6, 5, 165, 115
     GROUPBOX        "", IDC_STATIC, 6, 120, 165, 30
 END
-159 ICON icons/9.ico
-160 ICON icons/1.ico
-161 ICON icons/2.ico
-162 ICON icons/3.ico
-163 ICON icons/4.ico
-164 ICON icons/5.ico
-165 ICON icons/6.ico
-166 ICON icons/7.ico
-167 ICON icons/8.ico
-168 ICON icons/0.ico
+159 ICON Icons/9.ico
+160 ICON Icons/1.ico
+161 ICON Icons/2.ico
+162 ICON Icons/3.ico
+163 ICON Icons/4.ico
+164 ICON Icons/5.ico
+165 ICON Icons/6.ico
+166 ICON Icons/7.ico
+167 ICON Icons/8.ico
+168 ICON Icons/0.ico
 IDR_MENU1 MENU
 BEGIN
     POPUP "emty"
