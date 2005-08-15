@@ -24,7 +24,7 @@ endif
 
 TARGET	= VirtuaWin.exe
 OBJS	= VirtuaWin.o DiskRoutines.o SetupDialog.o ModuleRoutines.o VirtuaWin.coff
-LIBS	= -lshell32 -lcomctl32 -lgdi32 -lmsvcrt
+LIBS	= -lshfolder -lshell32 -lcomctl32 -lgdi32 -lmsvcrt
 
 .c.o:
 	$(CC) $(CFLAGS) -c -o $@ $<
