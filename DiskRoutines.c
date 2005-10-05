@@ -30,7 +30,6 @@
 #include <winbase.h> // for GetTempPath
 #include <stddef.h>  // for size_t
 #include <direct.h>  // for mkdir
-#include <winreg.h>  // For regisry calls
 
 #include "DiskRoutines.h"
 #include "ConfigParameters.h"
@@ -67,25 +66,6 @@ int getConfigPath(char* path, BOOL multiUser)
          }
       }
    }
-   else
-   {
-      HKEY hkey = NULL;
-
-      RegOpenKeyEx(HKEY_LOCAL_MACHINE, "Software\\VirtuaWin\\Settings", 0, KEY_READ, &hkey);
-
-      if (hkey) 
-      {
-         DWORD dwType;
-         DWORD cbData = 0;
-         RegQueryValueEx(hkey, "Path", NULL, &dwType, (LPBYTE)path, &cbData);
-      }
-      else
-      {
-         MessageBox(hWnd, "VirtuaWin is not correctly installed, try to reinstall.\nIf you still have problems, send a mail to \nvirtuawin@home.se", "Registry Error", MB_ICONWARNING);
-         PostQuitMessage(0);
-      }
-   }
-   
    return strlen(path); // , MAX_PATH);
 }
 
@@ -104,79 +84,66 @@ int getConfigPath(char* path, BOOL multiUser)
 int GetFilename(eFileNames filetype, char* outStr)
 {
    int retvalue = 1;
+   char VirtuaWinPath[MAX_PATH], *ss;
 
-   char VirtuaWinPath[MAX_PATH];
-   HKEY hkey = NULL;
-   DWORD PathLength = MAX_PATH;
+   GetModuleFileName(GetModuleHandle(NULL), VirtuaWinPath, MAX_PATH) ;
+   ss = strrchr(VirtuaWinPath,'\\') ;
+   ss[1] = '\0' ;
 
-   RegOpenKeyEx(HKEY_LOCAL_MACHINE, VIRTUAWIN_REGLOC, 0, KEY_QUERY_VALUE, &hkey);
-   if (hkey) 
+   if(VirtuaWinPath[(strlen(VirtuaWinPath) - 1)] != '\\') strcat(VirtuaWinPath, "\\");
+   int VirtuaWinPathRemaining = MAX_PATH - strlen(VirtuaWinPath);
+
+   char UserAppPath[MAX_PATH];
+   getConfigPath(UserAppPath, TRUE);  // for now I only want multiuser, we'll probably get rid of the registry entry
+   if(UserAppPath[ (strlen(UserAppPath) - 1)] != '\\') strcat(UserAppPath, "\\");
+   int UserAppPathRemaining = MAX_PATH - strlen(UserAppPath);
+
+   switch(filetype)
    {
-     if(RegQueryValueEx(hkey, "Path", NULL, NULL, VirtuaWinPath, &PathLength) != ERROR_SUCCESS)
-     {
-       // Uh oh! TODO:  Handle this!
-     }
-
-     RegCloseKey(hkey);
+      case vwPATH:
+         strncpy(outStr, VirtuaWinPath, MAX_PATH);
+         break;
+      case vwCONFIG:
+         strncpy(outStr, UserAppPath, MAX_PATH);
+         strncat(outStr, "vwconfig.cfg", UserAppPathRemaining);
+         break;
+      case vwLIST:
+         strncpy(outStr, VirtuaWinPath, MAX_PATH);
+         strncat(outStr, "userlist.cfg", VirtuaWinPathRemaining);
+         break;
+      case vwHELP:
+         strncpy(outStr, VirtuaWinPath, MAX_PATH);
+         strncat(outStr, "virtuawin", VirtuaWinPathRemaining);
+         break;
+      case vwSTICKY:
+         strncpy(outStr, UserAppPath, MAX_PATH);
+         strncat(outStr, "sticky.cfg", UserAppPathRemaining);
+         break;
+      case vwTRICKY:
+         strncpy(outStr, VirtuaWinPath, MAX_PATH);
+         strncat(outStr, "tricky.cfg", VirtuaWinPathRemaining);
+         break;
+      case vwSTATE:
+         strncpy(outStr, UserAppPath, MAX_PATH);
+         strncat(outStr, "vwstate.cfg", UserAppPathRemaining);
+         break;
+      case vwMODULES:
+         strncpy(outStr, VirtuaWinPath, MAX_PATH);
+         strncat(outStr, "modules\\*.exe", VirtuaWinPathRemaining);
+         break;
+      case vwDISABLED:
+         strncpy(outStr, UserAppPath, MAX_PATH);
+         strncat(outStr, "vwDisabled.cfg", UserAppPathRemaining);
+         break;
+      case vwWINDOWS_STATE:
+         strncpy(outStr, UserAppPath, MAX_PATH);
+         strncat(outStr, "vwWindowsState.cfg", UserAppPathRemaining);
+         break;
+      default:
+         retvalue = 0;
    }
-   else
-   {
-     // Uh oh!! TODO:  handle this!
-   }
-  if(VirtuaWinPath[(strlen(VirtuaWinPath) - 1)] != '\\') strcat(VirtuaWinPath, "\\");
-  int VirtuaWinPathRemaining = MAX_PATH - strlen(VirtuaWinPath);
 
-  char UserAppPath[MAX_PATH];
-  getConfigPath(UserAppPath, TRUE);  // for now I only want multiuser, we'll probably get rid of the registry entry
-  if(UserAppPath[ (strlen(UserAppPath) - 1)] != '\\') strcat(UserAppPath, "\\");
-  int UserAppPathRemaining = MAX_PATH - strlen(UserAppPath);
-
-  switch(filetype)
-  {
-    case vwPATH:
-      strncpy(outStr, VirtuaWinPath, MAX_PATH);
-      break;
-    case vwCONFIG:
-      strncpy(outStr, UserAppPath, MAX_PATH);
-      strncat(outStr, "vwconfig.cfg", UserAppPathRemaining);
-      break;
-    case vwLIST:
-      strncpy(outStr, VirtuaWinPath, MAX_PATH);
-      strncat(outStr, "userlist.cfg", VirtuaWinPathRemaining);
-      break;
-    case vwHELP:
-      strncpy(outStr, VirtuaWinPath, MAX_PATH);
-      strncat(outStr, "virtuawin", VirtuaWinPathRemaining);
-      break;
-    case vwSTICKY:
-      strncpy(outStr, UserAppPath, MAX_PATH);
-      strncat(outStr, "sticky.cfg", UserAppPathRemaining);
-      break;
-    case vwTRICKY:
-      strncpy(outStr, VirtuaWinPath, MAX_PATH);
-      strncat(outStr, "tricky.cfg", VirtuaWinPathRemaining);
-      break;
-    case vwSTATE:
-      strncpy(outStr, UserAppPath, MAX_PATH);
-      strncat(outStr, "vwstate.cfg", UserAppPathRemaining);
-      break;
-    case vwMODULES:
-      strncpy(outStr, VirtuaWinPath, MAX_PATH);
-      strncat(outStr, "modules\\*.exe", VirtuaWinPathRemaining);
-      break;
-    case vwDISABLED:
-      strncpy(outStr, UserAppPath, MAX_PATH);
-      strncat(outStr, "vwDisabled.cfg", UserAppPathRemaining);
-      break;
-    case vwWINDOWS_STATE:
-      strncpy(outStr, UserAppPath, MAX_PATH);
-      strncat(outStr, "vwWindowsState.cfg", UserAppPathRemaining);
-      break;
-    default:
-      retvalue = 0;
-  }
-
-  return retvalue;
+   return retvalue;
 }
 
 
@@ -752,6 +719,9 @@ void clearLock()
 
 /*
  * $Log$
+ * Revision 1.23  2005/03/10 08:10:18  rexkerr
+ * Removed debugging code
+ *
  * Revision 1.22  2005/03/10 08:02:10  rexkerr
  * Added multi-user support
  *
