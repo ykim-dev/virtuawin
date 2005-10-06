@@ -1980,7 +1980,7 @@ void moveShowWindow( windowType* aWindow, BOOL show )
                    0, 0, SWP_NOZORDER | SWP_NOSIZE | SWP_NOACTIVATE );
       // This removes window from taskbar and alt+tab list
       SetWindowLong( aWindow->Handle, GWL_EXSTYLE, 
-                     aWindow->StyleFlags & ((~WS_EX_APPWINDOW) | WS_EX_TOOLWINDOW) );
+                     (aWindow->StyleFlags & (~WS_EX_APPWINDOW)) | WS_EX_TOOLWINDOW );
       // Notify taskbar of the change
       PostMessage( hwndTask, RM_Shellhook, 2, (LPARAM) aWindow->Handle);
       aWindow->Hidden = TRUE;
@@ -2232,6 +2232,9 @@ void setSticky(HWND theWin, int state)
 
 /*
  * $Log$
+ * Revision 1.50  2005/08/10 15:35:34  rexkerr
+ * Fixed a bug that was causing the right edge or bottom edge of the screen to be detected incorrectly when the secondary monitor was to the left of or above the primary monitor.
+ *
  * Revision 1.49  2005/08/02 22:05:34  rexkerr
  * Fixed grammar error when recovering windows.  It now properly says "# windows were recovered" or "1 window was recovered"
  *
