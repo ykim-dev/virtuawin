@@ -1824,12 +1824,10 @@ void toggleActiveSticky()
    int i;
    lockMutex();
    for (i = 0; i < nWin; ++i) {
-      if(tempHnd == winList[i].Handle) {
-         if(winList[i].Sticky)
-            winList[i].Sticky = FALSE;
-         else
-            winList[i].Sticky = TRUE;
-         return;
+      windowType* w = &winList[i];
+      if (tempHnd == w->Handle) {
+         w->Sticky = !w->Sticky;
+         break;
       }
    }
    releaseMutex();
@@ -2232,6 +2230,9 @@ void setSticky(HWND theWin, int state)
 
 /*
  * $Log$
+ * Revision 1.51  2005/10/06 20:04:20  jopi
+ * Added SF fix 1296291 for alt+tab listing issue
+ *
  * Revision 1.50  2005/08/10 15:35:34  rexkerr
  * Fixed a bug that was causing the right edge or bottom edge of the screen to be detected incorrectly when the secondary monitor was to the left of or above the primary monitor.
  *
