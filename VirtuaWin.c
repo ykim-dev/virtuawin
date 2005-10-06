@@ -570,13 +570,60 @@ void unRegisterMenuHotKey()
 }
 
 /*************************************************
+ * handle menu hotkey and leftclick on tray icon
+ */
+static void doPopup(HWND aHWnd)
+{
+   if (enabled) {
+      HMENU hpopup;
+      POINT pt;
+      int retItem;
+
+      hpopup = createSortedWinList_cos();
+      GetCursorPos(&pt);
+      SetForegroundWindow(aHWnd);
+
+      retItem = TrackPopupMenu(hpopup,
+                               TPM_RETURNCMD |  // Return menu code
+                               TPM_LEFTBUTTON,
+                               (pt.x-2), (pt.y-2), // screen coords
+                               0, aHWnd, NULL);
+      if (retItem) {
+         lockMutex();
+         if (retItem < (2 * MAXWIN)) { // Sticky toggle
+            int idx = retItem - MAXWIN;
+            if (winList[idx].Sticky)
+               winList[idx].Sticky = FALSE;
+            else {
+               winList[idx].Sticky = TRUE; // mark sticky..
+               showHideWindow(&winList[idx], TRUE);
+            }
+         } else if (retItem < (MAXWIN * 3)) { // window access
+            int idx = retItem - 2 * MAXWIN;
+            gotoDesk(winList[idx].Desk);
+            forceForeground(winList[idx].Handle);
+         } else { // Assign to this desktop
+            int idx = retItem - 3 * MAXWIN;
+            showHideWindow(&winList[idx], TRUE);
+            forceForeground(winList[idx].Handle);
+         }
+
+         releaseMutex();
+      }
+
+      PostMessage(aHWnd, 0, 0, 0);  // see above
+      DestroyMenu(hpopup);	      // Delete loaded menu and reclaim its resources
+      clearBitmapVector();
+   }
+}
+
+/*************************************************
  * Main window callback, this is where all main window messages are taken care of
  */
 LRESULT CALLBACK wndProc(HWND aHWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
    POINT pt;
    HMENU hmenu, hpopup;
-   int retItem;
    static UINT taskbarRestart; 
    char virtuaWinHelpFile[MAX_PATH];
    
@@ -724,38 +771,7 @@ LRESULT CALLBACK wndProc(HWND aHWnd, UINT message, WPARAM wParam, LPARAM lParam)
             break;
          }
          else if(wParam == vwMenu && hotkeyMenuEn == TRUE) {
-            if(enabled) {
-               hpopup = createSortedWinList_cos();
-               GetCursorPos(&pt);
-               SetForegroundWindow(aHWnd);
-               
-               retItem = TrackPopupMenu(hpopup, TPM_RETURNCMD |  // Return menu code
-                                        TPM_LEFTBUTTON, (pt.x-2), (pt.y-2), // screen coordinates
-                                        0, aHWnd, NULL);
-               if(retItem) {
-                  lockMutex();
-                  if(retItem < (2 * MAXWIN)) { // Sticky toggle
-                     if(winList[retItem - MAXWIN].Sticky)
-                        winList[retItem - MAXWIN].Sticky = FALSE;
-                     else {
-                        winList[retItem - MAXWIN].Sticky = TRUE; // mark sticky..
-                        showHideWindow( &winList[retItem - MAXWIN], TRUE );
-                     }
-                  } else if(retItem < (MAXWIN * 3)) { // window access
-                     gotoDesk(winList[retItem -  (2 * MAXWIN)].Desk);
-                     forceForeground(winList[retItem - (2 * MAXWIN)].Handle);
-                  } else { // Assign to this desktop
-                     showHideWindow( &winList[retItem - (3 * MAXWIN)], TRUE );
-                     forceForeground(winList[retItem - (3 * MAXWIN)].Handle);
-                  }
-                  releaseMutex();
-               }
-               
-               PostMessage(aHWnd, 0, 0, 0);  // see above
-               DestroyMenu(hpopup);       // Delete loaded menu and reclaim its resources
-               clearBitmapVector();
-            }
-            
+            doPopup(aHWnd);            
             break;
          }
          // Cycling hot keys
@@ -940,37 +956,7 @@ LRESULT CALLBACK wndProc(HWND aHWnd, UINT message, WPARAM wParam, LPARAM lParam)
                break;
       
             case WM_LBUTTONDOWN: // Show the window list
-               if(enabled) {
-                  hpopup = createSortedWinList_cos();
-                  GetCursorPos(&pt);
-                  SetForegroundWindow(aHWnd);
-        
-                  retItem = TrackPopupMenu(hpopup, TPM_RETURNCMD |  // Return menu code
-                                           TPM_LEFTBUTTON, (pt.x-2), (pt.y-2), // screen coordinates
-                                           0, aHWnd, NULL);
-                  if(retItem) {
-                     lockMutex();
-                     if(retItem < (2 * MAXWIN)) { // Sticky toggle
-                        if(winList[retItem - MAXWIN].Sticky)
-                           winList[retItem - MAXWIN].Sticky = FALSE;
-                        else {
-                           winList[retItem - MAXWIN].Sticky = TRUE; // mark sticky..
-                           showHideWindow( &winList[retItem - MAXWIN], TRUE );
-                        }
-                     } else if(retItem < (MAXWIN * 3)) { // window access
-                        gotoDesk(winList[retItem -  (2 * MAXWIN)].Desk);
-                        forceForeground(winList[retItem - (2 * MAXWIN)].Handle);
-                     } else { // Assign to this desktop
-                        showHideWindow( &winList[retItem - (3 * MAXWIN)], TRUE );
-                        forceForeground(winList[retItem - (3 * MAXWIN)].Handle);
-                     }
-                     releaseMutex();
-                  }
-        
-                  PostMessage(aHWnd, 0, 0, 0);  // see above
-                  DestroyMenu(hpopup);	      // Delete loaded menu and reclaim its resources
-                  clearBitmapVector();
-               }
+               doPopup(aHWnd);
                break;
          }
          return TRUE;
@@ -2230,6 +2216,9 @@ void setSticky(HWND theWin, int state)
 
 /*
  * $Log$
+ * Revision 1.52  2005/10/06 20:13:16  jopi
+ * Added patch 1295748, toggle sticky function was incorrectly implemented.
+ *
  * Revision 1.51  2005/10/06 20:04:20  jopi
  * Added SF fix 1296291 for alt+tab listing issue
  *
