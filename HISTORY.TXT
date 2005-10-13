@@ -1,5 +1,28 @@
 ***   VirtuaWin Revision History   ***
 --------------------------------------
+Ver 2.11 2005/10/13
+* Better multi-user support. Store config files in home directory
+* Removed the need for registry entry
+* SF1205908, periodic check that moved application doesn't reappear in the taskbar
+* Updated mousekeys functionality to require a motion tendency towards the edge 
+  of the screen to prevent the desktop from swapping unintentionally just 
+  because the mouse is near the end of the screen when the meta key is pressed
+* Fixed grammar error when recovering windows.  It now properly says 
+  "# windows were recovered" or "1 window was recovered"
+* Fixed a bug that was causing the right edge or bottom edge of the screen 
+  to be detected incorrectly when the secondary monitor was to the left of or 
+  above the primary monitor
+* Added SF fix 1296291 for alt+tab listing issue
+* Added patch 1295748, toggle sticky function was incorrectly implemented.
+* Added patch 1295745, this removes some duplicated code which is always nice
+* Removed popup alert message when configuring only one desktop
+* Made the setup dialog center itself on the primary monitor so that it worked 
+  on dual monitor systems.  Prior to this change it was centering itself on the 
+  centerline between the two monitors if the secondary monitor was to the left 
+  or under the primary monitor, and half way off of the edge of the displays 
+  if the secondary monitor was to the right or above the primary monitor.
+----------------------------
+
 Ver 2.10 2005/02/16
 * Changed compiler to gcc, maybe fixes some reported crashes?
 * SF904069 Added possibility to choose if sticky should be permanent for all instances 
