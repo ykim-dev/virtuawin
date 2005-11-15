@@ -5,7 +5,7 @@
 //  for moving the current active window to next or previous desktop
 //  
 // 
-//  Copyright (c) 1999, 2000, 2001, 2002, 2003, 2004 Johan Piculell
+//  Copyright (c) 1999, 2000, 2001, 2002, 2003, 2004, 2005 Johan Piculell
 // 
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -27,9 +27,12 @@
 #include <string.h>
 #include <stdio.h>
 #include <commctrl.h>
+#include <shlobj.h>  // for SHGetFolderPath
 
 #include "assignerres.h"
 #include "../../Messages.h"
+
+#define VIRTUAWIN_SUBDIR      "VirtuaWin"
 
 HINSTANCE hInst;   // Instance handle
 HWND hwndMain;	   // Main window handle
@@ -291,24 +294,17 @@ void saveSettings()
 
 void getConfigDir()
 {
-   HKEY hkey = NULL;
-   DWORD dwType;
-   DWORD cbData = 0;
-   
-   RegOpenKeyEx(HKEY_LOCAL_MACHINE, "Software\\VirtuaWin\\Settings", 0,
-                               KEY_READ, &hkey);
-   if (hkey) 
-   {
-      RegQueryValueEx(hkey, "Path", NULL, &dwType, NULL, &cbData);
-      vwPath   = (LPSTR)malloc(cbData * sizeof(char));
-      RegQueryValueEx(hkey, "Path", NULL, &dwType, (LPBYTE)vwPath, &cbData);
-      configFile = (LPSTR)malloc(cbData * sizeof(char) + 21);
-      sprintf(configFile, "%smodules\\VWassigner.cfg", vwPath);
-   }
-   else
-   {
-      MessageBox(hwndMain, "Could not locate VirtuaWin module directory", "Registry Error", MB_ICONWARNING);
-   }
+    configFile = (LPSTR)malloc(MAX_PATH);
+    
+    TCHAR userSettingsPath[MAX_PATH];
+
+    if(SUCCEEDED(SHGetFolderPath(NULL, CSIDL_LOCAL_APPDATA, NULL, 0, userSettingsPath)))
+    {
+        if(userSettingsPath[(strlen(userSettingsPath)-1)] != '\\')
+            strcat(userSettingsPath, "\\");
+        strncat(userSettingsPath, VIRTUAWIN_SUBDIR, MAX_PATH - strlen(userSettingsPath));
+        sprintf(configFile, "%s\\VWassigner.cfg", userSettingsPath);
+    }
 }
 
 /*************************************************
@@ -328,6 +324,9 @@ WORD hotKey2ModKey(BYTE vModifiers)
 
 /*
  * $Log$
+ * Revision 1.3  2004/12/07 19:47:22  jopi
+ * SF1004932, assignment is now able to send windows past the desktop boundaries.
+ *
  * Revision 1.2  2004/04/10 11:38:40  jopi
  * Updated to use gcc/mingw
  *
