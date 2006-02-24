@@ -1,7 +1,7 @@
 //
 //  VirtuaWin - Virtual Desktop Manager for Win9x/NT/Win2K/XP
 // 
-//  Copyright (c) 1999-2003, 2004 Johan Piculell
+//  Copyright (c) 1999-2005, 2006 Johan Piculell
 // 
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -1616,7 +1616,17 @@ HMENU createSortedWinList_cos()
         item = malloc( sizeof(MenuItem) );
         item->name = strdup (title);
         
-        HICON hSmallIcon = (HICON)GetClassLong(winList[i].Handle, GCL_HICON);
+        // Get the application icon for the list
+        HICON hSmallIcon = (HICON)GetClassLong(winList[i].Handle, GCL_HICONSM);
+        if(hSmallIcon == NULL)
+        {
+            // Fallback plan, maybe this works better for this type of application
+            // Otherwise there is not much we can do
+            DWORD theIcon;
+            SendMessageTimeout(winList[i].Handle, WM_GETICON, ICON_SMALL, 0L, 
+                               SMTO_ABORTIFHUNG | SMTO_BLOCK, 500, &theIcon);
+            hSmallIcon = (HICON)theIcon;
+        }
         item->icon = createBitmapIcon(hSmallIcon);
 
         item->desk = winList[i].Desk;
@@ -2215,6 +2225,9 @@ void setSticky(HWND theWin, int state)
 
 /*
  * $Log$
+ * Revision 1.54  2006/02/24 07:49:41  jopi
+ * Found that a mutex was released twice, not sure about the sideffects but could possibly cause a crash when displaying the window list
+ *
  * Revision 1.53  2005/10/06 20:22:22  jopi
  * Added patch 1295745, this removes some duplicated code which is always nice
  *
