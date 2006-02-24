@@ -1056,7 +1056,6 @@ VOID CALLBACK TimerProc(HWND hwnd, UINT uMsg, UINT idEvent, DWORD dwTime)
    EnumWindows(enumWindowsProc, 0); // Get all windows
    /* Let other threads have a go. */
    releaseMutex();
-   if (hMutex != (HANDLE)0) ReleaseMutex(hMutex);
    currentActive = GetForegroundWindow();
    if(userDefinedWin)
       findUserWindows();
@@ -2216,6 +2215,9 @@ void setSticky(HWND theWin, int state)
 
 /*
  * $Log$
+ * Revision 1.53  2005/10/06 20:22:22  jopi
+ * Added patch 1295745, this removes some duplicated code which is always nice
+ *
  * Revision 1.52  2005/10/06 20:13:16  jopi
  * Added patch 1295748, toggle sticky function was incorrectly implemented.
  *
