@@ -1686,30 +1686,29 @@ HMENU createSortedWinList_cos()
                 c = items [x]->desk; d=0;
             }
 
-            // accessing current desk - direct assign makes no sense
-            if (items[x]->desk!=calculateDesk()) {
-                if (!e && useTitle) {
-                    if (menuBreak) {
-                        AppendMenu( hMenu,
-                                    MF_STRING | MF_MENUBARBREAK, 0, "Access" );
-                        menuBreak = FALSE;
-                    }
-                    else
-                        AppendMenu(hMenu, MF_STRING, 0, "Access" );
-
-                    AppendMenu(hMenu, MF_SEPARATOR, 0, NULL );
-                    AppendMenu(hMenu, MF_SEPARATOR, 0, NULL );
-                    e=1;
+            if (!e && useTitle) {
+                if (menuBreak) {
+                    AppendMenu( hMenu,
+                                MF_STRING | MF_MENUBARBREAK, 0, "Access" );
+                    menuBreak = FALSE;
                 }
-                AppendMenu( hMenu,
-                            MF_STRING | (items[x]->sticky ? MF_CHECKED: 0),
-                            2 * MAXWIN + (items[x]->id), items[x]->name );
-                SetMenuItemBitmaps(hMenu, 2 * MAXWIN + (items[x]->id), MF_BYCOMMAND, items[x]->icon, 0);
-                d=1;
+                else
+                {
+                    AppendMenu(hMenu, MF_STRING, 0, "Access" );
+                }
+                
+                AppendMenu(hMenu, MF_SEPARATOR, 0, NULL );
+                AppendMenu(hMenu, MF_SEPARATOR, 0, NULL );
+                e=1;
             }
+            AppendMenu( hMenu,
+                        MF_STRING | (items[x]->sticky ? MF_CHECKED: 0),
+                        2 * MAXWIN + (items[x]->id), items[x]->name );
+            SetMenuItemBitmaps(hMenu, 2 * MAXWIN + (items[x]->id), MF_BYCOMMAND, items[x]->icon, 0);
+            d=1;
         }
     }
-
+    
     c=0; d=1; e=0;
     if(assignMenu) {
         if (stickyMenu || directMenu) menuBreak=TRUE;
@@ -2225,6 +2224,9 @@ void setSticky(HWND theWin, int state)
 
 /*
  * $Log$
+ * Revision 1.55  2006/02/24 08:47:19  jopi
+ * SF1421175, added alternative fallback method in case the application icon cannot be retrieved with GetClassLong
+ *
  * Revision 1.54  2006/02/24 07:49:41  jopi
  * Found that a mutex was released twice, not sure about the sideffects but could possibly cause a crash when displaying the window list
  *
