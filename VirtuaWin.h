@@ -112,7 +112,7 @@ BOOL userDefinedWin = FALSE;  // if we have any user defined
 extern HANDLE hMutex;
 
 HANDLE mouseThread;       // Handle to the mouse thread
-BOOL mouseEnabled = TRUE; // Status of the mouse thread, always running at startup 
+BOOL mouseEnabled = FALSE; // Status of the mouse thread, stopped by default at startup 
 
 static int curAssigned = 0;   // how many predefined desktop belongings we have (saved)
 static int curSticky = 0;     // how many stickywindows we have (saved)
@@ -179,7 +179,7 @@ int warpLength = 20;
 int warpMultiplier = 0;
 int configMultiplier = 1;
 BOOL noMouseWrap = FALSE;
-BOOL mouseEnable = TRUE; 
+BOOL mouseEnable = FALSE; 
 BOOL useMouseKey = FALSE;
 BOOL keyEnable = TRUE;		
 BOOL hotKeyEnable = FALSE;      
@@ -283,6 +283,9 @@ LPSTR vwWindowsState;
 
 /*
  * $Log$
+ * Revision 1.30  2005/03/10 08:02:11  rexkerr
+ * Added multi-user support
+ *
  * Revision 1.29  2004/12/07 19:18:42  jopi
  * SF1053738, added application icons to the window list
  *
