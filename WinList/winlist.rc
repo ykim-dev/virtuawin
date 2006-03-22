@@ -10,7 +10,7 @@ BEGIN
     DEFPUSHBUTTON   "Restore", IDOK, 129, 206, 40, 14
     PUSHBUTTON      "Done", IDCANCEL, 217, 206, 40, 14
     PUSHBUTTON      "Undo", IDUNDO, 173, 206, 40, 14
-    LISTBOX         ID_WINLIST, 6, 31, 365, 179, WS_VSCROLL | WS_HSCROLL
+    LISTBOX         ID_WINLIST, 6, 31, 365, 179, WS_VSCROLL | WS_HSCROLL | LBS_USETABSTOPS
     LTEXT           "Use this module to restore windows that might have been lost. Mark the window that you want to restore and press the Restore button. Press Undo if you accidently restored the wrong window.", 
                     102, 6, 6, 364, 21
 END
