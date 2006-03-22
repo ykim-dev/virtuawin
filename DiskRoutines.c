@@ -192,7 +192,7 @@ int loadDisabledModules(disModules *theDisList)
 int loadStickyList(stickyType *theStickyList) 
 {
     char buff[MAX_PATH];
-    int len, nOfSticky = 0;
+    int len, nOfSticky = 0, winClassLen;
     FILE* fp;
     
     GetFilename(vwSTICKY,buff);
@@ -203,12 +203,25 @@ int loadStickyList(stickyType *theStickyList)
         {
             if((len = strlen(buff)) > 1)
             {
+                winClassLen = vwCLASSNAME_MAX ;
                 if(len > vwCLASSNAME_MAX)
                     buff[vwCLASSNAME_MAX] = '\0' ;
-                else if(buff[len-1] == '\n')
-                    buff[len-1] = '\0' ;
+                else
+                {
+                    if(buff[len-1] == '\n')
+                        len-- ;
+                    if(buff[len-1] == '*')
+                    {
+                        len-- ;
+                        winClassLen = len ;
+                    }
+                    buff[len] = '\0' ;
+                }                    
                 if((theStickyList[nOfSticky].winClassName = strdup(buff)) != NULL)
+                {
+                    theStickyList[nOfSticky].winClassLen = winClassLen ;
                     nOfSticky++;
+                }
             }
         }
         fclose(fp);
@@ -240,9 +253,8 @@ void saveStickyWindows(int theNOfWin, windowType *theWinList)
             if(theWinList[i].Sticky)
             {
                 GetClassName(theWinList[i].Handle,className,vwCLASSNAME_MAX);
-                className[vwCLASSNAME_MAX] = '\n' ;
-                className[vwCLASSNAME_MAX+1] = '\0' ;
-                fputs(className,fp) ;
+                className[vwCLASSNAME_MAX] = '\0' ;
+                fprintf(fp, "%s\n",className);
             }
         }
         fclose(fp);
@@ -255,7 +267,7 @@ void saveStickyWindows(int theNOfWin, windowType *theWinList)
 int loadTrickyList(stickyType *theTrickyList) 
 {
     char buff[MAX_PATH];
-    int len, nOfTricky = 0;
+    int len, nOfTricky = 0, winClassLen;
     FILE* fp;
     
     GetFilename(vwTRICKY, buff);
@@ -265,12 +277,25 @@ int loadTrickyList(stickyType *theTrickyList)
         {
             if((len = strlen(buff)) > 1)
             {
+                winClassLen = vwCLASSNAME_MAX ;
                 if(len > vwCLASSNAME_MAX)
                     buff[vwCLASSNAME_MAX] = '\0' ;
-                else if(buff[len-1] == '\n')
-                    buff[len-1] = '\0' ;
+                else
+                {
+                    if(buff[len-1] == '\n')
+                        len-- ;
+                    if(buff[len-1] == '*')
+                    {
+                        len-- ;
+                        winClassLen = len ;
+                    }
+                    buff[len] = '\0' ;
+                }                    
                 if((theTrickyList[nOfTricky].winClassName = strdup(buff)) != NULL)
+                {
+                    theTrickyList[nOfTricky].winClassLen = winClassLen ;
                     nOfTricky++;
+                }
             }
         }
         fclose(fp);
@@ -311,8 +336,8 @@ void saveAssignedList(int theNOfWin, windowType *theWinList)
  */
 int loadAssignedList(assignedType *theAssignList) 
 {
-    char buff[MAX_PATH], className[MAX_PATH];
-    int curAssigned = 0;
+    char buff[MAX_PATH], *ss ;
+    int curAssigned = 0, desk, len, winClassLen ;
     FILE *fp;
     
     GetFilename(vwWINDOWS_STATE,buff) ;
@@ -320,12 +345,31 @@ int loadAssignedList(assignedType *theAssignList)
     {
         while(fgets(buff,MAX_PATH,fp) != NULL)
         {
-            if(sscanf(buff, "%d %s",&theAssignList[curAssigned].desktop,className) == 2)
+            
+            if(((desk = atoi(buff)) > 0) &&
+               ((ss=strchr(buff,' ')) != NULL) && ((len = strlen(ss+1)) > 1))
             {
-                className[vwCLASSNAME_MAX] = '\0' ;
-                if((className[0] != '\0') &&
-                   ((theAssignList[curAssigned].winClassName = strdup(className)) != NULL))
+                ss += 1 ;
+                winClassLen = vwCLASSNAME_MAX ;
+                if(len > vwCLASSNAME_MAX)
+                    ss[vwCLASSNAME_MAX] = '\0' ;
+                else
+                {
+                    if(ss[len-1] == '\n')
+                        len-- ;
+                    if(ss[len-1] == '*')
+                    {
+                        len-- ;
+                        winClassLen = len ;
+                    }
+                    ss[len] = '\0' ;
+                }
+                if((theAssignList[curAssigned].winClassName = strdup(ss)) != NULL)
+                {
+                    theAssignList[curAssigned].winClassLen = winClassLen ;
+                    theAssignList[curAssigned].desktop = desk ;
                     curAssigned++;
+                }
             }
         }
         fclose(fp);
@@ -349,12 +393,11 @@ int loadUserList(userType* theUserList)
         while(!feof(fp)) {
             fgets(buff, 99, fp);
             // Remove the newline
-            if(buff[strlen(buff) - 1] == '\n') {
+            if(buff[strlen(buff) - 1] == '\n')
                 buff[strlen(buff) - 1] = '\0';
-            }
-            if(curUser < MAXUSER && buff[0] != ':' && (strlen(buff) != 0) && !feof(fp)) {
-                theUserList[curUser].winNameClass = malloc(sizeof(char) * strlen(buff) + 1);
-                strcpy(theUserList[curUser].winNameClass, buff);
+            if(curUser < MAXUSER && buff[0] != ':' && (strlen(buff) != 0) && !feof(fp) &&
+               ((theUserList[curUser].winNameClass = strdup(buff)) != NULL))
+            {
                 theUserList[curUser].isClass = TRUE;
                 curUser++;
             } 
@@ -438,6 +481,8 @@ void writeConfig(void)
         fprintf(fp, "Hot_key_10# %i\n",deskHotkey[10]);
         fprintf(fp, "Hot_key_Mod10# %i\n",deskHotkeyMod[10]);
         fprintf(fp, "Hot_key_Win10# %i\n",deskHotkeyWin[10]);
+        fprintf(fp, "HiddenWindowPopup# %i\n", hiddenWindowPopup);
+        fprintf(fp, "AssignImmediately# %i\n", assignImmediately);
         fclose(fp);
     }
 }
@@ -522,6 +567,8 @@ void readConfig(void)
             fscanf(fp, "%s%i", buff, deskHotkey + 10);
             fscanf(fp, "%s%i", buff, deskHotkeyMod + 10);
             fscanf(fp, "%s%i", buff, deskHotkeyWin + 10);
+            fscanf(fp, "%s%i", buff, &hiddenWindowPopup);
+            fscanf(fp, "%s%i", buff, &assignImmediately);
         }
         fclose(fp);
     }

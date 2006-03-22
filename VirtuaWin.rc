@@ -110,38 +110,39 @@ BEGIN
                     ES_READONLY | NOT WS_BORDER | WS_GROUP | NOT WS_TABSTOP
     GROUPBOX        "Desktop Layout", IDC_STATIC, 4, 5, 202, 30
 
-    GROUPBOX        "Desktop State Handling", IDC_STATIC,    4, 38, 202, 58
+    GROUPBOX        "Desktop State Handling", IDC_STATIC,    4, 38, 202, 69
     AUTOCHECKBOX    "Use desktop assignment", IDC_USEASSIGN, 10, 49, 90, 10
     AUTOCHECKBOX    "Assign only first window", IDC_FIRSTONLY, 22, 60, 90, 10
-    AUTOCHECKBOX    "Save layout on exit", IDC_SAVEEXITSTATE, 10, 71, 90, 10
-    AUTOCHECKBOX    "Save sticky on exit", IDC_STICKYSAVE, 10, 82, 80, 10
+    AUTOCHECKBOX    "Move window immediately", IDC_ASSIGNWINNOW, 22, 71, 90, 10
+    AUTOCHECKBOX    "Save layout on exit", IDC_SAVEEXITSTATE, 10, 82, 90, 10
+    AUTOCHECKBOX    "Save sticky on exit", IDC_STICKYSAVE, 10, 93, 80, 10
     PUSHBUTTON      "Save layout", IDC_SAVENOW,            144, 54, 45, 14
-    PUSHBUTTON      "Save sticky", IDC_SAVESTICKY,         144, 74, 45, 14
+    PUSHBUTTON      "Save sticky", IDC_SAVESTICKY,         144, 84, 45, 14
 
-    GROUPBOX        "Window Menu", IDC_STATIC, 4, 99, 202, 85
-    LTEXT           "Menu contents:", IDC_STATIC, 10, 110, 85, 10
-    AUTOCHECKBOX    "Sticky toggle", IDC_MENUSTICKY, 22, 121, 55, 10
-    AUTOCHECKBOX    "Direct access", IDC_MENUACCESS, 22, 132, 55, 10
-    AUTOCHECKBOX    "Assign",        IDC_MENUASSIGN, 22, 143, 45, 10
-    AUTOCHECKBOX    "Enable menu hotkey", IDC_HOTMENUEN, 10, 155, 96, 10
-    LTEXT           "Hotkey", IDC_STATIC, 22, 169, 32, 10
+    GROUPBOX        "Window Menu", IDC_STATIC, 4, 110, 202, 85
+    LTEXT           "Menu contents:", IDC_STATIC, 10, 121, 85, 10
+    AUTOCHECKBOX    "Sticky toggle", IDC_MENUSTICKY, 22, 132, 55, 10
+    AUTOCHECKBOX    "Direct access", IDC_MENUACCESS, 22, 143, 55, 10
+    AUTOCHECKBOX    "Assign",        IDC_MENUASSIGN, 22, 154, 45, 10
+    AUTOCHECKBOX    "Enable menu hotkey", IDC_HOTMENUEN, 10, 166, 96, 10
+    LTEXT           "Hotkey", IDC_STATIC, 22, 180, 32, 10
     CONTROL         "HotMenu", IDC_HOTMENU, "msctls_hotkey32", 0x0 | WS_BORDER |
-                    WS_TABSTOP, 55, 167, 76, 12
-    AUTOCHECKBOX    "+ WIN key", IDC_HOTMENUW, 133, 169, 47, 9, 0x0020
+                    WS_TABSTOP, 55, 178, 76, 12
+    AUTOCHECKBOX    "+ WIN key", IDC_HOTMENUW, 133, 180, 47, 9, 0x0020
 
-    GROUPBOX        "Sticky", IDC_STATIC, 4, 185, 202, 40
-    AUTOCHECKBOX    "Enable toggle window sticky hotkey", IDC_HOTSTICKYEN, 10, 196, 130, 10
-    LTEXT           "Hotkey", IDC_STATIC, 22, 210, 32, 10
+    GROUPBOX        "Sticky", IDC_STATIC, 4, 196, 202, 40
+    AUTOCHECKBOX    "Enable toggle window sticky hotkey", IDC_HOTSTICKYEN, 10, 207, 130, 10
+    LTEXT           "Hotkey", IDC_STATIC, 22, 221, 32, 10
     CONTROL         "StickyHot", IDC_HOTSTICKY, "msctls_hotkey32", 0x0 |
-                    WS_BORDER | WS_TABSTOP, 55, 208, 76, 12
-    AUTOCHECKBOX    "+ WIN key", IDC_HOTSTICKYW, 133, 210, 47, 9, 0x0020
+                    WS_BORDER | WS_TABSTOP, 55, 219, 76, 12
+    AUTOCHECKBOX    "+ WIN key", IDC_HOTSTICKYW, 133, 221, 47, 9, 0x0020
 END
 
 IDD_PROPPAGE_EXPERT DIALOG 0, 0, 150, 150
 STYLE DS_3DLOOK | WS_CHILD | WS_DISABLED | WS_BORDER
 FONT 8, "MS Sans Serif"
 BEGIN
-    GROUPBOX        "Extras", IDC_STATIC, 4, 5, 202, 146
+    GROUPBOX        "Extras", IDC_STATIC, 4, 5, 202, 157
     AUTOCHECKBOX    "Keep last active", IDC_LASTACTIVE, 10, 16, 65, 10
     AUTOCHECKBOX    "Release focus", IDC_FOCUS,         22, 27, 61, 10
     AUTOCHECKBOX    "Switch minimized", IDC_MINIMIZED,  10, 38, 69, 10
@@ -154,6 +155,7 @@ BEGIN
     AUTOCHECKBOX    "Use alternate hiding", IDC_TRICKYSUPPORT, 10, 115, 90, 10
     AUTOCHECKBOX    "XP taskbar patch", IDC_XPSTYLETASKBAR, 10, 126, 90, 10
     AUTOCHECKBOX    "Permanent sticky", IDC_PERMSTICKY, 10, 137, 90, 10
+    AUTOCHECKBOX    "Move popped-up hidden windows", IDC_HWINPOPUP, 10, 148, 120, 10
 END
 
 IDD_PROPPAGE_ABOUT DIALOG 0, 0, 150, 150

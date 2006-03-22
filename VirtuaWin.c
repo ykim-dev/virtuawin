@@ -140,11 +140,13 @@ short directMenu = 0;
 BOOL useDeskAssignment = FALSE;
 BOOL saveLayoutOnExit = FALSE;
 BOOL assignOnlyFirst = FALSE;
+BOOL assignImmediately = TRUE;
 BOOL cyclingKeysEnabled = FALSE;
 BOOL displayTaskbarIcon = TRUE;
 BOOL noTaskbarCheck = FALSE;
 BOOL trickyWindows = TRUE;
 BOOL permanentSticky = TRUE;
+BOOL hiddenWindowPopup = TRUE;
 
 UINT MOUSEKEY = 0;           // Holds the modifier for enabling mouse warp
 UINT deskHotkey[MAXDESK];
@@ -168,8 +170,8 @@ UINT hotkeyStickyWin = 0;
 int curDisabledMod = 0; 
 unsigned long vwZOrder=0 ;
 
-#define vwSHWIN_TRYHARD 0x01
-BOOL showHideWindow(windowType *aWindow, int shwFlags, BOOL show);
+#define vwSHWIN_TRYHARD   0x01
+BOOL showHideWindow(windowType *aWindow, int shwFlags, unsigned char show);
 
 #ifdef NDEBUG
 #define vwLogPrint(a)
@@ -694,16 +696,27 @@ static inline int winListFind(HWND hwnd)
  * Checks if this window is saved as a tricky window that needs the 
  * "move technique" to be hidden.
  */
-static BOOL isTrickyWindow(char *className)
+static BOOL isTrickyWindow(char *className, RECT *pos)
 {
 #if USE_SHOWWIN
-    int i;
-    for( i = 0; i < curTricky; ++i ) 
-        if(!strcmp(trickyList[i].winClassName,className)) 
-            return TRUE;
-    return FALSE;  
+    if(trickyWindows)
+    {
+        int i=curTricky ;
+        while(--i >= 0)
+        {
+            vwLogPrint((vwLog, "Tricky comparing [%s] with %d [%s]\n",className,trickyList[i].winClassLen,trickyList[i].winClassName)) ;
+            if(!strncmp(trickyList[i].winClassName,className,trickyList[i].winClassLen)) 
+                return vwTRICKY_WINDOW ;
+        }
+        if((pos->left == -32000) && (pos->top == -32000))
+            // some apps hide the window by pushing it to -32000, the windows
+            // cannot be moved from here VirtualWin handles these by making them
+            // Tricky (not hiding them) so crash recovery will still find them.
+            return vwTRICKY_POSITION ;
+    }
+    return 0 ;  
 #else 
-    return TRUE;  
+    return vwTRICKY_WINDOW ;
 #endif 
 }
 
@@ -712,14 +725,15 @@ static BOOL isTrickyWindow(char *className)
  */
 static BOOL checkIfSavedSticky(char *className)
 {
-    int i;
-    for(i = 0; i < curSticky; ++i) {
-        if (!strcmp(stickyList[i].winClassName, className)) {
+    int i=curSticky ;
+    while(--i >= 0)
+    {
+        vwLogPrint((vwLog, "Sticky comparing [%s] with %d [%s]\n",className,stickyList[i].winClassLen,stickyList[i].winClassName)) ;
+        if(!strncmp(stickyList[i].winClassName, className, stickyList[i].winClassLen))
             // Typically user windows will loose their stickiness if
             // minimized, therefore we do not remove their name from 
             // the list as done above.
             return TRUE;
-        }
     }
     return FALSE;
 }
@@ -732,12 +746,13 @@ static int checkIfAssignedDesktop(char *className)
     int i;
     for(i = 0; i < curAssigned; ++i) 
     {
-        if (!strcmp(assignedList[i].winClassName, className))
+        vwLogPrint((vwLog, "Assign comparing [%s] with %d [%s]\n",className,assignedList[i].winClassLen,assignedList[i].winClassName)) ;
+        
+        if((assignedList[i].winClassLen > 0) &&
+           !strncmp(assignedList[i].winClassName, className, assignedList[i].winClassLen))
         {
-            if(assignOnlyFirst) {
-                free(assignedList[i].winClassName);
-                assignedList[i].winClassName = "\n"; // Remove this from list, it is used
-            }
+            if(assignOnlyFirst)
+                assignedList[i].winClassLen = 0 ;
             if(assignedList[i].desktop > (nDesksX * nDesksY))
                 MessageBox(hWnd, "Tried to assign an application to an unavaliable desktop.\nIt will not be assigned.\nCheck desktop assignmet configuration.", "VirtuaWin", 0); 
             else
@@ -748,39 +763,185 @@ static int checkIfAssignedDesktop(char *className)
 }
 
 /*************************************************
+ * Forces a window into the foreground. Must be done in this way to avoid
+ * the flashing in the taskbar insted of actually changing active window.
+ */
+#define vwSETFOREWIN_FORCE   0x01
+#define vwSETFOREWIN_MAKETOP 0x02
+static void setForegroundWin(HWND theWin, int flags)
+{
+    HWND cwHwnd ;
+    int index ;
+    
+    /* must first find the window in the winList and only proceed if found
+     * and flagged as visible, if we make a hidden window current things go wrong */
+    if((((index = winListFind(theWin)) >= 0) && winList[index].Visible) || (flags & vwSETFOREWIN_FORCE))
+    {
+        /* do not bother making it the foreground if it already is */
+        if((cwHwnd = GetForegroundWindow()) != theWin)
+        {
+            /* don't use the thread method if the current process is hung */
+            if(SendMessageTimeout(cwHwnd, (int)NULL, 0, 0, SMTO_ABORTIFHUNG | SMTO_BLOCK,100,NULL))
+            {
+                DWORD ThreadID1;
+                DWORD ThreadID2;
+                
+                vwLogPrint((vwLog, "Foreground Window: %x\n",(int) theWin)) ;
+                /* Get the thread responsible for VirtuaWin,
+                   and the thread for the foreground window */
+                ThreadID1 = GetWindowThreadProcessId(cwHwnd, NULL);
+                ThreadID2 = GetWindowThreadProcessId(hWnd, NULL);
+                /* By sharing input state, threads share their concept of
+                   the active window */
+                if(ThreadID1 != ThreadID2)
+                {
+                    AttachThreadInput(ThreadID1, ThreadID2, TRUE);
+                    SetForegroundWindow(hWnd); // Set VirtuaWin active. Don't no why, but it seems to work
+                    AttachThreadInput(ThreadID1, ThreadID2, FALSE);
+                }
+            }
+            SetForegroundWindow(theWin);
+        }
+        /* already bring to the front if requested as swapping desks can muddle the order */
+        if(flags & vwSETFOREWIN_MAKETOP)
+            BringWindowToTop(theWin);
+    }
+}
+
+/************************************************
+ * Moves a window to a given desk
+ */
+static void windowSetDesk(HWND theWin, int theDesk, int move)
+{
+    HWND ownerWin, activeHWnd ;
+    unsigned char show ;
+    BOOL setActive ;
+    int index;
+    
+    setActive = FALSE ;
+    activeHWnd = GetForegroundWindow() ;
+    do {
+        ownerWin = 0 ;
+        index = nWin ;
+        while(--index >= 0)
+        {
+            if(((winList[index].Handle == theWin) || (winList[index].Owner == theWin)) &&
+               (winList[index].Desk != theDesk) && !winList[index].Sticky)
+            {
+                // set the windows zorder on the new desk to be its zorder on the current desk
+                winList[index].ZOrder[theDesk] = winList[index].ZOrder[winList[index].Desk] ;
+                winList[index].Desk = theDesk;
+                if(currentDesk == theDesk)
+                    show = vwVISIBLE_YES ;
+                else if(move)
+                    show = vwVISIBLE_NO ;
+                else
+                    show = vwVISIBLE_YESTEMP ;
+                if(!show && (activeHWnd == winList[index].Handle))
+                    setActive = TRUE ;
+                showHideWindow(&winList[index],0,show) ;
+                if((winList[index].Owner != 0) && (winList[index].Owner != theWin))
+                    ownerWin = winList[index].Owner ;
+            }
+        }
+    } while((theWin = ownerWin) != 0) ;
+    if(setActive)
+    {
+        // we have just assigned the foreground window to a different
+        // desktop, we must find a replacement as leaving this one as the
+        // active foreground window can lead to problems 
+        unsigned long activeZOrder=0 ;
+        activeHWnd = NULL ;
+        index = nWin ;
+        while(--index >= 0)
+        {
+            if((winList[index].Desk == currentDesk) &&
+               ((winList[index].Style & (WS_MINIMIZE|WS_VISIBLE)) == WS_VISIBLE) && 
+               (winList[index].ZOrder[currentDesk] > activeZOrder))
+            {
+                activeHWnd = winList[index].Handle;
+                activeZOrder = winList[index].ZOrder[currentDesk];
+            }
+        }
+        vwLogPrint((vwLog,"Looking for replacement active: %x\n",(int) activeHWnd)) ;
+        if(activeHWnd != NULL)
+            setForegroundWin(activeHWnd,0) ;
+        else
+            setForegroundWin(releaseHnd,vwSETFOREWIN_FORCE) ;
+    }
+}
+
+/************************************************
+ * Sets a windows sticky setting
+ */
+static void windowSetSticky(HWND theWin, int state)
+{
+    unsigned long zorder ;
+    HWND ownerWin ;
+    int index, ii ;
+    
+    do {
+        ownerWin = 0 ;
+        index = nWin ;
+        while(--index >= 0)
+        {
+            if((winList[index].Handle == theWin) || (winList[index].Owner == theWin))
+            {
+                // found
+                if(state < 0) // toggle
+                    winList[index].Sticky ^= TRUE;
+                else
+                    winList[index].Sticky = state ;
+                if(winList[index].Sticky)
+                {
+                    // set its zorder of all desks to its zorder on its current desk
+                    zorder = winList[index].ZOrder[winList[index].Desk] ;
+                    ii = MAXDESK - 1 ;
+                    do
+                        winList[index].ZOrder[ii] = zorder ;
+                    while(--ii >= 0) ;
+                    // if not visible (i.e. was on another desktop) then make it visible
+                    if(!winList[index].Visible)
+                        showHideWindow(&winList[index],0,vwVISIBLE_YES) ;
+                }
+                winList[index].Desk = currentDesk;
+                if((winList[index].Owner != 0) && (winList[index].Owner != theWin))
+                    ownerWin = winList[index].Owner ;
+            }
+        }
+    } while((theWin = ownerWin) != 0) ;
+}
+
+/*************************************************
  * Searches for windows in user list
  */
 static void findUserWindows(void) 
 {
     HWND tmpHnd;
     int i;
-    for (i = 0; i < curUser; ++i) {
-        if(userList[i].isClass) {
+    
+    for(i = 0; i < curUser; ++i)
+    {
+        if(userList[i].isClass)
             tmpHnd = FindWindow(userList[i].winNameClass, NULL);
-            if(!tmpHnd)
-                userList[i].isClass = FALSE;
-        }
-        else {
+        else
             tmpHnd = FindWindow(NULL, userList[i].winNameClass);
-            if(!tmpHnd)
-                userList[i].isClass = TRUE;
-        }
         
-        lockMutex();
-        if((tmpHnd != NULL) && (winListFind(tmpHnd) < 0))
+        if(tmpHnd != NULL)
         {
-            winList[nWin].Handle = tmpHnd;
-            winList[nWin].Desk = currentDesk;
-            winList[nWin].Sticky = checkIfSavedSticky(userList[i].winNameClass);
-#if USE_SHOWWIN
-            winList[nWin].Tricky = FALSE;
-#else
-            winList[nWin].Tricky = TRUE;
-#endif
-            winList[nWin].Visible = TRUE;
-            nWin++;
+            lockMutex();
+            if(winListFind(tmpHnd) < 0)
+            {
+                winList[nWin].Handle = tmpHnd;
+                winList[nWin].Style = GetWindowLong(tmpHnd, GWL_STYLE);
+                winList[nWin].ExStyle = GetWindowLong(tmpHnd, GWL_EXSTYLE);
+                winList[nWin].Deleted = FALSE ;
+                nWin++;
+            }
+            releaseMutex();
         }
-        releaseMutex();
+        else
+            userList[i].isClass ^= TRUE;
     }
 }
 
@@ -798,8 +959,6 @@ static inline BOOL CALLBACK enumWindowsProc(HWND hwnd, LPARAM lParam)
     exstyle = GetWindowLong(hwnd, GWL_EXSTYLE) ;
     if((idx=winListFind(hwnd)) < 0)
     {
-        char buf[vwCLASSNAME_MAX+1];
-    
         /* Criterias for a window to be handeled by VirtuaWin */
         if(!(style & WS_VISIBLE) ||                                       // Must be visible
            (exstyle & WS_EX_TOOLWINDOW) ||                                // No toolwindows
@@ -812,79 +971,48 @@ static inline BOOL CALLBACK enumWindowsProc(HWND hwnd, LPARAM lParam)
             MessageBox(hWnd, "Oops! Maximum windows reached. \nVirtuaWin has been disabled. \nMail VirtuaWin@home.se and tell me this.", "VirtuaWin", MB_ICONWARNING);
             return FALSE;
         }
-        // Store the owner if there is one, but only if the owner is visible
-        if(((winList[nWin].Owner = GetWindow(hwnd, GW_OWNER)) != NULL) &&
-           !IsWindowVisible(winList[nWin].Owner))
-            winList[nWin].Owner = NULL ;
-        
-        GetClassName(hwnd,buf,vwCLASSNAME_MAX);
-        buf[vwCLASSNAME_MAX] = '\0' ;
-        GetWindowRect(hwnd,&pos) ;
-        if(!trickyWindows)
-            winList[nWin].Tricky = FALSE ;
-        else if((pos.left == -32000) || (pos.top == -32000))
-            // some apps hide the window by pushing it to -32000, the windows
-            // cannot be moved from here VirtualWin handles these by making them
-            // Tricky (not hiding them) so crash recovery will still find them.
-            winList[nWin].Tricky = TRUE ;
-        else
-            winList[nWin].Tricky = isTrickyWindow(buf);
-        winList[nWin].Handle = hwnd;
-        winList[nWin].Visible = TRUE;
-        winList[nWin].Sticky = checkIfSavedSticky(buf);
-        if(!winList[nWin].Sticky && useDeskAssignment) 
-        {
-            winList[nWin].Desk = checkIfAssignedDesktop(buf);
-            if(winList[nWin].Desk != currentDesk)
-                showHideWindow(&winList[nWin],0,FALSE);
-        }
-        else 
-            winList[nWin].Desk = currentDesk;
         idx = nWin++;
-        vwLogPrint((vwLog,"Got new window %8x %x %x %d %d %d %d %d %x\n",(int) winList[idx].Handle,
-                    (int)style,(int)exstyle,winList[idx].Desk,winList[idx].Active,winList[idx].Sticky,winList[idx].Tricky,
-                    winList[idx].Visible,(int) winList[idx].Owner)) ;
+        winList[idx].Handle = hwnd;
+        winList[idx].Style = style;
+        winList[idx].ExStyle = exstyle;
     }
-    else if((winList[idx].Visible == 0) ^ ((style & WS_VISIBLE) == 0))
+    else if(winList[idx].Visible)
     {
-        if(winList[idx].Visible)
+        if(!(style & WS_VISIBLE))
             /* this window has been hidden by some else - stop handling it (return now so Delete remains TRUE)
              * Note if the list knows its not visible it is probably a hung process so keep it. */
             return TRUE ;
-        if(!winList[idx].Tricky)
-        {
-            GetWindowRect(hwnd,&pos) ;
-            vwLogPrint((vwLog,"Got window state change: %x %d (%d) (%d %d) %d -> %d\n",
-                        (int) winList[idx].Handle,winList[idx].Desk,currentDesk,(int)pos.left,(int)pos.top,
-                        winList[idx].Visible,IsWindowVisible(winList[idx].Handle))) ;
-            /* Something has pulled this window onto the current desktop, update the list entry,
-             * also check the location as the window may have only made it visible */
-            winList[idx].Desk = currentDesk ;
-            winList[idx].Visible = TRUE ;
-            if((pos.left <= -10000) && (pos.top <= -10000) &&
-               (pos.left >= -22000) && (pos.top >= -22000))
-            {
-                // Bring back to visible area
-                pos.left += 20000 ;
-                pos.top += 20000 ;
-                if(pos.left < screenLeft)
-                    pos.left = screenLeft + 10 ;
-                else if(pos.left > screenRight)
-                    pos.left = screenLeft + 10 ;
-                if(pos.top < screenTop)
-                pos.top = screenTop + 10 ;
-                else if(pos.top > screenBottom)
-                    pos.top = screenTop + 10 ;
-                SetWindowPos(hwnd, 0, pos.left, pos.top, 0, 0,
-                             SWP_FRAMECHANGED | SWP_NOZORDER | SWP_NOSIZE | SWP_NOACTIVATE ); 
-            }
-        }
-    }
-    if(winList[idx].Visible)
-    {
         /* if visible store the latest style flags */
         winList[idx].Style = style;
         winList[idx].ExStyle = exstyle;
+    }
+    else if(winList[idx].Tricky)
+    {
+        GetWindowRect(hwnd,&pos) ;
+        if((pos.left > -10000) || (pos.top > -10000))
+        {
+            /* Something has moved this window back into a visible area (or
+             * at least outside VirtuaWins domain) so make it belong to this
+             * desktop, update the list entry, also check the location as the
+             * app may have only made the window visible */
+            vwLogPrint((vwLog,"Got tricky window state change: %x %d (%d) %d -> %d %d\n",
+                        (int) winList[idx].Handle,winList[idx].Desk,currentDesk,
+                        winList[idx].Visible,(int)pos.left,(int)pos.top)) ;
+            if(hiddenWindowPopup)
+                winList[idx].Desk = currentDesk ;
+            showHideWindow(&winList[idx],0,(hiddenWindowPopup) ? vwVISIBLE_YES:vwVISIBLE_YESTEMP);
+        }
+    }
+    else if(style & WS_VISIBLE)
+    {
+        /* Something has made this window visible so make it belong to this desktop, update the list entry,
+         * also check the location as the app may have only made the window visible */
+        vwLogPrint((vwLog,"Got window state change: %x %d (%d) %d -> %d\n",
+                    (int) winList[idx].Handle,winList[idx].Desk,currentDesk,
+                    winList[idx].Visible,IsWindowVisible(winList[idx].Handle))) ;
+        if(hiddenWindowPopup)
+            winList[idx].Desk = currentDesk ;
+        showHideWindow(&winList[idx],0,(hiddenWindowPopup) ? vwVISIBLE_YES:vwVISIBLE_YESTEMP);
     }
     winList[idx].Deleted = FALSE ;
     return TRUE;
@@ -894,6 +1022,8 @@ static inline BOOL CALLBACK enumWindowsProc(HWND hwnd, LPARAM lParam)
 static int winListUpdate(void)
 {
     HWND activeHWnd ;
+    RECT pos ;
+    char buf[vwCLASSNAME_MAX+1];
     int i, j, hungCount=0 ;
     
     /* We now own the mutex. */
@@ -905,25 +1035,61 @@ static int winListUpdate(void)
     if(curUser)
         findUserWindows();
     
+    // finish the initialisation of new windows
+    for(; i < nWin; ++i)
+    {
+        // Store the owner if there is one, but only if the owner is visible
+        if(((winList[i].Owner = GetWindow(winList[i].Handle, GW_OWNER)) != NULL) &&
+           !IsWindowVisible(winList[i].Owner))
+            winList[i].Owner = NULL ;
+        GetClassName(winList[i].Handle,buf,vwCLASSNAME_MAX);
+        buf[vwCLASSNAME_MAX] = '\0' ;
+        GetWindowRect(winList[i].Handle,&pos) ;
+        winList[i].Tricky = isTrickyWindow(buf,&pos) ;
+        winList[i].Visible = TRUE;
+        winList[i].Desk = currentDesk;
+        winList[i].ZOrder[currentDesk] = 1;
+        winList[i].menuId = 0 ;
+        if((winList[i].Sticky=checkIfSavedSticky(buf)))
+            windowSetSticky(winList[i].Handle,TRUE) ;
+        else if(useDeskAssignment &&
+                ((j = checkIfAssignedDesktop(buf)) != currentDesk))
+            windowSetDesk(winList[i].Handle,j,assignImmediately) ;
+        vwLogPrint((vwLog,"Got new window %8x %x %x %d %d %d %d %x\n",(int) winList[i].Handle,
+                    (int)winList[i].Style,(int)winList[i].ExStyle,winList[i].Desk,winList[i].Sticky,winList[i].Tricky,
+                    winList[i].Visible,(int) winList[i].Owner)) ;
+    }
+          
     // Clean up the window list
     vwZOrder++ ;
     activeHWnd = GetForegroundWindow() ;
-    for(i = 0, j=0 ; i < nWin; ++i)
+    for(i=0, j=0 ; i < nWin; ++i)
     {
         if(!winList[i].Deleted)
         {
             if(i != j)
                 winList[j] = winList[i] ;
             if(winList[j].Handle == activeHWnd)
+            {
                 winList[j].ZOrder[currentDesk] = vwZOrder ;
-            if(!winList[j].Sticky && ((winList[j].Desk == currentDesk) ^ (winList[j].Visible != 0)))
+                // if this is only a temporary display increase its zorder in its main desk
+                if(winList[j].Desk != currentDesk)
+                    winList[j].ZOrder[winList[j].Desk] = vwZOrder ;
+            }
+            if(!winList[j].Visible)
+            {
+                if(winList[j].Sticky || (winList[j].Desk == currentDesk))
+                    hungCount++ ;
+            }
+            else if(((winList[j].Visible & vwVISIBLE_TEMP) == 0) &&
+                    !winList[j].Sticky && (winList[j].Desk != currentDesk))
                 hungCount++ ;
             j++ ;
         }
         else
         {
-            vwLogPrint((vwLog,"Lost window %8x %d %d %d %d %d %x\n",(int) winList[i].Handle,
-                        winList[i].Desk,winList[i].Active,winList[i].Sticky,winList[i].Tricky,
+            vwLogPrint((vwLog,"Lost window %8x %d %d %d %d %x\n",(int) winList[i].Handle,
+                        winList[i].Desk,winList[i].Sticky,winList[i].Tricky,
                         winList[i].Visible,(int) winList[i].Owner)) ;
         }
     }
@@ -946,7 +1112,7 @@ static void showAll(int shwFlags)
         if((winList[x].Desk < vwDESK_PRIVATE1) || (shwFlags & vwSHWIN_TRYHARD))
         {
             winList[x].Desk = currentDesk ;
-            showHideWindow(&winList[x],shwFlags,TRUE);
+            showHideWindow(&winList[x],shwFlags,vwVISIBLE_YES);
         }
     }
     releaseMutex();
@@ -974,47 +1140,8 @@ static void shutDown(void)
     showAll(0);                            // gather all windows quickly
     Shell_NotifyIcon(NIM_DELETE, &nIconD); // This removes the icon
     clearLock();                           // Remove the lock file, don't bother if this fails
-    showAll(vwSHWIN_TRYHARD);              // try harder to gather remaining ones before exiting
+    showAll(vwSHWIN_TRYHARD);            // try harder to gather remaining ones before exiting
     PostQuitMessage(0);
-}
-
-/*************************************************
- * Forces a window into the foreground. Must be done in this way to avoid
- * the flashing in the taskbar insted of actually changing active window.
- */
-static void forceForeground(HWND theWin)
-{
-    HWND cwHwnd ;
-    int index ;
-    
-    /* must first find the window in the winList and only proceed if found
-     * and flagged as visible, if we make a hidden window current things go
-     * wrong, also nothing to do if already in foreground */
-    if(((index = winListFind(theWin)) >= 0) && winList[index].Visible &&
-       ((cwHwnd = GetForegroundWindow()) != theWin))
-    {
-        /* don't use the thread method if the current process is hung */
-        if(SendMessageTimeout(cwHwnd, (int)NULL, 0, 0, SMTO_ABORTIFHUNG | SMTO_BLOCK,100,NULL))
-        {
-            DWORD ThreadID1;
-            DWORD ThreadID2;
-        
-            vwLogPrint((vwLog, "Foreground Window: %x\n",(int) theWin)) ;
-            /* Get the thread responsible for VirtuaWin,
-               and the thread for the foreground window */
-            ThreadID1 = GetWindowThreadProcessId(cwHwnd, NULL);
-            ThreadID2 = GetWindowThreadProcessId(hWnd, NULL);
-            /* By sharing input state, threads share their concept of
-               the active window */
-            if(ThreadID1 != ThreadID2)
-            {
-                AttachThreadInput(ThreadID1, ThreadID2, TRUE);
-                SetForegroundWindow(hWnd); // Set VirtuaWin active. Don't no why, but it seems to work
-                AttachThreadInput(ThreadID1, ThreadID2, FALSE);
-            }
-        }
-        SetForegroundWindow(theWin);
-    }
 }
 
 /*************************************************
@@ -1080,7 +1207,7 @@ static int changeDesk(int newDesk, WPARAM msgWParam)
         {
             // Show these windows
             if(!winList[x].Visible)
-                showHideWindow(&winList[x],0,TRUE) ;
+                showHideWindow(&winList[x],0,vwVISIBLE_YES) ;
             if(((winList[x].Style & (WS_MINIMIZE|WS_VISIBLE)) == WS_VISIBLE) && 
                (winList[x].ZOrder[currentDesk] > activeZOrder))
             {
@@ -1090,15 +1217,15 @@ static int changeDesk(int newDesk, WPARAM msgWParam)
         }
         else if(winList[x].Visible)
             // Hide these, not iconic or "Switch minimized" enabled
-            showHideWindow(&winList[x],0,FALSE) ;
+            showHideWindow(&winList[x],0,vwVISIBLE_NO) ;
     }
     if(releaseFocus)     // Release focus maybe?
         activeHWnd = NULL ;
-    vwLogPrint((vwLog, "Active found: %x (%d,%d,%d)",(int) activeHWnd,(int)activeZOrder,releaseFocus)) ;
+    vwLogPrint((vwLog, "Active found: %x (%d,%d)\n",(int) activeHWnd,(int)activeZOrder,releaseFocus)) ;
     if(activeHWnd != NULL)
-        forceForeground(activeHWnd) ;
+        setForegroundWin(activeHWnd,vwSETFOREWIN_MAKETOP) ;
     else
-        SetForegroundWindow(releaseHnd);
+        setForegroundWin(releaseHnd,vwSETFOREWIN_FORCE) ;
     releaseMutex();
     
     setIcon(currentDesk) ;
@@ -1111,9 +1238,9 @@ static int changeDesk(int newDesk, WPARAM msgWParam)
         SYSTEMTIME stime;
     
         GetLocalTime (&stime);
-        vwLogPrint((vwLog, "[%04d-%02d-%02d %02d:%02d:%02d] Step Desk End\n",
+        vwLogPrint((vwLog, "[%04d-%02d-%02d %02d:%02d:%02d] Step Desk End (%x)\n",
                     stime.wYear, stime.wMonth, stime.wDay, stime.wHour,
-                    stime.wMinute, stime.wSecond)) ;
+                    stime.wMinute, stime.wSecond,(int)GetForegroundWindow())) ;
     }
 #endif
     return currentDesk ;
@@ -1136,7 +1263,7 @@ int gotoDesk(int theDesk, BOOL force)
 static int stepDelta(int delta)
 {
     int newDesk ;
-    if(currentDeskY >= vwDESK_PRIVATE1)
+    if(currentDesk >= vwDESK_PRIVATE1)
         /* on a private desktop - go to first if delta is +ve, last otherwise */
         newDesk = (delta < 0) ? (nDesksX * nDesksY):1 ;
     else if((newDesk=currentDesk+delta) < 1)
@@ -1162,7 +1289,7 @@ static int stepRight(void)
 {
     int deskX, deskY=currentDeskY ;
     
-    if(currentDeskY >= vwDESK_PRIVATE1) {
+    if(currentDesk >= vwDESK_PRIVATE1) {
         /* on a private desktop - go to first */
         deskX = 1;
         deskY = 1;
@@ -1182,7 +1309,7 @@ static int stepLeft(void)
 {
     int deskX, deskY=currentDeskY ;
     
-    if(currentDeskY >= vwDESK_PRIVATE1) {
+    if(currentDesk >= vwDESK_PRIVATE1) {
         /* on a private desktop - go to last */
         deskX = nDesksX;
         deskY = nDesksY;
@@ -1202,7 +1329,7 @@ static int stepDown(void)
 {
     int deskX=currentDeskX, deskY ;
     
-    if(currentDeskY >= vwDESK_PRIVATE1) {
+    if(currentDesk >= vwDESK_PRIVATE1) {
         /* on a private desktop - go to first */
         deskX = 1;
         deskY = 1;
@@ -1222,7 +1349,7 @@ static int stepUp(void)
 {
     int deskX=currentDeskX, deskY ;
     
-    if(currentDeskY >= vwDESK_PRIVATE1) {
+    if(currentDesk >= vwDESK_PRIVATE1) {
         /* on a private desktop - go to last */
         deskX = nDesksX;
         deskY = nDesksY;
@@ -1488,7 +1615,7 @@ static inline BOOL CALLBACK recoverWindowsEnumProc(HWND hwnd, LPARAM lParam)
     int style = GetWindowLong(hwnd, GWL_STYLE);
     int exstyle = GetWindowLong(hwnd, GWL_EXSTYLE);
     char buf[vwCLASSNAME_MAX+1];
-    BOOL Tricky;
+    unsigned char Tricky;
     RECT pos;
     
     /* any window that VirtuaWin may have lost would be a managed window
@@ -1499,7 +1626,7 @@ static inline BOOL CALLBACK recoverWindowsEnumProc(HWND hwnd, LPARAM lParam)
     if((style & WS_CHILD) ||                                                   // No child windows
        (((style & WS_VISIBLE) == 0) ^ ((exstyle & WS_EX_TOOLWINDOW) == 0)) ||  // Must be (not visible) xor (a toolwindow)
        (((pos.left > -10000) || (pos.top > -10000) ||                          // Not a hidden position
-         (pos.left < -22000) || (pos.top < -22000)) &&
+         (pos.left < -30000) || (pos.top < -30000)) &&
         (((style & WS_VISIBLE) == 0) || (pos.left != -32000) || (pos.top != -32000))) ||
        ((GetParent(hwnd) != NULL) && (GetParent(hwnd) != releaseHnd)))         // Only toplevel or owned by desktop
     {
@@ -1512,20 +1639,10 @@ static inline BOOL CALLBACK recoverWindowsEnumProc(HWND hwnd, LPARAM lParam)
         return TRUE;
     }
     
-    if(!trickyWindows)
-        Tricky = FALSE;
-    else if(pos.left == -32000)
-        Tricky = TRUE;
-    else
-    {
-#if USE_SHOWWIN
-        GetClassName(hwnd,buf,vwCLASSNAME_MAX);
-        buf[vwCLASSNAME_MAX] = '\0' ;
-        Tricky = isTrickyWindow(buf) ;
-#else
-        Tricky = TRUE;
-#endif
-    }
+    GetClassName(hwnd,buf,vwCLASSNAME_MAX);
+    buf[vwCLASSNAME_MAX] = '\0' ;
+    Tricky = isTrickyWindow(buf,&pos) ;
+    
     // tricky windows are changed to toolwindows, non-tricky are hidden, ignore others
     if(((exstyle & WS_EX_TOOLWINDOW) == 0) ^ (Tricky == 0))
     {
@@ -1605,8 +1722,18 @@ static VOID CALLBACK monitorTimerProc(HWND hwnd, UINT uMsg, UINT idEvent, DWORD 
             }
             index = nWin ;
             while(--index >= 0)
-                if(!winList[index].Sticky && ((winList[index].Desk == currentDesk) ^ (winList[index].Visible != 0)))
-                    showHideWindow(&winList[index],0,(winList[index].Visible == FALSE)) ;
+            {
+                if(!winList[index].Visible)
+                {
+                   if(winList[index].Sticky || (winList[index].Desk == currentDesk))
+                       showHideWindow(&winList[index],0,vwVISIBLE_YES) ;
+                }
+                else if(!(winList[index].Visible & vwVISIBLE_TEMP))
+                {
+                   if(!winList[index].Sticky && (winList[index].Desk != currentDesk))
+                       showHideWindow(&winList[index],0,vwVISIBLE_NO) ;
+                }
+            }
         }
         else if((((mtCount-1) & index) == 0) && displayTaskbarIcon)
         {
@@ -1636,34 +1763,36 @@ static VOID CALLBACK monitorTimerProc(HWND hwnd, UINT uMsg, UINT idEvent, DWORD 
  * This function decides what switching technique that should be used
  * and calls the appropriate switching function
  */
-BOOL showHideWindow(windowType* aWindow, int shwFlags, BOOL show)
+BOOL showHideWindow(windowType* aWindow, int shwFlags, unsigned char show)
 {
     // Do nothing if we are dragging a window or the show hide state is right
     if((show != 0) ^ (aWindow->Visible != 0))
     {
+        unsigned char Tricky;
         RECT pos;
         UINT swpFlags ;
-        if(!SendMessageTimeout(aWindow->Handle, (int)NULL, 0, 0, SMTO_ABORTIFHUNG | SMTO_BLOCK, (shwFlags & vwSHWIN_TRYHARD) ? 10000:100, NULL))
+        if(!SendMessageTimeout(aWindow->Handle, (int)NULL, 0, 0, SMTO_ABORTIFHUNG | SMTO_BLOCK,(shwFlags & vwSHWIN_TRYHARD) ? 10000:100, NULL))
         {
-            vwLogPrint((vwLog,"showHideWindow %8x %d %d %x %x %d %d %d %d - HUNG\n",(int) aWindow->Handle,shwFlags,show,(int)aWindow->Style,(int)aWindow->ExStyle,aWindow->Visible,aWindow->Active,aWindow->Desk,currentDesk)) ;
+            vwLogPrint((vwLog,"showHideWindow %8x %d %d %x %x %d %d %d - HUNG\n",(int) aWindow->Handle,shwFlags,show,(int)aWindow->Style,(int)aWindow->ExStyle,aWindow->Visible,aWindow->Desk,currentDesk)) ;
             return FALSE ;
         }
         GetWindowRect( aWindow->Handle, &pos );
-        vwLogPrint((vwLog,"showHideWindow %8x %d %d %x %x %d %d %d %d - %d %d\n",(int) aWindow->Handle,shwFlags,show,(int)aWindow->Style,(int)aWindow->ExStyle,aWindow->Visible,aWindow->Active,aWindow->Desk,currentDesk,(int) pos.left,(int) pos.top)) ;
-        // some apps hide the window by pushing it to -32000, the windows
-        // cannot be moved from here VirtualWin handles these by making them
-        // Tricky (not hiding them) so crash recovery will still find them. 
-        if((pos.left == -32000) && (pos.top == -32000))
-            aWindow->Tricky = TRUE ;
-        
-        swpFlags = SWP_FRAMECHANGED | SWP_DEFERERASE | SWP_NOZORDER | SWP_NOSIZE | SWP_NOACTIVATE | SWP_NOSENDCHANGING ;
-        if(!aWindow->Tricky)
+        vwLogPrint((vwLog,"showHideWindow %8x %d %d %x %x %d %d %d - %d %d\n",(int) aWindow->Handle,shwFlags,show,(int)aWindow->Style,(int)aWindow->ExStyle,aWindow->Visible,aWindow->Desk,currentDesk,(int) pos.left,(int) pos.top)) ;
+        Tricky = aWindow->Tricky ;
+        if(trickyWindows && (Tricky != vwTRICKY_WINDOW))
+        {
+            aWindow->Tricky = ((pos.left == -32000) && (pos.top == -32000)) ? vwTRICKY_POSITION:0 ;
+            // must still make the window visible in the same way it was hidden
+            if(!show)
+                Tricky = aWindow->Tricky ;
+        }
+        swpFlags = SWP_DEFERERASE | SWP_NOZORDER | SWP_NOSIZE | SWP_NOACTIVATE | SWP_NOSENDCHANGING ;
+        if(!Tricky)
         {
             ShowWindow(aWindow->Handle,(show) ? SW_SHOWNA:SW_HIDE) ;
             /* if minimized dont show popups */
             if(!(aWindow->Style & WS_MINIMIZE))
                 ShowOwnedPopups(aWindow->Handle,show) ;
-            swpFlags ^= SWP_FRAMECHANGED ;
         }
         else if(aWindow->Owner == NULL)
         {
@@ -1683,23 +1812,26 @@ BOOL showHideWindow(windowType* aWindow, int shwFlags, BOOL show)
                 // Notify taskbar of the change
                 PostMessage(hwndTask, RM_Shellhook, HSHELL_WINDOWDESTROYED, (LPARAM) aWindow->Handle);
             }
+            swpFlags |= SWP_FRAMECHANGED ;
         }
-        if((pos.left != -32000) || (pos.top != -32000))
-        {
-            if(show)
-            {   // Move window to visible area
-                pos.left += 20000 ;
-                pos.top += 20000 ;
-            }
-            else
-            {   // Move the window off visible area
-                pos.left -= 20000 ;
-                pos.top -= 20000 ;
-            }
-            SetWindowPos( aWindow->Handle, 0, pos.left, pos.top, 0, 0, swpFlags); 
+        if(!show && (pos.left > -10000) && (pos.top > -10000))
+        {   // Move the window off visible area
+            pos.left -= 20000 ;
+            pos.top -= 20000 ;
+            SetWindowPos(aWindow->Handle, 0, pos.left, pos.top, 0, 0, swpFlags); 
         }
-        aWindow->Visible = show;
+        else if(show &&
+            (pos.left <= -10000) && (pos.top <= -10000) &&
+            (pos.left >= -30000) && (pos.top >= -30000))
+        {   // Move the window back onto visible area
+            pos.left += 20000 ;
+            pos.top += 20000 ;
+            SetWindowPos(aWindow->Handle, 0, pos.left, pos.top, 0, 0, swpFlags); 
+        }
+        else if(swpFlags & SWP_FRAMECHANGED)
+            SetWindowPos(aWindow->Handle, 0, pos.left, pos.top, 0, 0, swpFlags|SWP_NOMOVE); 
     }
+    aWindow->Visible = show;
     return TRUE ;
 }
 
@@ -1751,9 +1883,6 @@ static void disableAll(HWND aHWnd)
  */
 void assignWindow(HWND theWin, int theDesk, BOOL force)
 {
-    HWND ownerWin ;
-    int index;
-    
     vwLogPrint((vwLog,"Assign window: %x %d %d\n",(int) theWin,theDesk,force)) ;
     if((theWin == NULL) ||
        (((theDesk > (nDesksY * nDesksX)) || (theDesk < 1)) && !force))
@@ -1761,21 +1890,7 @@ void assignWindow(HWND theWin, int theDesk, BOOL force)
     
     lockMutex();
     winListUpdate() ;
-    do {
-        ownerWin = 0 ;
-        index = nWin ;
-        while(--index >= 0)
-        {
-            if(((winList[index].Handle == theWin) || (winList[index].Owner == theWin)) &&
-               (winList[index].Desk != theDesk) && !winList[index].Sticky)
-            {
-                winList[index].Desk = theDesk;
-                showHideWindow(&winList[index],0,(currentDesk == theDesk)) ;
-                if((winList[index].Owner != 0) && (winList[index].Owner != theWin))
-                    ownerWin = winList[index].Owner ;
-            }
-        }
-    } while((theWin = ownerWin) != 0) ;
+    windowSetDesk(theWin,theDesk,1) ;
     releaseMutex();
 }
 
@@ -1785,35 +1900,13 @@ void assignWindow(HWND theWin, int theDesk, BOOL force)
  */
 static void setSticky(HWND theWin, int state)
 {
-    HWND ownerWin ;
-    int index;
-    
     vwLogPrint((vwLog,"Set sticky window: %x %d\n",(int) theWin,state)) ;
     if(theWin == NULL)
         return ;
     
     lockMutex();
     winListUpdate() ;
-    do {
-        ownerWin = 0 ;
-        index = nWin ;
-        while(--index >= 0)
-        {
-            if((winList[index].Handle == theWin) || (winList[index].Owner == theWin))
-            {
-                // found
-                if(state < 0) // toggle
-                    winList[index].Sticky ^= TRUE;
-                else
-                    winList[index].Sticky = state ;
-                if(winList[index].Sticky && !winList[index].Visible)
-                    showHideWindow(&winList[index],0,TRUE) ;
-                winList[index].Desk = currentDesk;
-                if((winList[index].Owner != 0) && (winList[index].Owner != theWin))
-                    ownerWin = winList[index].Owner ;
-            }
-        }
-    } while((theWin = ownerWin) != 0) ;
+    windowSetSticky(theWin,state) ;
     releaseMutex();
 }
 
@@ -1852,12 +1945,12 @@ static void winListPopupMenu(HWND aHWnd)
             else if(retItem & vwPMENU_ACCESS)
             {   // window access
                 gotoDesk(winList[ii].Desk,FALSE);
-                forceForeground(hwnd);
+                setForegroundWin(hwnd,0);
             } 
             else
             {   // Assign to this desktop
                 assignWindow(hwnd,currentDesk,TRUE) ;
-                forceForeground(hwnd) ;
+                setForegroundWin(hwnd,0) ;
             }
         }
     }
@@ -2106,7 +2199,7 @@ skipMouseWarp:  // goto label for skipping mouse stuff
             {
                 /* found the window, if visible bring to the front otherwise set the zorder */
                 if((lParam == 0) || (lParam == currentDesk))
-                    forceForeground((HWND)wParam);
+                    setForegroundWin((HWND)wParam,0);
                 else
                     winList[index].ZOrder[lParam] = vwZOrder ;
             }
@@ -2242,6 +2335,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     MSG msg;
     WNDCLASSEX wc;
     DWORD threadID;
+    BOOL awStore;
     char *classname = "VirtuaWinMainClass";
     hInst = hInstance;
     
@@ -2337,9 +2431,13 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     curAssigned = loadAssignedList(assignedList);
     curUser     = loadUserList(userList);  // load any user defined windows
     
+    /* always move windows immediately on startup */
+    awStore = assignImmediately ;
+    assignImmediately = TRUE ;
     lockMutex();
     winListUpdate() ;
     releaseMutex();
+    assignImmediately = awStore ;
     
     /* Load user modules */
     curDisabledMod = loadDisabledModules(disabledModules);

@@ -153,8 +153,8 @@ __inline BOOL CALLBACK enumWindowsProc(HWND hwnd, LPARAM lParam)
         
         // Add window to the windowlist
         // If at the hidden position then flag as likely lost
-        if((rect.left <= -10000) || (rect.top <= -10000) ||
-           (rect.left >= -22000) || (rect.top >= -22000))
+        if((rect.left <= -10000) && (rect.top <= -10000) &&
+           (rect.left >= -30000) && (rect.top >= -30000))
             *ss++ = '*' ;
         else if(style & WS_VISIBLE)
             *ss++ = ' ' ;

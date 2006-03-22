@@ -37,13 +37,22 @@ typedef struct _MenuItems
 } MenuItem;
 
 typedef struct { // Holds user added windows
-    char* winNameClass;
-    BOOL isClass;
+    char *winNameClass;
+    BOOL  isClass;
 } userType;
 
 typedef struct { // Holds saved sticky and tricky windows
-    char* winClassName;
+    char *winClassName;
+    int   winClassLen;
 } stickyType;
+
+#define vwTRICKY_POSITION 1
+#define vwTRICKY_WINDOW   2
+
+#define vwVISIBLE_NO      0
+#define vwVISIBLE_YES     1
+#define vwVISIBLE_TEMP    2
+#define vwVISIBLE_YESTEMP 3
 
 typedef struct { // Holds the windows in the list
     HWND           Handle;
@@ -53,7 +62,6 @@ typedef struct { // Holds the windows in the list
     unsigned long  ZOrder[MAXDESK] ;
     unsigned short Desk;
     unsigned short menuId ;
-    unsigned char  Active;
     unsigned char  Sticky;
     unsigned char  Tricky;
     unsigned char  Visible;
@@ -71,8 +79,9 @@ typedef struct { // Holds disabled modules
 } disModules;
 
 typedef struct { // Holds desktop assigned windows
-    char* winClassName;
-    int desktop;
+    char *winClassName;
+    int   winClassLen;
+    int   desktop;
 } assignedType;
 
 userType userList[MAXUSER];               // list for holding user added applications

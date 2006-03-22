@@ -67,10 +67,12 @@ extern short directMenu;        // if direct access window menu should be shown
 extern BOOL useDeskAssignment;  // if we have desktop assignment 
 extern BOOL saveLayoutOnExit;   // save the desktop layout upon exit
 extern BOOL assignOnlyFirst;    // only assign the first window to a saved desktop 
+extern BOOL assignImmediately;  // move an assigned window immediately
 extern BOOL displayTaskbarIcon; // Should we display the systray icon
 extern BOOL noTaskbarCheck;     // Should we skip the taskbar search
 extern BOOL trickyWindows;      // Use the alternate hiding technique
 extern BOOL permanentSticky;    // If a sticky classname should be permanent
+extern BOOL hiddenWindowPopup;  // Move or temp copy a popped up hidden window
 
 extern BOOL cyclingKeysEnabled; // If we are using the cycling hotkeys
 extern UINT hotCycleUp;

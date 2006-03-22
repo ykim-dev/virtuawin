@@ -541,6 +541,8 @@ BOOL APIENTRY misc(HWND hDlg, UINT message, UINT wParam, LONG lParam)
             SendDlgItemMessage(hDlg, IDC_SAVEEXITSTATE, BM_SETCHECK, 1,0);
         if(assignOnlyFirst)
             SendDlgItemMessage(hDlg, IDC_FIRSTONLY, BM_SETCHECK, 1,0);
+        if(assignImmediately)
+            SendDlgItemMessage(hDlg, IDC_ASSIGNWINNOW, BM_SETCHECK, 1,0);
         SendDlgItemMessage(hDlg, IDC_HOTMENUEN, BM_SETCHECK,(hotkeyMenuEn != 0),0);
         SendDlgItemMessage(hDlg, IDC_HOTMENU, HKM_SETHOTKEY, MAKEWORD(hotkeyMenu, hotkeyMenuMod), 0);
         SendDlgItemMessage(hDlg, IDC_HOTMENUW, BM_SETCHECK,(hotkeyMenuWin != 0),0);
@@ -606,6 +608,7 @@ BOOL APIENTRY misc(HWND hDlg, UINT message, UINT wParam, LONG lParam)
                 assignOnlyFirst = TRUE;
             else
                 assignOnlyFirst = FALSE;
+            assignImmediately = (SendDlgItemMessage(hDlg, IDC_ASSIGNWINNOW, BM_GETCHECK, 0, 0) == BST_CHECKED) ;
             if(SendDlgItemMessage(hDlg, IDC_SAVEEXITSTATE, BM_GETCHECK, 0, 0) == BST_CHECKED)
                 saveLayoutOnExit = TRUE;
             else
@@ -656,7 +659,8 @@ BOOL APIENTRY misc(HWND hDlg, UINT message, UINT wParam, LONG lParam)
         if( LOWORD(wParam) == IDC_STICKYSAVE || LOWORD(wParam) == IDC_DISPLAYICON ||
             LOWORD(wParam) == IDC_MENUSTICKY || LOWORD(wParam) == IDC_MENUACCESS ||
             LOWORD(wParam) == IDC_MENUASSIGN || LOWORD(wParam) == IDC_USEASSIGN ||
-            LOWORD(wParam) == IDC_FIRSTONLY  || LOWORD(wParam) == IDC_SAVEEXITSTATE ||
+            LOWORD(wParam) == IDC_FIRSTONLY  || LOWORD(wParam) == IDC_ASSIGNWINNOW ||
+            LOWORD(wParam) == IDC_SAVEEXITSTATE ||
             LOWORD(wParam) == IDC_HOTMENUEN  || LOWORD(wParam) == IDC_HOTMENUW || 
             LOWORD(wParam) == IDC_HOTMENU    || LOWORD(wParam) == IDC_HOTSTICKYEN  ||
             LOWORD(wParam) == IDC_HOTSTICKY  || LOWORD(wParam) == IDC_HOTSTICKYW )
@@ -731,6 +735,8 @@ BOOL APIENTRY expert(HWND hDlg, UINT message, UINT wParam, LONG lParam)
             SendDlgItemMessage(hDlg, IDC_XPSTYLETASKBAR, BM_SETCHECK, 1,0);
         if(permanentSticky)
             SendDlgItemMessage(hDlg, IDC_PERMSTICKY, BM_SETCHECK, 1,0);
+        if(hiddenWindowPopup)
+            SendDlgItemMessage(hDlg, IDC_HWINPOPUP, BM_SETCHECK, 1,0);
         return TRUE;
         
     case WM_NOTIFY:
@@ -783,6 +789,7 @@ BOOL APIENTRY expert(HWND hDlg, UINT message, UINT wParam, LONG lParam)
                 permanentSticky = TRUE;
             else
                 permanentSticky = FALSE;
+            hiddenWindowPopup = (SendDlgItemMessage(hDlg, IDC_HWINPOPUP, BM_GETCHECK, 0, 0) == BST_CHECKED) ;
             if(SendDlgItemMessage(hDlg, IDC_DISPLAYICON, BM_GETCHECK, 0, 0) == BST_CHECKED)
             {
                 displayTaskbarIcon = FALSE;
@@ -809,9 +816,9 @@ BOOL APIENTRY expert(HWND hDlg, UINT message, UINT wParam, LONG lParam)
            LOWORD(wParam) == IDC_DESKCYCLE  || LOWORD(wParam) == IDC_INVERTY ||
            LOWORD(wParam) == IDC_RECOVERY   || LOWORD(wParam) == IDC_DISPLAYICON ||
            LOWORD(wParam) == IDC_TASKBARDETECT || LOWORD(wParam) == IDC_TRICKYSUPPORT ||
-           LOWORD(wParam) == IDC_XPSTYLETASKBAR || LOWORD(wParam) == IDC_PERMSTICKY ) {
+           LOWORD(wParam) == IDC_XPSTYLETASKBAR || LOWORD(wParam) == IDC_PERMSTICKY ||
+           LOWORD(wParam) == IDC_HWINPOPUP)
             SendMessage(GetParent(hDlg), PSM_CHANGED, (WPARAM)hDlg, 0L);
-        }
         if (LOWORD(wParam) == IDC_LASTACTIVE) {
             if(SendDlgItemMessage(hDlg, IDC_LASTACTIVE, BM_GETCHECK, 0, 0) == BST_CHECKED) {
                 SendDlgItemMessage(hDlg, IDC_FOCUS, BM_SETCHECK, 0,0);
