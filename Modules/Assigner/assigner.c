@@ -5,7 +5,7 @@
 //  for moving the current active window to next or previous desktop
 //  
 // 
-//  Copyright (c) 1999, 2000, 2001, 2002, 2003, 2004, 2005 Johan Piculell
+//  Copyright (c) 1999, 2000, 2001, 2002, 2003, 2004 Johan Piculell
 // 
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -27,56 +27,203 @@
 #include <string.h>
 #include <stdio.h>
 #include <commctrl.h>
-#include <shlobj.h>  // for SHGetFolderPath
 
 #include "assignerres.h"
 #include "../../Messages.h"
 
-#define VIRTUAWIN_SUBDIR      "VirtuaWin"
-
+int initialised=0 ;
 HINSTANCE hInst;   // Instance handle
 HWND hwndMain;	   // Main window handle
 HWND vwHandle;     // Handle to VirtuaWin
-ATOM hotKeyUp;
-ATOM hotKeyDown;
+ATOM hotKeyNext;
+ATOM hotKeyPrev;
 UINT HOT_NEXT;
 UINT HOT_NEXT_MOD;
+UINT HOT_NEXT_WIN;
 UINT HOT_PREV;
 UINT HOT_PREV_MOD;
+UINT HOT_PREV_WIN;
+WORD CHANGE_DESKTOP=BST_UNCHECKED;
 LPSTR vwPath;
 LPSTR configFile;
 UINT numberOfDesktops;
 
-/* prototype for the dialog box function. */
-static BOOL CALLBACK DialogFunc(HWND hwndDlg, UINT msg, WPARAM wParam, LPARAM lParam);
 
-/* Main message handler */
-LRESULT CALLBACK MainWndProc(HWND hwnd,UINT msg,WPARAM wParam,LPARAM lParam);
-
-void registerAssignment();
-void unregisterAssignment();
-void getConfigDir();
-void saveSettings();
-void loadSettings();
-WORD hotKey2ModKey(BYTE vModifiers);
-
-/* Initializes the window */ 
-static BOOL InitApplication(void)
+/*************************************************
+ * Translates virtual key codes to "hotkey codes"
+ */
+WORD hotKey2ModKey(BYTE vModifiers)
 {
-   WNDCLASS wc;
+    WORD mod = 0;
+    if (vModifiers & HOTKEYF_ALT)
+        mod |= MOD_ALT;
+    if (vModifiers & HOTKEYF_CONTROL)
+        mod |= MOD_CONTROL;
+    if (vModifiers & HOTKEYF_SHIFT)
+        mod |= MOD_SHIFT;
+    return mod;
+}
 
-   memset(&wc, 0, sizeof(WNDCLASS));
-   wc.style = 0;
-   wc.lpfnWndProc = (WNDPROC)MainWndProc;
-   wc.hInstance = hInst;
-   /* IMPORTANT! The classname must be the same as the filename since VirtuaWin uses 
-      this for locating the window */
-   wc.lpszClassName = "VWAssigner.exe";
-   
-   if (!RegisterClass(&wc))
-      return 0;
-  
-   return 1;
+/*************************************************
+ * Register the assignment hotkey
+ */
+static void registerAssignment(void)
+{
+    if(HOT_NEXT)
+    {
+        hotKeyNext = GlobalAddAtom("AssignmentNext");
+        if(RegisterHotKey(hwndMain, hotKeyNext, hotKey2ModKey(HOT_NEXT_MOD) | HOT_NEXT_WIN, HOT_NEXT) == 0)
+            MessageBox(hwndMain, "Invalid key modifier combination, check hot keys!",
+                       "VWAssigner Error", MB_ICONWARNING);
+    }
+    if(HOT_PREV)
+    {
+        hotKeyPrev = GlobalAddAtom("AssignmentPrev");
+        if(RegisterHotKey(hwndMain, hotKeyPrev, hotKey2ModKey(HOT_PREV_MOD) | HOT_PREV_WIN, HOT_PREV) == 0)
+            MessageBox(hwndMain, "Invalid key modifier combination, check hot keys!", 
+                       "VWAssigner Error", MB_ICONWARNING);
+    }
+}
+
+/*************************************************
+ * Un-register the assignment hotkey
+ */
+static void unregisterAssignment(void)
+{
+    UnregisterHotKey(hwndMain, hotKeyNext);
+    UnregisterHotKey(hwndMain, hotKeyPrev);
+}
+
+//*************************************************
+
+static void loadSettings(void)
+{
+    char dummy[80] ;
+    FILE* fp;
+    
+    if((fp = fopen(configFile, "r")))
+    {
+        fscanf(fp, "%s%i", dummy, &HOT_NEXT_MOD);
+        fscanf(fp, "%s%i", dummy, &HOT_NEXT);
+        fscanf(fp, "%s%i", dummy, &HOT_PREV_MOD);
+        fscanf(fp, "%s%i", dummy, &HOT_PREV);
+        if(fscanf(fp, "%s%i", dummy, &HOT_NEXT_WIN) == 2)
+        {
+            fscanf(fp, "%s%i", dummy, &HOT_PREV_WIN);
+            fscanf(fp, "%s%hd", dummy, &CHANGE_DESKTOP);
+        }
+        fclose(fp);
+    }
+}
+
+//*************************************************
+
+static void saveSettings(void)
+{
+    FILE* fp;
+    if(!(fp = fopen(configFile, "w"))) 
+    {
+        MessageBox(hwndMain, "Error writing config file", "VWAssigner Error", MB_ICONWARNING);
+    } 
+    else 
+    {
+        fprintf(fp, "next_mod# %i\n", HOT_NEXT_MOD);
+        fprintf(fp, "next# %i\n", HOT_NEXT);
+        fprintf(fp, "prev_mod# %i\n", HOT_PREV_MOD);
+        fprintf(fp, "prev# %i\n", HOT_PREV);
+        fprintf(fp, "next_win# %i\n", HOT_NEXT_WIN);
+        fprintf(fp, "prev_win# %i\n", HOT_PREV_WIN);
+        fprintf(fp, "change_desktop# %d\n", CHANGE_DESKTOP);
+        fclose(fp);
+    }
+}
+
+//*************************************************
+// This is the main function for the dialog. 
+
+static BOOL CALLBACK DialogFunc(HWND hwndDlg, UINT msg, WPARAM wParam, LPARAM lParam)
+{
+    WORD wRawHotKey;
+    
+    switch (msg) {
+    case WM_INITDIALOG:
+        unregisterAssignment();
+        SendDlgItemMessage(hwndDlg, IDC_HOTNEXT, HKM_SETHOTKEY, 
+                           MAKEWORD(HOT_NEXT, HOT_NEXT_MOD), 0);
+        SendDlgItemMessage(hwndDlg, IDC_HOTNEXTW, BM_SETCHECK, (HOT_NEXT_WIN != 0),0);
+        SendDlgItemMessage(hwndDlg, IDC_HOTPREV, HKM_SETHOTKEY, 
+                           MAKEWORD(HOT_PREV, HOT_NEXT_MOD), 0);
+        SendDlgItemMessage(hwndDlg, IDC_HOTPREVW, BM_SETCHECK, (HOT_PREV_WIN != 0),0);
+        SendDlgItemMessage(hwndDlg, IDC_CHNGDESK, BM_SETCHECK, CHANGE_DESKTOP, 0 );
+        return TRUE;
+        
+    case WM_COMMAND:
+        switch (LOWORD(wParam)) {
+        case IDOK:
+            wRawHotKey = (WORD)SendDlgItemMessage(hwndDlg, IDC_HOTNEXT, HKM_GETHOTKEY, 0, 0);
+            HOT_NEXT = LOBYTE(wRawHotKey);
+            HOT_NEXT_MOD = HIBYTE(wRawHotKey);
+            if(SendDlgItemMessage(hwndDlg, IDC_HOTNEXTW, BM_GETCHECK, 0, 0) == BST_CHECKED)
+                HOT_NEXT_WIN = MOD_WIN;
+            else
+                HOT_NEXT_WIN = FALSE;
+            
+            wRawHotKey = (WORD)SendDlgItemMessage(hwndDlg, IDC_HOTPREV, HKM_GETHOTKEY, 0, 0);
+            HOT_PREV = LOBYTE(wRawHotKey);
+            HOT_PREV_MOD = HIBYTE(wRawHotKey);
+            if(SendDlgItemMessage(hwndDlg, IDC_HOTPREVW, BM_GETCHECK, 0, 0) == BST_CHECKED)
+                HOT_PREV_WIN = MOD_WIN;
+            else
+                HOT_PREV_WIN = FALSE;
+            
+            CHANGE_DESKTOP = (WORD)SendDlgItemMessage(hwndDlg, IDC_CHNGDESK, BM_GETCHECK, 0, 0);
+            
+            saveSettings();
+            unregisterAssignment();
+            registerAssignment();
+            EndDialog(hwndDlg,0);
+            return 1;
+        case IDCANCEL:
+            registerAssignment();
+            EndDialog(hwndDlg,0);
+            return 1;
+        }
+        break;
+        
+    case WM_CLOSE:
+        EndDialog(hwndDlg,0);
+        return TRUE;
+	
+    }
+    return FALSE;
+}
+
+/* Initializes the app */ 
+static BOOL InitApplication(HWND hwnd, char *userAppPath)
+{
+    char buff[MAX_PATH];
+    
+    InitCommonControls();
+    strcpy(buff,userAppPath) ;
+    strcat(buff,"vwassigner.cfg") ;
+    if((configFile = strdup(buff)) == NULL)
+    {
+        MessageBox(hwnd, "Malloc failure", "VWAssigner Error", MB_ICONWARNING);
+        exit(1) ;
+    }
+    loadSettings();
+    registerAssignment();
+    
+    return 1;
+}
+
+static VOID CALLBACK startupFailureTimerProc(HWND hwnd, UINT uMsg, UINT idEvent, DWORD dwTime)
+{
+    if(!initialised)
+    {
+        MessageBox(hwnd, "VirtuaWin failed to send the UserApp path.", "VWAssigner Error", MB_ICONWARNING);
+        exit(1) ;
+    }
 }
 
 //*************************************************
@@ -84,60 +231,97 @@ static BOOL InitApplication(void)
 LRESULT CALLBACK MainWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     HWND theActive = NULL;
-    int theCurDesk;
+    COPYDATASTRUCT *cds;         
+    int theCurDesk, theNewDesk;
     int deskX, deskY;
-    InitCommonControls();
-    switch (msg) {
-        case WM_HOTKEY:
-            // Get the current desktop
-            theCurDesk = SendMessage(vwHandle, VW_CURDESK, 0, 0);
-            // Get the active window
-            theActive = GetForegroundWindow();
-         
-            if(theActive)
+    
+    switch (msg)
+    {
+    case WM_HOTKEY:
+        // Get the current desktop
+        theCurDesk = SendMessage(vwHandle, VW_CURDESK, 0, 0);
+        // Get the active window
+        theActive = GetForegroundWindow();
+        if(theActive)
+        {
+            if(wParam == hotKeyNext)
+                theNewDesk = theCurDesk+1 ;
+            else if(wParam == hotKeyPrev)
+                theNewDesk = theCurDesk-1 ;
+            else
+                break ;
+            if(theNewDesk <= 0)
+                theNewDesk = numberOfDesktops ;
+            else if(theNewDesk > numberOfDesktops)
+                theNewDesk = 1 ;
+            SendMessage(vwHandle, VW_ASSIGNWIN, (WPARAM)theActive, theNewDesk);
+            /* Always bring to the forground of the destination desk so when
+             * the user moves to this desk it should be on top (config
+             * settings can make this fail). This should ensure that if the
+             * user has CHANGE_DESKTOP enabled they can move the window
+             * multiple times and alway move the right window. */
+            SendMessage(vwHandle, VW_FOREGDWIN, (WPARAM)theActive, theNewDesk);
+            if(CHANGE_DESKTOP == BST_CHECKED)
             {
-                if(wParam == hotKeyUp)
-                {
-                    if(theCurDesk < numberOfDesktops)
-                        PostMessage(vwHandle, VW_ASSIGNWIN, (WPARAM)theActive, theCurDesk + 1);
-                    else
-                        PostMessage(vwHandle, VW_ASSIGNWIN, (WPARAM)theActive, 1);  
-                }
-                else if(wParam == hotKeyDown)
-                {
-                    if((theCurDesk - 1) > 0)
-                        PostMessage(vwHandle, VW_ASSIGNWIN, (WPARAM)theActive, theCurDesk - 1);
-                    else
-                        PostMessage(vwHandle, VW_ASSIGNWIN, (WPARAM)theActive, numberOfDesktops); 
-                }
+                /* move desks and then bring to the front again just to
+                 * ensure its the foreground */
+                SendMessage(vwHandle, VW_CHANGEDESK, theNewDesk, 0);
+                SendMessage(vwHandle, VW_FOREGDWIN, (WPARAM)theActive, 0);
             }
-            break;  
-        case MOD_INIT: // This must be taken care of in order to get the handle to VirtuaWin. 
-            // The handle to VirtuaWin comes in the wParam 
-            vwHandle = (HWND) wParam; // Should be some error handling here if NULL 
-            deskY = SendMessage(vwHandle, VW_DESKY, 0, 0);
-            deskX = SendMessage(vwHandle, VW_DESKX, 0, 0);
-            numberOfDesktops = deskX * deskY;
-            break;
-        case MOD_CFGCHANGE:
-            deskY = SendMessage(vwHandle, VW_DESKY, 0, 0);
-            deskX = SendMessage(vwHandle, VW_DESKX, 0, 0);
-            numberOfDesktops = deskX * deskY;
-            break;
-        case MOD_QUIT: // This must be handeled, otherwise VirtuaWin can't shut down the module 
-            PostQuitMessage(0);
-            break;
-        case MOD_SETUP:
-            DialogBox(hInst, MAKEINTRESOURCE(IDD_MAINDIALOG), vwHandle, (DLGPROC) DialogFunc);
-            break;
-        case WM_DESTROY:
-            unregisterAssignment();
-            PostQuitMessage(0);
-            break;
-        default:
-            return DefWindowProc(hwnd, msg, wParam, lParam);
+        }
+        break;  
+    
+    case WM_COPYDATA:
+        cds = (COPYDATASTRUCT *) lParam ;         
+        if((cds->dwData == (0-VW_USERAPPPATH)) && !initialised)
+        {
+            initialised = 1 ;
+            if((cds->cbData < 2) || (cds->lpData == NULL))
+            {
+                MessageBox(hwnd, "VirtuaWin returned a bad UserApp path.", "VWAssigner Error", MB_ICONWARNING);
+                exit(1) ;
+            }
+            InitApplication(hwnd,(char *) cds->lpData) ;
+        }
+        return TRUE ;
+        
+    case MOD_INIT: // This must be taken care of in order to get the handle to VirtuaWin. 
+        // The handle to VirtuaWin comes in the wParam 
+        vwHandle = (HWND) wParam; // Should be some error handling here if NULL 
+        deskY = SendMessage(vwHandle, VW_DESKY, 0, 0);
+        deskX = SendMessage(vwHandle, VW_DESKX, 0, 0);
+        numberOfDesktops = deskX * deskY;
+        if(!initialised)
+        {
+            // Get the user path - give VirtuaWin 10 seconds to do this
+            SendMessage(vwHandle, VW_USERAPPPATH, 0, 0);
+            SetTimer(hwnd, 0x29a, 10000, startupFailureTimerProc);
+        }
+        break;
+    
+    case MOD_CFGCHANGE:
+        deskY = SendMessage(vwHandle, VW_DESKY, 0, 0);
+        deskX = SendMessage(vwHandle, VW_DESKX, 0, 0);
+        numberOfDesktops = deskX * deskY;
+        break;
+    
+    case MOD_QUIT: // This must be handeled, otherwise VirtuaWin can't shut down the module 
+        PostQuitMessage(0);
+        break;
+    
+    case MOD_SETUP:
+        DialogBox(hInst, MAKEINTRESOURCE(IDD_MAINDIALOG), vwHandle, (DLGPROC) DialogFunc);
+        break;
+    
+    case WM_DESTROY:
+        unregisterAssignment();
+        PostQuitMessage(0);
+        break;
+    
+    default:
+        return DefWindowProc(hwnd, msg, wParam, lParam);
     }
-  
+    
     return 0;
 }
 
@@ -146,180 +330,41 @@ LRESULT CALLBACK MainWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
  */
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, INT nCmdShow)
 {
-   MSG msg;
-   hInst = hInstance;
-   if (!InitApplication())
-      return 0;
-  
-   // the window is never shown
-   if ((hwndMain = CreateWindow("VWAssigner.exe", 
-                                "VWAssigner", 
-                                WS_POPUP,
-                                CW_USEDEFAULT, 
-                                0, 
-                                CW_USEDEFAULT, 
-                                0,
-                                NULL,
-                                NULL,
-                                hInst,
-                                NULL)) == (HWND)0)
-      return 0;
-
-   getConfigDir();
-   loadSettings();
-   registerAssignment();
-   // main messge loop
-   while (GetMessage(&msg, NULL, 0, 0)) {
-      TranslateMessage(&msg);
-      DispatchMessage(&msg);
-   }
-   return msg.wParam;
-}
-
-/*
-  This is the main function for the dialog. 
-*/
-static BOOL CALLBACK DialogFunc(HWND hwndDlg, UINT msg, WPARAM wParam, LPARAM lParam)
-{
-   WORD wRawHotKey;
-   
-   switch (msg) {
-      case WM_INITDIALOG:
-         unregisterAssignment();
-         SendDlgItemMessage(hwndDlg, IDC_HOTNEXT, HKM_SETHOTKEY, 
-                            MAKEWORD(HOT_NEXT, HOT_NEXT_MOD), 0);
-         SendDlgItemMessage(hwndDlg, IDC_HOTPREV, HKM_SETHOTKEY, 
-                            MAKEWORD(HOT_PREV, HOT_NEXT_MOD), 0);
-         return TRUE;
-         
-      case WM_COMMAND:
-         switch (LOWORD(wParam)) {
-            case IDOK:
-               wRawHotKey = (WORD)SendDlgItemMessage(hwndDlg, IDC_HOTNEXT, HKM_GETHOTKEY, 0, 0);
-               HOT_NEXT = LOBYTE(wRawHotKey);
-               HOT_NEXT_MOD = HIBYTE(wRawHotKey);
-               
-               wRawHotKey = (WORD)SendDlgItemMessage(hwndDlg, IDC_HOTPREV, HKM_GETHOTKEY, 0, 0);
-               HOT_PREV = LOBYTE(wRawHotKey);
-               HOT_PREV_MOD = HIBYTE(wRawHotKey);
-
-               saveSettings();
-               unregisterAssignment();
-               registerAssignment();
-               EndDialog(hwndDlg,0);
-               return 1;
-            case IDCANCEL:
-               registerAssignment();
-               EndDialog(hwndDlg,0);
-               return 1;
-         }
-         break;
-      
-      case WM_CLOSE:
-         EndDialog(hwndDlg,0);
-         return TRUE;
-	
-   }
-   return FALSE;
-}
-
-/*************************************************
- * Register the assignment hotkey
- */
-void registerAssignment()
-{
-   if(HOT_NEXT)
-   {
-      hotKeyUp = GlobalAddAtom("AssignmentNext");
-      if(RegisterHotKey(hwndMain, hotKeyUp, hotKey2ModKey(HOT_NEXT_MOD), HOT_NEXT) == 0)
-         MessageBox(hwndMain, "Invalid key modifier combination, check hot keys!", 
-                    NULL, MB_ICONWARNING);
-   }
-   if(HOT_PREV)
-   {
-      hotKeyDown = GlobalAddAtom("AssignmentPrev");
-      if(RegisterHotKey(hwndMain, hotKeyDown, hotKey2ModKey(HOT_PREV_MOD), HOT_PREV) == 0)
-         MessageBox(hwndMain, "Invalid key modifier combination, check hot keys!", 
-                    NULL, MB_ICONWARNING);
-   }
-}
-
-/*************************************************
- * Un-register the assignment hotkey
- */
-void unregisterAssignment()
-{
-   UnregisterHotKey(hwndMain, hotKeyUp);
-   UnregisterHotKey(hwndMain, hotKeyDown);
-}
-
-//*************************************************
-
-void loadSettings()
-{
-   char* dummy = malloc(sizeof(char) * 80);
-   FILE* fp;
-   
-   if((fp = fopen(configFile, "r")))
-   {
-      fscanf(fp, "%s%i", dummy, &HOT_NEXT_MOD);
-      fscanf(fp, "%s%i", dummy, &HOT_NEXT);
-      fscanf(fp, "%s%i", dummy, &HOT_PREV_MOD);
-      fscanf(fp, "%s%i", dummy, &HOT_PREV);
-      fclose(fp);
-   }
-   free(dummy);
-}
-
-//*************************************************
-
-void saveSettings()
-{
-   FILE* fp;
-   if(!(fp = fopen(configFile, "w"))) 
-   {
-      MessageBox(hwndMain, "Assigner", "Error writing config file", MB_ICONWARNING);
-   } 
-   else 
-   {
-      fprintf(fp, "next_mod# %i\n", HOT_NEXT_MOD);
-      fprintf(fp, "next# %i\n", HOT_NEXT);
-      fprintf(fp, "prev_mod# %i\n", HOT_PREV_MOD);
-      fprintf(fp, "prev# %i\n", HOT_PREV);
-      fclose(fp);
-   }
-}
-
-//*************************************************
-
-void getConfigDir()
-{
-    configFile = (LPSTR)malloc(MAX_PATH);
+    MSG msg;
+    hInst = hInstance;
+    WNDCLASS wc;
     
-    TCHAR userSettingsPath[MAX_PATH];
-
-    if(SUCCEEDED(SHGetFolderPath(NULL, CSIDL_LOCAL_APPDATA, NULL, 0, userSettingsPath)))
-    {
-        if(userSettingsPath[(strlen(userSettingsPath)-1)] != '\\')
-            strcat(userSettingsPath, "\\");
-        strncat(userSettingsPath, VIRTUAWIN_SUBDIR, MAX_PATH - strlen(userSettingsPath));
-        sprintf(configFile, "%s\\VWassigner.cfg", userSettingsPath);
+    memset(&wc, 0, sizeof(WNDCLASS));
+    wc.style = 0;
+    wc.lpfnWndProc = (WNDPROC)MainWndProc;
+    wc.hInstance = hInst;
+    /* IMPORTANT! The classname must be the same as the filename since VirtuaWin uses 
+       this for locating the window */
+    wc.lpszClassName = "VWAssigner.exe";
+    
+    if (!RegisterClass(&wc))
+        return 0;
+    
+    // the window is never shown
+    if ((hwndMain = CreateWindow("VWAssigner.exe", 
+                                 "VWAssigner", 
+                                 WS_POPUP,
+                                 CW_USEDEFAULT, 
+                                 0, 
+                                 CW_USEDEFAULT, 
+                                 0,
+                                 NULL,
+                                 NULL,
+                                 hInst,
+                                 NULL)) == (HWND)0)
+        return 0;
+    
+    // main messge loop
+    while (GetMessage(&msg, NULL, 0, 0)) {
+        TranslateMessage(&msg);
+        DispatchMessage(&msg);
     }
-}
-
-/*************************************************
- * Translates virtual key codes to "hotkey codes"
- */
-WORD hotKey2ModKey(BYTE vModifiers)
-{
-   WORD mod = 0;
-   if (vModifiers & HOTKEYF_ALT)
-      mod |= MOD_ALT;
-   if (vModifiers & HOTKEYF_CONTROL)
-      mod |= MOD_CONTROL;
-   if (vModifiers & HOTKEYF_SHIFT)
-      mod |= MOD_SHIFT;
-   return mod;
+    return msg.wParam;
 }
 
 /*
