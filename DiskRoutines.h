@@ -25,29 +25,31 @@
 #ifndef _DISKROUTINES_H_
 #define _DISKROUTINES_H_
 
-typedef enum { vwPATH, vwCONFIG, vwLIST, vwHELP, vwSTICKY, vwTRICKY, vwSTATE, vwMODULES, vwDISABLED, vwWINDOWS_STATE, LAST_FILE } eFileNames;
+typedef enum { vwLIST, vwHELP, vwTRICKY, vwMODULES, vwCONFIG, vwSTICKY, vwDISABLED, vwWINDOWS_STATE, vwFILE_COUNT } eFileNames;
+extern char *VirtuaWinPath ;
+extern char *UserAppPath ;
 
-int GetFilename(eFileNames filetype, char* outStr);
-void writeDisabledList(int* theNOfModules, moduleType* theModList);
-int loadDisabledModules(disModules* theDisList);
-int loadStickyList(stickyType* theStickyList);
-//void saveTrickyWindows(int* theNOfWin, windowType* theWinList);
-int loadTrickyList(stickyType* theTrickyList);
-void saveStickyWindows(int* theNOfWin, windowType* theWinList);
-void saveDesktopState(int* theNOfWin, windowType* theWinList);
-void saveDesktopConfiguration(int* theNOfWin, windowType* theWinList);
-int loadAssignedList(assignedType* theAssignList);
-int loadUserList(userType* theUserList);
-void writeConfig();
-void readConfig();
-BOOL tryToLock();
-void clearLock();
-char *replace(char *g_string, char *replace_from, char *replace_to);
+int  GetFilename(eFileNames filetype, char* outStr);
+int  loadDisabledModules(disModules* theDisList);
+void saveDisabledList(int theNOfModules, moduleType* theModList);
+int  loadTrickyList(stickyType *theTrickyList);
+int  loadStickyList(stickyType *theStickyList);
+void saveStickyWindows(int theNOfWin, windowType* theWinList);
+int  loadAssignedList(assignedType* theAssignList);
+void saveAssignedList(int theNOfWin, windowType* theWinList);
+int  loadUserList(userType *theUserList);
+void writeConfig(void);
+void readConfig(void);
+BOOL tryToLock(void);
+void clearLock(void);
 
 #endif
 
 /*
  * $Log$
+ * Revision 1.11  2005/03/10 08:02:11  rexkerr
+ * Added multi-user support
+ *
  * Revision 1.10  2004/04/10 14:33:14  jopi
  * Updated for gcc/mingw
  *

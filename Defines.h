@@ -24,10 +24,14 @@
 
 // Various defines used on several places 
 
-#define MAXWIN 100  // max number of windows to handle
-#define MAXUSER 10  // max number of user windows to search for
+#define MAXWIN 100                // max number of windows to handle
+#define MAXDESK 11                // max number of desktops (0 - not used, 1 - 9 - normal, 10 private) 
+#define MAXUSER 10                // max number of user windows to search for
 #define UWM_SYSTRAY (WM_USER + 1) // Sent to us by the systray
-#define MAXMODULES 10 // max number of modules to handle
+#define MAXMODULES 10             // max number of modules to handle
+#define vwCLASSNAME_MAX  47       // maximum length of a class name (buffer needs to be n+1 long)
+#define vwMODULENAME_MAX 79       // Maximum length of a module name (buffer needs to be n+1 long)
+#define vwDESK_PRIVATE1  10       // Deesk number of the first private desk
 
 // Internal messages for mouse controlling
 #define VW_MOUSEWARP WM_USER + 90
@@ -41,6 +45,9 @@
 
 /*
  * $Log$
+ * Revision 1.8  2004/01/10 11:15:52  jopi
+ * Updated copyright for 2004
+ *
  * Revision 1.7  2003/01/27 20:23:53  jopi
  * Updated copyright header for 2003
  *

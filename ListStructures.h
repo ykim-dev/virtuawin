@@ -22,45 +22,57 @@
 #ifndef _LISTSTRUCTURES_H_
 #define _LISTSTRUCTURES_H_
 
-// Includes
-#include "Defines.h"
-
 // Standard includes
 #include <windows.h>
+#include "Defines.h"
 
 // Structures
+typedef struct _MenuItems
+{
+    char          *name;
+    HBITMAP        icon; 
+    unsigned short id;
+    unsigned short desk;
+    unsigned char  sticky;
+} MenuItem;
+
 typedef struct { // Holds user added windows
-        char* winNameClass;
-        BOOL isClass;
+    char* winNameClass;
+    BOOL isClass;
 } userType;
 
 typedef struct { // Holds saved sticky and tricky windows
-        char* winClassName;
+    char* winClassName;
 } stickyType;
 
 typedef struct { // Holds the windows in the list
-      HWND Handle;
-      BOOL Active;
-      BOOL Sticky;
-      BOOL NormalHide;
-      BOOL Hidden;
-      long StyleFlags;
-      int Desk;
+    HWND           Handle;
+    HWND           Owner;
+    long           Style;
+    long           ExStyle;
+    unsigned long  ZOrder[MAXDESK] ;
+    unsigned short Desk;
+    unsigned short menuId ;
+    unsigned char  Active;
+    unsigned char  Sticky;
+    unsigned char  Tricky;
+    unsigned char  Visible;
+    unsigned char  Deleted;
 } windowType;
 
 typedef struct { // Holds data for modules
-  HWND Handle;
-  BOOL Disabled;
-  char description[80];
+    HWND Handle;
+    BOOL Disabled;
+    char description[vwMODULENAME_MAX+1];
 } moduleType;
 
 typedef struct { // Holds disabled modules
-  char moduleName[80];
+    char moduleName[vwMODULENAME_MAX+1];
 } disModules;
 
 typedef struct { // Holds desktop assigned windows
-      char* winClassName;
-      int desktop;
+    char* winClassName;
+    int desktop;
 } assignedType;
 
 userType userList[MAXUSER];               // list for holding user added applications
@@ -75,6 +87,9 @@ windowType winList[MAXWIN];               // list for holding windows
 
 /*
  * $Log$
+ * Revision 1.7  2004/01/10 11:15:52  jopi
+ * Updated copyright for 2004
+ *
  * Revision 1.6  2003/01/27 20:23:53  jopi
  * Updated copyright header for 2003
  *

@@ -8,12 +8,12 @@
 #define	IDC_HOT1W	105
 #define	IDD_PROPPAGE_ABOUT	106
 #define	IDI_VIRTWIN	107
-#define	IDI_SMALL_NE	108
-#define	IDI_LARGEAPP	109
-#define	IDI_SMALL_SW	110
-#define	IDI_SMALL_SE	111
-#define	IDI_SMALL_DIS	112
-#define	IDI_SMALL_NW	113
+#define	IDI_LARGEAPP	108
+#define	IDI_SMALL_DIS	109
+#define	IDI_SMALL_NW	110
+#define	IDI_SMALL_NE	111
+#define	IDI_SMALL_SW	112
+#define	IDI_SMALL_SE	113
 #define	IDC_HOT2	114
 #define	IDC_HOT7	115
 #define	IDC_HOT4	116
@@ -31,7 +31,7 @@
 #define	IDC_HOT8W	128
 #define	IDC_HOT9W	129
 #define	IDR_MENU1	130
-#define	IDI_ICON9	159
+#define	IDI_ICON0	159
 #define	IDI_ICON1	160
 #define	IDI_ICON2	161
 #define	IDI_ICON3	162
@@ -40,14 +40,13 @@
 #define	IDI_ICON6	165
 #define	IDI_ICON7	166
 #define	IDI_ICON8	167
-#define	IDI_ICON0	168
+#define	IDI_ICON9	168
 #define	IDD_PROPPAGE_MOUSE	170
 #define	IDD_PROPPAGE_MISC	171
 #define	IDD_PROPPAGE_MODULES	172
 #define IDD_PROPPAGE_EXPERT     173
 #define	IDC_RECOVERY	174
 #define	IDC_DESKCYCLE	175
-#define IDC_HOTSKW      176
 #define	IDC_MOUSWARP	1001
 #define	IDC_KEYS	1002
 #define	IDC_TIME	1006
@@ -55,12 +54,11 @@
 #define	IDC_DESKX	1008
 #define	IDC_FOCUS	1013
 #define	IDC_SLIDER	1014
-#define	IDC_ALT	1015
+#define	IDC_ALT 	1015
 #define	IDC_SHIFT	1016
 #define	IDC_CTRL	1017
-#define	IDC_WIN	1018
+#define	IDC_WIN 	1018
 #define	IDC_JUMP	1021
-#define	IDC_WJUMP	1022
 #define	IDC_LASTACTIVE	1023
 #define	IDC_SHIFTHOT	1024
 #define	IDC_CTRLHOT	1025
@@ -102,10 +100,16 @@
 #define IDC_TASKBARDETECT 1081
 #define IDC_TRICKYSUPPORT 1082
 #define IDC_XPSTYLETASKBAR 1083
-#define IDC_PERMSTICKY 1084
+#define IDC_PERMSTICKY  1084
+#define IDC_HOTSTICKYEN 1085
+#define IDC_HOTSTICKYW  1086
+#define IDC_HOTCYCLEUPW 1087
+#define IDC_HOTCYCLEDOWNW 1088
 
 #define	ID_SETUP	32771
 #define	ID_EXIT	        32772
+#define	ID_FORWARD      32773
+#define	ID_BACKWARD     32774
 #define	ID_GATHER	32775
 #define ID_DISABLE      32776
 #define	ID_HELP	        32777
@@ -114,6 +118,9 @@
 
 /*
  * $Log$
+ * Revision 1.10  2004/02/28 18:54:01  jopi
+ * SF904069 Added possibility to choose if sticky should be permanent for all instances of the same classname.
+ *
  * Revision 1.9  2003/06/24 19:47:04  jopi
  * SF693876 Fixed option to handle XP skinned style taskbars
  *

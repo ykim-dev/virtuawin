@@ -1,102 +1,98 @@
 #include <windows.h>
-#include "Resource.h"
+#include "resource.h"
 
-107 ICON Icons/APPICONSMALL.ICO
-108 ICON Icons/SMALLNE.ICO
-109 ICON Icons/APPICONLARGE.ICO
-110 ICON Icons/SMALLSW.ICO
-111 ICON Icons/SMALLSE.ICO
-112 ICON Icons/SMALL.ICO
-113 ICON Icons/SMALLNW.ICO
+107 ICON icons/APPICONSMALL.ICO
+108 ICON icons/APPICONLARGE.ICO
+109 ICON icons/SMALL.ICO
+110 ICON icons/SMALLNW.ICO
+111 ICON icons/SMALLNE.ICO
+112 ICON icons/SMALLSW.ICO
+113 ICON icons/SMALLSE.ICO
 
 IDD_PROPPAGE_KEYS DIALOG 0, 0, 150, 250
 STYLE DS_3DLOOK | WS_CHILD | WS_DISABLED | WS_BORDER
 FONT 8, "MS Sans Serif"
 BEGIN
-    GROUPBOX        "Control keys", IDC_STATIC, 6, 6, 165, 23
-    AUTOCHECKBOX    "Enable", IDC_KEYS, 10, 16, 36, 10
-    AUTOCHECKBOX    "SHIFT", IDC_SHIFT, 46, 16, 34, 10
-    AUTOCHECKBOX    "CTRL", IDC_CTRL, 79, 16, 35, 10
-    AUTOCHECKBOX    "ALT", IDC_ALT, 112, 16, 29, 10
-    AUTOCHECKBOX    "WIN", IDC_WIN, 140, 16, 28, 10
-    GROUPBOX        "Hot keys", IDC_STATIC, 6, 31, 165, 141
-    AUTOCHECKBOX    "Enable", IDC_HOTKEYS, 10, 40, 57, 10
+    GROUPBOX        "Cursor Keys", IDC_STATIC, 4, 5, 202, 37
+    AUTOCHECKBOX    "Enable cursor key desktop navigation", IDC_KEYS, 10, 16, 135, 10
+    LTEXT           "Modifier", IDC_STATIC, 22, 28, 30, 8
+    AUTOCHECKBOX    "Shift", IDC_SHIFT, 55, 28, 34, 10
+    AUTOCHECKBOX    "Ctrl", IDC_CTRL, 90, 28, 30, 10
+    AUTOCHECKBOX    "Alt", IDC_ALT, 120, 28, 30, 10
+    AUTOCHECKBOX    "WIN", IDC_WIN, 150, 28, 30, 10
 
-    GROUPBOX        "Cycling keys", IDC_STATIC, 6, 173, 165, 42
-    AUTOCHECKBOX    "Enable", IDC_CYCLINGKEYS, 10, 182, 36, 10
-    LTEXT           "Up", IDC_STATIC, 50, 184, 48, 8
+    GROUPBOX        "Desktop Cycling", IDC_STATIC, 4, 45, 202, 53
+    AUTOCHECKBOX    "Enable desktop cycling hotkeys", IDC_CYCLINGKEYS, 10, 56, 130, 10
+    LTEXT           "Next", IDC_STATIC, 22, 70, 33, 8
     CONTROL         "UpHot",   IDC_HOTCYCLEUP, "msctls_hotkey32", 0x0 |
-                    WS_BORDER | WS_TABSTOP, 75, 184, 85, 12
-    LTEXT           "Down", IDC_STATIC, 50, 199, 48, 8
+                    WS_BORDER | WS_TABSTOP, 55, 68, 76, 12
+    AUTOCHECKBOX    "+ WIN key", IDC_HOTCYCLEUPW, 133, 70, 47, 9, 0x0020
+    LTEXT           "Previous", IDC_STATIC, 22, 83, 33, 8
     CONTROL         "DownHot", IDC_HOTCYCLEDOWN, "msctls_hotkey32", 0x0 |
-                    WS_BORDER | WS_TABSTOP, 75, 199, 85, 12
+                    WS_BORDER | WS_TABSTOP, 55, 81, 76, 12
+    AUTOCHECKBOX    "+ WIN key", IDC_HOTCYCLEDOWNW, 133, 83, 47, 9, 0x0020
 
-    GROUPBOX        "Sticky", IDC_STATIC, 6, 217, 165, 23
-    CONTROL         "StickyHot", IDC_HOTSTICKY, "msctls_hotkey32", 0x0 |
-                    WS_BORDER | WS_TABSTOP, 49, 224, 70, 12
-    LTEXT           "Toggle key", IDC_STATIC, 11, 227, 38, 8
-    CONTROL         "+ WIN key",IDC_HOTSKW,"Button",BS_AUTOCHECKBOX | 
-                    BS_LEFTTEXT | WS_TABSTOP,120,227,47,9
-
+    GROUPBOX        "Direct Desktop Access", IDC_STATIC, 4, 101, 202, 144
+    AUTOCHECKBOX    "Enable direct desktop access hotkeys", IDC_HOTKEYS, 10, 112, 135, 10
+    LTEXT           "Desk 1", IDC_STATIC, 22, 126, 27, 12
     CONTROL         "Hot1", IDC_HOT1, "msctls_hotkey32", 0x0 | WS_BORDER |
-                    WS_TABSTOP, 39, 51, 65, 12
+                    WS_TABSTOP, 55, 124, 76, 12
+    AUTOCHECKBOX    "+ WIN key", IDC_HOT1W, 133, 126, 47, 9, 0x0020
+    LTEXT           "Desk 2", IDC_STATIC, 22, 139, 27, 12
     CONTROL         "Hot2", IDC_HOT2, "msctls_hotkey32", 0x0 | WS_BORDER |
-                    WS_TABSTOP, 39, 64, 65, 12
+                    WS_TABSTOP, 55, 137, 76, 12
+    AUTOCHECKBOX    "+ WIN key", IDC_HOT2W, 133, 139, 47, 9, 0x0020
+    LTEXT           "Desk 3", IDC_STATIC, 22, 152, 27, 12
     CONTROL         "Hot3", IDC_HOT3, "msctls_hotkey32", 0x0 | WS_BORDER |
-                    WS_TABSTOP, 39, 77, 65, 12
+                    WS_TABSTOP, 55, 150, 76, 12
+    AUTOCHECKBOX    "+ WIN key", IDC_HOT3W, 133, 152, 47, 9, 0x0020
+    LTEXT           "Desk 4", IDC_STATIC, 22, 165, 27, 12
     CONTROL         "Hot4", IDC_HOT4, "msctls_hotkey32", 0x0 | WS_BORDER |
-                    WS_TABSTOP, 39, 90, 65, 12
+                    WS_TABSTOP, 55, 163, 76, 12
+    AUTOCHECKBOX    "+ WIN key", IDC_HOT4W, 133, 165, 47, 9, 0x0020
+    LTEXT           "Desk 5", IDC_STATIC, 22, 178, 27, 12
     CONTROL         "Hot5", IDC_HOT5, "msctls_hotkey32", 0x0 | WS_BORDER |
-                    WS_TABSTOP, 39, 103, 65, 12
+                    WS_TABSTOP, 55, 176, 76, 12
+    AUTOCHECKBOX    "+ WIN key", IDC_HOT5W, 133, 178, 47, 9, 0x0020
+    LTEXT           "Desk 6", IDC_STATIC, 22, 191, 27, 12
     CONTROL         "Hot6", IDC_HOT6, "msctls_hotkey32", 0x0 | WS_BORDER |
-                    WS_TABSTOP, 39, 116, 65, 12
+                    WS_TABSTOP, 55, 189, 76, 12
+    AUTOCHECKBOX    "+ WIN key", IDC_HOT6W, 133, 191, 47, 9, 0x0020
+    LTEXT           "Desk 7", IDC_STATIC, 22, 204, 27, 12
     CONTROL         "Hot7", IDC_HOT7, "msctls_hotkey32", 0x0 | WS_BORDER |
-                    WS_TABSTOP, 39, 129, 65, 12
+                    WS_TABSTOP, 55, 202, 76, 12
+    AUTOCHECKBOX    "+ WIN key", IDC_HOT7W, 133, 204, 47, 9, 0x0020
+    LTEXT           "Desk 8", IDC_STATIC, 22, 217, 27, 12
     CONTROL         "Hot8", IDC_HOT8, "msctls_hotkey32", 0x0 | WS_BORDER |
-                    WS_TABSTOP, 39, 142, 65, 12
+                    WS_TABSTOP, 55, 215, 76, 12
+    AUTOCHECKBOX    "+ WIN key", IDC_HOT8W, 133, 217, 47, 9, 0x0020
+    LTEXT           "Desk 9", IDC_STATIC, 22, 230, 27, 12
     CONTROL         "Hot9", IDC_HOT9, "msctls_hotkey32", 0x0 | WS_BORDER |
-                    WS_TABSTOP, 39, 155, 65, 12
-    AUTOCHECKBOX    "+ WIN key", IDC_HOT1W, 107, 53, 47, 9, 0x0020
-    AUTOCHECKBOX    "+ WIN key", IDC_HOT2W, 107, 66, 47, 9, 0x0020
-    AUTOCHECKBOX    "+ WIN key", IDC_HOT3W, 107, 79, 47, 9, 0x0020
-    AUTOCHECKBOX    "+ WIN key", IDC_HOT4W, 107, 92, 47, 9, 0x0020
-    AUTOCHECKBOX    "+ WIN key", IDC_HOT5W, 107, 105, 47, 9, 0x0020
-    AUTOCHECKBOX    "+ WIN key", IDC_HOT6W, 107, 118, 47, 9, 0x0020
-    AUTOCHECKBOX    "+ WIN key", IDC_HOT7W, 107, 131, 47, 9, 0x0020
-    AUTOCHECKBOX    "+ WIN key", IDC_HOT8W, 107, 144, 47, 9, 0x0020
-    AUTOCHECKBOX    "+ WIN key", IDC_HOT9W, 107, 156, 47, 9, 0x0020
-    LTEXT           "Desk 1", 131, 11, 52, 27, 12
-    LTEXT           "Desk 2", 132, 11, 65, 27, 12
-    LTEXT           "Desk 3", 133, 11, 78, 27, 12
-    LTEXT           "Desk 4", 134, 11, 91, 27, 12
-    LTEXT           "Desk 5", 135, 11, 104, 27, 12
-    LTEXT           "Desk 6", 136, 11, 116, 27, 12
-    LTEXT           "Desk 7", 137, 11, 129, 27, 12
-    LTEXT           "Desk 8", 138, 11, 142, 27, 12
-    LTEXT           "Desk 9", 139, 11, 155, 27, 12
+                    WS_TABSTOP, 55, 228, 76, 12
+    AUTOCHECKBOX    "+ WIN key", IDC_HOT9W, 133, 230, 47, 9, 0x0020
 END
 
 IDD_PROPPAGE_MOUSE DIALOGEX 0, 0, 150, 150
 STYLE DS_3DLOOK | WS_CHILD | WS_DISABLED | WS_BORDER
 FONT 8, "MS Sans Serif"
 BEGIN
-    AUTOCHECKBOX    "Mouse Support", IDC_MOUSWARP, 10, 15, 64, 10
-    CTEXT           "ms delay", IDC_STATIC, 100, 25, 35, 10
-    EDITTEXT        IDC_TIME, 80, 25, 20, 12, ES_RIGHT | ES_AUTOHSCROLL |
-                    ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
+    GROUPBOX        "Mouse Support", IDC_STATIC, 4, 5, 202, 103
+    AUTOCHECKBOX    "Enable mouse support", IDC_MOUSWARP, 10, 16, 85, 10
+    LTEXT           "Delay", IDC_STATIC, 22, 29, 18, 8
     CONTROL         "Slider1", IDC_SLIDER, "msctls_trackbar32", 0x19 |
-                    WS_TABSTOP, 10, 25, 70, 15
-    EDITTEXT        IDC_JUMP, 10, 40, 20, 12, ES_AUTOHSCROLL
-    LTEXT           "Mouse jump length", IDC_WJUMP, 30, 45, 60, 8, 0,
-                    WS_EX_RIGHT
-    GROUPBOX        "Basics ", IDC_STATIC, 5, 5, 165, 75
-    AUTOCHECKBOX    "Taskbar warp", IDC_TASKBAR, 20, 55, 59, 10
-    GROUPBOX        "Key control", IDC_STATIC, 5, 85, 165, 55
-    AUTOCHECKBOX    "Use key control", IDC_KEYCONTROL, 10, 95, 65, 10
-    AUTORADIOBUTTON    "ALT", IDC_ALT, 20, 105, 29, 10
-    AUTORADIOBUTTON    "SHIFT", IDC_SHIFT, 20, 115, 37, 10
-    AUTORADIOBUTTON    "CTRL", IDC_CTRL, 20, 125, 35, 10
-    AUTOCHECKBOX    "No mouse move", IDC_MOUSEWRAP, 20, 65, 67, 10
+                    WS_TABSTOP, 50, 27, 70, 15
+    EDITTEXT        IDC_TIME, 125, 29, 20, 12, ES_RIGHT | ES_AUTOHSCROLL |
+                    ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
+    LTEXT           "ms", IDC_STATIC, 145, 29, 35, 10
+    LTEXT           "Mouse jump length", IDC_STATIC, 22, 45, 60, 8, 0
+    EDITTEXT        IDC_JUMP, 87, 43, 20, 12, ES_AUTOHSCROLL
+    AUTOCHECKBOX    "Taskbar warp", IDC_TASKBAR, 22, 59, 59, 10
+    AUTOCHECKBOX    "No mouse move", IDC_MOUSEWRAP, 22, 70, 67, 10
+    AUTOCHECKBOX    "Use modifier key control", IDC_KEYCONTROL, 10, 82, 65, 10
+    LTEXT           "Modifier", IDC_STATIC, 22, 94, 30, 8
+    AUTOCHECKBOX    "Shift", IDC_SHIFT, 55, 94, 34, 10
+    AUTOCHECKBOX    "Ctrl", IDC_CTRL, 90, 94, 30, 10
+    AUTOCHECKBOX    "Alt", IDC_ALT, 120, 94, 29, 10
 END
 
 IDD_PROPPAGE_MISC DIALOG 0, 0, 150, 150
@@ -104,92 +100,97 @@ STYLE DS_3DLOOK | WS_CHILD | WS_DISABLED | WS_BORDER
 FONT 8, "MS Sans Serif"
 BEGIN
     CONTROL         "XSpin", IDC_SLIDERX, "msctls_updown32", 0x0 | WS_CLIPSIBLINGS |
-                    UDS_SETBUDDYINT, 5, 12, 0, 15
+                    UDS_SETBUDDYINT, 10, 16, 0, 15
     CONTROL         "YSpin", IDC_SLIDERY, "msctls_updown32",  0x0 | WS_CLIPSIBLINGS |
-                    UDS_SETBUDDYINT, 43, 12, 0, 15
-    EDITTEXT        IDC_DESKX, 17, 16, 8, 8, ES_LEFT | ES_AUTOHSCROLL |
+                    UDS_SETBUDDYINT, 52, 16, 0, 15
+    EDITTEXT        IDC_DESKX, 26, 19, 8, 8, ES_LEFT | ES_AUTOHSCROLL |
                     ES_READONLY | NOT WS_BORDER | WS_GROUP | NOT WS_TABSTOP
-    LTEXT           "by", IDC_STATIC, 25, 16, 8, 8
-    EDITTEXT        IDC_DESKY, 35, 16, 8, 8, ES_LEFT | ES_AUTOHSCROLL |
+    LTEXT           "by", IDC_STATIC, 34, 19, 8, 8
+    EDITTEXT        IDC_DESKY, 44, 19, 8, 8, ES_LEFT | ES_AUTOHSCROLL |
                     ES_READONLY | NOT WS_BORDER | WS_GROUP | NOT WS_TABSTOP
-    GROUPBOX        "Number of desktops", IDC_STATIC, 0, 2, 165, 30
+    GROUPBOX        "Desktop Layout", IDC_STATIC, 4, 5, 202, 30
 
-    GROUPBOX        "Desktop state handling", IDC_STATIC,    0, 34, 165, 59
-    AUTOCHECKBOX    "Use desktop assignment", IDC_USEASSIGN, 6, 44, 90, 10
-    AUTOCHECKBOX    "Assign only first window", IDC_FIRSTONLY,      6, 54, 90, 10
-    AUTOCHECKBOX    "Save layout on exit", IDC_SAVEEXITSTATE, 6, 64, 90, 10
-    PUSHBUTTON      "Save layout", IDC_SAVENOW,            104, 45, 45, 14
-    AUTOCHECKBOX    "Save sticky on exit", IDC_STICKYSAVE,   6, 74, 80, 10
-    PUSHBUTTON      "Save sticky", IDC_SAVESTICKY,         104, 65, 45, 14
+    GROUPBOX        "Desktop State Handling", IDC_STATIC,    4, 38, 202, 58
+    AUTOCHECKBOX    "Use desktop assignment", IDC_USEASSIGN, 10, 49, 90, 10
+    AUTOCHECKBOX    "Assign only first window", IDC_FIRSTONLY, 22, 60, 90, 10
+    AUTOCHECKBOX    "Save layout on exit", IDC_SAVEEXITSTATE, 10, 71, 90, 10
+    AUTOCHECKBOX    "Save sticky on exit", IDC_STICKYSAVE, 10, 82, 80, 10
+    PUSHBUTTON      "Save layout", IDC_SAVENOW,            144, 54, 45, 14
+    PUSHBUTTON      "Save sticky", IDC_SAVESTICKY,         144, 74, 45, 14
 
-    GROUPBOX        "Window menu", IDC_STATIC, 0, 95, 165, 22
-    AUTOCHECKBOX    "Sticky toggle", IDC_MENUSTICKY, 6, 105, 55, 10
-    AUTOCHECKBOX    "Direct access", IDC_MENUACCESS, 60, 105, 55, 10
-    AUTOCHECKBOX    "Assign",        IDC_MENUASSIGN, 118, 105, 45, 10
-
-    GROUPBOX        "Window list", IDC_STATIC, 0, 120, 165, 38
-    AUTOCHECKBOX    "Enable Access Menu key", IDC_HOTMENUEN, 4, 132, 96, 9, 0x0020
-    LTEXT           "Menu key", 180, 6, 144, 32, 10
+    GROUPBOX        "Window Menu", IDC_STATIC, 4, 99, 202, 85
+    LTEXT           "Menu contents:", IDC_STATIC, 10, 110, 85, 10
+    AUTOCHECKBOX    "Sticky toggle", IDC_MENUSTICKY, 22, 121, 55, 10
+    AUTOCHECKBOX    "Direct access", IDC_MENUACCESS, 22, 132, 55, 10
+    AUTOCHECKBOX    "Assign",        IDC_MENUASSIGN, 22, 143, 45, 10
+    AUTOCHECKBOX    "Enable menu hotkey", IDC_HOTMENUEN, 10, 155, 96, 10
+    LTEXT           "Hotkey", IDC_STATIC, 22, 169, 32, 10
     CONTROL         "HotMenu", IDC_HOTMENU, "msctls_hotkey32", 0x0 | WS_BORDER |
-                    WS_TABSTOP, 41, 142, 65, 12
-    AUTOCHECKBOX    "+ WIN key", IDC_HOTMENUW, 107, 144, 47, 9, 0x0020
+                    WS_TABSTOP, 55, 167, 76, 12
+    AUTOCHECKBOX    "+ WIN key", IDC_HOTMENUW, 133, 169, 47, 9, 0x0020
+
+    GROUPBOX        "Sticky", IDC_STATIC, 4, 185, 202, 40
+    AUTOCHECKBOX    "Enable toggle window sticky hotkey", IDC_HOTSTICKYEN, 10, 196, 130, 10
+    LTEXT           "Hotkey", IDC_STATIC, 22, 210, 32, 10
+    CONTROL         "StickyHot", IDC_HOTSTICKY, "msctls_hotkey32", 0x0 |
+                    WS_BORDER | WS_TABSTOP, 55, 208, 76, 12
+    AUTOCHECKBOX    "+ WIN key", IDC_HOTSTICKYW, 133, 210, 47, 9, 0x0020
 END
 
 IDD_PROPPAGE_EXPERT DIALOG 0, 0, 150, 150
 STYLE DS_3DLOOK | WS_CHILD | WS_DISABLED | WS_BORDER
 FONT 8, "MS Sans Serif"
 BEGIN
-    GROUPBOX        "Extras", IDC_STATIC, 0, 2, 165, 126
-    AUTOCHECKBOX    "Keep last active", IDC_LASTACTIVE,  6, 15, 65, 10
-    AUTOCHECKBOX    "Release focus", IDC_FOCUS,         74, 15, 61, 10
-    AUTOCHECKBOX    "Switch minimized", IDC_MINIMIZED,   6, 25, 69, 10
-    AUTOCHECKBOX    "Refresh after switch", IDC_REFRESH, 6, 35, 79, 10
-    AUTOCHECKBOX    "Crash recovery", IDC_RECOVERY,      6, 45, 73, 10
-    AUTOCHECKBOX    "Desktop cycling", IDC_DESKCYCLE,    6, 55, 74, 10
-    AUTOCHECKBOX    "Invert Up/Down", IDC_INVERTY,       6, 65, 74, 10
-    AUTOCHECKBOX    "Hide system tray icon", IDC_DISPLAYICON, 6, 75, 80, 10
-    AUTOCHECKBOX    "Disable taskbar detection", IDC_TASKBARDETECT, 6, 85, 100, 10
-    AUTOCHECKBOX    "Use alternate hiding", IDC_TRICKYSUPPORT, 6, 95, 90, 10
-    AUTOCHECKBOX    "XP taskbar patch", IDC_XPSTYLETASKBAR, 6, 105, 90, 10
-    AUTOCHECKBOX    "Permanent sticky", IDC_PERMSTICKY, 6, 115, 90, 10
+    GROUPBOX        "Extras", IDC_STATIC, 4, 5, 202, 146
+    AUTOCHECKBOX    "Keep last active", IDC_LASTACTIVE, 10, 16, 65, 10
+    AUTOCHECKBOX    "Release focus", IDC_FOCUS,         22, 27, 61, 10
+    AUTOCHECKBOX    "Switch minimized", IDC_MINIMIZED,  10, 38, 69, 10
+    AUTOCHECKBOX    "Refresh after switch", IDC_REFRESH,10, 49, 79, 10
+    AUTOCHECKBOX    "Crash recovery", IDC_RECOVERY,     10, 60, 73, 10
+    AUTOCHECKBOX    "Desktop cycling", IDC_DESKCYCLE,   10, 71, 74, 10
+    AUTOCHECKBOX    "Invert Up/Down", IDC_INVERTY,      10, 82, 74, 10
+    AUTOCHECKBOX    "Hide system tray icon", IDC_DISPLAYICON, 10, 93, 80, 10
+    AUTOCHECKBOX    "Disable taskbar detection", IDC_TASKBARDETECT, 10, 104, 100, 10
+    AUTOCHECKBOX    "Use alternate hiding", IDC_TRICKYSUPPORT, 10, 115, 90, 10
+    AUTOCHECKBOX    "XP taskbar patch", IDC_XPSTYLETASKBAR, 10, 126, 90, 10
+    AUTOCHECKBOX    "Permanent sticky", IDC_PERMSTICKY, 10, 137, 90, 10
 END
 
 IDD_PROPPAGE_ABOUT DIALOG 0, 0, 150, 150
 STYLE DS_3DLOOK | WS_CHILD | WS_DISABLED | WS_BORDER
 FONT 8, "MS Sans Serif"
 BEGIN
-    GROUPBOX        "VirtuaWin  V2.x test", IDC_STATIC, 6, 2, 165, 81, 0x0300
-    ICON            IDI_LARGEAPP, IDC_STATIC, 78, 14, 20, 20
-    CTEXT           "Copyright (c) 1999-2004 and 2005 Johan Piculell", IDC_STATIC, 9, 38, 158, 8
-    CTEXT           "virtuawin@home.se", IDC_MAILTO, 9, 48, 158, 8, 0x0100
-    CTEXT           "Latest version, info, source, etc. visit:", IDC_STATIC, 9, 62, 158, 8
-    CTEXT           "http://virtuawin.sourceforge.net/", IDC_HTTP, 9, 72, 158, 10, 0x0100
-    GROUPBOX        "License", IDC_STATIC, 6, 87, 165, 160, 0x0300
-    EDITTEXT        IDC_LICENSE, 11, 98, 155, 147, ES_MULTILINE | ES_READONLY |NOT WS_TABSTOP | NOT WS_BORDER
+    GROUPBOX        "VirtuaWin  V2.11 beta 2", IDC_STATIC, 4, 5, 202, 81, 0x0300
+    ICON            IDI_LARGEAPP, IDC_STATIC, 95, 16, 20, 20
+    CTEXT           "Copyright (c) 1999-2004 and 2005 Johan Piculell", IDC_STATIC, 10, 40, 190, 8
+    CTEXT           "virtuawin@home.se", IDC_MAILTO, 10, 50, 190, 8, 0x0100
+    CTEXT           "Latest version, info, source, etc. visit:", IDC_STATIC, 10, 62, 190, 8
+    CTEXT           "http://virtuawin.sourceforge.net/", IDC_HTTP, 10, 72, 190, 10, 0x0100
+    GROUPBOX        "License", IDC_STATIC, 4, 89, 202, 140, 0x0300
+    EDITTEXT        IDC_LICENSE, 10, 100, 190, 125, ES_MULTILINE | ES_READONLY |NOT WS_TABSTOP | NOT WS_BORDER
 END
 
 IDD_PROPPAGE_MODULES DIALOG 0, 0, 150, 150
 STYLE WS_CHILD | WS_DISABLED | WS_BORDER
 FONT 8, "MS Sans Serif"
 BEGIN
-    LISTBOX         IDC_MODLIST, 10, 15, 155, 100, LBS_NOINTEGRALHEIGHT |
+    GROUPBOX        "Module List", IDC_STATIC, 4, 5, 202, 133
+    LISTBOX         IDC_MODLIST, 10, 16, 190, 100, LBS_NOINTEGRALHEIGHT |
                     WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON      "Configure", IDC_MODCONFIG, 10, 130, 40, 14
-    PUSHBUTTON      "Reload",    IDC_MODRELOAD, 55, 130, 40, 14
-    PUSHBUTTON      "Enable/Disable",  IDC_MODDISABLE, 100, 130, 60, 14
-    GROUPBOX        "Module list", IDC_STATIC, 6, 5, 165, 115
-    GROUPBOX        "", IDC_STATIC, 6, 120, 165, 30
+    PUSHBUTTON      "Configure", IDC_MODCONFIG, 10, 120, 40, 14
+    PUSHBUTTON      "Reload",    IDC_MODRELOAD, 55, 120, 40, 14
+    PUSHBUTTON      "Enable/Disable",  IDC_MODDISABLE, 100, 120, 60, 14
 END
-159 ICON Icons/9.ico
-160 ICON Icons/1.ico
-161 ICON Icons/2.ico
-162 ICON Icons/3.ico
-163 ICON Icons/4.ico
-164 ICON Icons/5.ico
-165 ICON Icons/6.ico
-166 ICON Icons/7.ico
-167 ICON Icons/8.ico
-168 ICON Icons/0.ico
+159 ICON icons/0.ico
+160 ICON icons/1.ico
+161 ICON icons/2.ico
+162 ICON icons/3.ico
+163 ICON icons/4.ico
+164 ICON icons/5.ico
+165 ICON icons/6.ico
+166 ICON icons/7.ico
+167 ICON icons/8.ico
+168 ICON icons/9.ico
 IDR_MENU1 MENU
 BEGIN
     POPUP "emty"
@@ -200,5 +201,8 @@ BEGIN
         MENUITEM "Disable", ID_DISABLE
         MENUITEM SEPARATOR
         MENUITEM "Exit", ID_EXIT
+        MENUITEM SEPARATOR
+        MENUITEM "Next", ID_FORWARD
+        MENUITEM "Previous", ID_BACKWARD
         END
 END

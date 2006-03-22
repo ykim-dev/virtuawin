@@ -34,19 +34,13 @@ extern void loadModules();
 extern void enableMouse(BOOL);
 extern void setMouseKey();
 
-BOOL APIENTRY mouse(HWND, UINT, UINT, LONG);
-BOOL APIENTRY keys(HWND, UINT, UINT, LONG);
-BOOL APIENTRY misc(HWND, UINT, UINT, LONG);
-BOOL APIENTRY modules(HWND, UINT, UINT, LONG);
-BOOL APIENTRY expert(HWND, UINT, UINT, LONG);
-BOOL APIENTRY about(HWND, UINT, UINT, LONG);
-
-int CALLBACK propCallBack(HWND hwndDlg, UINT uMsg, LPARAM lParam);
-
 #endif
 
 /*
  * $Log$
+ * Revision 1.10  2004/04/10 10:20:01  jopi
+ * Updated to compile with gcc/mingw
+ *
  * Revision 1.9  2004/01/10 11:15:52  jopi
  * Updated copyright for 2004
  *

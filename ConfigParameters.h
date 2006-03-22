@@ -22,8 +22,6 @@
 #ifndef _CONFIGPARAMETERS_H_
 #define _CONFIGPARAMETERS_H_
 
-extern HWND hWnd; // The handle to VirtuaWin 
-
 extern int saveInterval; // Number of time loops before saving desktop state
 extern int nOfModules;   // Number of loaded modules
 extern int nWin;         // Number of windows in the system
@@ -54,7 +52,6 @@ extern BOOL hotModWin;		// hot switch key
 extern BOOL mouseModAlt;	// mouse warp key
 extern BOOL mouseModShift;	// mouse warp key
 extern BOOL mouseModCtrl;	// mouse warp key
-extern BOOL mouseModWin;	// mouse warp key
 extern BOOL taskBarWarp;        // if removing taskbar height when warping down
 extern BOOL saveSticky;         // if we shall save sticky win. on exit
 extern BOOL mouseWarpCalled;    // if MouseDll has posted a warp message
@@ -64,70 +61,45 @@ extern BOOL crashRecovery;      // Should we use recovery functionality
 extern BOOL deskWrap;           // If we want to have desktop cycling
 extern BOOL setupOpen;          // if setup dialog is visible
 extern BOOL invertY;            // if up/down should be inverted
-extern short stickyMenu;         // if sticky window menu should be shown
-extern short assignMenu;         // if assign window menu should be shown
-extern short directMenu;         // if direct access window menu should be shown
+extern short stickyMenu;        // if sticky window menu should be shown
+extern short assignMenu;        // if assign window menu should be shown
+extern short directMenu;        // if direct access window menu should be shown
 extern BOOL useDeskAssignment;  // if we have desktop assignment 
 extern BOOL saveLayoutOnExit;   // save the desktop layout upon exit
 extern BOOL assignOnlyFirst;    // only assign the first window to a saved desktop 
-extern BOOL cyclingKeysEnabled; // If we are using the cycling hotkeys
 extern BOOL displayTaskbarIcon; // Should we display the systray icon
 extern BOOL noTaskbarCheck;     // Should we skip the taskbar search
 extern BOOL trickyWindows;      // Use the alternate hiding technique
 extern BOOL permanentSticky;    // If a sticky classname should be permanent
 
-extern UINT MOUSEKEY;           // Holds the modifier for enabling mouse warp
-extern UINT VW_STICKY;
-extern UINT VW_STICKYMOD;
-extern UINT VW_STICKYWIN;
-extern UINT hotkey1;
-extern UINT hotkey1Mod;
-extern UINT hotkey1Win;
-extern UINT hotkey2;
-extern UINT hotkey2Mod;
-extern UINT hotkey2Win;
-extern UINT hotkey3;
-extern UINT hotkey3Mod;
-extern UINT hotkey3Win;
-extern UINT hotkey4;
-extern UINT hotkey4Mod;
-extern UINT hotkey4Win;
-extern UINT hotkey5;
-extern UINT hotkey5Mod;
-extern UINT hotkey5Win;
-extern UINT hotkey6;
-extern UINT hotkey6Mod;
-extern UINT hotkey6Win;
-extern UINT hotkey7;
-extern UINT hotkey7Mod;
-extern UINT hotkey7Win;
-extern UINT hotkey8;
-extern UINT hotkey8Mod;
-extern UINT hotkey8Win;
-extern UINT hotkey9;
-extern UINT hotkey9Mod;
-extern UINT hotkey9Win;
+extern BOOL cyclingKeysEnabled; // If we are using the cycling hotkeys
+extern UINT hotCycleUp;
+extern UINT hotCycleUpMod;
+extern UINT hotCycleUpWin;
+extern UINT hotCycleDown;
+extern UINT hotCycleDownMod;
+extern UINT hotCycleDownWin;
 
+extern UINT deskHotkey[MAXDESK];
+extern UINT deskHotkeyMod[MAXDESK];
+extern UINT deskHotkeyWin[MAXDESK];
+
+extern UINT hotkeyMenuEn;
 extern UINT hotkeyMenu;
 extern UINT hotkeyMenuMod;
 extern UINT hotkeyMenuWin;
-extern UINT hotkeyMenuEn;
-
-extern UINT hotCycleUp;
-extern UINT hotCycleUpMod;
-extern UINT hotCycleDown;
-extern UINT hotCycleDownMod;
-
-extern int screenRight;	  // the width of screen, from VirtuaWin.h
-extern int screenBottom;  // the height of screen, from VirtuaWin.h
-
-extern int curDisabledMod; // how many disabled modules we have
-extern int taskbarOffset;  // Default 3, 0 if XP skinned taskbar is used.
+extern UINT hotkeyStickyEn;
+extern UINT hotkeySticky;
+extern UINT hotkeyStickyMod;
+extern UINT hotkeyStickyWin;
 
 #endif
 
 /*
  * $Log$
+ * Revision 1.15  2005/03/10 08:02:10  rexkerr
+ * Added multi-user support
+ *
  * Revision 1.14  2004/02/28 18:54:01  jopi
  * SF904069 Added possibility to choose if sticky should be permanent for all instances of the same classname.
  *

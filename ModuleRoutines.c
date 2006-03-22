@@ -25,10 +25,11 @@
 #include <string.h>
 
 // Includes
+#include "VirtuaWin.h"
 #include "ModuleRoutines.h"
+#include "Defines.h"
 #include "Messages.h"
 #include "ConfigParameters.h"
-#include "Defines.h"
 #include "ListStructures.h"
 #include "DiskRoutines.h"
 
@@ -36,120 +37,126 @@
 /*************************************************
  * Unloads all modules in the module list
  */
-void unloadModules()
+void unloadModules(void)
 {
-   sendModuleMessage(MOD_QUIT, 0, 0);
+    sendModuleMessage(MOD_QUIT, 0, 0);
+}
+
+/*************************************************
+ * Checks if a module is disabled
+ */
+static BOOL checkDisabledList(char* theModName)
+{
+    int modIndex;
+    
+    for (modIndex = 0; modIndex < curDisabledMod; ++modIndex)
+        if (!strncmp(disabledModules[modIndex].moduleName, theModName, (strlen(theModName) - 4)))
+            return TRUE; // Module disabled
+    return FALSE;  // Not disabled
+}
+
+/*************************************************
+ * Adds a module to a list, found by loadModules()
+ */
+static void addModule(char *moduleName, char *path)
+{
+    char tmpPath[MAX_PATH];
+    char errMsg[150];
+    HWND myModule;
+    STARTUPINFO si;
+    PROCESS_INFORMATION pi;  
+    int retVal = 1;
+    
+    if(nOfModules >= MAXMODULES)
+    {
+        sprintf(errMsg, "Max number of modules where added.\n'%s' won't be loaded.", moduleName);
+        MessageBox(hWnd, errMsg, "Warning",0 );
+        return;
+    }
+    
+    // Is the module disabled
+    if(!checkDisabledList(moduleName))
+    {
+        if((myModule = FindWindow(moduleName, NULL)))
+        {
+            sprintf(errMsg, "The module '%s' seems to already be running and will be re-used. \nThis is probably due to incorrect shutdown of VirtuaWin" , moduleName);
+            MessageBox(hWnd, errMsg, "Module warning", 0);
+        }
+        else
+        {
+            // Startup the module
+            strcpy(tmpPath,path) ;
+            strcat(tmpPath,moduleName) ;
+            memset(&si, 0, sizeof(si)); 
+            si.cb = sizeof(si); 
+            if(!CreateProcess(tmpPath, NULL, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi))
+            {
+                LPTSTR  lpszLastErrorMsg; 
+                FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM, NULL, 
+                              GetLastError(), 
+                              MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), //The user default language 
+                              (LPTSTR) &lpszLastErrorMsg, 
+                              0, 
+                              NULL ); 
+                
+                sprintf(errMsg, "Failed to load module '%s'.\n %s", moduleName, lpszLastErrorMsg);
+                MessageBox(hWnd, errMsg, "Module error",0 );
+                return;
+            }
+            // Wait max 5 sec for the module to initialize itself
+            retVal = WaitForInputIdle( pi.hProcess, 10000); 
+            
+            // Find the module with classname 
+            myModule = FindWindow(moduleName, NULL);
+        }
+        if(!myModule)
+        {
+            sprintf(errMsg, "Failed to load module '%s'.\n Maybe wrong class/filename.\nErrcode %d", moduleName, retVal);
+            MessageBox(hWnd, errMsg, "Module error",0 );
+        }
+        else
+        {
+            moduleList[nOfModules].Handle = myModule;
+            moduleList[nOfModules].Disabled = FALSE;
+            moduleName[strlen(moduleName)-4] = '\0'; // remove .exe
+            strncpy(moduleList[nOfModules].description, moduleName, 79);
+            PostMessage(myModule, MOD_INIT, (WPARAM) hWnd , 0);
+            nOfModules++;
+        }
+    } 
+    else
+    { // Module disabled
+        moduleList[nOfModules].Handle = NULL;
+        moduleList[nOfModules].Disabled = TRUE;
+        moduleName[strlen(moduleName)-4] = '\0'; // remove .exe
+        strncpy(moduleList[nOfModules].description, moduleName, 79);
+        nOfModules++;
+    }
 }
 
 /*************************************************
  * Locates modules in "Modules" directory, that is 
  * all files with an .exe extension
  */
-void loadModules()
+void loadModules(void)
 {
-   struct _finddata_t exe_file;
-   long hFile;
-  
-
-   char VWModulesFiles[MAX_PATH];
-   GetFilename(vwMODULES, VWModulesFiles);
-
-   // Find first .exe file in modules directory
-   if( (hFile = _findfirst(VWModulesFiles, &exe_file )) == -1L )
-      return;
-   else {
-      addModule(&exe_file);
-   }
-   // Find the rest of the .exe files
-   while( _findnext( hFile, &exe_file ) == 0 ) {
-      addModule(&exe_file);
-   }
-  
-   _findclose( hFile );
-}
-
-/*************************************************
- * Adds a module to a list, found by loadModules()
- */
-void addModule(struct _finddata_t* aModule)
-{
-  char VirtuawinEXEPath[MAX_PATH];
-  GetFilename(vwPATH, VirtuawinEXEPath);
-
-   char errMsg[150];
-   HWND myModule;
-   char tmpPath[100];
-   STARTUPINFO si;
-   PROCESS_INFORMATION pi;  
-   sprintf(tmpPath, "%smodules\\", VirtuawinEXEPath);
-   int retVal = 1;
-
-   if(nOfModules >= MAXMODULES) {
-      sprintf(errMsg, "Max number of modules where added.\n'%s' won't be loaded.", aModule->name);
-      MessageBox(hWnd, errMsg, "Warning",0 );
-      return;
-   }
-  
-   // Is the module disabled
-   if(!checkDisabledList(aModule->name)) {
-      if((myModule = FindWindow(aModule->name, NULL))) {
-         sprintf(errMsg, "The module '%s' seems to already be running and will be re-used. \nThis is probably due to incorrect shutdown of VirtuaWin" , aModule->name);
-         MessageBox(hWnd, errMsg, "Module warning", 0);
-      } else {
-         // Startup the module
-         memset(&si, 0, sizeof(si)); 
-         si.cb = sizeof(si); 
-         if(!CreateProcess(strcat(tmpPath, aModule->name), NULL, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi)) {
-            LPTSTR  lpszLastErrorMsg; 
-            FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM, NULL, 
-                          GetLastError(), 
-                          MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), //The user default language 
-                          (LPTSTR) &lpszLastErrorMsg, 
-                          0, 
-                          NULL ); 
-            
-            sprintf(errMsg, "Failed to load module '%s'.\n %s", aModule->name, lpszLastErrorMsg);
-            MessageBox(hWnd, errMsg, "Module error",0 );
-            return;
-         }
-         // Wait max 5 sec for the module to initialize itself
-         retVal = WaitForInputIdle( pi.hProcess, 10000); 
-         
-         // Find the module with classname 
-         myModule = FindWindow(aModule->name, NULL);
-      }
-      if(!myModule) {
-         sprintf(errMsg, "Failed to load module '%s'.\n Maybe wrong class/filename.\nErrcode %d", aModule->name, retVal);
-         MessageBox(hWnd, errMsg, "Module error",0 );
-      } else {
-         moduleList[nOfModules].Handle = myModule;
-         moduleList[nOfModules].Disabled = FALSE;
-         aModule->name[strlen(aModule->name)-4] = '\0'; // remove .exe
-         strncpy(moduleList[nOfModules].description, aModule->name, 79);
-         PostMessage(myModule, MOD_INIT, (WPARAM) hWnd , 0);
-         nOfModules++;
-      }
-   } else { // Module disabled
-      moduleList[nOfModules].Handle = NULL;
-      moduleList[nOfModules].Disabled = TRUE;
-      aModule->name[strlen(aModule->name)-4] = '\0'; // remove .exe
-      strncpy(moduleList[nOfModules].description, aModule->name, 79);
-      nOfModules++;
-   }
-}
-
-/*************************************************
- * Checks if a module is disabled
- */
-BOOL checkDisabledList(char* theModName)
-{
-  int modIndex;
-  
-  for (modIndex = 0; modIndex < curDisabledMod; ++modIndex) {
-    if (!strncmp(disabledModules[modIndex].moduleName, theModName, (strlen(theModName) - 4)))
-      return TRUE; // Module disabled
-  }
-  return FALSE;  // Not disabled
+    WIN32_FIND_DATA exe_file;
+    char buff[MAX_PATH], *ss ;
+    HANDLE hFile;
+    
+    GetFilename(vwMODULES, buff);
+    
+    // Find first .exe file in modules directory
+    if((hFile = FindFirstFile(buff,&exe_file)) != INVALID_HANDLE_VALUE)
+    {
+        if((ss = strrchr(buff,'\\')) != NULL)
+            ss[1] = '\0' ;
+        do {
+            addModule(exe_file.cFileName,buff);
+        } while(FindNextFile(hFile,&exe_file)) ;
+        
+        FindClose(hFile);
+    }
 }
 
 /*************************************************
@@ -157,11 +164,11 @@ BOOL checkDisabledList(char* theModName)
  */
 void sendModuleMessage(UINT Msg, WPARAM wParam,	LPARAM lParam)
 {
-   int index;
-   for(index = 0; index < nOfModules; ++index) {
-      if(moduleList[index].Handle != NULL) 
-         SendMessage(moduleList[index].Handle, Msg, wParam, lParam);
-   }
+    int index;
+    for(index = 0; index < nOfModules; ++index) {
+        if(moduleList[index].Handle != NULL) 
+            SendMessage(moduleList[index].Handle, Msg, wParam, lParam);
+    }
 }
 
 /*************************************************
@@ -169,15 +176,18 @@ void sendModuleMessage(UINT Msg, WPARAM wParam,	LPARAM lParam)
  */
 void postModuleMessage(UINT Msg, WPARAM wParam, LPARAM lParam)
 {
-   int index;
-   for(index = 0; index < nOfModules; ++index) {
-      if(moduleList[index].Handle != NULL)
-         PostMessage(moduleList[index].Handle, Msg, wParam, lParam);
-   }
+    int index;
+    for(index = 0; index < nOfModules; ++index) {
+        if(moduleList[index].Handle != NULL)
+            PostMessage(moduleList[index].Handle, Msg, wParam, lParam);
+    }
 }
 
 /*
  * $Log$
+ * Revision 1.11  2005/03/10 08:06:40  rexkerr
+ * Fixed compile error in ModuleRoutines
+ *
  * Revision 1.10  2004/04/10 10:20:01  jopi
  * Updated to compile with gcc/mingw
  *
