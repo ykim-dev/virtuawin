@@ -80,28 +80,3 @@
 #define MOD_CFGCHANGE (WM_USER + 38)
 
 #endif
-
-/*
- * $Log$
- * Revision 1.7  2004/02/28 23:50:26  jopi
- * SF905625 Added module message for changing the sticky state of a window
- *
- * Revision 1.6  2003/11/05 15:46:34  jopi
- * Better description of ASSIGNWIN
- *
- * Revision 1.5  2003/06/26 19:56:52  jopi
- * Added module support for assigning a window to specified desktop
- *
- * Revision 1.4  2001/11/12 21:39:15  jopi
- * Added functionality for disabling the systray icon
- *
- * Revision 1.3  2001/01/12 16:58:11  jopi
- * Added module message for getting the current desktop number
- *
- * Revision 1.2  2000/07/18 16:03:34  jopi
- * Changed mail adress in error message
- *
- * Revision 1.1.1.1  2000/06/03 15:38:05  jopi
- * Added first time
- *
- */

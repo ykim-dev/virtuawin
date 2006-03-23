@@ -1,7 +1,7 @@
 //
 //  VirtuaWin - Virtual Desktop Manager for Win9x/NT/Win2K/XP
 // 
-//  Copyright (c) 1999-2003, 2004 Johan Piculell
+//  Copyright (c) 1999-2005, 2006 Johan Piculell
 // 
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -45,7 +45,7 @@
 HWND hWnd;		  // handle to VirtuaWin
 HANDLE hMutex;
 BOOL taskbarFixRequired;  // TRUE if tricky window tasks need to be continually hidden
-BOOL mouseEnabled=TRUE;   // Status of the mouse thread, always running at startup 
+BOOL mouseEnabled=FALSE;  // Status of the mouse thread, always running at startup 
 HANDLE mouseThread;       // Handle to the mouse thread
 int curAssigned = 0;      // how many predefined desktop belongings we have (saved)
 int curSticky = 0;        // how many stickywindows we have (saved)
@@ -1791,27 +1791,20 @@ static HMENU createSortedWinList_cos(void)
             items[i++] = item;
             item->name = strdup(title) ;
             
-#if 0
-            // this only works on WinNT and requires psapi.lib
-            if((hSmallIcon = (HICON)GetClassLong(winList[c].Handle, GCL_HICON)) == 0)
+            if((hSmallIcon = (HICON)GetClassLong(winList[c].Handle, GCL_HICON)) == NULL)
             {
-                HINSTANCE instance;
-                DWORD processId;
-                HANDLE process;
-                GetWindowThreadProcessId(winList[c].Handle, &processId);
-                process = OpenProcess(PROCESS_ALL_ACCESS,FALSE,processId);
-                if(process != NULL)
-                {
-                    if(((instance = (HINSTANCE) GetWindowLong(winList[c].Handle,GWL_HINSTANCE)) != 0) &&
-                       (GetModuleFileNameEx(process,instance,buff,MAX_PATH) != 0))
-                        hSmallIcon = ExtractIcon(hInst,buff,0);
-                    CloseHandle(process);
-                }
+                // Fallback plan, maybe this works better for this type of application
+                // Otherwise there is not much we can do (could try looking for an owned window)
+                DWORD theIcon;
+                SendMessageTimeout(winList[c].Handle, WM_GETICON, ICON_SMALL, 0L, 
+                                   SMTO_ABORTIFHUNG | SMTO_BLOCK, 100, &theIcon);
+                if(theIcon == 0)
+                    // some apps (e.g. Opera) only have big icons
+                    SendMessageTimeout(winList[c].Handle, WM_GETICON, ICON_BIG, 0L, 
+                                       SMTO_ABORTIFHUNG | SMTO_BLOCK, 100, &theIcon);
+                hSmallIcon = (HICON)theIcon;
             }
-            if(hSmallIcon != 0)
-#else
-            if((hSmallIcon = (HICON)GetClassLong(winList[c].Handle, GCL_HICON)) != 0)
-#endif
+            if(hSmallIcon != NULL)
                 item->icon = createBitmapIcon(hSmallIcon);
             else
                 item->icon = 0 ;
@@ -1826,11 +1819,11 @@ static HMENU createSortedWinList_cos(void)
     releaseMutex();
     
     // sorting using bubble sort
-    for (x = 0; x < i; x++ )
+    for(x = 0; x < i; x++ )
     {
-        for (y = 0; y<i; y++)
+        for(y = 0; y<i; y++)
         {
-            if( strcmp(items[x]->name, items[y]->name) < 0 )
+            if(strcmp(items[x]->name, items[y]->name) < 0 )
             {
                 item = items [x];
                 items[x] = items[y];
@@ -1840,15 +1833,19 @@ static HMENU createSortedWinList_cos(void)
     }
     
     c = 0; d=1; e=0; menuBreak = FALSE;
-    if(stickyMenu) {
+    if(stickyMenu)
+    {
         for (x=0; x < i; x++ )
         {
-            if ((!c || c != items[x]->desk) &&d )
+            if((!c || (c != items[x]->desk)) && d)
             {
-                if(c) AppendMenu(hMenu, MF_SEPARATOR, 0, NULL );
-                c = items[x]->desk; d=0;
+                if(c)
+                    AppendMenu(hMenu, MF_SEPARATOR, 0, NULL );
+                c = items[x]->desk;
+                d=0;
             }
-            if (!e && useTitle ) {
+            if(!e && useTitle)
+            {
                 AppendMenu(hMenu, MF_STRING, 0, "Sticky" );
                 AppendMenu(hMenu, MF_SEPARATOR, 0, NULL );
                 AppendMenu(hMenu, MF_SEPARATOR, 0, NULL );
@@ -1863,55 +1860,63 @@ static HMENU createSortedWinList_cos(void)
     }
     
     c=0; d=1; e=0;
-    if(directMenu) {
-        if (stickyMenu) menuBreak = TRUE;
-        for (x=0; x < i; x++ )
+    if(directMenu)
+    {
+        if(stickyMenu)
+            menuBreak = TRUE;
+        for(x=0; x < i; x++ )
         {
-            // accessing current desk - direct assign makes no sense
-            if (items[x]->desk != currentDesk) {
-                if ((!c || c != items[x]->desk)&&d)
-                {
-                    if(c) AppendMenu(hMenu, MF_SEPARATOR, 0, NULL );
-                    c = items[x]->desk; d=0;
-                }
-                if (!e && useTitle) {
-                    if (menuBreak) {
-                        AppendMenu( hMenu,
-                                    MF_STRING | MF_MENUBARBREAK, 0, "Access" );
-                        menuBreak = FALSE;
-                    }
-                    else
-                        AppendMenu(hMenu, MF_STRING, 0, "Access" );
-                    
+            if((!c || (c != items[x]->desk)) && d)
+            {
+                if(c)
                     AppendMenu(hMenu, MF_SEPARATOR, 0, NULL );
-                    AppendMenu(hMenu, MF_SEPARATOR, 0, NULL );
-                    e=1;
-                }
-                AppendMenu( hMenu, MF_STRING | (items[x]->sticky ? MF_CHECKED: 0),
-                            vwPMENU_ACCESS | (items[x]->id), items[x]->name );
-                if(items[x]->icon != 0)
-                    SetMenuItemBitmaps(hMenu, vwPMENU_ACCESS | (items[x]->id), MF_BYCOMMAND, items[x]->icon, 0);
-                d=1;
+                c = items[x]->desk;
+                d=0;
             }
+            if(!e && useTitle)
+            {
+                if(menuBreak)
+                {
+                    AppendMenu(hMenu, MF_STRING | MF_MENUBARBREAK, 0, "Access" );
+                    menuBreak = FALSE;
+                }
+                else
+                    AppendMenu(hMenu, MF_STRING, 0, "Access" );
+                
+                AppendMenu(hMenu, MF_SEPARATOR, 0, NULL );
+                AppendMenu(hMenu, MF_SEPARATOR, 0, NULL );
+                e=1;
+            }
+            AppendMenu( hMenu, MF_STRING, vwPMENU_ACCESS | (items[x]->id), items[x]->name );
+            if(items[x]->icon != 0)
+                SetMenuItemBitmaps(hMenu, vwPMENU_ACCESS | (items[x]->id), MF_BYCOMMAND, items[x]->icon, 0);
+            d=1;
         }
     }
     
     c=0; d=1; e=0;
-    if(assignMenu) {
-        if (stickyMenu || directMenu) menuBreak=TRUE;
-        for (x=0; x < i; x++ )
+    if(assignMenu)
+    {
+        if(stickyMenu || directMenu)
+            menuBreak=TRUE;
+        for(x=0; x < i; x++ )
         {
             //sticky windows can't be assigned cause they're sticky :-) so leave them.out..
             //cannot assign to current Desktop
-            if ((!items[x]->sticky) && (items[x]->desk != currentDesk))
+            y = (!items[x]->sticky) && (items[x]->desk != currentDesk) ;
+            if(y || useTitle)
             {
-                if ((!c || c != items[x]->desk)&&d)
+                if ((!c || (c != items[x]->desk)) && d)
                 {
-                    if(c) AppendMenu(hMenu, MF_SEPARATOR, 0, NULL );
-                    c = items [x]->desk; d=0;
+                    if(c)
+                        AppendMenu(hMenu, MF_SEPARATOR, 0, NULL );
+                    c = items [x]->desk;
+                    d=0;
                 }
-                if (!e && useTitle) {
-                    if ( menuBreak ) {
+                if (!e && useTitle)
+                {
+                    if(menuBreak)
+                    {
                         AppendMenu( hMenu, MF_STRING | MF_MENUBARBREAK, 0, "Assign" );
                         menuBreak = FALSE; d=1;
                     }
@@ -1922,9 +1927,14 @@ static HMENU createSortedWinList_cos(void)
                     AppendMenu(hMenu, MF_SEPARATOR, 0, NULL );
                     e=1;
                 }
-                AppendMenu( hMenu, MF_STRING, (vwPMENU_ASSIGN | (items[x]->id)), items[x]->name );
-                if(items[x]->icon != 0)
-                    SetMenuItemBitmaps(hMenu, (vwPMENU_ASSIGN | (items[x]->id)), MF_BYCOMMAND, items[x]->icon, 0);
+                if(y)
+                {
+                    AppendMenu( hMenu, MF_STRING, (vwPMENU_ASSIGN | (items[x]->id)), items[x]->name );
+                    if(items[x]->icon != 0)
+                        SetMenuItemBitmaps(hMenu, (vwPMENU_ASSIGN | (items[x]->id)), MF_BYCOMMAND, items[x]->icon, 0);
+                }
+                else
+                    AppendMenu( hMenu, MF_GRAYED, 0, "") ;
                 d=1;
             }
         }

@@ -5,7 +5,7 @@
 //  for moving the current active window to next or previous desktop
 //  
 // 
-//  Copyright (c) 1999, 2000, 2001, 2002, 2003, 2004 Johan Piculell
+//  Copyright (c) 1999, 2000, 2001, 2002, 2003, 2004, 2005 Johan Piculell
 // 
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -355,22 +355,3 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     }
     return msg.wParam;
 }
-
-/*
- * $Log$
- * Revision 1.5  2006/03/22 23:29:11  bjasspa
- * Changed assigner to use the user's config path and added + WIN hotkey modifier.
- *
- * Revision 1.4  2005/11/15 17:58:16  jopi
- * Fixed incompatibility with version 2.11
- *
- * Revision 1.3  2004/12/07 19:47:22  jopi
- * SF1004932, assignment is now able to send windows past the desktop boundaries.
- *
- * Revision 1.2  2004/04/10 11:38:40  jopi
- * Updated to use gcc/mingw
- *
- * Revision 1.1  2003/06/26 19:27:40  jopi
- * Added new VWAssigner module
- *
- */

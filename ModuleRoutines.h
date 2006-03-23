@@ -30,28 +30,3 @@ void sendModuleMessage(UINT Msg, WPARAM wParam, LPARAM lParam);
 void postModuleMessage(UINT Msg, WPARAM wParam, LPARAM lParam);
 
 #endif
-
-/*
- * $Log$
- * Revision 1.7  2004/12/02 07:38:28  jopi
- * Removed compilation warning
- *
- * Revision 1.6  2004/01/10 11:15:52  jopi
- * Updated copyright for 2004
- *
- * Revision 1.5  2003/01/27 20:23:53  jopi
- * Updated copyright header for 2003
- *
- * Revision 1.4  2002/12/29 15:20:39  jopi
- * Fixed copyright info.
- *
- * Revision 1.3  2002/02/14 21:23:40  jopi
- * Updated copyright header
- *
- * Revision 1.2  2001/02/05 21:13:08  jopi
- * Updated copyright header
- *
- * Revision 1.1.1.1  2000/06/03 15:38:05  jopi
- * Added first time
- *
- */

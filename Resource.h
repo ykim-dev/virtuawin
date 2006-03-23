@@ -120,37 +120,3 @@
 #define	ID_HELP	        32777
 
 #endif
-
-/*
- * $Log$
- * Revision 1.10  2004/02/28 18:54:01  jopi
- * SF904069 Added possibility to choose if sticky should be permanent for all instances of the same classname.
- *
- * Revision 1.9  2003/06/24 19:47:04  jopi
- * SF693876 Fixed option to handle XP skinned style taskbars
- *
- * Revision 1.8  2003/03/10 20:48:20  jopi
- * Changed so that doubleclick will bring up setup and added a disabled menu item instead.
- *
- * Revision 1.7  2002/12/23 15:42:28  jopi
- * Added config options to disable taskbar detection and the alternative hiding technique.
- *
- * Revision 1.6  2002/12/23 14:16:47  jopi
- * Added a new setup tab, "expert" and moved some settings from misc.
- *
- * Revision 1.5  2002/06/01 21:15:23  Johan Piculell
- * Multiple fixes by Christian Storm.
- *
- * Revision 1.4  2001/11/12 21:39:14  Johan Piculell
- * Added functionality for disabling the systray icon
- *
- * Revision 1.3  2001/01/28 16:10:00  Administrator
- * Added #ifndef/#define
- *
- * Revision 1.2  2000/08/18 23:43:07  Administrator
- *  Minor modifications by Matti Jagula <matti@proekspert.ee> List of modifications follows: Added window title sorting in popup menus (Assign, Direct, Sticky) Added some controls to Setup Misc tab and support for calling the popup menus from keyboard.
- *
- * Revision 1.1.1.1  2000/06/03 15:38:05  Administrator
- * Added first time
- *
- */

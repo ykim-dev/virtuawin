@@ -312,17 +312,3 @@ static BOOL CALLBACK DialogFunc(HWND hwndDlg, UINT msg, WPARAM wParam, LPARAM lP
     }
     return FALSE;
 }
-
-/*
- * $Log$
- * Revision 1.4  2003/01/27 20:26:01  jopi
- * Updated copyright header
- *
- * Revision 1.3  2001/02/05 21:24:45  jopi
- * Updated copyright header
- *
- * Revision 1.2  2000/12/11 19:59:26  jopi
- * Added classname for all applications
- *
- *
- */

@@ -93,28 +93,3 @@ assignedType assignedList[MAXWIN];        // list with all windows that have a p
 windowType winList[MAXWIN];               // list for holding windows
 
 #endif
-
-/*
- * $Log$
- * Revision 1.7  2004/01/10 11:15:52  jopi
- * Updated copyright for 2004
- *
- * Revision 1.6  2003/01/27 20:23:53  jopi
- * Updated copyright header for 2003
- *
- * Revision 1.5  2002/12/29 15:20:37  jopi
- * Fixed copyright info.
- *
- * Revision 1.4  2002/02/14 21:23:39  jopi
- * Updated copyright header
- *
- * Revision 1.3  2001/12/01 00:05:52  jopi
- * Added alternative window hiding for troublesome windows like InternetExplorer
- *
- * Revision 1.2  2001/02/05 21:13:07  jopi
- * Updated copyright header
- *
- * Revision 1.1.1.1  2000/06/03 15:38:05  jopi
- * Added first time
- *
- */

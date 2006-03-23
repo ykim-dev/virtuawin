@@ -24,7 +24,7 @@
 
 // application name and version defines
 #define vwVIRTUAWIN_NAME    "VirtuaWin"
-#define vwVIRTUAWIN_VERSION "v3.0 beta 1"   
+#define vwVIRTUAWIN_VERSION "v3.0 beta 2"
 #define vwVIRTUAWIN_EMAIL   "VirtuaWin@home.se"
 #define vwVIRTUAWIN_NAME_VERSION vwVIRTUAWIN_NAME " " vwVIRTUAWIN_VERSION
 
@@ -47,31 +47,3 @@
 #define VW_MOUSERESET WM_USER + 95
 
 #endif
-
-/*
- * $Log$
- * Revision 1.8  2004/01/10 11:15:52  jopi
- * Updated copyright for 2004
- *
- * Revision 1.7  2003/01/27 20:23:53  jopi
- * Updated copyright header for 2003
- *
- * Revision 1.6  2002/12/29 15:20:35  jopi
- * Fixed copyright info.
- *
- * Revision 1.5  2002/02/14 21:23:38  jopi
- * Updated copyright header
- *
- * Revision 1.4  2001/02/05 21:13:07  jopi
- * Updated copyright header
- *
- * Revision 1.3  2001/01/28 16:10:24  jopi
- * Added #ifndef/#define
- *
- * Revision 1.2  2000/08/21 20:54:32  jopi
- * More than MAXMODULES modules would corrupt data and cause undefined behaviour, also increased value from 5 to 10
- *
- * Revision 1.1.1.1  2000/06/03 15:38:05  jopi
- * Added first time
- *
- */
