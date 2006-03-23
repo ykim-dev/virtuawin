@@ -89,6 +89,8 @@ HWND taskHWnd;                  // handle to taskbar
 HWND desktopHWnd;		// handle to the desktop window
 HWND lastFGHWnd;		// handle to the last foreground window
 int  lastFGStyle;               // style of the last foreground window
+HWND lastBOFGHWnd;		// handle to the last but one foreground window
+int  lastBOFGStyle;             // style of the last but one foreground window
 
 // vector holding icon handles for the systray
 HICON icons[MAXDESK];           // 0=disabled, 1=9=nromal desks, 10=private desk
@@ -182,11 +184,25 @@ unsigned long vwZOrder=0 ;
 #define vwSHWIN_TRYHARD   0x01
 BOOL showHideWindow(windowType *aWindow, int shwFlags, unsigned char show);
 
-#ifdef NDEBUG
-#define vwLogPrint(a)
+#ifndef NDEBUG
+#define vwLOG_PRINT_ENABLED
+#define vwLOG_DEBUG_ENABLED
+#endif
+
+#ifdef vwLOG_DEBUG_ENABLED
+#ifndef vwLOG_PRINT_ENABLED
+#define vwLOG_PRINT_ENABLED
+#endif
+#define vwLogDebug(a) (fprintf a , fflush(vwLog))
 #else
+#define vwLogDebug(a)
+#endif
+
+#ifdef vwLOG_PRINT_ENABLED
 FILE *vwLog ;
 #define vwLogPrint(a) (fprintf a , fflush(vwLog))
+#else
+#define vwLogPrint(a)
 #endif
 
 /************************************************
@@ -639,23 +655,23 @@ static void unRegisterDismissKey(void)
 void registerAllKeys(void)
 {
     if(!registerKeys())
-        MessageBox(hWnd, "Invalid key modifier combination, check control keys!", 
-                   NULL, MB_ICONWARNING);
+        MessageBox(hWnd, "Invalid key modifier combination, check cursor hotkeys!", 
+                   vwVIRTUAWIN_NAME " Error", MB_ICONWARNING);
     if(!registerCyclingKeys())
-        MessageBox(hWnd, "Invalid key modifier combination, check cycling hot keys!", 
-                   NULL, MB_ICONWARNING);
+        MessageBox(hWnd, "Invalid key modifier combination, check cycling hotkeys!", 
+                   vwVIRTUAWIN_NAME " Error", MB_ICONWARNING);
     if(!registerHotKeys())
-        MessageBox(hWnd, "Invalid key modifier combination, check hot keys!", 
-                   NULL, MB_ICONWARNING);
+        MessageBox(hWnd, "Invalid key modifier combination, check hotkeys!", 
+                   vwVIRTUAWIN_NAME " Error", MB_ICONWARNING);
     if(!registerMenuHotKey())
-        MessageBox(hWnd, "Invalid key modifier combination, check menu hot key!", 
-                   NULL, MB_ICONWARNING);
+        MessageBox(hWnd, "Invalid key modifier combination, check menu hotkey!", 
+                   vwVIRTUAWIN_NAME " Error", MB_ICONWARNING);
     if(!registerStickyKey())
-        MessageBox(hWnd, "Invalid key modifier combination, check sticky hot key!", 
-                   NULL, MB_ICONWARNING);
+        MessageBox(hWnd, "Invalid key modifier combination, check sticky hotkey!", 
+                   vwVIRTUAWIN_NAME " Error", MB_ICONWARNING);
     if(!registerDismissKey())
-        MessageBox(hWnd, "Invalid key modifier combination, check dismiss window hot key!", 
-                   NULL, MB_ICONWARNING);
+        MessageBox(hWnd, "Invalid key modifier combination, check dismiss window hotkey!", 
+                   vwVIRTUAWIN_NAME " Error", MB_ICONWARNING);
 }
 
 /************************************************
@@ -805,7 +821,7 @@ static BOOL isTrickyWindow(char *className, RECT *pos)
         int i=curTricky ;
         while(--i >= 0)
         {
-            vwLogPrint((vwLog, "Tricky comparing [%s] with %d [%s]\n",className,trickyList[i].winClassLen,trickyList[i].winClassName)) ;
+            vwLogDebug((vwLog, "Tricky comparing [%s] with %d [%s]\n",className,trickyList[i].winClassLen,trickyList[i].winClassName)) ;
             if(!strncmp(trickyList[i].winClassName,className,trickyList[i].winClassLen)) 
                 return vwTRICKY_WINDOW ;
         }
@@ -829,7 +845,7 @@ static BOOL checkIfSavedSticky(char *className)
     int i=curSticky ;
     while(--i >= 0)
     {
-        vwLogPrint((vwLog, "Sticky comparing [%s] with %d [%s]\n",className,stickyList[i].winClassLen,stickyList[i].winClassName)) ;
+        vwLogDebug((vwLog, "Sticky comparing [%s] with %d [%s]\n",className,stickyList[i].winClassLen,stickyList[i].winClassName)) ;
         if(!strncmp(stickyList[i].winClassName, className, stickyList[i].winClassLen))
             // Typically user windows will loose their stickiness if
             // minimized, therefore we do not remove their name from 
@@ -847,7 +863,7 @@ static int checkIfAssignedDesktop(char *className)
     int i;
     for(i = 0; i < curAssigned; ++i) 
     {
-        vwLogPrint((vwLog, "Assign comparing [%s] with %d [%s]\n",className,assignedList[i].winClassLen,assignedList[i].winClassName)) ;
+        vwLogDebug((vwLog, "Assign comparing [%s] with %d [%s]\n",className,assignedList[i].winClassLen,assignedList[i].winClassName)) ;
         
         if((assignedList[i].winClassLen > 0) &&
            !strncmp(assignedList[i].winClassName, className, assignedList[i].winClassLen))
@@ -914,18 +930,18 @@ static void setForegroundWin(HWND theWin, int makeTop)
                     err = SetForegroundWindow(hWnd) ; 
                     // Set VirtuaWin active. Don't no why, but it seems to work
                     AttachThreadInput(ThreadID1, ThreadID2, FALSE);
-                    vwLogPrint((vwLog, "Attached to foreground Window: %x - %x\n",(int) cwHwnd,(int) GetForegroundWindow())) ;
+                    vwLogDebug((vwLog, "Attached to foreground Window: %x - %x\n",(int) cwHwnd,(int) GetForegroundWindow())) ;
                 }
                 else
                 {
                     SetForegroundWindow(hWnd) ; 
-                    vwLogPrint((vwLog, "VW owns foreground Window: %x - %x\n",(int) cwHwnd,(int) GetForegroundWindow())) ;
+                    vwLogDebug((vwLog, "VW owns foreground Window: %x - %x\n",(int) cwHwnd,(int) GetForegroundWindow())) ;
                 }
             }
             else
             {
                 SetForegroundWindow(hWnd) ; 
-                vwLogPrint((vwLog, "No foreground Window or hung: %x - %x\n",(int) cwHwnd,(int) GetForegroundWindow())) ;
+                vwLogDebug((vwLog, "No foreground Window or hung: %x - %x\n",(int) cwHwnd,(int) GetForegroundWindow())) ;
             }
         }
         SetForegroundWindow(theWin) ;
@@ -938,7 +954,7 @@ static void setForegroundWin(HWND theWin, int makeTop)
         if((cwHwnd == theWin) || (--index < 0))
             break ;
         /* A short sleep allows the rest of the system to catch up */
-        vwLogPrint((vwLog,"About to FG sleep\n")) ;
+        vwLogDebug((vwLog,"About to FG sleep\n")) ;
         Sleep(1) ;
     }
     /* bring to the front if requested as swapping desks can muddle the order */
@@ -1024,7 +1040,7 @@ static int windowSetDesk(HWND theWin, int theDesk, int move)
                 activeZOrder = winList[index].ZOrder[currentDesk];
             }
         }
-        vwLogPrint((vwLog,"Looking for replacement active: %x\n",(int) activeHWnd)) ;
+        vwLogDebug((vwLog,"Looking for replacement active: %x\n",(int) activeHWnd)) ;
         setForegroundWin(activeHWnd,0) ;
     }
     return ret ;
@@ -1048,7 +1064,7 @@ static int windowSetSticky(HWND theWin, int state)
             {
                 if(state < 0) // toggle sticky state - set state so all owner windows are set correctly.
                     state = winList[index].Sticky ^ TRUE;
-                vwLogPrint((vwLog,"Setting Sticky: %x %x - %d -> %d\n",(int) winList[index].Handle,
+                vwLogDebug((vwLog,"Setting Sticky: %x %x - %d -> %d\n",(int) winList[index].Handle,
                             (int) theWin,(int) winList[index].Sticky,state)) ;
                 winList[index].Sticky = state ;
                 if(winList[index].Sticky)
@@ -1162,7 +1178,7 @@ static inline BOOL CALLBACK enumWindowsProc(HWND hwnd, LPARAM lParam)
              * at least outside VirtuaWins domain) so make it belong to this
              * desktop, update the list entry, also check the location as the
              * app may have only made the window visible */
-            vwLogPrint((vwLog,"Got tricky window state change: %x %d (%d) %d -> %d %d\n",
+            vwLogDebug((vwLog,"Got tricky window state change: %x %d (%d) %d -> %d %d\n",
                         (int) winList[idx].Handle,winList[idx].Desk,currentDesk,
                         winList[idx].Visible,(int)pos.left,(int)pos.top)) ;
             winList[idx].State = 2 ;
@@ -1172,7 +1188,7 @@ static inline BOOL CALLBACK enumWindowsProc(HWND hwnd, LPARAM lParam)
     {
         /* Something has made this window visible so make it belong to this desktop, update the list entry,
          * also check the location as the app may have only made the window visible */
-        vwLogPrint((vwLog,"Got window state change: %x %d (%d) %d -> %d\n",
+        vwLogDebug((vwLog,"Got window state change: %x %d (%d) %d -> %d\n",
                     (int) winList[idx].Handle,winList[idx].Desk,currentDesk,
                     winList[idx].Visible,IsWindowVisible(winList[idx].Handle))) ;
         winList[idx].State = 2 ;
@@ -1188,7 +1204,7 @@ static int winListUpdate(void)
     char buf[vwCLASSNAME_MAX+1];
     int inWin, i, j, hungCount=0 ;
     
-    vwLogPrint((vwLog,"Updating winList, nWin %d, fgw %x tpw %x\n",nWin,
+    vwLogDebug((vwLog,"Updating winList, nWin %d, fgw %x tpw %x\n",nWin,
                 (int) GetForegroundWindow(),(int) GetTopWindow(NULL))) ;
     /* We now own the mutex. */
     i = inWin = nWin ;
@@ -1260,12 +1276,20 @@ static int winListUpdate(void)
             vwLogPrint((vwLog,"Lost window %8x %d %d %d %d %x\n",(int) winList[i].Handle,
                         winList[i].Desk,winList[i].Sticky,winList[i].Tricky,
                         winList[i].Visible,(int) winList[i].Owner)) ;
+            if(winList[i].Handle == lastFGHWnd)
+            {
+                lastBOFGHWnd = lastFGHWnd ;
+                lastBOFGStyle = lastFGStyle ;
+                lastFGHWnd = NULL ;
+            }
         }
     }
     nWin = j ;
     
     // Handle the re-assignment of any popped up window, set the zorder and count hung windows
     activeHWnd = GetForegroundWindow() ;
+    vwLogDebug((vwLog,"Active %8x Last %8x %x LBO %8x %x\n",(int) activeHWnd,
+                (int) lastFGHWnd, lastFGStyle, (int) lastBOFGHWnd, lastBOFGStyle)) ;
     i = nWin ;
     while(--i >= 0)
     {
@@ -1277,16 +1301,26 @@ static int winListUpdate(void)
             // windows will select a Tricky hidden window as the replacement - try to spot this
             if(activeHWnd != lastFGHWnd)
             {
-                // one problem with handling tricky windows is if the user closes the last window on a desktop
-                // windows will select a Tricky hidden window as the replacement - try to spot & handle this
+                // one problem with handling tricky windows is if the user
+                // closes or minimises the last window on a desktop windows
+                // will select a Tricky hidden window as the replacement -
+                // try to spot & handle this - a bit messy... 
                 if(!winList[i].Visible && winList[i].Tricky &&
-                   ((lastFGHWnd == NULL) || !IsWindow(lastFGHWnd) ||
-                    (((lastFGStyle & WS_MINIMIZE) == 0) && (GetWindowLong(lastFGHWnd,GWL_STYLE) & WS_MINIMIZE))))
+                   (((lastBOFGHWnd != NULL) && (lastFGHWnd == NULL)) ||
+                    ((lastFGHWnd != NULL) && 
+                     (!IsWindow(lastFGHWnd) ||
+                      ((((lastFGStyle & WS_MINIMIZE) == 0) || (lastBOFGHWnd != lastFGHWnd) || ((lastBOFGStyle & WS_MINIMIZE) == 0)) &&
+                       (GetWindowLong(lastFGHWnd,GWL_STYLE) & WS_MINIMIZE))))))
+                    // not a popup, windows selected replacement - ingore
                     setForegroundWin(NULL,0) ;
                 else
                 {
                     if(!winList[i].Visible && hiddenWindowRaise)
+                    {
+                        vwLogPrint((vwLog,"Got Popup - Active %8x Last %8x %x LBO %8x %x\n",(int) activeHWnd,
+                                    (int) lastFGHWnd, lastFGStyle, (int) lastBOFGHWnd, lastBOFGStyle)) ;
                         windowSetDesk(winList[i].Handle,currentDesk,2-hiddenWindowPopup) ;
+                    }
                     winList[i].ZOrder[currentDesk] = ++vwZOrder ;
                     // if this is only a temporary display increase its zorder in its main desk
                     if(winList[i].Desk != currentDesk)
@@ -1303,10 +1337,14 @@ static int winListUpdate(void)
                 !winList[i].Sticky && (winList[i].Desk != currentDesk))
             hungCount++ ;
     }
-    if((lastFGHWnd = activeHWnd) != NULL)
+    lastBOFGHWnd = lastFGHWnd ;
+    lastBOFGStyle = lastFGStyle ;
+    if((lastFGHWnd = activeHWnd) == hWnd)
+        lastFGHWnd = NULL ;
+    else if((lastFGHWnd = activeHWnd) != NULL)
         lastFGStyle = GetWindowLong(activeHWnd,GWL_STYLE) ;
     
-    vwLogPrint((vwLog,"Updated winList, %d windows - %d hung\n",nWin,hungCount)) ;
+    vwLogDebug((vwLog,"Updated winList, %d windows - %d hung\n",nWin,hungCount)) ;
     return hungCount ;
 }
 
@@ -1430,15 +1468,17 @@ static int changeDesk(int newDesk, WPARAM msgWParam)
     if(newDesk == currentDesk)
         // Nothing to do
         return 0;
-#ifndef NDEBUG
+#ifdef vwLOG_DEBUG_ENABLED
     {
         SYSTEMTIME stime;
     
         GetLocalTime (&stime);
-        vwLogPrint((vwLog, "[%04d-%02d-%02d %02d:%02d:%02d] Step Desk Start: %d -> %d\n",
+        vwLogDebug((vwLog, "[%04d-%02d-%02d %02d:%02d:%02d] Step Desk Start: %d -> %d\n",
                     stime.wYear, stime.wMonth, stime.wDay, stime.wHour,
                     stime.wMinute, stime.wSecond, currentDesk, newDesk)) ;
     }
+#else
+    vwLogPrint((vwLog,"Step Desk Start: %d -> %d\n",currentDesk,newDesk)) ;
 #endif
     lockMutex();
     winListUpdate() ;
@@ -1514,7 +1554,7 @@ static int changeDesk(int newDesk, WPARAM msgWParam)
     }
     if(releaseFocus)     // Release focus maybe?
         activeHWnd = NULL ;
-    vwLogPrint((vwLog, "Active found: %x (%d,%d)\n",(int) activeHWnd,(int)activeZOrder,releaseFocus)) ;
+    vwLogPrint((vwLog, "Active found: %x (%d,%d,%d)\n",(int) activeHWnd,(int)activeZOrder,releaseFocus,isDragging)) ;
     setForegroundWin(activeHWnd,TRUE) ;
     // reset the monitor timer to give the system a chance to catch up first
     SetTimer(hWnd, 0x29a, 250, monitorTimerProc);
@@ -1525,7 +1565,7 @@ static int changeDesk(int newDesk, WPARAM msgWParam)
         RedrawWindow( NULL, NULL, NULL, RDW_INVALIDATE | RDW_ERASE | RDW_ALLCHILDREN );
     
     postModuleMessage(MOD_CHANGEDESK,msgWParam,currentDesk);
-#ifndef NDEBUG
+#ifdef vwLOG_DEBUG_ENABLED
     {
         SYSTEMTIME stime;
     
@@ -1534,6 +1574,8 @@ static int changeDesk(int newDesk, WPARAM msgWParam)
                     stime.wYear, stime.wMonth, stime.wDay, stime.wHour,
                     stime.wMinute, stime.wSecond,(int)GetForegroundWindow())) ;
     }
+#else
+    vwLogPrint((vwLog,"Step Desk End (%x)\n",(int)GetForegroundWindow())) ;
 #endif
     return currentDesk ;
 }
@@ -1923,7 +1965,7 @@ static inline BOOL CALLBACK recoverWindowsEnumProc(HWND hwnd, LPARAM lParam)
        ((GetParent(hwnd) != NULL) && (GetParent(hwnd) != desktopHWnd)))         // Only toplevel or owned by desktop
     {
         // Ignore this window
-        vwLogPrint((vwLog,"Ignore  %x %d %d %d %d %d %d %d\n",(int) hwnd,
+        vwLogDebug((vwLog,"Ignore  %x %d %d %d %d %d %d %d\n",(int) hwnd,
                     (pos.left > -10000),(pos.top > -10000),(style & WS_CHILD),
                     ((style & WS_VISIBLE) == 0),((exstyle & WS_EX_TOOLWINDOW) != 0),
                     (((style & WS_VISIBLE) == 0) ^ ((exstyle & WS_EX_TOOLWINDOW) != 0)),
@@ -1938,7 +1980,7 @@ static inline BOOL CALLBACK recoverWindowsEnumProc(HWND hwnd, LPARAM lParam)
     // tricky windows are changed to toolwindows, non-tricky are hidden, ignore others
     if(((exstyle & WS_EX_TOOLWINDOW) == 0) ^ (Tricky == 0))
     {
-        vwLogPrint((vwLog,"Ignore  %x %d %d\n",(int) hwnd,((exstyle & WS_EX_TOOLWINDOW) == 0),(Tricky == 0))) ;
+        vwLogDebug((vwLog,"Ignore  %x %d %d\n",(int) hwnd,((exstyle & WS_EX_TOOLWINDOW) == 0),(Tricky == 0))) ;
         return TRUE;
     }
             
@@ -2016,11 +2058,11 @@ BOOL showHideWindow(windowType* aWindow, int shwFlags, unsigned char show)
         UINT swpFlags ;
         if(!windowIsNotHung(aWindow->Handle,(shwFlags & vwSHWIN_TRYHARD) ? 10000:100))
         {
-            vwLogPrint((vwLog,"showHideWindow %8x %d %d %x %x %d %d %d - HUNG\n",(int) aWindow->Handle,shwFlags,show,(int)aWindow->Style,(int)aWindow->ExStyle,aWindow->Visible,aWindow->Desk,currentDesk)) ;
+            vwLogDebug((vwLog,"showHideWindow %8x %d %d %x %x %d %d %d - HUNG\n",(int) aWindow->Handle,shwFlags,show,(int)aWindow->Style,(int)aWindow->ExStyle,aWindow->Visible,aWindow->Desk,currentDesk)) ;
             return FALSE ;
         }
         GetWindowRect( aWindow->Handle, &pos );
-        vwLogPrint((vwLog,"showHideWindow %8x %d %d %x %x %d %d %d - %d %d\n",(int) aWindow->Handle,shwFlags,show,(int)aWindow->Style,(int)aWindow->ExStyle,aWindow->Visible,aWindow->Desk,currentDesk,(int) pos.left,(int) pos.top)) ;
+        vwLogDebug((vwLog,"showHideWindow %8x %d %d %x %x %d %d %d - %d %d\n",(int) aWindow->Handle,shwFlags,show,(int)aWindow->Style,(int)aWindow->ExStyle,aWindow->Visible,aWindow->Desk,currentDesk,(int) pos.left,(int) pos.top)) ;
         Tricky = aWindow->Tricky ;
         if(trickyWindows && (Tricky != vwTRICKY_WINDOW))
         {
@@ -2111,15 +2153,34 @@ static void disableAll(HWND aHWnd)
  */
 int assignWindow(HWND theWin, int theDesk, BOOL force)
 {
-    int ret ;
+    int ret, change, idx ;
+    unsigned char sticky ;
+    
     vwLogPrint((vwLog,"Assign window: %x %d %d\n",(int) theWin,theDesk,force)) ;
+    change = (theDesk < 0) ;
+    if(change)
+        theDesk = 0 - theDesk ;
+        
     if((theWin == NULL) || (theWin == hWnd) ||
        (((theDesk > (nDesksY * nDesksX)) || (theDesk < 1)) && !force))
         return 0 ; // Invalid window or desk
     
     lockMutex();
     winListUpdate() ;
-    ret = windowSetDesk(theWin,theDesk,1) ;
+    if(change)
+    {
+        if((idx = winListFind(theWin)) >= 0)
+        {
+            sticky = winList[idx].Sticky ;
+            windowSetSticky(theWin,1) ;
+            ret = (changeDesk(theDesk,MOD_CHANGEDESK) > 0) ;
+            windowSetSticky(theWin,sticky) ;
+        }
+        else
+            ret = 0 ;
+    }
+    else
+        ret = windowSetDesk(theWin,theDesk,1) ;
     releaseMutex();
     return ret ;
 }
@@ -2214,7 +2275,7 @@ static void winListPopupMenu(HWND aHWnd)
         if(ii >= 0)
         {
             hwnd = winList[ii].Handle ;
-            vwLogPrint((vwLog,"Menu select %x %d %x\n",retItem,ii,(int) hwnd)) ;
+            vwLogDebug((vwLog,"Menu select %x %d %x\n",retItem,ii,(int) hwnd)) ;
             if(retItem & vwPMENU_STICKY)
                 // Sticky toggle
                 setSticky(hwnd,-1) ;
@@ -2268,15 +2329,17 @@ wndProc(HWND aHWnd, UINT message, WPARAM wParam, LPARAM lParam)
             {
             case VW_MOUSELEFT:
                 warpMultiplier++;
-                if((warpMultiplier >= configMultiplier)) {
+                if((warpMultiplier >= configMultiplier))
+                {
                     isDragging = LOWORD(lParam);
-                    if(stepLeft() != 0) {
-                        isDragging = FALSE;
+                    if(stepLeft() != 0)
+                    {
                         if(noMouseWrap)
                             SetCursorPos(pt.x + warpLength, pt.y);
                         else
                             SetCursorPos(screenRight-warpLength, pt.y);
                     }
+                    isDragging = FALSE;
                     warpMultiplier = 0;
                 }
                 ResumeThread(mouseThread);
@@ -2284,15 +2347,17 @@ wndProc(HWND aHWnd, UINT message, WPARAM wParam, LPARAM lParam)
                 
             case VW_MOUSERIGHT:
                 warpMultiplier++;
-                if((warpMultiplier >= configMultiplier)) {
+                if((warpMultiplier >= configMultiplier))
+                {
                     isDragging = LOWORD(lParam);
-                    if(stepRight() != 0) {
-                        isDragging = FALSE;
+                    if(stepRight() != 0)
+                    {
                         if(noMouseWrap)
                             SetCursorPos(pt.x - warpLength, pt.y);
                         else
                             SetCursorPos(screenLeft+warpLength, pt.y);
                     }
+                    isDragging = FALSE;
                     warpMultiplier = 0;
                 }
                 ResumeThread(mouseThread);
@@ -2300,20 +2365,22 @@ wndProc(HWND aHWnd, UINT message, WPARAM wParam, LPARAM lParam)
                 
             case VW_MOUSEUP:
                 warpMultiplier++;
-                if((warpMultiplier >= configMultiplier)) {
+                if((warpMultiplier >= configMultiplier))
+                {
                     int switchVal;
                     isDragging = LOWORD(lParam);
                     if(invertY)
                         switchVal = stepDown();
                     else
                         switchVal = stepUp();
-                    if(switchVal != 0) {
-                        isDragging = FALSE;
+                    if(switchVal != 0)
+                    {
                         if(noMouseWrap)
                             SetCursorPos(pt.x, pt.y + warpLength);
                         else
                             SetCursorPos(pt.x, screenBottom-warpLength);
                     }
+                    isDragging = FALSE;
                     warpMultiplier = 0;
                 }
                 ResumeThread(mouseThread);
@@ -2321,20 +2388,22 @@ wndProc(HWND aHWnd, UINT message, WPARAM wParam, LPARAM lParam)
                 
             case VW_MOUSEDOWN:
                 warpMultiplier++;
-                if((warpMultiplier >= configMultiplier)) {
+                if((warpMultiplier >= configMultiplier))
+                {
                     int switchVal;
                     isDragging = LOWORD(lParam);
                     if(invertY)
                         switchVal = stepUp();
                     else
                         switchVal = stepDown();
-                    if(switchVal != 0) {
-                        isDragging = FALSE;
+                    if(switchVal != 0)
+                    {
                         if(noMouseWrap)
                             SetCursorPos(pt.x, pt.y - warpLength);
                         else
                             SetCursorPos(pt.x, screenTop+warpLength);
                     }
+                    isDragging = FALSE;
                     warpMultiplier = 0;
                 }
                 ResumeThread(mouseThread);
@@ -2528,7 +2597,7 @@ skipMouseWarp:  // goto label for skipping mouse stuff
             break;
             
         case WM_MBUTTONUP:		   // Move to the next desktop
-            stepDelta(1) ;
+            stepDelta((HIWORD(GetKeyState(VK_SHIFT))) ? -1:1) ;
             break;
             
         case WM_RBUTTONUP:		   // Let's track a popup menu
@@ -2629,7 +2698,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
         return 0; // ...and quit 
     }
     
-#ifndef NDEBUG
+#ifdef vwLOG_PRINT_ENABLED
     vwLog = fopen("c:\\" vwVIRTUAWIN_NAME ".log","w+") ;
 #endif
     
@@ -2741,157 +2810,3 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     CloseHandle(hMutex);
     return msg.wParam;
 }
-
-/*
- * $Log$
- * Revision 1.50  2005/08/10 15:35:34  rexkerr	
- * Fixed a bug that was causing the right edge or bottom edge of the screen to be detected incorrectly when the secondary monitor was to the left of or above the primary monitor.	
- *
- * Revision 1.49  2005/08/02 22:05:34  rexkerr	
- * Fixed grammar error when recovering windows.  It now properly says "# windows were recovered" or "1 window was recovered"	
- *
- * Revision 1.48  2005/07/29 06:37:59  rexkerr	
- * Updated mousekeys functionality to require a motion tendency towards the edge of the screen to prevent the desktop from swapping unintentionally just because the mouse is near the end of the screen when the meta key is pressed.	
- *
- * Revision 1.47  2005/07/21 19:55:11  jopi
- * SF 1204278, Help path was not initialized correctly after the multi user changes.
- *
- * Revision 1.46  2005/06/11 20:59:48  jopi
- * SF1205908, periodic check that moved application doesn't reappear in the taskbar
- *
- * Revision 1.45  2005/03/10 08:02:11  rexkerr
- * Added multi-user support
- *
- * Revision 1.44  2005/02/16 07:44:20  jopi
- * Removed unused variable
- *
- * Revision 1.43  2005/02/04 11:04:41  jopi
- * SF936865, use virtual sceensize for mouse switching instead since multimonitor setups would switch desktop prematurely otherwise.
- *
- * Revision 1.42  2004/12/07 19:18:42  jopi
- * SF1053738, added application icons to the window list
- *
- * Revision 1.41  2004/04/10 10:20:01  jopi
- * Updated to compile with gcc/mingw
- *
- * Revision 1.40  2004/02/28 23:50:26  jopi
- * SF905625 Added module message for changing the sticky state of a window
- *
- * Revision 1.39  2004/02/28 18:54:01  jopi
- * SF904069 Added possibility to choose if sticky should be permanent for all instances of the same classname.
- *
- * Revision 1.38  2004/01/10 11:23:43  jopi
- * When assigning a visible window to the current desktop it would be lost
- *
- * Revision 1.37  2004/01/10 11:15:52  jopi
- * Updated copyright for 2004
- *
- * Revision 1.36  2004/01/10 11:04:12  jopi
- * Changed what windows that should be handled, was some problems with some windows
- *
- * Revision 1.35  2003/09/24 19:26:28  jopi
- * SF770859 Window menu heading will not be displayed if only one meny is used
- *
- * Revision 1.34  2003/07/08 21:10:28  jopi
- * SF745820, excluded some special types of windows from beeing handled by VirtuaWin
- *
- * Revision 1.33  2003/06/26 19:56:52  jopi
- * Added module support for assigning a window to specified desktop
- *
- * Revision 1.32  2003/06/24 19:52:04  jopi
- * SF693876 Fixed option to handle XP skinned style taskbars
- *
- * Revision 1.31  2003/04/09 16:47:58  jopi
- * SF710500, removed all the old menu handling code to make menus work the same independently of numner of menus used.
- *
- * Revision 1.30  2003/03/10 20:48:18  jopi
- * Changed so that doubleclick will bring up setup and added a disabled menu item instead.
- *
- * Revision 1.29  2003/03/10 19:23:43  jopi
- * Fixed so that we retry to add the systray icon incase of failure, we might be in a position where we try to add the icon before the systray process is started.
- *
- * Revision 1.28  2003/02/27 19:57:01  jopi
- * Old taskbar position was not deleted if taskbar position moved during operation. Also improved left/right/up/down taskbar position detection, seems like we can have negative coordinates on the position.
- *
- * Revision 1.27  2003/01/27 20:22:59  jopi
- * Updated copyright header for 2003
- *
- * Revision 1.26  2002/12/23 15:42:24  jopi
- * Added config options to disable taskbar detection and the alternative hiding technique.
- *
- * Revision 1.25  2002/12/21 08:44:20  jopi
- * The "tricky" windows was not moved away far enough from the screen so you could see a small grey bar at the screen bottom.
- *
- * Revision 1.24  2002/09/26 21:00:50  Johan Piculell
- * Added mutex protection for the window list
- *
- * Revision 1.23  2002/06/15 11:25:13  Johan Piculell
- * Now we try to locate the MSTaskSwWClass even if it is a direct child of Shell_TrayWnd, this will make it work on more windows version since this differs sometimes.
- *
- * Revision 1.22  2002/06/15 11:17:50  Johan Piculell
- * Fixed so that window coordinates are reloaded when resolution is changed, and also so that taskbar location is reloaded if moved.
- *
- * Revision 1.21  2002/06/11 20:10:27  Johan Piculell
- * Improved the window menus so that unnecessary menus and items won't show and they all have a lable. Fixes by Ulf Jaenicke-Roessler.
- *
- * Revision 1.20  2002/06/11 19:43:57  Johan Piculell
- * Removed the MF_POPUP flag from the window menus since they shouldn't be created like this. Fixed by Ulf Jaenicke-Roessler.
- *
- * Revision 1.19  2002/06/01 21:15:22  Johan Piculell
- * Multiple fixes by Christian Storm.
- *
- * Revision 1.18  2002/06/01 19:33:33  Johan Piculell
- * *** empty log message ***
- *
- * Revision 1.17  2002/02/14 21:23:41  Johan Piculell
- * Updated copyright header
- *
- * Revision 1.16  2001/12/19 17:34:34  Johan Piculell
- * Classname will now always be "VirtuaWinMainClass" and not version dependent.
- *
- * Revision 1.15  2001/12/01 00:05:52  Johan Piculell
- * Added alternative window hiding for troublesome windows like InternetExplorer
- *
- * Revision 1.14  2001/11/12 21:39:15  Johan Piculell
- * Added functionality for disabling the systray icon
- *
- * Revision 1.13  2001/11/12 20:11:47  Johan Piculell
- * Display setup dialog if started a second time instead of just quit
- *
- * Revision 1.12  2001/11/12 18:33:42  Johan Piculell
- * Fixed so that user windows are also checked if they are saved as sticky.
- *
- * Revision 1.11  2001/02/05 21:13:08  Administrator
- * Updated copyright header
- *
- * Revision 1.10  2001/01/28 16:26:56  Administrator
- * Configuration behaviour change. It is now possible to test all settings by using apply and all changes will be rollbacked if cancel is pressed
- *
- * Revision 1.9  2001/01/14 16:27:42  Administrator
- * Moved io.h include to DiskRoutines.c
- *
- * Revision 1.8  2001/01/12 18:11:25  Administrator
- * Moved some disk stuff from VirtuaWin to DiskRoutines
- *
- * Revision 1.7  2001/01/12 16:58:11  Administrator
- * Added module message for getting the current desktop number
- *
- * Revision 1.6  2000/12/11 21:28:41  Administrator
- * Fixed the sticky symbol in the winlist again, got lost during some changes
- *
- * Revision 1.5  2000/08/28 21:38:37  Administrator
- * Added new functions for menu hot key registration. Fixed bug with needing to have hot keys enabled for menu keys to work and also better error message
- *
- * Revision 1.4  2000/08/19 15:00:26  Administrator
- * Added multiple user setup support (Alasdair McCaig) and fixed creation of setup file if it don't exist
- *
- * Revision 1.3  2000/08/18 23:43:08  Administrator
- *  Minor modifications by Matti Jagula <matti@proekspert.ee> List of modifications follows: Added window title sorting in popup menus (Assign, Direct, Sticky) Added some controls to Setup Misc tab and support for calling the popup menus from keyboard.
- *
- * Revision 1.2  2000/08/18 21:41:31  Administrator
- * Added the code again that removes closed windows, this will avoid having closed child windows reappearing again. Also updated the mail adress
- *
- * Revision 1.1.1.1  2000/06/03 15:38:05  Administrator
- * Added first time
- *
- */
