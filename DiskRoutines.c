@@ -36,8 +36,7 @@
 #include "DiskRoutines.h"
 #include "ConfigParameters.h"
 
-#define VIRTUAWIN_SUBDIR  "VirtuaWin"
-#define LOCK_FILENAME     ".vwLock.cfg"
+#define VIRTUAWIN_SUBDIR vwVIRTUAWIN_NAME
 
 char *VirtuaWinPath=NULL ;
 char *UserAppPath=NULL ;
@@ -69,12 +68,6 @@ static void getUserAppPath(char* path)
         if(path[len - 1] != '\\')
             path[len++] = '\\' ;
         strncpy(path+len,VIRTUAWIN_SUBDIR,MAX_PATH - len) ;
-        if(((GetFileAttributes(path) & (0xf0000000|FILE_ATTRIBUTE_DIRECTORY)) != FILE_ATTRIBUTE_DIRECTORY) &&
-           (CreateDirectory(path,NULL) == 0))
-        {
-            MessageBox(hWnd, "VirtuaWin cannot create its config directory.\nIf you continue to have problems, send e-mail to \nvirtuawin@home.se", "General Error", MB_ICONWARNING);
-            exit(1) ;
-        }
         len += strlen(path+len) ;
         path[len++] = '\\' ;
         path[len] = '\0' ;
@@ -93,11 +86,11 @@ static void getUserAppPath(char* path)
  * type bool after porting to cpp)
  */
 
-int GetFilename(eFileNames filetype, char* outStr)
+int GetFilename(eFileNames filetype, int location, char* outStr)
 {
     static char *subPath[vwFILE_COUNT] = {
-        "userlist.cfg", "virtuawin", "tricky.cfg", "modules\\*.exe",
-        "vwconfig.cfg", "sticky.cfg", "vwdisabled.cfg", "vwwindowsstate.cfg"
+        "modules\\*.exe", "virtuawin", "virtuawin.cfg", "userlist.cfg", "tricky.cfg",
+        "sticky.cfg", "module.cfg", "assignment.cfg"
     };
     DWORD len ;
     
@@ -119,14 +112,14 @@ int GetFilename(eFileNames filetype, char* outStr)
             UserAppPath = strdup(path) ;
         if((VirtuaWinPath == NULL) || (UserAppPath == NULL))
         {
-            MessageBox(hWnd, "Memory resources appear to be very low, try rebooting.\nIf you still have problems, send a mail to \nvirtuawin@home.se", "General Error", MB_ICONWARNING);
+            MessageBox(hWnd, "Memory resources appear to be very low, try rebooting.\nIf you still have problems, send a mail to \n" vwVIRTUAWIN_EMAIL,vwVIRTUAWIN_NAME " Error", MB_ICONWARNING);
             exit(1);
         }
     }
     
     if(filetype >= vwFILE_COUNT)
         return 0 ;
-    strncpy(outStr,(filetype < vwCONFIG) ? VirtuaWinPath:UserAppPath, MAX_PATH);
+    strncpy(outStr,(location) ? UserAppPath:VirtuaWinPath, MAX_PATH);
     len = MAX_PATH - strlen(outStr) ;
     strncat(outStr,subPath[filetype],len) ;
     return 1;
@@ -141,7 +134,7 @@ void saveDisabledList(int theNOfModules, moduleType* theModList)
     FILE* fp;
     
     char DisabledFileList[MAX_PATH];
-    GetFilename(vwDISABLED, DisabledFileList);
+    GetFilename(vwDISABLED,1,DisabledFileList);
     
     if(!(fp = fopen(DisabledFileList, "w")))
         MessageBox(hWnd, "Error saving disabled module state", NULL, MB_ICONWARNING);
@@ -164,7 +157,7 @@ int loadDisabledModules(disModules *theDisList)
     int len, nOfDisMod = 0;
     FILE *fp;
     
-    GetFilename(vwDISABLED, buff);
+    GetFilename(vwDISABLED,1,buff);
     
     if((fp = fopen(buff,"r")) != NULL)
     {
@@ -195,7 +188,7 @@ int loadStickyList(stickyType *theStickyList)
     int len, nOfSticky = 0, winClassLen;
     FILE* fp;
     
-    GetFilename(vwSTICKY,buff);
+    GetFilename(vwSTICKY,1,buff);
     
     if((fp = fopen(buff,"r")) != NULL)
     {
@@ -241,7 +234,7 @@ void saveStickyWindows(int theNOfWin, windowType *theWinList)
     FILE* fp;
     
     char vwStickyList[MAX_PATH];
-    GetFilename(vwSTICKY, vwStickyList);
+    GetFilename(vwSTICKY,1,vwStickyList);
     
     if((fp = fopen(vwStickyList, "w")) == NULL)
         MessageBox(hWnd, "Error writing sticky file", NULL, MB_ICONWARNING);
@@ -270,7 +263,7 @@ int loadTrickyList(stickyType *theTrickyList)
     int len, nOfTricky = 0, winClassLen;
     FILE* fp;
     
-    GetFilename(vwTRICKY, buff);
+    GetFilename(vwTRICKY,1,buff);
     if((fp = fopen(buff, "r")) != NULL) 
     {
         while(fgets(buff,MAX_PATH,fp) != NULL)
@@ -315,7 +308,7 @@ void saveAssignedList(int theNOfWin, windowType *theWinList)
     char buff[MAX_PATH];
     FILE *fp;
     
-    GetFilename(vwWINDOWS_STATE,buff);
+    GetFilename(vwWINDOWS_STATE,1,buff);
     if((fp = fopen(buff, "w")) == NULL)
         MessageBox(hWnd, "Error writing desktop configuration file", NULL, MB_ICONWARNING);
     else
@@ -340,7 +333,7 @@ int loadAssignedList(assignedType *theAssignList)
     int curAssigned = 0, desk, len, winClassLen ;
     FILE *fp;
     
-    GetFilename(vwWINDOWS_STATE,buff) ;
+    GetFilename(vwWINDOWS_STATE,1,buff) ;
     if((fp = fopen(buff, "r")) != NULL)
     {
         while(fgets(buff,MAX_PATH,fp) != NULL)
@@ -386,11 +379,12 @@ int loadUserList(userType* theUserList)
     FILE* fp;
     int curUser = 0;
     
-    GetFilename(vwLIST, buff);
+    GetFilename(vwLIST,1,buff);
     
     if((fp = fopen(buff, "r")))
     {
-        while(!feof(fp)) {
+        while(!feof(fp))
+        {
             fgets(buff, 99, fp);
             // Remove the newline
             if(buff[strlen(buff) - 1] == '\n')
@@ -417,7 +411,7 @@ void writeConfig(void)
     int ii ;
     
     char VWConfigFile[MAX_PATH];
-    GetFilename(vwCONFIG, VWConfigFile);
+    GetFilename(vwCONFIG,1,VWConfigFile);
     
     if((fp = fopen(VWConfigFile, "w")) == NULL) {
         MessageBox(NULL, "Error writing config file", NULL, MB_ICONWARNING);
@@ -426,7 +420,7 @@ void writeConfig(void)
         fprintf(fp, "Mouse_delay# %i\n", configMultiplier);
         fprintf(fp, "Key_support# %i\n", keyEnable);
         fprintf(fp, "Release_focus# %i\n", releaseFocus);
-        fprintf(fp, "Keep_active# %i\n", keepActive);
+        fprintf(fp, "Keep_active# %i\n", 1);
         fprintf(fp, "Control_key_alt# %i\n", modAlt);
         fprintf(fp, "Control_key_shift# %i\n", modShift);
         fprintf(fp, "Control_key_ctrl# %i\n", modCtrl);
@@ -451,7 +445,7 @@ void writeConfig(void)
         fprintf(fp, "No_mouse_wrap# %i\n", noMouseWrap);
         fprintf(fp, "Sticky_modifier# %i\n", hotkeyStickyMod);
         fprintf(fp, "Sticky_key# %i\n", hotkeySticky);
-        fprintf(fp, "Crash_recovery# %i\n", crashRecovery);
+        fprintf(fp, "Preserve_zorder# %i\n", preserveZOrder);
         fprintf(fp, "Desktop_cycling# %i\n", deskWrap);
         fprintf(fp, "Invert_Y# %i\n", invertY);
         fprintf(fp, "WinMenu_sticky# %i\n", stickyMenu);
@@ -484,6 +478,10 @@ void writeConfig(void)
         fprintf(fp, "AssignImmediately# %i\n", assignImmediately);
         fprintf(fp, "HiddenWindowRaise# %i\n", hiddenWindowRaise);
         fprintf(fp, "HiddenWindowPopup# %i\n", hiddenWindowPopup);
+        fprintf(fp, "DismissHotkeyEn# %i\n", hotkeyDismissEn);
+        fprintf(fp, "DismissHotkey# %i\n", hotkeyDismiss);
+        fprintf(fp, "DismissHotkeyMod# %i\n", hotkeyDismissMod);
+        fprintf(fp, "DismissHotkeyWin# %i\n", hotkeyDismissWin);
         fclose(fp);
     }
 }
@@ -493,17 +491,69 @@ void writeConfig(void)
  */
 void readConfig(void)
 {
-    char buff[MAX_PATH];
-    FILE* fp;
-    int ii;
+    char buff[MAX_PATH], buff2[2048], *ss ;
+    FILE *fp, *wfp;
+    int ii, jj ;
     
-    GetFilename(vwCONFIG, buff);
-    if((fp = fopen(buff, "r")) == NULL)
+    GetFilename(vwCONFIG,1,buff);
+    if(GetFileAttributes(buff) == INVALID_FILE_ATTRIBUTES)
     {
-        MessageBox(NULL, "Error reading config file. This is probably due to new user setup.\nA new config file will be created.", NULL, MB_ICONWARNING);
-        // Try to create new file
-        if((fp = fopen(buff, "w")) == NULL)
-            MessageBox(NULL, "Error writing new config file. Check writepermissions.", NULL, MB_ICONWARNING);
+        /* config file does not exist - new user, setup configuration, check the user path exists first */
+        ss = strrchr(buff,'\\') ;
+        *ss = '\0' ;
+        if(((GetFileAttributes(buff) & (0xf0000000|FILE_ATTRIBUTE_DIRECTORY)) != FILE_ATTRIBUTE_DIRECTORY) &&
+           (CreateDirectory(buff,NULL) == 0))
+        {
+            sprintf(buff2,vwVIRTUAWIN_NAME " cannot create the user config directory:\n\n    %s\n\nPlease check file permissions. If you continue to have problems, send e-mail to:\n\n    " vwVIRTUAWIN_EMAIL,buff);
+            MessageBox(hWnd,buff2,vwVIRTUAWIN_NAME " Error",MB_ICONERROR);
+            exit(1) ;
+        }
+        /* now copy all the config files across to the user area */
+        ii = vwFILE_COUNT ;
+        while(--ii >= vwCONFIG)
+        {
+            GetFilename(ii,0,buff);
+            if((fp = fopen(buff, "rb")) != NULL)
+            {
+                GetFilename(ii,1,buff2);
+                if((wfp = fopen(buff2, "wb")) == NULL)
+                    break ;
+                for(;;)
+                {
+                    if((jj=fread(buff2,1,2048,fp)) <= 0)
+                        break ;
+                    if(fwrite(buff2,1,jj,wfp) != (size_t) jj)
+                    {
+                        jj = -1 ;
+                        break ;
+                    }
+                }
+                fclose(fp) ;
+                if((fclose(wfp) != 0) || (jj < 0))
+                    break ;
+            }
+        }
+        GetFilename(vwCONFIG,1,buff);
+        /* check a main config file has been copied, if not create a dummy one */
+        if((ii < vwCONFIG) && (fp == NULL) &&
+           (((wfp = fopen(buff, "wb")) == NULL) || (fclose(wfp) != 0)))
+            ii = vwCONFIG ;
+            
+        /* check we did not break out due to an error */
+        if(ii >= vwCONFIG)
+        {
+            MessageBox(hWnd, "Error occurred creating new user configuration, please check file permissions.\nIf you continue to have problems, send e-mail to:\n\n    " vwVIRTUAWIN_EMAIL,vwVIRTUAWIN_NAME " Error",MB_ICONERROR);
+            exit(1) ;
+        }
+            
+        sprintf(buff2,"Welcome to %s\n\nA new config been been created, right click on tray icon to access the Setup dialog.",vwVIRTUAWIN_NAME_VERSION) ;
+        MessageBox(hWnd,buff2,vwVIRTUAWIN_NAME,MB_ICONINFORMATION);
+    }
+    if((fp = fopen(buff,"r")) == NULL)
+    {
+        sprintf(buff2, "Error reading config file:\n\n    %s\n\nPlease check file permissions. If you continue to have problems, send e-mail to:\n\n    " vwVIRTUAWIN_EMAIL,buff);
+        MessageBox(hWnd,buff2,vwVIRTUAWIN_NAME " Error",MB_ICONERROR) ;
+        exit(1) ;
     }
     else
     {   
@@ -511,7 +561,7 @@ void readConfig(void)
         fscanf(fp, "%s%i", buff, &configMultiplier);
         fscanf(fp, "%s%i", buff, &keyEnable);
         fscanf(fp, "%s%i", buff, &releaseFocus);
-        fscanf(fp, "%s%i", buff, &keepActive);
+        fscanf(fp, "%s%i", buff, &ii);
         fscanf(fp, "%s%i", buff, &modAlt);
         fscanf(fp, "%s%i", buff, &modShift);
         fscanf(fp, "%s%i", buff, &modCtrl);
@@ -537,7 +587,7 @@ void readConfig(void)
         fscanf(fp, "%s%i", buff, &noMouseWrap);
         fscanf(fp, "%s%i", buff, &hotkeyStickyMod);
         fscanf(fp, "%s%i", buff, &hotkeySticky);
-        fscanf(fp, "%s%i", buff, &crashRecovery);
+        fscanf(fp, "%s%i", buff, &preserveZOrder);
         fscanf(fp, "%s%i", buff, &deskWrap);
         fscanf(fp, "%s%i", buff, &invertY);
         fscanf(fp, "%s%hi", buff, &stickyMenu);
@@ -561,69 +611,23 @@ void readConfig(void)
         fscanf(fp, "%s%i", buff, &trickyWindows);
         fscanf(fp, "%s%i", buff, &taskbarOffset);
         fscanf(fp, "%s%i", buff, &permanentSticky);
-        if(fscanf(fp, "%s%i", buff, &hotCycleUpWin) == 2)
-        {
-            fscanf(fp, "%s%i", buff, &hotCycleDownWin);
-            fscanf(fp, "%s%i", buff, &hotkeyStickyEn);
-            fscanf(fp, "%s%i", buff, deskHotkey + 10);
-            fscanf(fp, "%s%i", buff, deskHotkeyMod + 10);
-            fscanf(fp, "%s%i", buff, deskHotkeyWin + 10);
-            fscanf(fp, "%s%i", buff, &assignImmediately);
-            fscanf(fp, "%s%i", buff, &hiddenWindowRaise);
-            fscanf(fp, "%s%i", buff, &hiddenWindowPopup);
-        }
+        fscanf(fp, "%s%i", buff, &hotCycleUpWin);
+        fscanf(fp, "%s%i", buff, &hotCycleDownWin);
+        fscanf(fp, "%s%i", buff, &hotkeyStickyEn);
+        fscanf(fp, "%s%i", buff, deskHotkey + 10);
+        fscanf(fp, "%s%i", buff, deskHotkeyMod + 10);
+        fscanf(fp, "%s%i", buff, deskHotkeyWin + 10);
+        fscanf(fp, "%s%i", buff, &assignImmediately);
+        fscanf(fp, "%s%i", buff, &hiddenWindowRaise);
+        fscanf(fp, "%s%i", buff, &hiddenWindowPopup);
+        fscanf(fp, "%s%i", buff, &hotkeyDismissEn);
+        fscanf(fp, "%s%i", buff, &hotkeyDismiss);
+        fscanf(fp, "%s%i", buff, &hotkeyDismissMod);
+        fscanf(fp, "%s%i", buff, &hotkeyDismissWin);
         fclose(fp);
     }
 }
 
-
-/*************************************************
- * Check if we have a previous lock file, otherwise it creates it
- */
-BOOL tryToLock(void)
-{
-    BOOL retval = FALSE;
-    TCHAR lockFile[MAX_PATH];
-    if(GetTempPath(MAX_PATH, lockFile))
-    {
-        strncat(lockFile, LOCK_FILENAME, MAX_PATH - strlen(lockFile));
-        
-        if(access(lockFile, 0 == -1)) 
-        {
-            FILE* fp;
-            if(!(fp = fopen(lockFile, "wc"))) {
-                MessageBox(hWnd, "Error writing lock file", "VirtuaWin", MB_ICONWARNING);
-                return TRUE;
-            } 
-            else 
-            {
-                fprintf(fp, "%s", "VirtuaWin LockFile");
-            }
-            
-            fflush(fp); // Make sure the file is physically written to disk
-            fclose(fp);
-            
-            retval = TRUE;
-        } 
-        else 
-        {
-            retval = FALSE; // We already had a lock file, probably due to a previous crash
-        }
-    }
-    
-    return retval;
-}
-
-void clearLock(void)
-{
-    // returns void because there's not much that we can do if it fails anyhow.
-    TCHAR lockFile[MAX_PATH];
-    if(GetTempPath(MAX_PATH, lockFile))
-    {
-        strncat(lockFile, LOCK_FILENAME, MAX_PATH - strlen(lockFile));
-        remove(lockFile);
-    }
-}
 
 /*
  * $Log$

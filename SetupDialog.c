@@ -36,6 +36,28 @@
 #include <prsht.h>
 #include <commctrl.h>
 
+static int pageChangeMask=0 ;
+static int pageApplyMask=0 ;
+
+static void vwSetupApply(HWND hDlg, int curPageMask)
+{
+    pageApplyMask |= curPageMask ;
+    if(pageApplyMask == pageApplyMask)
+    {
+        // All pages have now got any changes from the GUI, save them and apply
+        writeConfig();
+        getTaskbarLocation();
+        unRegisterAllKeys();
+        registerAllKeys();
+        enableMouse(mouseEnable);
+        setMouseKey();
+        // Tell modules about the config change
+        postModuleMessage(MOD_CFGCHANGE, 0, 0);
+        pageChangeMask = 0 ;
+        pageApplyMask = 0 ;
+    }
+}
+
 /*************************************************
  * The "Key" tab callback
  * This is the firts callback to be called when the property sheet is created
@@ -277,18 +299,19 @@ BOOL APIENTRY keys(HWND hDlg, UINT message, UINT wParam, LONG lParam)
             else {
                 hotKeyEnable = FALSE;
             }
-            unRegisterAllKeys();
-            registerAllKeys();
+            vwSetupApply(hDlg,0x01) ;
             SetWindowLong(hDlg, DWL_MSGRESULT, TRUE);
             break;
         case PSN_KILLACTIVE: // Switch tab sheet
             SetWindowLong(hDlg, DWL_MSGRESULT, FALSE);
             return 1;
-            break;
         case PSN_RESET: // Cancel
             // Reset to the original values.
             readConfig();
             SetWindowLong(hDlg, DWL_MSGRESULT, FALSE);
+            break;
+        case PSN_HELP:
+            showHelp(hDlg);
             break;
         }
         
@@ -303,7 +326,9 @@ BOOL APIENTRY keys(HWND hDlg, UINT message, UINT wParam, LONG lParam)
            wPar == IDC_HOT4W || wPar == IDC_HOT5W || wPar == IDC_HOT6W ||
            wPar == IDC_HOT7W || wPar == IDC_HOT8W || wPar == IDC_HOT9W ||
            wPar == IDC_CYCLINGKEYS || wPar == IDC_HOTCYCLEUP || wPar == IDC_HOTCYCLEUPW ||
-           wPar == IDC_HOTCYCLEDOWN || wPar == IDC_HOTCYCLEDOWNW ) {
+           wPar == IDC_HOTCYCLEDOWN || wPar == IDC_HOTCYCLEDOWNW )
+        {
+            pageChangeMask |= 0x01 ;
             SendMessage(GetParent(hDlg), PSM_CHANGED, (WPARAM)hDlg, 0L); // Enable apply button
         }
         break;
@@ -335,9 +360,6 @@ BOOL APIENTRY mouse(HWND hDlg, UINT message, UINT wParam, LONG lParam)
             SendDlgItemMessage(hDlg, IDC_SHIFT, BM_SETCHECK, 1,0);
         if(mouseModCtrl)
             SendDlgItemMessage(hDlg, IDC_CTRL, BM_SETCHECK, 1,0);
-        
-        if(minSwitch)
-            SendDlgItemMessage(hDlg, IDC_MINIMIZED, BM_SETCHECK, 1,0);
         if(mouseEnable) 
             SendDlgItemMessage(hDlg, IDC_MOUSWARP, BM_SETCHECK, 1,0);
         if(taskBarWarp)
@@ -386,18 +408,19 @@ BOOL APIENTRY mouse(HWND hDlg, UINT message, UINT wParam, LONG lParam)
             }
             else
                 useMouseKey = FALSE;
-            enableMouse(mouseEnable);
-            setMouseKey();
+            vwSetupApply(hDlg,0x02) ;
             SetWindowLong(hDlg, DWL_MSGRESULT, TRUE);
             break;
         case PSN_KILLACTIVE:
             SetWindowLong(hDlg, DWL_MSGRESULT, FALSE);
             return 1;
-            break;
         case PSN_RESET:
             // Reset to the original values.
             readConfig();
             SetWindowLong(hDlg, DWL_MSGRESULT, FALSE);
+            break;
+        case PSN_HELP:
+            showHelp(hDlg);
             break;
         }
         
@@ -406,12 +429,15 @@ BOOL APIENTRY mouse(HWND hDlg, UINT message, UINT wParam, LONG lParam)
            LOWORD(wParam) == IDC_JUMP || LOWORD(wParam) == IDC_KEYCONTROL || 
            LOWORD(wParam) == IDC_CTRL || LOWORD(wParam) == IDC_ALT || 
            LOWORD(wParam) == IDC_SHIFT || 
-           LOWORD(wParam) == IDC_MOUSEWRAP) {
+           LOWORD(wParam) == IDC_MOUSEWRAP)
+        {
+            pageChangeMask |= 0x02 ;
             SendMessage(GetParent(hDlg), PSM_CHANGED, (WPARAM)hDlg, 0L); // Enable apply
         }
         break;
         
     case WM_HSCROLL:
+        pageChangeMask |= 0x02 ;
         SendMessage(GetParent(hDlg), PSM_CHANGED, (WPARAM)hDlg, 0L);
         SetDlgItemInt(hDlg, IDC_TIME, (SendDlgItemMessage(hDlg, IDC_SLIDER, TBM_GETPOS, 0, 0) * 50), TRUE);
         break;
@@ -448,10 +474,12 @@ BOOL APIENTRY modules(HWND hDlg, UINT message, UINT wParam, LONG lParam)
         case PSN_KILLACTIVE:
             SetWindowLong(hDlg, DWL_MSGRESULT, FALSE);
             return 1;
-            break;
         case PSN_RESET:
             // Reset to the original values.
             SetWindowLong(hDlg, DWL_MSGRESULT, FALSE);
+            break;
+        case PSN_HELP:
+            showHelp(hDlg);
             break;
         }
         
@@ -662,13 +690,16 @@ BOOL APIENTRY misc(HWND hDlg, UINT message, UINT wParam, LONG lParam)
             {
                 hotkeyStickyEn = FALSE;
             }
+            vwSetupApply(hDlg,0x04) ;
             break;
         case PSN_KILLACTIVE:
             SetWindowLong(hDlg, DWL_MSGRESULT, FALSE);
             return 1;
-            break;
         case PSN_RESET:
             SetWindowLong(hDlg, DWL_MSGRESULT, FALSE);
+            break;
+        case PSN_HELP:
+            showHelp(hDlg);
             break;
         }
         
@@ -681,8 +712,10 @@ BOOL APIENTRY misc(HWND hDlg, UINT message, UINT wParam, LONG lParam)
             LOWORD(wParam) == IDC_HOTMENUEN  || LOWORD(wParam) == IDC_HOTMENUW || 
             LOWORD(wParam) == IDC_HOTMENU    || LOWORD(wParam) == IDC_HOTSTICKYEN  ||
             LOWORD(wParam) == IDC_HOTSTICKY  || LOWORD(wParam) == IDC_HOTSTICKYW )
+        {
+            pageChangeMask |= 0x04 ;
             SendMessage(GetParent(hDlg), PSM_CHANGED, (WPARAM)hDlg, 0L);
-        
+        }
         if (LOWORD(wParam) == IDC_SAVENOW) {
             saveAssignedList(nWin,winList) ;
         }
@@ -694,7 +727,9 @@ BOOL APIENTRY misc(HWND hDlg, UINT message, UINT wParam, LONG lParam)
         else if (LOWORD(wParam) == IDC_SLIDERY)
             spinPressed = 2;
         
-        if (LOWORD(wParam) == IDC_DESKX && spinPressed == 1) {
+        if (LOWORD(wParam) == IDC_DESKX && spinPressed == 1)
+        {
+            pageChangeMask |= 0x04 ;
             SendMessage(GetParent(hDlg), PSM_CHANGED, (WPARAM)hDlg, 0L);
             tmpDesksX = SendMessage(GetDlgItem(hDlg, IDC_SLIDERX), UDM_GETPOS, 0, 0);
             while ((tmpDesksX * tmpDesksY) > 9) {
@@ -702,7 +737,9 @@ BOOL APIENTRY misc(HWND hDlg, UINT message, UINT wParam, LONG lParam)
                 SendMessage(GetDlgItem(hDlg, IDC_SLIDERY), UDM_SETPOS, 0L, MAKELONG( tmpDesksY, 0));
             }
         }
-        else if(LOWORD(wParam) == IDC_DESKY && spinPressed == 2) {
+        else if(LOWORD(wParam) == IDC_DESKY && spinPressed == 2)
+        {
+            pageChangeMask |= 0x04 ;
             SendMessage(GetParent(hDlg), PSM_CHANGED, (WPARAM)hDlg, 0L);
             tmpDesksY = SendMessage(GetDlgItem(hDlg, IDC_SLIDERY), UDM_GETPOS, 0, 0);
             while ((tmpDesksY * tmpDesksX) > 9) {
@@ -720,33 +757,23 @@ BOOL APIENTRY misc(HWND hDlg, UINT message, UINT wParam, LONG lParam)
  */
 BOOL APIENTRY expert(HWND hDlg, UINT message, UINT wParam, LONG lParam)
 {
-    static HWND focus;
-    
     switch (message) {
     case WM_INITDIALOG:
-        focus = GetDlgItem(hDlg, IDC_FOCUS);
         if(minSwitch)
             SendDlgItemMessage(hDlg, IDC_MINIMIZED, BM_SETCHECK, 1,0);
         if(releaseFocus)
             SendDlgItemMessage(hDlg, IDC_FOCUS, BM_SETCHECK, 1,0);
-        if(keepActive) {
-            SendDlgItemMessage(hDlg, IDC_FOCUS, BM_SETCHECK, 0,0);
-            EnableWindow(focus, FALSE);
-            SendDlgItemMessage(hDlg, IDC_LASTACTIVE, BM_SETCHECK, 1,0);
-        }
         if(refreshOnWarp)
             SendDlgItemMessage(hDlg, IDC_REFRESH, BM_SETCHECK, 1,0);
         if(preserveZOrder)
             SendDlgItemMessage(hDlg, IDC_PRESZORDER, BM_SETCHECK, 1,0);
-        if(crashRecovery)
-            SendDlgItemMessage(hDlg, IDC_RECOVERY, BM_SETCHECK, 1,0);
         if(deskWrap)
             SendDlgItemMessage(hDlg, IDC_DESKCYCLE, BM_SETCHECK, 1,0);
         if(invertY)
             SendDlgItemMessage(hDlg, IDC_INVERTY, BM_SETCHECK, 1,0);
         if(!displayTaskbarIcon)
             SendDlgItemMessage(hDlg, IDC_DISPLAYICON, BM_SETCHECK, 1,0);
-        if(noTaskbarCheck)
+        if(!noTaskbarCheck)
             SendDlgItemMessage(hDlg, IDC_TASKBARDETECT, BM_SETCHECK, 1,0);
         if(trickyWindows)
             SendDlgItemMessage(hDlg, IDC_TRICKYSUPPORT, BM_SETCHECK, 1,0);
@@ -758,6 +785,9 @@ BOOL APIENTRY expert(HWND hDlg, UINT message, UINT wParam, LONG lParam)
             SendDlgItemMessage(hDlg, IDC_POPUPRHWIN, BM_SETCHECK, 1,0);
         if(hiddenWindowPopup)
             SendDlgItemMessage(hDlg, IDC_HWINPOPUP, BM_SETCHECK, 1,0);
+        SendDlgItemMessage(hDlg, IDC_HOTDISMISSEN, BM_SETCHECK,(hotkeyDismissEn != 0),0);
+        SendDlgItemMessage(hDlg, IDC_HOTDISMISS, HKM_SETHOTKEY, MAKEWORD(hotkeyDismiss, hotkeyDismissMod), 0);
+        SendDlgItemMessage(hDlg, IDC_HOTDISMISSW, BM_SETCHECK,(hotkeyDismissWin != 0),0);
         return TRUE;
         
     case WM_NOTIFY:
@@ -768,13 +798,11 @@ BOOL APIENTRY expert(HWND hDlg, UINT message, UINT wParam, LONG lParam)
         case PSN_APPLY:
             minSwitch = (SendDlgItemMessage(hDlg, IDC_MINIMIZED, BM_GETCHECK, 0, 0) == BST_CHECKED) ;
             releaseFocus = (SendDlgItemMessage(hDlg, IDC_FOCUS, BM_GETCHECK, 0, 0) == BST_CHECKED) ;
-            keepActive = (SendDlgItemMessage(hDlg, IDC_LASTACTIVE, BM_GETCHECK, 0, 0) == BST_CHECKED) ;
             refreshOnWarp = (SendDlgItemMessage(hDlg, IDC_REFRESH, BM_GETCHECK, 0, 0) == BST_CHECKED) ;
             preserveZOrder = (SendDlgItemMessage(hDlg, IDC_PRESZORDER, BM_GETCHECK, 0, 0) == BST_CHECKED) ;
-            crashRecovery = (SendDlgItemMessage(hDlg, IDC_RECOVERY, BM_GETCHECK, 0, 0) == BST_CHECKED) ;
             deskWrap = (SendDlgItemMessage(hDlg, IDC_DESKCYCLE, BM_GETCHECK, 0, 0) == BST_CHECKED) ;
             invertY = (SendDlgItemMessage(hDlg, IDC_INVERTY, BM_GETCHECK, 0, 0) == BST_CHECKED) ;
-            noTaskbarCheck = (SendDlgItemMessage(hDlg, IDC_TASKBARDETECT, BM_GETCHECK, 0, 0) == BST_CHECKED) ;
+            noTaskbarCheck = (SendDlgItemMessage(hDlg, IDC_TASKBARDETECT, BM_GETCHECK, 0, 0) != BST_CHECKED) ;
             trickyWindows = (SendDlgItemMessage(hDlg, IDC_TRICKYSUPPORT, BM_GETCHECK, 0, 0) == BST_CHECKED) ;
             if(SendDlgItemMessage(hDlg, IDC_XPSTYLETASKBAR, BM_GETCHECK, 0, 0) == BST_CHECKED)
                 taskbarOffset = 0;
@@ -793,34 +821,48 @@ BOOL APIENTRY expert(HWND hDlg, UINT message, UINT wParam, LONG lParam)
                 displayTaskbarIcon = TRUE;
                 PostMessage(hWnd, VW_SHOWICON, 0, 0);
             }
+            if(SendDlgItemMessage(hDlg, IDC_HOTDISMISSEN, BM_GETCHECK, 0, 0) == BST_CHECKED)
+            {
+                WORD wRawHotKey;
+                hotkeyDismissEn = TRUE;
+                SetWindowLong(hDlg, DWL_MSGRESULT, TRUE);
+                wRawHotKey = (WORD)SendDlgItemMessage(hDlg, IDC_HOTDISMISS, HKM_GETHOTKEY, 0, 0);
+                hotkeyDismiss = LOBYTE(wRawHotKey);
+                hotkeyDismissMod = HIBYTE(wRawHotKey);
+                if(SendDlgItemMessage(hDlg, IDC_HOTDISMISSW, BM_GETCHECK, 0, 0) == BST_CHECKED)
+                    hotkeyDismissWin = MOD_WIN;
+                else
+                    hotkeyDismissWin = FALSE;
+            }
+            else
+            {
+                hotkeyDismissEn = FALSE;
+            }
+            vwSetupApply(hDlg,0x08) ;
             break;
         case PSN_KILLACTIVE:
             SetWindowLong(hDlg, DWL_MSGRESULT, FALSE);
             return 1;
-            break;
         case PSN_RESET:
             SetWindowLong(hDlg, DWL_MSGRESULT, FALSE);
+            break;
+        case PSN_HELP:
+            showHelp(hDlg);
             break;
         }
         
     case WM_COMMAND:
-        if(LOWORD(wParam) == IDC_FOCUS      || LOWORD(wParam) == IDC_LASTACTIVE ||
+        if(LOWORD(wParam) == IDC_FOCUS      || LOWORD(wParam) == IDC_TRICKYSUPPORT ||
            LOWORD(wParam) == IDC_MINIMIZED  || LOWORD(wParam) == IDC_REFRESH ||
            LOWORD(wParam) == IDC_DESKCYCLE  || LOWORD(wParam) == IDC_INVERTY ||
-           LOWORD(wParam) == IDC_RECOVERY   || LOWORD(wParam) == IDC_DISPLAYICON ||
+           LOWORD(wParam) == IDC_PERMSTICKY || LOWORD(wParam) == IDC_DISPLAYICON ||
            LOWORD(wParam) == IDC_PRESZORDER || LOWORD(wParam) == IDC_TASKBARDETECT ||
-           LOWORD(wParam) == IDC_TRICKYSUPPORT || LOWORD(wParam) == IDC_XPSTYLETASKBAR ||
-           LOWORD(wParam) == IDC_PERMSTICKY || LOWORD(wParam) == IDC_POPUPRHWIN ||
-           LOWORD(wParam) == IDC_HWINPOPUP)
+           LOWORD(wParam) == IDC_HWINPOPUP  || LOWORD(wParam) == IDC_XPSTYLETASKBAR ||
+           LOWORD(wParam) == IDC_POPUPRHWIN || LOWORD(wParam) == IDC_HOTDISMISSEN  ||
+           LOWORD(wParam) == IDC_HOTDISMISS || LOWORD(wParam) == IDC_HOTDISMISSW )
+        {
+            pageChangeMask |= 0x08 ;
             SendMessage(GetParent(hDlg), PSM_CHANGED, (WPARAM)hDlg, 0L);
-        if (LOWORD(wParam) == IDC_LASTACTIVE) {
-            if(SendDlgItemMessage(hDlg, IDC_LASTACTIVE, BM_GETCHECK, 0, 0) == BST_CHECKED) {
-                SendDlgItemMessage(hDlg, IDC_FOCUS, BM_SETCHECK, 0,0);
-                EnableWindow(focus, FALSE);
-                releaseFocus = FALSE;
-            } else {
-                EnableWindow(focus, TRUE);
-            }
         }
         break;
     }
@@ -851,7 +893,7 @@ BOOL APIENTRY about(HWND hDlg, UINT message, UINT wParam, LONG lParam)
         
     case WM_COMMAND:
         if(LOWORD(wParam) == IDC_MAILTO) {
-            HINSTANCE h = ShellExecute(NULL, "open", "mailto:virtuawin@home.se", 
+            HINSTANCE h = ShellExecute(NULL, "open", "mailto:" vwVIRTUAWIN_EMAIL, 
                                        NULL, NULL, SW_SHOWNORMAL);
             if ((UINT)h < 33) {
                 MessageBox(hDlg, "Error executing mail program.", "VirtuawWin", MB_ICONWARNING);
@@ -902,7 +944,7 @@ int createPropertySheet(HINSTANCE theHinst, HWND theHwndOwner)
     int yIcon = GetSystemMetrics(SM_CYSMICON);
     
     psp[0].dwSize = sizeof(PROPSHEETPAGE);
-    psp[0].dwFlags = PSP_USETITLE;
+    psp[0].dwFlags = PSP_USETITLE|PSP_HASHELP;
     psp[0].hInstance = theHinst;
     psp[0].pszTemplate = MAKEINTRESOURCE(IDD_PROPPAGE_KEYS);
     psp[0].pszIcon = NULL;
@@ -911,7 +953,7 @@ int createPropertySheet(HINSTANCE theHinst, HWND theHwndOwner)
     psp[0].lParam = 0;
     
     psp[1].dwSize = sizeof(PROPSHEETPAGE);
-    psp[1].dwFlags = PSP_USETITLE;
+    psp[1].dwFlags = PSP_USETITLE|PSP_HASHELP;
     psp[1].hInstance = theHinst;
     psp[1].pszTemplate = MAKEINTRESOURCE(IDD_PROPPAGE_MOUSE);
     psp[1].pszIcon = NULL;
@@ -920,7 +962,7 @@ int createPropertySheet(HINSTANCE theHinst, HWND theHwndOwner)
     psp[1].lParam = 0;
     
     psp[2].dwSize = sizeof(PROPSHEETPAGE);
-    psp[2].dwFlags = PSP_USETITLE;
+    psp[2].dwFlags = PSP_USETITLE|PSP_HASHELP;
     psp[2].hInstance = theHinst;
     psp[2].pszTemplate = MAKEINTRESOURCE(IDD_PROPPAGE_MODULES);
     psp[2].pszIcon = NULL;
@@ -929,7 +971,7 @@ int createPropertySheet(HINSTANCE theHinst, HWND theHwndOwner)
     psp[2].lParam = 0;
     
     psp[3].dwSize = sizeof(PROPSHEETPAGE);
-    psp[3].dwFlags = PSP_USETITLE;
+    psp[3].dwFlags = PSP_USETITLE|PSP_HASHELP;
     psp[3].hInstance = theHinst;
     psp[3].pszTemplate = MAKEINTRESOURCE(IDD_PROPPAGE_MISC);
     psp[3].pszIcon = NULL;
@@ -938,7 +980,7 @@ int createPropertySheet(HINSTANCE theHinst, HWND theHwndOwner)
     psp[3].lParam = 0;
     
     psp[4].dwSize = sizeof(PROPSHEETPAGE);
-    psp[4].dwFlags = PSP_USETITLE;
+    psp[4].dwFlags = PSP_USETITLE|PSP_HASHELP;
     psp[4].hInstance = theHinst;
     psp[4].pszTemplate = MAKEINTRESOURCE(IDD_PROPPAGE_EXPERT);
     psp[4].pszIcon = NULL;
@@ -947,7 +989,7 @@ int createPropertySheet(HINSTANCE theHinst, HWND theHwndOwner)
     psp[4].lParam = 0;
     
     psp[5].dwSize = sizeof(PROPSHEETPAGE);
-    psp[5].dwFlags = PSP_USETITLE;
+    psp[5].dwFlags = PSP_USETITLE|PSP_HASHELP;
     psp[5].hInstance = theHinst;
     psp[5].pszTemplate = MAKEINTRESOURCE(IDD_PROPPAGE_ABOUT);
     psp[5].pszIcon = NULL;
@@ -960,7 +1002,7 @@ int createPropertySheet(HINSTANCE theHinst, HWND theHwndOwner)
     // properly, this is only done when Okay is pressed, if the user selects
     // Apply and then Cancel their settings are lost which is bad behaviour
     // so remove the Apply button 
-    psh.dwFlags = PSH_USECALLBACK | PSH_PROPSHEETPAGE | PSH_USEHICON | PSH_NOAPPLYNOW ;
+    psh.dwFlags = PSH_USECALLBACK | PSH_PROPSHEETPAGE | PSH_USEHICON ;
     psh.hwndParent = theHwndOwner;
     psh.hInstance = theHinst;
     psh.pszIcon = NULL;

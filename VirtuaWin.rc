@@ -1,4 +1,5 @@
 #include <windows.h>
+#include "Defines.h"
 #include "Resource.h"
 
 107 ICON Icons/APPICONSMALL.ICO
@@ -102,22 +103,23 @@ BEGIN
     CONTROL         "XSpin", IDC_SLIDERX, "msctls_updown32", 0x0 | WS_CLIPSIBLINGS |
                     UDS_SETBUDDYINT, 10, 16, 0, 15
     CONTROL         "YSpin", IDC_SLIDERY, "msctls_updown32",  0x0 | WS_CLIPSIBLINGS |
-                    UDS_SETBUDDYINT, 52, 16, 0, 15
+                    UDS_SETBUDDYINT, 64, 16, 0, 15
     EDITTEXT        IDC_DESKX, 26, 19, 8, 8, ES_LEFT | ES_AUTOHSCROLL |
                     ES_READONLY | NOT WS_BORDER | WS_GROUP | NOT WS_TABSTOP
-    LTEXT           "by", IDC_STATIC, 34, 19, 8, 8
-    EDITTEXT        IDC_DESKY, 44, 19, 8, 8, ES_LEFT | ES_AUTOHSCROLL |
+    LTEXT           "wide by", IDC_STATIC, 34, 19, 24, 8
+    EDITTEXT        IDC_DESKY, 78, 19, 8, 8, ES_LEFT | ES_AUTOHSCROLL |
                     ES_READONLY | NOT WS_BORDER | WS_GROUP | NOT WS_TABSTOP
+    LTEXT           "deep", IDC_STATIC, 86, 19, 16, 8
     GROUPBOX        "Desktop Layout", IDC_STATIC, 4, 5, 202, 30
 
     GROUPBOX        "Desktop State Handling", IDC_STATIC,    4, 38, 202, 69
     AUTOCHECKBOX    "Use desktop assignment", IDC_USEASSIGN, 10, 49, 90, 10
     AUTOCHECKBOX    "Assign only first window", IDC_FIRSTONLY, 22, 60, 90, 10
-    AUTOCHECKBOX    "Move window immediately", IDC_ASSIGNWINNOW, 22, 71, 90, 10
-    AUTOCHECKBOX    "Save layout on exit", IDC_SAVEEXITSTATE, 10, 82, 90, 10
+    AUTOCHECKBOX    "Assign window immediately", IDC_ASSIGNWINNOW, 22, 71, 100, 10
+    AUTOCHECKBOX    "Save assignment on exit", IDC_SAVEEXITSTATE, 10, 82, 90, 10
     AUTOCHECKBOX    "Save sticky on exit", IDC_STICKYSAVE, 10, 93, 80, 10
-    PUSHBUTTON      "Save layout", IDC_SAVENOW,            144, 54, 45, 14
-    PUSHBUTTON      "Save sticky", IDC_SAVESTICKY,         144, 84, 45, 14
+    PUSHBUTTON      "Save Assignment", IDC_SAVENOW,  140, 54, 60, 14
+    PUSHBUTTON      "Save Sticky", IDC_SAVESTICKY,   140, 84, 60, 14
 
     GROUPBOX        "Window Menu", IDC_STATIC, 4, 110, 202, 85
     LTEXT           "Menu contents:", IDC_STATIC, 10, 121, 85, 10
@@ -131,7 +133,7 @@ BEGIN
     AUTOCHECKBOX    "+ WIN key", IDC_HOTMENUW, 133, 180, 47, 9, 0x0020
 
     GROUPBOX        "Sticky", IDC_STATIC, 4, 196, 202, 40
-    AUTOCHECKBOX    "Enable toggle window sticky hotkey", IDC_HOTSTICKYEN, 10, 207, 130, 10
+    AUTOCHECKBOX    "Enable sticky toggle hotkey", IDC_HOTSTICKYEN, 10, 207, 130, 10
     LTEXT           "Hotkey", IDC_STATIC, 22, 221, 32, 10
     CONTROL         "StickyHot", IDC_HOTSTICKY, "msctls_hotkey32", 0x0 |
                     WS_BORDER | WS_TABSTOP, 55, 219, 76, 12
@@ -142,32 +144,35 @@ IDD_PROPPAGE_EXPERT DIALOG 0, 0, 150, 150
 STYLE DS_3DLOOK | WS_CHILD | WS_DISABLED | WS_BORDER
 FONT 8, "MS Sans Serif"
 BEGIN
-    GROUPBOX        "Extras", IDC_STATIC, 4, 5, 202, 179
-    AUTOCHECKBOX    "Keep last active", IDC_LASTACTIVE,        10,  16, 65, 10
-    AUTOCHECKBOX    "Release focus", IDC_FOCUS,                22,  27, 61, 10
-    AUTOCHECKBOX    "Switch minimized", IDC_MINIMIZED,         10,  38, 69, 10
-    AUTOCHECKBOX    "Refresh after switch", IDC_REFRESH,       10,  49, 79, 10
-    AUTOCHECKBOX    "Preserve window Z order", IDC_PRESZORDER, 10,  60, 100, 10
-    AUTOCHECKBOX    "Crash recovery", IDC_RECOVERY,            10,  71, 73, 10
-    AUTOCHECKBOX    "Desktop cycling", IDC_DESKCYCLE,          10,  82, 74, 10
-    AUTOCHECKBOX    "Invert Up/Down", IDC_INVERTY,             10,  93, 74, 10
-    AUTOCHECKBOX    "Hide system tray icon", IDC_DISPLAYICON,  10, 104, 80, 10
-    AUTOCHECKBOX    "Disable taskbar detection", IDC_TASKBARDETECT, 10, 115, 100, 10
-    AUTOCHECKBOX    "Use alternate hiding", IDC_TRICKYSUPPORT, 10, 126, 90, 10
-    AUTOCHECKBOX    "XP taskbar patch", IDC_XPSTYLETASKBAR,    10, 137, 90, 10
-    AUTOCHECKBOX    "Permanent sticky", IDC_PERMSTICKY,        10, 148, 90, 10
-    AUTOCHECKBOX    "Pop-up raised hidden windows", IDC_POPUPRHWIN, 10, 159, 120, 10
-    AUTOCHECKBOX    "Move popped-up hidden windows", IDC_HWINPOPUP, 10, 170, 120, 10
+    GROUPBOX        "Advanced Options", IDC_STATIC, 4, 5, 202, 181
+    AUTOCHECKBOX    "Release focus on desktop change", IDC_FOCUS,                10,  16, 125, 10
+    AUTOCHECKBOX    "Hide minimized windows on desktop change", IDC_MINIMIZED,   10,  27, 155, 10
+    AUTOCHECKBOX    "Force refresh after desktop change", IDC_REFRESH,           10,  38, 130, 10
+    AUTOCHECKBOX    "Preserve window Z order", IDC_PRESZORDER,                   10,  49, 100, 10
+    AUTOCHECKBOX    "Desktop Wrapping", IDC_DESKCYCLE,                           10,  60, 75,  10
+    AUTOCHECKBOX    "Invert Up/Down", IDC_INVERTY,                               10,  71, 70,  10
+    AUTOCHECKBOX    "Hide system tray icon", IDC_DISPLAYICON,                    10,  82, 80,  10
+    AUTOCHECKBOX    "Enable taskbar detection", IDC_TASKBARDETECT,               10,  93, 100, 10
+    AUTOCHECKBOX    "Enable alternative hiding method for tricky windows", IDC_TRICKYSUPPORT, 10, 104, 180, 10
+    AUTOCHECKBOX    "XP themed taskbar support", IDC_XPSTYLETASKBAR,             10, 115, 100, 10
+    AUTOCHECKBOX    "Remember sticky state throughout session", IDC_PERMSTICKY,  10, 126, 150, 10
+    AUTOCHECKBOX    "Treat a raised hidden window as a pop-up", IDC_POPUPRHWIN,  10, 137, 150, 10
+    AUTOCHECKBOX    "Assign popped-up hidden window to current desktop", IDC_HWINPOPUP, 10, 148, 180, 10
+    AUTOCHECKBOX    "Enable dismiss window hotkey", IDC_HOTDISMISSEN, 10, 159, 130, 10
+    LTEXT           "Hotkey", IDC_STATIC, 22, 173, 32, 10
+    CONTROL         "DismissHot", IDC_HOTDISMISS, "msctls_hotkey32", 0x0 |
+                    WS_BORDER | WS_TABSTOP, 55, 171, 76, 12
+    AUTOCHECKBOX    "+ WIN key", IDC_HOTDISMISSW, 133, 173, 47, 9, 0x0020
 END
 
 IDD_PROPPAGE_ABOUT DIALOG 0, 0, 150, 150
 STYLE DS_3DLOOK | WS_CHILD | WS_DISABLED | WS_BORDER
 FONT 8, "MS Sans Serif"
 BEGIN
-    GROUPBOX        "VirtuaWin  V2.11 beta 2", IDC_STATIC, 4, 5, 202, 81, 0x0300
+    GROUPBOX        vwVIRTUAWIN_NAME_VERSION, IDC_STATIC, 4, 5, 202, 81, 0x0300
     ICON            IDI_LARGEAPP, IDC_STATIC, 95, 16, 20, 20
     CTEXT           "Copyright (c) 1999-2004 and 2005 Johan Piculell", IDC_STATIC, 10, 40, 190, 8
-    CTEXT           "virtuawin@home.se", IDC_MAILTO, 10, 50, 190, 8, 0x0100
+    CTEXT           vwVIRTUAWIN_EMAIL, IDC_MAILTO, 10, 50, 190, 8, 0x0100
     CTEXT           "Latest version, info, source, etc. visit:", IDC_STATIC, 10, 62, 190, 8
     CTEXT           "http://virtuawin.sourceforge.net/", IDC_HTTP, 10, 72, 190, 10, 0x0100
     GROUPBOX        "License", IDC_STATIC, 4, 89, 202, 140, 0x0300

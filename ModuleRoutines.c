@@ -144,7 +144,7 @@ void loadModules(void)
     char buff[MAX_PATH], *ss ;
     HANDLE hFile;
     
-    GetFilename(vwMODULES, buff);
+    GetFilename(vwMODULES,0,buff);
     
     // Find first .exe file in modules directory
     if((hFile = FindFirstFile(buff,&exe_file)) != INVALID_HANDLE_VALUE)

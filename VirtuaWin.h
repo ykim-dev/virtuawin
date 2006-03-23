@@ -38,8 +38,10 @@ void setMouseKey(void);
 void reLoadIcons(void);
 void registerAllKeys(void);
 void unRegisterAllKeys(void);
+void getTaskbarLocation(void);
 int  assignWindow(HWND theWin, int theDesk, BOOL force);
 int  gotoDesk(int theDesk, BOOL force);
+void showHelp(HWND aHWnd);
 
 #endif
 

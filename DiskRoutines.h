@@ -25,11 +25,11 @@
 #ifndef _DISKROUTINES_H_
 #define _DISKROUTINES_H_
 
-typedef enum { vwLIST, vwHELP, vwTRICKY, vwMODULES, vwCONFIG, vwSTICKY, vwDISABLED, vwWINDOWS_STATE, vwFILE_COUNT } eFileNames;
+typedef enum { vwMODULES, vwHELP, vwCONFIG, vwLIST, vwTRICKY, vwSTICKY, vwDISABLED, vwWINDOWS_STATE, vwFILE_COUNT } eFileNames;
 extern char *VirtuaWinPath ;
 extern char *UserAppPath ;
 
-int  GetFilename(eFileNames filetype, char* outStr);
+int  GetFilename(eFileNames filetype, int location, char* outStr);
 int  loadDisabledModules(disModules* theDisList);
 void saveDisabledList(int theNOfModules, moduleType* theModList);
 int  loadTrickyList(stickyType *theTrickyList);
@@ -40,8 +40,6 @@ void saveAssignedList(int theNOfWin, windowType* theWinList);
 int  loadUserList(userType *theUserList);
 void writeConfig(void);
 void readConfig(void);
-BOOL tryToLock(void);
-void clearLock(void);
 
 #endif
 

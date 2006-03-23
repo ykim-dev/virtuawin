@@ -39,7 +39,6 @@ extern BOOL useMouseKey;   // if user must use a modify key to warp with mouse
 extern BOOL keyEnable;		// key support
 extern BOOL hotKeyEnable;      // hot key support
 extern BOOL releaseFocus;	// release focus on switch
-extern BOOL keepActive;	        // if active windows will be remembered
 extern BOOL minSwitch;		// if we should switch minimized windows
 extern BOOL modAlt;		// switch key
 extern BOOL modShift;		// switch key
@@ -96,6 +95,10 @@ extern UINT hotkeyStickyEn;
 extern UINT hotkeySticky;
 extern UINT hotkeyStickyMod;
 extern UINT hotkeyStickyWin;
+extern UINT hotkeyDismissEn;
+extern UINT hotkeyDismiss;
+extern UINT hotkeyDismissMod;
+extern UINT hotkeyDismissWin;
 
 #endif
 
