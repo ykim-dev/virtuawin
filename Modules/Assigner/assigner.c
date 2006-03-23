@@ -254,20 +254,9 @@ LRESULT CALLBACK MainWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
                 theNewDesk = numberOfDesktops ;
             else if(theNewDesk > numberOfDesktops)
                 theNewDesk = 1 ;
-            SendMessage(vwHandle, VW_ASSIGNWIN, (WPARAM)theActive, theNewDesk);
-            /* Always bring to the forground of the destination desk so when
-             * the user moves to this desk it should be on top (config
-             * settings can make this fail). This should ensure that if the
-             * user has CHANGE_DESKTOP enabled they can move the window
-             * multiple times and alway move the right window. */
-            SendMessage(vwHandle, VW_FOREGDWIN, (WPARAM)theActive, theNewDesk);
             if(CHANGE_DESKTOP == BST_CHECKED)
-            {
-                /* move desks and then bring to the front again just to
-                 * ensure its the foreground */
-                SendMessage(vwHandle, VW_CHANGEDESK, theNewDesk, 0);
-                SendMessage(vwHandle, VW_FOREGDWIN, (WPARAM)theActive, 0);
-            }
+                theNewDesk = 0 - theNewDesk ;
+            SendMessage(vwHandle, VW_ASSIGNWIN, (WPARAM)theActive, theNewDesk) ;
         }
         break;  
     
@@ -369,6 +358,12 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
 /*
  * $Log$
+ * Revision 1.5  2006/03/22 23:29:11  bjasspa
+ * Changed assigner to use the user's config path and added + WIN hotkey modifier.
+ *
+ * Revision 1.4  2005/11/15 17:58:16  jopi
+ * Fixed incompatibility with version 2.11
+ *
  * Revision 1.3  2004/12/07 19:47:22  jopi
  * SF1004932, assignment is now able to send windows past the desktop boundaries.
  *
