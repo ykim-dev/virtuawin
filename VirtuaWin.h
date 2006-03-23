@@ -38,7 +38,7 @@ void setMouseKey(void);
 void reLoadIcons(void);
 void registerAllKeys(void);
 void unRegisterAllKeys(void);
-void assignWindow(HWND theWin, int theDesk, BOOL force);
+int  assignWindow(HWND theWin, int theDesk, BOOL force);
 int  gotoDesk(int theDesk, BOOL force);
 
 #endif

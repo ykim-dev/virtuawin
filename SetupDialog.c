@@ -42,16 +42,33 @@
  */
 BOOL APIENTRY keys(HWND hDlg, UINT message, UINT wParam, LONG lParam)
 {
-    RECT r;
     WORD wRawHotKey;
     WORD wPar;
+    RECT config_dlg_rect;
     
     switch (message) {
     case WM_INITDIALOG:
-        GetWindowRect(GetParent(hDlg), &r);
-        SetWindowPos(GetParent(hDlg), 0, (screenRight/2-((r.right-r.left)/2)),
-                     (screenBottom/2-((r.bottom-r.top)/2)), 0, 0, SWP_NOZORDER | SWP_NOSIZE | SWP_NOACTIVATE);
-        
+
+         GetWindowRect(GetParent(hDlg), &config_dlg_rect);
+
+         // Reposition the dialog to the center of the monitor that
+         // was selected
+            
+         // GetSystemMetrics returns the primary monitor for backward
+         // compatiblity.  I used this rather than GetMonitorInfo
+         // because some versions of MingW don't have that function
+         // and because those other functions only work on 98+ and
+         // 2000+
+         int monitor_width  = GetSystemMetrics(SM_CXSCREEN); // get the width of the PRIMARY display monitor
+         int monitor_height = GetSystemMetrics(SM_CYSCREEN); // get the height of the PRIMARY display monitor
+         int dialog_width   = config_dlg_rect.right  - config_dlg_rect.left;
+         int dialog_height  = config_dlg_rect.bottom - config_dlg_rect.top;
+
+         config_dlg_rect.left = (monitor_width  - dialog_width)  / 2;
+         config_dlg_rect.top  = (monitor_height - dialog_height) / 2;
+
+         SetWindowPos(GetParent(hDlg), 0, config_dlg_rect.left, config_dlg_rect.top, 0, 0, SWP_NOZORDER | SWP_NOSIZE | SWP_NOACTIVATE);
+    
         /* Control keys */
         if(keyEnable) {
             SendDlgItemMessage(hDlg, IDC_KEYS, BM_SETCHECK, 1,0);
@@ -719,6 +736,8 @@ BOOL APIENTRY expert(HWND hDlg, UINT message, UINT wParam, LONG lParam)
         }
         if(refreshOnWarp)
             SendDlgItemMessage(hDlg, IDC_REFRESH, BM_SETCHECK, 1,0);
+        if(preserveZOrder)
+            SendDlgItemMessage(hDlg, IDC_PRESZORDER, BM_SETCHECK, 1,0);
         if(crashRecovery)
             SendDlgItemMessage(hDlg, IDC_RECOVERY, BM_SETCHECK, 1,0);
         if(deskWrap)
@@ -747,50 +766,21 @@ BOOL APIENTRY expert(HWND hDlg, UINT message, UINT wParam, LONG lParam)
             // Initialize the controls.
             break;
         case PSN_APPLY:
-            if(SendDlgItemMessage(hDlg, IDC_MINIMIZED, BM_GETCHECK, 0, 0) == BST_CHECKED)
-                minSwitch = TRUE;
-            else
-                minSwitch = FALSE;
-            if(SendDlgItemMessage(hDlg, IDC_FOCUS, BM_GETCHECK, 0, 0) == BST_CHECKED)
-                releaseFocus = TRUE;
-            else
-                releaseFocus = FALSE;
-            if(SendDlgItemMessage(hDlg, IDC_LASTACTIVE, BM_GETCHECK, 0, 0) == BST_CHECKED)
-                keepActive = TRUE;
-            else
-                keepActive = FALSE;
-            if(SendDlgItemMessage(hDlg, IDC_REFRESH, BM_GETCHECK, 0, 0) == BST_CHECKED)
-                refreshOnWarp = TRUE;
-            else
-                refreshOnWarp = FALSE;
-            if(SendDlgItemMessage(hDlg, IDC_RECOVERY, BM_GETCHECK, 0, 0) == BST_CHECKED)
-                crashRecovery = TRUE;
-            else
-                crashRecovery = FALSE;
-            if(SendDlgItemMessage(hDlg, IDC_DESKCYCLE, BM_GETCHECK, 0, 0) == BST_CHECKED)
-                deskWrap = TRUE;
-            else
-                deskWrap = FALSE;           
-            if(SendDlgItemMessage(hDlg, IDC_INVERTY, BM_GETCHECK, 0, 0) == BST_CHECKED)
-                invertY = TRUE;
-            else
-                invertY = FALSE;
-            if(SendDlgItemMessage(hDlg, IDC_TASKBARDETECT, BM_GETCHECK, 0, 0) == BST_CHECKED)
-                noTaskbarCheck = TRUE;
-            else
-                noTaskbarCheck = FALSE;
-            if(SendDlgItemMessage(hDlg, IDC_TRICKYSUPPORT, BM_GETCHECK, 0, 0) == BST_CHECKED)
-                trickyWindows = TRUE;
-            else
-                trickyWindows = FALSE;
+            minSwitch = (SendDlgItemMessage(hDlg, IDC_MINIMIZED, BM_GETCHECK, 0, 0) == BST_CHECKED) ;
+            releaseFocus = (SendDlgItemMessage(hDlg, IDC_FOCUS, BM_GETCHECK, 0, 0) == BST_CHECKED) ;
+            keepActive = (SendDlgItemMessage(hDlg, IDC_LASTACTIVE, BM_GETCHECK, 0, 0) == BST_CHECKED) ;
+            refreshOnWarp = (SendDlgItemMessage(hDlg, IDC_REFRESH, BM_GETCHECK, 0, 0) == BST_CHECKED) ;
+            preserveZOrder = (SendDlgItemMessage(hDlg, IDC_PRESZORDER, BM_GETCHECK, 0, 0) == BST_CHECKED) ;
+            crashRecovery = (SendDlgItemMessage(hDlg, IDC_RECOVERY, BM_GETCHECK, 0, 0) == BST_CHECKED) ;
+            deskWrap = (SendDlgItemMessage(hDlg, IDC_DESKCYCLE, BM_GETCHECK, 0, 0) == BST_CHECKED) ;
+            invertY = (SendDlgItemMessage(hDlg, IDC_INVERTY, BM_GETCHECK, 0, 0) == BST_CHECKED) ;
+            noTaskbarCheck = (SendDlgItemMessage(hDlg, IDC_TASKBARDETECT, BM_GETCHECK, 0, 0) == BST_CHECKED) ;
+            trickyWindows = (SendDlgItemMessage(hDlg, IDC_TRICKYSUPPORT, BM_GETCHECK, 0, 0) == BST_CHECKED) ;
             if(SendDlgItemMessage(hDlg, IDC_XPSTYLETASKBAR, BM_GETCHECK, 0, 0) == BST_CHECKED)
                 taskbarOffset = 0;
             else
                 taskbarOffset = 3;
-            if(SendDlgItemMessage(hDlg, IDC_PERMSTICKY, BM_GETCHECK, 0, 0) == BST_CHECKED)
-                permanentSticky = TRUE;
-            else
-                permanentSticky = FALSE;
+            permanentSticky = (SendDlgItemMessage(hDlg, IDC_PERMSTICKY, BM_GETCHECK, 0, 0) == BST_CHECKED) ;
             hiddenWindowRaise = (SendDlgItemMessage(hDlg, IDC_POPUPRHWIN, BM_GETCHECK, 0, 0) == BST_CHECKED) ;
             hiddenWindowPopup = (SendDlgItemMessage(hDlg, IDC_HWINPOPUP, BM_GETCHECK, 0, 0) == BST_CHECKED) ;
             if(SendDlgItemMessage(hDlg, IDC_DISPLAYICON, BM_GETCHECK, 0, 0) == BST_CHECKED)
@@ -818,9 +808,10 @@ BOOL APIENTRY expert(HWND hDlg, UINT message, UINT wParam, LONG lParam)
            LOWORD(wParam) == IDC_MINIMIZED  || LOWORD(wParam) == IDC_REFRESH ||
            LOWORD(wParam) == IDC_DESKCYCLE  || LOWORD(wParam) == IDC_INVERTY ||
            LOWORD(wParam) == IDC_RECOVERY   || LOWORD(wParam) == IDC_DISPLAYICON ||
-           LOWORD(wParam) == IDC_TASKBARDETECT || LOWORD(wParam) == IDC_TRICKYSUPPORT ||
-           LOWORD(wParam) == IDC_XPSTYLETASKBAR || LOWORD(wParam) == IDC_PERMSTICKY ||
-           LOWORD(wParam) == IDC_POPUPRHWIN || LOWORD(wParam) == IDC_HWINPOPUP)
+           LOWORD(wParam) == IDC_PRESZORDER || LOWORD(wParam) == IDC_TASKBARDETECT ||
+           LOWORD(wParam) == IDC_TRICKYSUPPORT || LOWORD(wParam) == IDC_XPSTYLETASKBAR ||
+           LOWORD(wParam) == IDC_PERMSTICKY || LOWORD(wParam) == IDC_POPUPRHWIN ||
+           LOWORD(wParam) == IDC_HWINPOPUP)
             SendMessage(GetParent(hDlg), PSM_CHANGED, (WPARAM)hDlg, 0L);
         if (LOWORD(wParam) == IDC_LASTACTIVE) {
             if(SendDlgItemMessage(hDlg, IDC_LASTACTIVE, BM_GETCHECK, 0, 0) == BST_CHECKED) {
@@ -985,6 +976,9 @@ int createPropertySheet(HINSTANCE theHinst, HWND theHwndOwner)
 
 /*
  * $Log$
+ * Revision 1.26  2005/08/10 15:10:45  rexkerr	
+ * Made the setup dialog center itself on the primary monitor so that it worked on dual monitor systems.  Prior to this change it was centering itself on the centerline between the two monitors if the secondary monitor was to the left or under the primary monitor, and half way off of the edge of the displays if the secondary monitor was to the right or above the primary monitor.	
+ *
  * Revision 1.25  2005/07/21 19:34:47  jopi
  * Removed popup message when configuring only one desktop
  *

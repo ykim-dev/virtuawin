@@ -57,6 +57,7 @@ extern BOOL saveSticky;         // if we shall save sticky win. on exit
 extern BOOL mouseWarpCalled;    // if MouseDll has posted a warp message
 extern BOOL refreshOnWarp;      // if we should refresh desktop after switch
 extern BOOL stickyKeyRegistered; // if the sticky hot key is registered
+extern BOOL preserveZOrder;     // Should we preserve the window Z order
 extern BOOL crashRecovery;      // Should we use recovery functionality
 extern BOOL deskWrap;           // If we want to have desktop cycling
 extern BOOL setupOpen;          // if setup dialog is visible

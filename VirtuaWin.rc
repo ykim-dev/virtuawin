@@ -1,13 +1,13 @@
 #include <windows.h>
-#include "resource.h"
+#include "Resource.h"
 
-107 ICON icons/APPICONSMALL.ICO
-108 ICON icons/APPICONLARGE.ICO
-109 ICON icons/SMALL.ICO
-110 ICON icons/SMALLNW.ICO
-111 ICON icons/SMALLNE.ICO
-112 ICON icons/SMALLSW.ICO
-113 ICON icons/SMALLSE.ICO
+107 ICON Icons/APPICONSMALL.ICO
+108 ICON Icons/APPICONLARGE.ICO
+109 ICON Icons/SMALL.ICO
+110 ICON Icons/SMALLNW.ICO
+111 ICON Icons/SMALLNE.ICO
+112 ICON Icons/SMALLSW.ICO
+113 ICON Icons/SMALLSE.ICO
 
 IDD_PROPPAGE_KEYS DIALOG 0, 0, 150, 250
 STYLE DS_3DLOOK | WS_CHILD | WS_DISABLED | WS_BORDER
@@ -142,21 +142,22 @@ IDD_PROPPAGE_EXPERT DIALOG 0, 0, 150, 150
 STYLE DS_3DLOOK | WS_CHILD | WS_DISABLED | WS_BORDER
 FONT 8, "MS Sans Serif"
 BEGIN
-    GROUPBOX        "Extras", IDC_STATIC, 4, 5, 202, 168
-    AUTOCHECKBOX    "Keep last active", IDC_LASTACTIVE, 10, 16, 65, 10
-    AUTOCHECKBOX    "Release focus", IDC_FOCUS,         22, 27, 61, 10
-    AUTOCHECKBOX    "Switch minimized", IDC_MINIMIZED,  10, 38, 69, 10
-    AUTOCHECKBOX    "Refresh after switch", IDC_REFRESH,10, 49, 79, 10
-    AUTOCHECKBOX    "Crash recovery", IDC_RECOVERY,     10, 60, 73, 10
-    AUTOCHECKBOX    "Desktop cycling", IDC_DESKCYCLE,   10, 71, 74, 10
-    AUTOCHECKBOX    "Invert Up/Down", IDC_INVERTY,      10, 82, 74, 10
-    AUTOCHECKBOX    "Hide system tray icon", IDC_DISPLAYICON, 10, 93, 80, 10
-    AUTOCHECKBOX    "Disable taskbar detection", IDC_TASKBARDETECT, 10, 104, 100, 10
-    AUTOCHECKBOX    "Use alternate hiding", IDC_TRICKYSUPPORT, 10, 115, 90, 10
-    AUTOCHECKBOX    "XP taskbar patch", IDC_XPSTYLETASKBAR, 10, 126, 90, 10
-    AUTOCHECKBOX    "Permanent sticky", IDC_PERMSTICKY, 10, 137, 90, 10
-    AUTOCHECKBOX    "Pop-up raised hidden windows", IDC_POPUPRHWIN, 10, 148, 120, 10
-    AUTOCHECKBOX    "Move popped-up hidden windows", IDC_HWINPOPUP, 10, 159, 120, 10
+    GROUPBOX        "Extras", IDC_STATIC, 4, 5, 202, 179
+    AUTOCHECKBOX    "Keep last active", IDC_LASTACTIVE,        10,  16, 65, 10
+    AUTOCHECKBOX    "Release focus", IDC_FOCUS,                22,  27, 61, 10
+    AUTOCHECKBOX    "Switch minimized", IDC_MINIMIZED,         10,  38, 69, 10
+    AUTOCHECKBOX    "Refresh after switch", IDC_REFRESH,       10,  49, 79, 10
+    AUTOCHECKBOX    "Preserve window Z order", IDC_PRESZORDER, 10,  60, 100, 10
+    AUTOCHECKBOX    "Crash recovery", IDC_RECOVERY,            10,  71, 73, 10
+    AUTOCHECKBOX    "Desktop cycling", IDC_DESKCYCLE,          10,  82, 74, 10
+    AUTOCHECKBOX    "Invert Up/Down", IDC_INVERTY,             10,  93, 74, 10
+    AUTOCHECKBOX    "Hide system tray icon", IDC_DISPLAYICON,  10, 104, 80, 10
+    AUTOCHECKBOX    "Disable taskbar detection", IDC_TASKBARDETECT, 10, 115, 100, 10
+    AUTOCHECKBOX    "Use alternate hiding", IDC_TRICKYSUPPORT, 10, 126, 90, 10
+    AUTOCHECKBOX    "XP taskbar patch", IDC_XPSTYLETASKBAR,    10, 137, 90, 10
+    AUTOCHECKBOX    "Permanent sticky", IDC_PERMSTICKY,        10, 148, 90, 10
+    AUTOCHECKBOX    "Pop-up raised hidden windows", IDC_POPUPRHWIN, 10, 159, 120, 10
+    AUTOCHECKBOX    "Move popped-up hidden windows", IDC_HWINPOPUP, 10, 170, 120, 10
 END
 
 IDD_PROPPAGE_ABOUT DIALOG 0, 0, 150, 150
