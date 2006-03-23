@@ -72,6 +72,7 @@ extern BOOL displayTaskbarIcon; // Should we display the systray icon
 extern BOOL noTaskbarCheck;     // Should we skip the taskbar search
 extern BOOL trickyWindows;      // Use the alternate hiding technique
 extern BOOL permanentSticky;    // If a sticky classname should be permanent
+extern BOOL hiddenWindowRaise;  // Pop-up a hidden window if it is raised to foreground
 extern BOOL hiddenWindowPopup;  // Move or temp copy a popped up hidden window
 
 extern BOOL cyclingKeysEnabled; // If we are using the cycling hotkeys

@@ -65,7 +65,7 @@ typedef struct { // Holds the windows in the list
     unsigned char  Sticky;
     unsigned char  Tricky;
     unsigned char  Visible;
-    unsigned char  Deleted;
+    unsigned char  State;
 } windowType;
 
 typedef struct { // Holds data for modules

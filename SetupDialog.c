@@ -735,6 +735,8 @@ BOOL APIENTRY expert(HWND hDlg, UINT message, UINT wParam, LONG lParam)
             SendDlgItemMessage(hDlg, IDC_XPSTYLETASKBAR, BM_SETCHECK, 1,0);
         if(permanentSticky)
             SendDlgItemMessage(hDlg, IDC_PERMSTICKY, BM_SETCHECK, 1,0);
+        if(hiddenWindowRaise)
+            SendDlgItemMessage(hDlg, IDC_POPUPRHWIN, BM_SETCHECK, 1,0);
         if(hiddenWindowPopup)
             SendDlgItemMessage(hDlg, IDC_HWINPOPUP, BM_SETCHECK, 1,0);
         return TRUE;
@@ -789,6 +791,7 @@ BOOL APIENTRY expert(HWND hDlg, UINT message, UINT wParam, LONG lParam)
                 permanentSticky = TRUE;
             else
                 permanentSticky = FALSE;
+            hiddenWindowRaise = (SendDlgItemMessage(hDlg, IDC_POPUPRHWIN, BM_GETCHECK, 0, 0) == BST_CHECKED) ;
             hiddenWindowPopup = (SendDlgItemMessage(hDlg, IDC_HWINPOPUP, BM_GETCHECK, 0, 0) == BST_CHECKED) ;
             if(SendDlgItemMessage(hDlg, IDC_DISPLAYICON, BM_GETCHECK, 0, 0) == BST_CHECKED)
             {
@@ -817,7 +820,7 @@ BOOL APIENTRY expert(HWND hDlg, UINT message, UINT wParam, LONG lParam)
            LOWORD(wParam) == IDC_RECOVERY   || LOWORD(wParam) == IDC_DISPLAYICON ||
            LOWORD(wParam) == IDC_TASKBARDETECT || LOWORD(wParam) == IDC_TRICKYSUPPORT ||
            LOWORD(wParam) == IDC_XPSTYLETASKBAR || LOWORD(wParam) == IDC_PERMSTICKY ||
-           LOWORD(wParam) == IDC_HWINPOPUP)
+           LOWORD(wParam) == IDC_POPUPRHWIN || LOWORD(wParam) == IDC_HWINPOPUP)
             SendMessage(GetParent(hDlg), PSM_CHANGED, (WPARAM)hDlg, 0L);
         if (LOWORD(wParam) == IDC_LASTACTIVE) {
             if(SendDlgItemMessage(hDlg, IDC_LASTACTIVE, BM_GETCHECK, 0, 0) == BST_CHECKED) {

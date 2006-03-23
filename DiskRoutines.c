@@ -481,8 +481,9 @@ void writeConfig(void)
         fprintf(fp, "Hot_key_10# %i\n",deskHotkey[10]);
         fprintf(fp, "Hot_key_Mod10# %i\n",deskHotkeyMod[10]);
         fprintf(fp, "Hot_key_Win10# %i\n",deskHotkeyWin[10]);
-        fprintf(fp, "HiddenWindowPopup# %i\n", hiddenWindowPopup);
         fprintf(fp, "AssignImmediately# %i\n", assignImmediately);
+        fprintf(fp, "HiddenWindowRaise# %i\n", hiddenWindowRaise);
+        fprintf(fp, "HiddenWindowPopup# %i\n", hiddenWindowPopup);
         fclose(fp);
     }
 }
@@ -567,8 +568,9 @@ void readConfig(void)
             fscanf(fp, "%s%i", buff, deskHotkey + 10);
             fscanf(fp, "%s%i", buff, deskHotkeyMod + 10);
             fscanf(fp, "%s%i", buff, deskHotkeyWin + 10);
-            fscanf(fp, "%s%i", buff, &hiddenWindowPopup);
             fscanf(fp, "%s%i", buff, &assignImmediately);
+            fscanf(fp, "%s%i", buff, &hiddenWindowRaise);
+            fscanf(fp, "%s%i", buff, &hiddenWindowPopup);
         }
         fclose(fp);
     }

@@ -142,7 +142,7 @@ IDD_PROPPAGE_EXPERT DIALOG 0, 0, 150, 150
 STYLE DS_3DLOOK | WS_CHILD | WS_DISABLED | WS_BORDER
 FONT 8, "MS Sans Serif"
 BEGIN
-    GROUPBOX        "Extras", IDC_STATIC, 4, 5, 202, 157
+    GROUPBOX        "Extras", IDC_STATIC, 4, 5, 202, 168
     AUTOCHECKBOX    "Keep last active", IDC_LASTACTIVE, 10, 16, 65, 10
     AUTOCHECKBOX    "Release focus", IDC_FOCUS,         22, 27, 61, 10
     AUTOCHECKBOX    "Switch minimized", IDC_MINIMIZED,  10, 38, 69, 10
@@ -155,7 +155,8 @@ BEGIN
     AUTOCHECKBOX    "Use alternate hiding", IDC_TRICKYSUPPORT, 10, 115, 90, 10
     AUTOCHECKBOX    "XP taskbar patch", IDC_XPSTYLETASKBAR, 10, 126, 90, 10
     AUTOCHECKBOX    "Permanent sticky", IDC_PERMSTICKY, 10, 137, 90, 10
-    AUTOCHECKBOX    "Move popped-up hidden windows", IDC_HWINPOPUP, 10, 148, 120, 10
+    AUTOCHECKBOX    "Pop-up raised hidden windows", IDC_POPUPRHWIN, 10, 148, 120, 10
+    AUTOCHECKBOX    "Move popped-up hidden windows", IDC_HWINPOPUP, 10, 159, 120, 10
 END
 
 IDD_PROPPAGE_ABOUT DIALOG 0, 0, 150, 150
