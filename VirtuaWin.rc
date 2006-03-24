@@ -149,7 +149,7 @@ BEGIN
     AUTOCHECKBOX    "Hide minimized windows on desktop change", IDC_MINIMIZED,   10,  27, 155, 10
     AUTOCHECKBOX    "Force refresh after desktop change", IDC_REFRESH,           10,  38, 130, 10
     AUTOCHECKBOX    "Preserve window Z order", IDC_PRESZORDER,                   10,  49, 100, 10
-    AUTOCHECKBOX    "Desktop Wrapping", IDC_DESKCYCLE,                           10,  60, 75,  10
+    AUTOCHECKBOX    "Desktop wrapping", IDC_DESKCYCLE,                           10,  60, 75,  10
     AUTOCHECKBOX    "Invert Up/Down", IDC_INVERTY,                               10,  71, 70,  10
     AUTOCHECKBOX    "Hide system tray icon", IDC_DISPLAYICON,                    10,  82, 80,  10
     AUTOCHECKBOX    "Enable taskbar detection", IDC_TASKBARDETECT,               10,  93, 100, 10
@@ -171,7 +171,7 @@ FONT 8, "MS Sans Serif"
 BEGIN
     GROUPBOX        vwVIRTUAWIN_NAME_VERSION, IDC_STATIC, 4, 5, 202, 81, 0x0300
     ICON            IDI_LARGEAPP, IDC_STATIC, 95, 16, 20, 20
-    CTEXT           "Copyright (c) 1999-2004 and 2005 Johan Piculell", IDC_STATIC, 10, 40, 190, 8
+    CTEXT           "Copyright (c) 1999-2005 and 2006 Johan Piculell", IDC_STATIC, 10, 40, 190, 8
     CTEXT           vwVIRTUAWIN_EMAIL, IDC_MAILTO, 10, 50, 190, 8, 0x0100
     CTEXT           "Latest version, info, source, etc. visit:", IDC_STATIC, 10, 62, 190, 8
     CTEXT           "http://virtuawin.sourceforge.net/", IDC_HTTP, 10, 72, 190, 10, 0x0100

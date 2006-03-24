@@ -790,11 +790,14 @@ static void showSetup(void)
 /************************************************
  * Show the VirtuaWin help pages
  */
-void showHelp(HWND aHWnd)
+void showHelp(HWND aHWnd, UINT context)
 {
     char buff[MAX_PATH];
     GetFilename(vwHELP,0,buff);
-    WinHelp(aHWnd, buff, HELP_CONTENTS, 0);
+    if(context)
+        WinHelp(aHWnd, buff, HELP_CONTEXT, context) ;
+    else
+        WinHelp(aHWnd, buff, HELP_CONTENTS, 0) ;
 }
 
 /*************************************************
@@ -2514,7 +2517,7 @@ skipMouseWarp:  // goto label for skipping mouse stuff
         return TRUE;
         
     case VW_HELP:
-        showHelp(aHWnd);
+        showHelp(aHWnd,0);
         return TRUE;
         
     case VW_GATHER:
@@ -2656,7 +2659,7 @@ skipMouseWarp:  // goto label for skipping mouse stuff
                     disableAll(aHWnd);
                     break;
                 case ID_HELP:		// show help
-                    showHelp(aHWnd);
+                    showHelp(aHWnd,0);
                     break;
                 }
                 PostMessage(aHWnd, 0, 0, 0);	

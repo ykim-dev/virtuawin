@@ -311,9 +311,10 @@ BOOL APIENTRY keys(HWND hDlg, UINT message, UINT wParam, LONG lParam)
             SetWindowLong(hDlg, DWL_MSGRESULT, FALSE);
             break;
         case PSN_HELP:
-            showHelp(hDlg);
+            showHelp(hDlg,6001);
             break;
         }
+        break;
         
     case WM_COMMAND:
         wPar = LOWORD(wParam);
@@ -420,9 +421,10 @@ BOOL APIENTRY mouse(HWND hDlg, UINT message, UINT wParam, LONG lParam)
             SetWindowLong(hDlg, DWL_MSGRESULT, FALSE);
             break;
         case PSN_HELP:
-            showHelp(hDlg);
+            showHelp(hDlg,6002);
             break;
         }
+        break;
         
     case WM_COMMAND:
         if(LOWORD(wParam) == IDC_MOUSWARP || LOWORD(wParam) == IDC_TASKBAR || 
@@ -479,9 +481,10 @@ BOOL APIENTRY modules(HWND hDlg, UINT message, UINT wParam, LONG lParam)
             SetWindowLong(hDlg, DWL_MSGRESULT, FALSE);
             break;
         case PSN_HELP:
-            showHelp(hDlg);
+            showHelp(hDlg,6003);
             break;
         }
+        break;
         
     case WM_COMMAND:
         if(LOWORD((wParam) == IDC_MODCONFIG || HIWORD(wParam) == LBN_DBLCLK )) { // Show config
@@ -699,9 +702,10 @@ BOOL APIENTRY misc(HWND hDlg, UINT message, UINT wParam, LONG lParam)
             SetWindowLong(hDlg, DWL_MSGRESULT, FALSE);
             break;
         case PSN_HELP:
-            showHelp(hDlg);
+            showHelp(hDlg,6004);
             break;
         }
+        break;
         
     case WM_COMMAND:
         if( LOWORD(wParam) == IDC_STICKYSAVE || LOWORD(wParam) == IDC_DISPLAYICON ||
@@ -847,9 +851,10 @@ BOOL APIENTRY expert(HWND hDlg, UINT message, UINT wParam, LONG lParam)
             SetWindowLong(hDlg, DWL_MSGRESULT, FALSE);
             break;
         case PSN_HELP:
-            showHelp(hDlg);
+            showHelp(hDlg,6005);
             break;
         }
+        break;
         
     case WM_COMMAND:
         if(LOWORD(wParam) == IDC_FOCUS      || LOWORD(wParam) == IDC_TRICKYSUPPORT ||
@@ -887,10 +892,17 @@ BOOL APIENTRY about(HWND hDlg, UINT message, UINT wParam, LONG lParam)
             SetBkMode((HDC)wParam, TRANSPARENT); // Don't overwrite background
             SetTextColor((HDC)wParam, RGB(0, 0, 255)); // Blue 
             return (BOOL) GetStockObject(HOLLOW_BRUSH);
-        } else {
-            return FALSE;
         }
+        return FALSE;
         
+    case WM_NOTIFY:
+        switch (((NMHDR FAR *) lParam)->code) {
+        case PSN_HELP:
+            showHelp(hDlg,0);
+            break;
+        }
+        break;
+    
     case WM_COMMAND:
         if(LOWORD(wParam) == IDC_MAILTO) {
             HINSTANCE h = ShellExecute(NULL, "open", "mailto:" vwVIRTUAWIN_EMAIL, 

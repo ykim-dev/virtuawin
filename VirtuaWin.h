@@ -41,6 +41,6 @@ void unRegisterAllKeys(void);
 void getTaskbarLocation(void);
 int  assignWindow(HWND theWin, int theDesk, BOOL force);
 int  gotoDesk(int theDesk, BOOL force);
-void showHelp(HWND aHWnd);
+void showHelp(HWND aHWnd, UINT context);
 
 #endif
