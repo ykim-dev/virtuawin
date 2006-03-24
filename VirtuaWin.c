@@ -45,7 +45,7 @@
 HWND hWnd;		  // handle to VirtuaWin
 HANDLE hMutex;
 BOOL taskbarFixRequired;  // TRUE if tricky window tasks need to be continually hidden
-BOOL mouseEnabled=FALSE;  // Status of the mouse thread, always running at startup 
+BOOL mouseEnabled=TRUE;  // Status of the mouse thread, always running at startup 
 HANDLE mouseThread;       // Handle to the mouse thread
 int curAssigned = 0;      // how many predefined desktop belongings we have (saved)
 int curSticky = 0;        // how many stickywindows we have (saved)
