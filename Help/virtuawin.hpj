@@ -4,11 +4,26 @@
 COMPRESS=12 Hall Zeck
 LCID=0x409 0x0 0x0 ; English (United States)
 REPORT=Yes
-COPYRIGHT=VirtuaWin 1999-2005 jopi
+COPYRIGHT=VirtuaWin 1999-2006 jopi
 HLP=virtuawin.hlp
 
 [FILES]
 virtuawin.rtf
+
+[MAP]
+contents=1000
+general=2000
+install_uninstall=3000
+functions=4000
+winlist=5000
+setup_dialog=6000
+setup_keys=6001
+setup_mouse=6002
+setup_modules=6003
+setup_misc=6004
+setup_expert=6005
+configuration_files=7000
+custom_icons=8000
 
 [WINDOWS]
 Main="VirtuaWin",(278,188,419,620),27904,(r14876671),(r12632256),f3
