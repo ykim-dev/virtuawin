@@ -45,7 +45,7 @@
 HWND hWnd;		  // handle to VirtuaWin
 HANDLE hMutex;
 BOOL taskbarFixRequired;  // TRUE if tricky window tasks need to be continually hidden
-BOOL mouseEnabled=TRUE;  // Status of the mouse thread, always running at startup 
+BOOL mouseEnabled=TRUE;   // Status of the mouse thread, always running at startup 
 HANDLE mouseThread;       // Handle to the mouse thread
 int curAssigned = 0;      // how many predefined desktop belongings we have (saved)
 int curSticky = 0;        // how many stickywindows we have (saved)
@@ -91,6 +91,7 @@ HWND lastFGHWnd;		// handle to the last foreground window
 int  lastFGStyle;               // style of the last foreground window
 HWND lastBOFGHWnd;		// handle to the last but one foreground window
 int  lastBOFGStyle;             // style of the last but one foreground window
+HWND lastLostHWnd;		// handle to the last lost window
 
 // vector holding icon handles for the systray
 HICON icons[MAXDESK];           // 0=disabled, 1=9=nromal desks, 10=private desk
@@ -1191,7 +1192,7 @@ static inline BOOL CALLBACK enumWindowsProc(HWND hwnd, LPARAM lParam)
     {
         /* Something has made this window visible so make it belong to this desktop, update the list entry,
          * also check the location as the app may have only made the window visible */
-        vwLogDebug((vwLog,"Got window state change: %x %d (%d) %d -> %d\n",
+        vwLogPrint((vwLog,"Got window state change: %x %d (%d) %d -> %d\n",
                     (int) winList[idx].Handle,winList[idx].Desk,currentDesk,
                     winList[idx].Visible,IsWindowVisible(winList[idx].Handle))) ;
         winList[idx].State = 2 ;
@@ -1265,7 +1266,20 @@ static int winListUpdate(void)
                     winList[i].Visible,(int) winList[i].Owner,(int) pos.left,(int) pos.top)) ;
     }
           
-    // remove windows that have gone
+    // remove windows that have gone.
+    // Note that when a window is closed it takes a while for the window to
+    // disappear, windows will then find another app to make current and the
+    // order of events is fairly random. The problem for us is that if
+    // windows selects a hidden app (i.e. on another desktop) it is very
+    // difficult to differentiate between this and a genuine pop-up event.
+    activeHWnd = GetForegroundWindow() ;
+    if(lastLostHWnd != NULL)
+    {
+        if(activeHWnd == lastLostHWnd)
+            activeHWnd = NULL ;
+        else
+            lastLostHWnd = NULL ;
+    }
     for(i=0, j=0 ; i < nWin; ++i)
     {
         if(winList[i].State)
@@ -1281,6 +1295,11 @@ static int winListUpdate(void)
                         winList[i].Visible,(int) winList[i].Owner)) ;
             if(winList[i].Handle == lastFGHWnd)
             {
+                if(activeHWnd == lastFGHWnd)
+                {
+                    lastLostHWnd = activeHWnd ;
+                    activeHWnd = NULL ;
+                }
                 lastBOFGHWnd = lastFGHWnd ;
                 lastBOFGStyle = lastFGStyle ;
                 lastFGHWnd = NULL ;
@@ -1290,7 +1309,6 @@ static int winListUpdate(void)
     nWin = j ;
     
     // Handle the re-assignment of any popped up window, set the zorder and count hung windows
-    activeHWnd = GetForegroundWindow() ;
     vwLogDebug((vwLog,"Active %8x Last %8x %x LBO %8x %x\n",(int) activeHWnd,
                 (int) lastFGHWnd, lastFGStyle, (int) lastBOFGHWnd, lastBOFGStyle)) ;
     i = nWin ;
@@ -1340,13 +1358,15 @@ static int winListUpdate(void)
                 !winList[i].Sticky && (winList[i].Desk != currentDesk))
             hungCount++ ;
     }
-    lastBOFGHWnd = lastFGHWnd ;
-    lastBOFGStyle = lastFGStyle ;
-    if((lastFGHWnd = activeHWnd) == hWnd)
-        lastFGHWnd = NULL ;
-    else if((lastFGHWnd = activeHWnd) != NULL)
-        lastFGStyle = GetWindowLong(activeHWnd,GWL_STYLE) ;
-    
+    if(activeHWnd != NULL)
+    {
+        lastBOFGHWnd = lastFGHWnd ;
+        lastBOFGStyle = lastFGStyle ;
+        if((lastFGHWnd = activeHWnd) == hWnd)
+            lastFGHWnd = NULL ;
+        else if(lastFGHWnd != NULL)
+            lastFGStyle = GetWindowLong(activeHWnd,GWL_STYLE) ;
+    }
     vwLogDebug((vwLog,"Updated winList, %d windows - %d hung\n",nWin,hungCount)) ;
     return hungCount ;
 }
