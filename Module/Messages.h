@@ -50,6 +50,14 @@
    window handle (HWND) and lParam should be -1 for toggle, 0 for unset
    and 1 for set sticky state. */
 #define VW_SETSTICKY (WM_USER + 26)
+/* Message, make a window the foreground, only if visible 
+   wParam is the window handle (HWND) */
+#define VW_FOREGDWIN   (WM_USER + 27)
+/* Message, return VirtuaWin's installation path. List will be returned with WM_COPYDATA */
+#define VW_INSTALLPATH (WM_USER + 28)
+/* Message, return VirtuaWin's user path. List will be returned with WM_COPYDATA */
+#define VW_USERAPPPATH (WM_USER + 29)
+
 
 /* Message, sent by VirtuaWin after a switch. lParam will contain current desktop number 
    if wParam isn't one of the following, then wParam will also contain current desktop.
@@ -73,25 +81,3 @@
 #define MOD_CFGCHANGE (WM_USER + 38)
 
 #endif
-
-/*
- * $Log$
- * Revision 1.6  2003/11/05 15:48:14  jopi
- * Better description of ASSIGNWIN
- *
- * Revision 1.5  2003/06/26 19:56:52  jopi
- * Added module support for assigning a window to specified desktop
- *
- * Revision 1.4  2001/11/12 21:39:15  jopi
- * Added functionality for disabling the systray icon
- *
- * Revision 1.3  2001/01/12 16:58:11  jopi
- * Added module message for getting the current desktop number
- *
- * Revision 1.2  2000/07/18 16:03:34  jopi
- * Changed mail adress in error message
- *
- * Revision 1.1.1.1  2000/06/03 15:38:05  jopi
- * Added first time
- *
- */
