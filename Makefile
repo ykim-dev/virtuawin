@@ -6,8 +6,9 @@ CC      = gcc
 CFLAGS	= -mno-cygwin -Wall -O2 -DNDEBUG
 CFLAGSD = -mno-cygwin -Wall -g
 LDFLAGS	= -mwindows -mno-cygwin -O2
-LDFLAGS	= -mwindows -mno-cygwin -g
+LDFLAGSD= -mwindows -mno-cygwin -g
 RC      = windres 
+STRIP	= strip
 endif
 
 ifeq ($(findstring MINGW32,$(OSTYPE)),MINGW32)
@@ -17,6 +18,7 @@ CFLAGSD = -Wall -g
 LDFLAGS	= -mwindows -O2
 LDFLAGSD= -mwindows -g
 RC      = windres 
+STRIP	= strip
 endif
 
 ifeq ($(findstring Linux,$(OSTYPE)),Linux)
@@ -26,10 +28,11 @@ CFLAGSD = -Wall -g
 LDFLAGS = -mwindows -O2
 LDFLAGSD= -mwindows -g
 RC	= i586-mingw32msvc-windres
+STRIP	= strip
 endif
 
 SRC	= VirtuaWin.c DiskRoutines.c SetupDialog.c ModuleRoutines.c
-LIBS	= -lshfolder -lshell32 -lcomctl32 -lgdi32 -lmsvcrt
+LIBS	= -lshell32 -luser32 -lgdi32 -lcomctl32
 COFFS   = VirtuaWin.coff
 
 TARGET	= VirtuaWin.exe
@@ -46,7 +49,7 @@ OBJSD   = $(SRC:.c=.od)
 
 $(TARGET): $(OBJS) $(COFFS)
 	$(CC) $(LDFLAGS) -o $(TARGET) $(OBJS) $(COFFS) $(LIBS)
-	strip $(TARGET)
+	$(STRIP) $(TARGET)
 
 $(TARGETD): $(OBJSD) $(COFFS)
 	$(CC) $(LDFLAGSD) -o $(TARGETD) $(OBJSD) $(COFFS) $(LIBS)

@@ -70,81 +70,82 @@ BOOL APIENTRY keys(HWND hDlg, UINT message, UINT wParam, LONG lParam)
     
     switch (message) {
     case WM_INITDIALOG:
+        {
+            int monitor_width, monitor_height, dialog_width, dialog_height ; 
 
-         GetWindowRect(GetParent(hDlg), &config_dlg_rect);
+            GetWindowRect(GetParent(hDlg), &config_dlg_rect);
 
-         // Reposition the dialog to the center of the monitor that
-         // was selected
+            // Reposition the dialog to the center of the monitor that
+            // was selected
             
-         // GetSystemMetrics returns the primary monitor for backward
-         // compatiblity.  I used this rather than GetMonitorInfo
-         // because some versions of MingW don't have that function
-         // and because those other functions only work on 98+ and
-         // 2000+
-         int monitor_width  = GetSystemMetrics(SM_CXSCREEN); // get the width of the PRIMARY display monitor
-         int monitor_height = GetSystemMetrics(SM_CYSCREEN); // get the height of the PRIMARY display monitor
-         int dialog_width   = config_dlg_rect.right  - config_dlg_rect.left;
-         int dialog_height  = config_dlg_rect.bottom - config_dlg_rect.top;
+            // GetSystemMetrics returns the primary monitor for backward
+            // compatiblity.  I used this rather than GetMonitorInfo
+            // because some versions of MingW don't have that function
+            // and because those other functions only work on 98+ and
+            // 2000+
+            monitor_width  = GetSystemMetrics(SM_CXSCREEN); // get the width of the PRIMARY display monitor
+            monitor_height = GetSystemMetrics(SM_CYSCREEN); // get the height of the PRIMARY display monitor
+            dialog_width   = config_dlg_rect.right  - config_dlg_rect.left;
+            dialog_height  = config_dlg_rect.bottom - config_dlg_rect.top;
 
-         config_dlg_rect.left = (monitor_width  - dialog_width)  / 2;
-         config_dlg_rect.top  = (monitor_height - dialog_height) / 2;
-
-         SetWindowPos(GetParent(hDlg), 0, config_dlg_rect.left, config_dlg_rect.top, 0, 0, SWP_NOZORDER | SWP_NOSIZE | SWP_NOACTIVATE);
-    
-        /* Control keys */
-        if(keyEnable) {
-            SendDlgItemMessage(hDlg, IDC_KEYS, BM_SETCHECK, 1,0);
+            config_dlg_rect.left = (monitor_width  - dialog_width)  / 2;
+            config_dlg_rect.top  = (monitor_height - dialog_height) / 2;
+            
+            SetWindowPos(GetParent(hDlg), 0, config_dlg_rect.left, config_dlg_rect.top, 0, 0, SWP_NOZORDER | SWP_NOSIZE | SWP_NOACTIVATE);
+            
+            /* Control keys */
+            if(keyEnable)
+                SendDlgItemMessage(hDlg, IDC_KEYS, BM_SETCHECK, 1,0);
+            if(modAlt)
+                SendDlgItemMessage(hDlg, IDC_ALT, BM_SETCHECK, 1,0);
+            if(modShift)
+                SendDlgItemMessage(hDlg, IDC_SHIFT, BM_SETCHECK, 1,0);
+            if(modCtrl)
+                SendDlgItemMessage(hDlg, IDC_CTRL, BM_SETCHECK, 1,0);
+            if(modWin)
+                SendDlgItemMessage(hDlg, IDC_WIN, BM_SETCHECK, 1,0);
+            
+            /* Cycling key */
+            SendDlgItemMessage(hDlg, IDC_CYCLINGKEYS, BM_SETCHECK,(cyclingKeysEnabled != 0),0);
+            SendDlgItemMessage(hDlg, IDC_HOTCYCLEUP, HKM_SETHOTKEY, 
+                               MAKEWORD(hotCycleUp, hotCycleUpMod), 0);
+            SendDlgItemMessage(hDlg, IDC_HOTCYCLEUPW, BM_SETCHECK,(hotCycleUpWin != 0),0);
+            SendDlgItemMessage(hDlg, IDC_HOTCYCLEDOWN, HKM_SETHOTKEY, 
+                               MAKEWORD(hotCycleDown, hotCycleDownMod), 0);
+            SendDlgItemMessage(hDlg, IDC_HOTCYCLEDOWNW, BM_SETCHECK,(hotCycleDownWin != 0),0);
+            
+            /* Hot keys */
+            if(hotKeyEnable)
+                SendDlgItemMessage(hDlg, IDC_HOTKEYS, BM_SETCHECK, 1,0);
+            if(deskHotkeyWin[1])
+                SendDlgItemMessage(hDlg, IDC_HOT1W, BM_SETCHECK, 1,0);
+            SendDlgItemMessage(hDlg, IDC_HOT1, HKM_SETHOTKEY, MAKEWORD(deskHotkey[1], deskHotkeyMod[1]), 0);
+            if(deskHotkeyWin[2])
+                SendDlgItemMessage(hDlg, IDC_HOT2W, BM_SETCHECK, 1,0);
+            SendDlgItemMessage(hDlg, IDC_HOT2, HKM_SETHOTKEY, MAKEWORD(deskHotkey[2], deskHotkeyMod[2]), 0);
+            if(deskHotkeyWin[3])
+                SendDlgItemMessage(hDlg, IDC_HOT3W, BM_SETCHECK, 1,0);
+            SendDlgItemMessage(hDlg, IDC_HOT3, HKM_SETHOTKEY, MAKEWORD(deskHotkey[3], deskHotkeyMod[3]), 0);
+            if(deskHotkeyWin[4])
+                SendDlgItemMessage(hDlg, IDC_HOT4W, BM_SETCHECK, 1,0);
+            SendDlgItemMessage(hDlg, IDC_HOT4, HKM_SETHOTKEY, MAKEWORD(deskHotkey[4], deskHotkeyMod[4]), 0);
+            if(deskHotkeyWin[5])
+                SendDlgItemMessage(hDlg, IDC_HOT5W, BM_SETCHECK, 1,0);
+            SendDlgItemMessage(hDlg, IDC_HOT5, HKM_SETHOTKEY, MAKEWORD(deskHotkey[5], deskHotkeyMod[5]), 0);
+            if(deskHotkeyWin[6])
+                SendDlgItemMessage(hDlg, IDC_HOT6W, BM_SETCHECK, 1,0);
+            SendDlgItemMessage(hDlg, IDC_HOT6, HKM_SETHOTKEY, MAKEWORD(deskHotkey[6], deskHotkeyMod[6]), 0);
+            if(deskHotkeyWin[7])
+                SendDlgItemMessage(hDlg, IDC_HOT7W, BM_SETCHECK, 1,0);
+            SendDlgItemMessage(hDlg, IDC_HOT7, HKM_SETHOTKEY, MAKEWORD(deskHotkey[7], deskHotkeyMod[7]), 0);
+            if(deskHotkeyWin[8])
+                SendDlgItemMessage(hDlg, IDC_HOT8W, BM_SETCHECK, 1,0);
+            SendDlgItemMessage(hDlg, IDC_HOT8, HKM_SETHOTKEY, MAKEWORD(deskHotkey[8], deskHotkeyMod[8]), 0);
+            if(deskHotkeyWin[9])
+                SendDlgItemMessage(hDlg, IDC_HOT9W, BM_SETCHECK, 1,0);
+            SendDlgItemMessage(hDlg, IDC_HOT9, HKM_SETHOTKEY, MAKEWORD(deskHotkey[9], deskHotkeyMod[9]), 0);
+            return (TRUE);
         }
-        if(modAlt)
-            SendDlgItemMessage(hDlg, IDC_ALT, BM_SETCHECK, 1,0);
-        if(modShift)
-            SendDlgItemMessage(hDlg, IDC_SHIFT, BM_SETCHECK, 1,0);
-        if(modCtrl)
-            SendDlgItemMessage(hDlg, IDC_CTRL, BM_SETCHECK, 1,0);
-        if(modWin)
-            SendDlgItemMessage(hDlg, IDC_WIN, BM_SETCHECK, 1,0);
-        
-        /* Cycling key */
-        SendDlgItemMessage(hDlg, IDC_CYCLINGKEYS, BM_SETCHECK,(cyclingKeysEnabled != 0),0);
-        SendDlgItemMessage(hDlg, IDC_HOTCYCLEUP, HKM_SETHOTKEY, 
-                           MAKEWORD(hotCycleUp, hotCycleUpMod), 0);
-        SendDlgItemMessage(hDlg, IDC_HOTCYCLEUPW, BM_SETCHECK,(hotCycleUpWin != 0),0);
-        SendDlgItemMessage(hDlg, IDC_HOTCYCLEDOWN, HKM_SETHOTKEY, 
-                           MAKEWORD(hotCycleDown, hotCycleDownMod), 0);
-        SendDlgItemMessage(hDlg, IDC_HOTCYCLEDOWNW, BM_SETCHECK,(hotCycleDownWin != 0),0);
-        
-        /* Hot keys */
-        if(hotKeyEnable) {
-            SendDlgItemMessage(hDlg, IDC_HOTKEYS, BM_SETCHECK, 1,0);
-        }
-        if(deskHotkeyWin[1])
-            SendDlgItemMessage(hDlg, IDC_HOT1W, BM_SETCHECK, 1,0);
-        SendDlgItemMessage(hDlg, IDC_HOT1, HKM_SETHOTKEY, MAKEWORD(deskHotkey[1], deskHotkeyMod[1]), 0);
-        if(deskHotkeyWin[2])
-            SendDlgItemMessage(hDlg, IDC_HOT2W, BM_SETCHECK, 1,0);
-        SendDlgItemMessage(hDlg, IDC_HOT2, HKM_SETHOTKEY, MAKEWORD(deskHotkey[2], deskHotkeyMod[2]), 0);
-        if(deskHotkeyWin[3])
-            SendDlgItemMessage(hDlg, IDC_HOT3W, BM_SETCHECK, 1,0);
-        SendDlgItemMessage(hDlg, IDC_HOT3, HKM_SETHOTKEY, MAKEWORD(deskHotkey[3], deskHotkeyMod[3]), 0);
-        if(deskHotkeyWin[4])
-            SendDlgItemMessage(hDlg, IDC_HOT4W, BM_SETCHECK, 1,0);
-        SendDlgItemMessage(hDlg, IDC_HOT4, HKM_SETHOTKEY, MAKEWORD(deskHotkey[4], deskHotkeyMod[4]), 0);
-        if(deskHotkeyWin[5])
-            SendDlgItemMessage(hDlg, IDC_HOT5W, BM_SETCHECK, 1,0);
-        SendDlgItemMessage(hDlg, IDC_HOT5, HKM_SETHOTKEY, MAKEWORD(deskHotkey[5], deskHotkeyMod[5]), 0);
-        if(deskHotkeyWin[6])
-            SendDlgItemMessage(hDlg, IDC_HOT6W, BM_SETCHECK, 1,0);
-        SendDlgItemMessage(hDlg, IDC_HOT6, HKM_SETHOTKEY, MAKEWORD(deskHotkey[6], deskHotkeyMod[6]), 0);
-        if(deskHotkeyWin[7])
-            SendDlgItemMessage(hDlg, IDC_HOT7W, BM_SETCHECK, 1,0);
-        SendDlgItemMessage(hDlg, IDC_HOT7, HKM_SETHOTKEY, MAKEWORD(deskHotkey[7], deskHotkeyMod[7]), 0);
-        if(deskHotkeyWin[8])
-            SendDlgItemMessage(hDlg, IDC_HOT8W, BM_SETCHECK, 1,0);
-        SendDlgItemMessage(hDlg, IDC_HOT8, HKM_SETHOTKEY, MAKEWORD(deskHotkey[8], deskHotkeyMod[8]), 0);
-        if(deskHotkeyWin[9])
-            SendDlgItemMessage(hDlg, IDC_HOT9W, BM_SETCHECK, 1,0);
-        SendDlgItemMessage(hDlg, IDC_HOT9, HKM_SETHOTKEY, MAKEWORD(deskHotkey[9], deskHotkeyMod[9]), 0);
-        return (TRUE);
         
     case WM_NOTIFY:
         

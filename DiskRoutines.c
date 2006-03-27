@@ -22,7 +22,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <lmcons.h>
 #include <io.h>
 #include <errno.h>
 #include <assert.h>
@@ -496,7 +495,7 @@ void readConfig(void)
     int ii, jj ;
     
     GetFilename(vwCONFIG,1,buff);
-    if(GetFileAttributes(buff) == INVALID_FILE_ATTRIBUTES)
+    if(GetFileAttributes(buff) < 0)
     {
         /* config file does not exist - new user, setup configuration, check the user path exists first */
         ss = strrchr(buff,'\\') ;

@@ -35,8 +35,6 @@
 #include <commctrl.h>
 #include <math.h>
 #include <time.h>
-#include <Psapi.h>
-
 #define USE_SHOWWIN 1
 
 #define calculateDesk(x,y) (((y) * nDesksX) - (nDesksX - (x)))
@@ -227,7 +225,7 @@ void releaseMutex(void)
 /*************************************************
  * Checks if mouse key modifier is pressed
  */
-inline BOOL checkMouseState(void)
+static BOOL checkMouseState(void)
 {
     if(!GetSystemMetrics(SM_SWAPBUTTON)) {  // Check the state of mouse button(s)
         if(HIWORD(GetAsyncKeyState(VK_LBUTTON)))
@@ -247,95 +245,90 @@ inline BOOL checkMouseState(void)
  */
 DWORD WINAPI MouseProc(LPVOID lpParameter)
 {
-   // in this function I'm using int for bool & 0,1 rather than
-   // false,true since the file extension is .c and it's being compiled
-   // as C rather than C++ ... this should change when we port to C++
-  
-   int mousekeyPressed = 0;
-   POINT firstPoint;
-   POINT pt;
+    // in this function I'm using int for bool & 0,1 rather than
+    // false,true since the file extension is .c and it's being compiled
+    // as C rather than C++ ... this should change when we port to C++
+    
+    int mousekeyPressed = 0, xDelta, yDelta ;
+    int movingLeft, movingRight, movingUp, movingDown ; 
+    POINT firstPoint;
+    POINT pt;
+    
+    // infinite loop
+    while(1)
+    {
+        // If the useMouseKey function is turned on (the function
+        // that requires a modifier key to be pressed to change
+        // desktops using the mouse) and that key is pressed, then
+        // we need to get the position at which the modifier key was
+        // pressed.  Later we'll use that first position to see if
+        // there's a motion tendency towards the edge of the screen that
+        // we're switching to.  If they're not moving the mouse in that
+        // general direction then we don't want to make the switch
+        // because that sometimes causes the screen to switch when the
+        // user presses the modifier key for some other purpose if the
+        // mouse is near the edge of the screen.  Checking for their
+        // general motion tendency feels natural and prevents accidental
+        // switching
+        
+        if(useMouseKey)
+        {   // Are we using a mouse key
+            if(HIWORD(GetAsyncKeyState(MOUSEKEY)))
+            {
+                if(!mousekeyPressed)
+                {
+                    mousekeyPressed = 1;
+                    GetCursorPos(&firstPoint);
+                }
+            }
+            else
+                mousekeyPressed = 0;
+        }
 
-   // infinite loop
-   while(1) {
-      // If the useMouseKey function is turned on (the function
-      // that requires a modifier key to be pressed to change
-      // desktops using the mouse) and that key is pressed, then
-      // we need to get the position at which the modifier key was
-      // pressed.  Later we'll use that first position to see if
-      // there's a motion tendency towards the edge of the screen that
-      // we're switching to.  If they're not moving the mouse in that
-      // general direction then we don't want to make the switch
-      // because that sometimes causes the screen to switch when the
-      // user presses the modifier key for some other purpose if the
-      // mouse is near the edge of the screen.  Checking for their
-      // general motion tendency feels natural and prevents accidental
-      // switching
-
-      if(useMouseKey) { // Are we using a mouse key
-        if(HIWORD(GetAsyncKeyState(MOUSEKEY))) {
-          if(!mousekeyPressed) {
-             mousekeyPressed = 1;
-             GetCursorPos(&firstPoint);
-          }
+        // sleep between iterations of this function.  If we're using
+        // modifier keys it loops more often to be sure to watch the
+        // tendency.
+        if(useMouseKey) {
+            Sleep(4);
         }
         else {
-          mousekeyPressed = 0;
+            Sleep(50); 
         }
-      }
-
-      // sleep between iterations of this function.  If we're using
-      // modifier keys it loops more often to be sure to watch the
-      // tendency.
-      if(useMouseKey) {
-         Sleep(4);
-      }
-      else {
-        Sleep(50); 
-      }
-
-      // Now get the second point
-      GetCursorPos(&pt);
-
-      // Now figure out the motion tendency
-      int xDelta = pt.x - firstPoint.x;
-      int yDelta = pt.y - firstPoint.y;
-
-      // If they're not using the modifier keys we'll just set all of
-      // these to true to simplify the logic later on
-      int movingLeft  = !useMouseKey || (mousekeyPressed && (xDelta < -25)); // && (yDelta > -30 && yDelta < 30);
-      int movingRight = !useMouseKey || (mousekeyPressed && (xDelta >  25)); // && (yDelta > -30 && yDelta < 30);
-      int movingUp    = !useMouseKey || (mousekeyPressed && (yDelta < -25)); // && (xDelta > -30 && xDelta < 30);
-      int movingDown  = !useMouseKey || (mousekeyPressed && (yDelta >  25)); // && (xDelta > -30 && xDelta < 30);
-
-      // ...and if we're moving in the right direction and close
-      // enough to the side of the screen, send the message to switch
-      // desktops
-      if( movingLeft  &&  pt.x < (screenLeft   + 3 + (taskBarWarp * taskBarLeftWarp   * checkMouseState()))) {
-         // switch left
-         SendNotifyMessage(hWnd, VW_MOUSEWARP, 0, 
-                           MAKELPARAM(checkMouseState(), VW_MOUSELEFT));
-      }
-      else if( movingRight && pt.x > (screenRight  - 3 - (taskBarWarp * taskBarRightWarp  * checkMouseState()))) { 
-         // switch right
-         SendNotifyMessage(hWnd, VW_MOUSEWARP, 0, 
-                           MAKELPARAM(checkMouseState(), VW_MOUSERIGHT));
-      }
-      else if( movingUp && pt.y < (screenTop    + 3 + (taskBarWarp * taskBarTopWarp    * checkMouseState()))) { 
-         // switch up
-         SendNotifyMessage(hWnd, VW_MOUSEWARP, 0, 
-                           MAKELPARAM(checkMouseState(), VW_MOUSEUP));
-      }
-      else if( movingDown && pt.y > (screenBottom - 3 - (taskBarWarp * taskBarBottomWarp * checkMouseState()))) {
-         // switch down
-         SendNotifyMessage(hWnd, VW_MOUSEWARP, 0, 
-                           MAKELPARAM(checkMouseState(), VW_MOUSEDOWN));
-      }
-      else {
-         SendNotifyMessage(hWnd, VW_MOUSEWARP, 0, MAKELPARAM(0, VW_MOUSERESET));
-      }
-   }
-
-   return TRUE;
+        
+        // Now get the second point
+        GetCursorPos(&pt);
+        
+        // Now figure out the motion tendency
+        xDelta = pt.x - firstPoint.x;
+        yDelta = pt.y - firstPoint.y;
+        
+        // If they're not using the modifier keys we'll just set all of
+        // these to true to simplify the logic later on
+        movingLeft  = !useMouseKey || (mousekeyPressed && (xDelta < -25)); // && (yDelta > -30 && yDelta < 30);
+        movingRight = !useMouseKey || (mousekeyPressed && (xDelta >  25)); // && (yDelta > -30 && yDelta < 30);
+        movingUp    = !useMouseKey || (mousekeyPressed && (yDelta < -25)); // && (xDelta > -30 && xDelta < 30);
+        movingDown  = !useMouseKey || (mousekeyPressed && (yDelta >  25)); // && (xDelta > -30 && xDelta < 30);
+        
+        // ...and if we're moving in the right direction and close
+        // enough to the side of the screen, send the message to switch
+        // desktops
+        if( movingLeft  &&  pt.x < (screenLeft   + 3 + (taskBarWarp * taskBarLeftWarp   * checkMouseState())))
+            // switch left
+            SendNotifyMessage(hWnd, VW_MOUSEWARP, 0, MAKELPARAM(checkMouseState(), VW_MOUSELEFT));
+        else if( movingRight && pt.x > (screenRight  - 3 - (taskBarWarp * taskBarRightWarp  * checkMouseState())))
+            // switch right
+            SendNotifyMessage(hWnd, VW_MOUSEWARP, 0, MAKELPARAM(checkMouseState(), VW_MOUSERIGHT));
+        else if( movingUp && pt.y < (screenTop    + 3 + (taskBarWarp * taskBarTopWarp    * checkMouseState())))
+            // switch up
+            SendNotifyMessage(hWnd, VW_MOUSEWARP, 0, MAKELPARAM(checkMouseState(), VW_MOUSEUP));
+        else if( movingDown && pt.y > (screenBottom - 3 - (taskBarWarp * taskBarBottomWarp * checkMouseState())))
+            // switch down
+            SendNotifyMessage(hWnd, VW_MOUSEWARP, 0, MAKELPARAM(checkMouseState(), VW_MOUSEDOWN));
+        else
+            SendNotifyMessage(hWnd, VW_MOUSEWARP, 0, MAKELPARAM(0, VW_MOUSERESET));
+    }
+    
+    return TRUE;
 }
 
 /************************ *************************
@@ -467,7 +460,7 @@ static void unRegisterKeys(void)
 /*************************************************
  * Translates virtual key codes to "hotkey codes"
  */
-static WORD hotKey2ModKey(BYTE vModifiers)
+static UINT hotKey2ModKey(UINT vModifiers)
 {
     WORD mod = 0;
     if (vModifiers & HOTKEYF_ALT)
@@ -694,6 +687,14 @@ void unRegisterAllKeys(void)
  */
 static void getScreenSize(void)
 {
+    /* The virtual screen size system matrix values were only added for WINVER >= 0x0500 (Win2k) */
+#ifndef SM_XVIRTUALSCREEN
+#define SM_XVIRTUALSCREEN       76
+#define SM_YVIRTUALSCREEN       77
+#define SM_CXVIRTUALSCREEN      78
+#define SM_CYVIRTUALSCREEN      79
+#endif
+
 #if 0
     // TODO:  make a user configured flag to specify whether to only act on the primary display or not
     if(0)
@@ -814,7 +815,7 @@ void showHelp(HWND aHWnd, UINT context)
 /*************************************************
  * Returns index if window is found, -1 otherwise
  */
-static inline int winListFind(HWND hwnd)
+static int winListFind(HWND hwnd)
 {
     int index = nWin ;
     while(--index >= 0)
@@ -1139,7 +1140,7 @@ static void findUserWindows(void)
 /*************************************************
  * Callback function. Integrates all enumerated windows
  */
-static inline BOOL CALLBACK enumWindowsProc(HWND hwnd, LPARAM lParam) 
+static BOOL CALLBACK enumWindowsProc(HWND hwnd, LPARAM lParam) 
 {
     int idx, style, exstyle ;
     RECT pos ;
@@ -1949,7 +1950,7 @@ static HMENU createSortedWinList_cos(void)
 /*************************************************
  * Tries to find windows saved before a crash by classname matching
  */
-static inline BOOL CALLBACK recoverWindowsEnumProc(HWND hwnd, LPARAM lParam) 
+static BOOL CALLBACK recoverWindowsEnumProc(HWND hwnd, LPARAM lParam) 
 {
     int style = GetWindowLong(hwnd, GWL_STYLE);
     int exstyle = GetWindowLong(hwnd, GWL_EXSTYLE);
@@ -2618,12 +2619,13 @@ skipMouseWarp:  // goto label for skipping mouse stuff
             else
             {
                 HMENU hmenu, hpopup;
+                UINT nID ;
                 GetCursorPos(&pt);
                 hmenu = LoadMenu(hInst, MAKEINTRESOURCE(IDR_MENU1));
                 
                 hpopup = GetSubMenu(hmenu, 0);
                 
-                UINT nID = GetMenuItemID(hpopup, 3); // Get the Disable item
+                nID = GetMenuItemID(hpopup, 3); // Get the Disable item
                 if(enabled) // Change the text depending on state
                     ModifyMenu(hpopup, nID, MF_BYCOMMAND, nID, "Disable");
                 else
