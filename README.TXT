@@ -37,12 +37,13 @@ Bugs
 --------------------------------------------------------------
 If you discover any bugs in this software, please register a bug 
 in SourceForge tracking system, http://sourceforge.net/projects/virtuawin/
-or send a bugreport to virtuawin@home.se and describe the problem.
-Please include version number.
+
+Please include version number and as much information about 
+the problem as possible.
 
 
 Copyright
 --------------------------------------------------------------
-VirtuaWin is copyright (c) 1999-2004, and 2005 by Johan Piculell and is 
+VirtuaWin is copyright (c) 1999-2005, and 2006 by Johan Piculell and is 
 licensed through the GNU General Public License. Read the 
 COPYING.TXT file for the complete license.
