@@ -712,11 +712,13 @@ static void getScreenSize(void)
     if((screenRight  = GetSystemMetrics(SM_CXVIRTUALSCREEN)) <= 0)
     {
         /* The virtual screen size system matrix values are not supported on
-         * this OS (Win95 & NT), use the default screen size */
-        screenLeft   = 0 ;
-        screenRight  = GetSystemMetrics(SM_CXSCREEN);
-        screenTop    = 0 ;
-        screenBottom = GetSystemMetrics(SM_CYSCREEN);
+         * this OS (Win95 & NT), use the desktop window size */
+        RECT r;
+        GetClientRect(desktopHWnd, &r);
+        screenLeft   = r.left;
+        screenRight  = r.right;
+        screenTop    = r.top;
+        screenBottom = r.bottom;
     }
     else
     {
@@ -725,6 +727,7 @@ static void getScreenSize(void)
         screenTop    = GetSystemMetrics(SM_YVIRTUALSCREEN);
         screenBottom = GetSystemMetrics(SM_CYVIRTUALSCREEN)+screenTop;
     }
+    vwLogPrint((vwLog,"Got screen size: %d %d -> %d %d\n",screenLeft,screenRight,screenTop,screenBottom)) ;
 }
 
 /************************************************
@@ -2728,10 +2731,9 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
                                    GetSystemMetrics(SM_CYSMICON), 0);
     RegisterClassEx(&wc);
     
-    getScreenSize();
-    
     /* set the window to give focus to when releasing focus on switch also used to refresh */
     desktopHWnd = GetDesktopWindow();
+    getScreenSize();
     
     readConfig();	// Read the config file
     getTaskbarLocation(); // This is dependent on the config
