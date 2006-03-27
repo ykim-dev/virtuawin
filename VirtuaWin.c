@@ -696,24 +696,34 @@ static void getScreenSize(void)
 {
 #if 0
     // TODO:  make a user configured flag to specify whether to only act on the primary display or not
-   if(0)
-   {
-      // TODO:  Figure out how to get the size of JUST the primary
-      // monitor... I have the width, but dont' know what to do to get
-      // the origin w/o using the GetDeviceCaps functions that don't
-      // seem to work in MingW
-      screenLeft   = GetSystemMetrics(SM_XVIRTUALSCREEN);
-      screenRight  = GetSystemMetrics(SM_CXVIRTUALSCREEN) + screenLeft;
-      screenTop    = GetSystemMetrics(SM_YVIRTUALSCREEN);
-      screenBottom = GetSystemMetrics(SM_CYVIRTUALSCREEN) + screenTop;
-   }
+    if(0)
+    {
+        // TODO:  Figure out how to get the size of JUST the primary
+        // monitor... I have the width, but dont' know what to do to get
+        // the origin w/o using the GetDeviceCaps functions that don't
+        // seem to work in MingW
+        screenLeft   = GetSystemMetrics(SM_XVIRTUALSCREEN);
+        screenRight  = GetSystemMetrics(SM_CXVIRTUALSCREEN) + screenLeft;
+        screenTop    = GetSystemMetrics(SM_YVIRTUALSCREEN);
+        screenBottom = GetSystemMetrics(SM_CYVIRTUALSCREEN) + screenTop;
+    }
 #endif
-   {
-      screenLeft   = GetSystemMetrics(SM_XVIRTUALSCREEN);
-      screenRight  = GetSystemMetrics(SM_CXVIRTUALSCREEN) + screenLeft;
-      screenTop    = GetSystemMetrics(SM_YVIRTUALSCREEN);
-      screenBottom = GetSystemMetrics(SM_CYVIRTUALSCREEN) + screenTop;
-   }
+    if((screenRight  = GetSystemMetrics(SM_CXVIRTUALSCREEN)) <= 0)
+    {
+        /* The virtual screen size system matrix values are not supported on
+         * this OS (Win95 & NT), use the default screen size */
+        screenLeft   = 0 ;
+        screenRight  = GetSystemMetrics(SM_CXSCREEN);
+        screenTop    = 0 ;
+        screenBottom = GetSystemMetrics(SM_CYSCREEN);
+    }
+    else
+    {
+        screenLeft   = GetSystemMetrics(SM_XVIRTUALSCREEN);
+        screenRight += screenLeft;
+        screenTop    = GetSystemMetrics(SM_YVIRTUALSCREEN);
+        screenBottom = GetSystemMetrics(SM_CYVIRTUALSCREEN)+screenTop;
+    }
 }
 
 /************************************************
@@ -2253,7 +2263,8 @@ static void winListPopupMenu(HWND aHWnd)
     HWND hwnd ;
     int retItem, id, ii;
     
-    hpopup = createSortedWinList_cos();
+    if((hpopup = createSortedWinList_cos()) == NULL)
+        return ;
     GetCursorPos(&pt);
     SetForegroundWindow(aHWnd);
     
