@@ -1780,18 +1780,8 @@ static HMENU createSortedWinList_cos(void)
     char title[48];
     MenuItem *items[MAXWIN], *item;
     char buff[MAX_PATH];
-    int i,x,y,c,d,e;
+    int i,x,y,c,doAssignMenu=0;
     BOOL useTitle;    // Only use title if we have more than one menu
-    BOOL menuBreak;   // indicates if vertical seperator is needed
-    hMenu = NULL;
-    
-    hMenu = CreatePopupMenu();
-    
-    // Don't show titles if only one menu is enabled
-    if((stickyMenu+directMenu+assignMenu) == 1)
-        useTitle = FALSE;
-    else
-        useTitle = TRUE;
     
     // create the window list
     lockMutex();
@@ -1831,7 +1821,8 @@ static HMENU createSortedWinList_cos(void)
                 item->icon = createBitmapIcon(hSmallIcon);
             else
                 item->icon = 0 ;
-            item->desk = winList[c].Desk;
+            if(((item->desk = winList[c].Desk) != currentDesk) && !winList[c].Sticky)
+                doAssignMenu = assignMenu ;
             item->sticky = winList[c].Sticky;
             item->id = i ;
             winList[c].menuId = i ;
@@ -1840,6 +1831,17 @@ static HMENU createSortedWinList_cos(void)
             winList[c].menuId = 0 ;
     }
     releaseMutex();
+    if((i == 0) || ((stickyMenu + directMenu + doAssignMenu) == 0))
+        // Either user has no apps, disabled all 3 menus or only enable assign and all are on the current desk
+        return NULL ;
+    
+    if((stickyMenu + directMenu + assignMenu) == 1)
+        // Don't show titles if only one menu is enabled
+        useTitle = FALSE;
+    else
+        useTitle = TRUE;
+    
+    hMenu = CreatePopupMenu();
     
     // sorting using bubble sort
     for(x = 0; x < i; x++ )
@@ -1855,101 +1857,63 @@ static HMENU createSortedWinList_cos(void)
         }
     }
     
-    c = 0; d=1; e=0; menuBreak = FALSE;
     if(stickyMenu)
     {
-        for (x=0; x < i; x++ )
+        if(useTitle)
         {
-            if((!c || (c != items[x]->desk)) && d)
-            {
-                if(c)
-                    AppendMenu(hMenu, MF_SEPARATOR, 0, NULL );
-                c = items[x]->desk;
-                d=0;
-            }
-            if(!e && useTitle)
-            {
-                AppendMenu(hMenu, MF_STRING, 0, "Sticky" );
+            AppendMenu(hMenu, MF_STRING | MF_DISABLED, 0, "Sticky" );
+            AppendMenu(hMenu, MF_SEPARATOR, 0, NULL );
+            AppendMenu(hMenu, MF_SEPARATOR, 0, NULL );
+        }
+        for(x=0,c=0 ; x < i ; x++)
+        {
+            if((c != 0) && (c != items[x]->desk))
                 AppendMenu(hMenu, MF_SEPARATOR, 0, NULL );
-                AppendMenu(hMenu, MF_SEPARATOR, 0, NULL );
-                e=1;
-            }
+            c = items[x]->desk;
             AppendMenu( hMenu, MF_STRING | (items[x]->sticky ? MF_CHECKED: 0),
                         vwPMENU_STICKY | (items[x]->id), items[x]->name );
             if(items[x]->icon != 0)
                 SetMenuItemBitmaps(hMenu, vwPMENU_STICKY | (items[x]->id), MF_BYCOMMAND, items[x]->icon, 0);
-            d=1;
         }
     }
     
-    c=0; d=1; e=0;
     if(directMenu)
     {
-        if(stickyMenu)
-            menuBreak = TRUE;
-        for(x=0; x < i; x++ )
+        if(useTitle)
         {
-            if((!c || (c != items[x]->desk)) && d)
-            {
-                if(c)
-                    AppendMenu(hMenu, MF_SEPARATOR, 0, NULL );
-                c = items[x]->desk;
-                d=0;
-            }
-            if(!e && useTitle)
-            {
-                if(menuBreak)
-                {
-                    AppendMenu(hMenu, MF_STRING | MF_MENUBARBREAK, 0, "Access" );
-                    menuBreak = FALSE;
-                }
-                else
-                    AppendMenu(hMenu, MF_STRING, 0, "Access" );
-                
+            AppendMenu(hMenu, (stickyMenu) ? (MF_STRING | MF_DISABLED | MF_MENUBARBREAK):(MF_STRING | MF_DISABLED), 0, "Access" );
+            AppendMenu(hMenu, MF_SEPARATOR, 0, NULL );
+            AppendMenu(hMenu, MF_SEPARATOR, 0, NULL );
+        }
+        for(x=0,c=0 ; x < i ; x++)
+        {
+            if((c != 0) && (c != items[x]->desk))
                 AppendMenu(hMenu, MF_SEPARATOR, 0, NULL );
-                AppendMenu(hMenu, MF_SEPARATOR, 0, NULL );
-                e=1;
-            }
+            c = items[x]->desk;
             AppendMenu( hMenu, MF_STRING, vwPMENU_ACCESS | (items[x]->id), items[x]->name );
             if(items[x]->icon != 0)
                 SetMenuItemBitmaps(hMenu, vwPMENU_ACCESS | (items[x]->id), MF_BYCOMMAND, items[x]->icon, 0);
-            d=1;
         }
     }
     
-    c=0; d=1; e=0;
-    if(assignMenu)
+    if(doAssignMenu)
     {
-        if(stickyMenu || directMenu)
-            menuBreak=TRUE;
-        for(x=0; x < i; x++ )
+        if(useTitle)
+        {
+            AppendMenu(hMenu, (stickyMenu || directMenu) ? (MF_STRING | MF_DISABLED | MF_MENUBARBREAK):(MF_STRING | MF_DISABLED), 0, "Assign" );
+            AppendMenu(hMenu, MF_SEPARATOR, 0, NULL );
+            AppendMenu(hMenu, MF_SEPARATOR, 0, NULL );
+        }
+        for(x=0,c=0 ; x < i ; x++)
         {
             //sticky windows can't be assigned cause they're sticky :-) so leave them.out..
             //cannot assign to current Desktop
             y = (!items[x]->sticky) && (items[x]->desk != currentDesk) ;
             if(y || useTitle)
             {
-                if ((!c || (c != items[x]->desk)) && d)
-                {
-                    if(c)
-                        AppendMenu(hMenu, MF_SEPARATOR, 0, NULL );
-                    c = items [x]->desk;
-                    d=0;
-                }
-                if (!e && useTitle)
-                {
-                    if(menuBreak)
-                    {
-                        AppendMenu( hMenu, MF_STRING | MF_MENUBARBREAK, 0, "Assign" );
-                        menuBreak = FALSE; d=1;
-                    }
-                    else
-                        AppendMenu(hMenu, MF_STRING, 0, "Assign" );
-                    
+                if((c != 0) && (c != items[x]->desk))
                     AppendMenu(hMenu, MF_SEPARATOR, 0, NULL );
-                    AppendMenu(hMenu, MF_SEPARATOR, 0, NULL );
-                    e=1;
-                }
+                c = items [x]->desk;
                 if(y)
                 {
                     AppendMenu( hMenu, MF_STRING, (vwPMENU_ASSIGN | (items[x]->id)), items[x]->name );
@@ -1957,17 +1921,16 @@ static HMENU createSortedWinList_cos(void)
                         SetMenuItemBitmaps(hMenu, (vwPMENU_ASSIGN | (items[x]->id)), MF_BYCOMMAND, items[x]->icon, 0);
                 }
                 else
-                    AppendMenu( hMenu, MF_GRAYED, 0, "") ;
-                d=1;
+                    AppendMenu( hMenu, MF_DISABLED, 0, "") ;
             }
         }
     }
     
     // destroy the generated window-list
-    for (x=0; x<i; x++){
-        free ( items[x]->name );
-        free ( items[x]);
-        items [x] = NULL;
+    for (x=0; x<i; x++)
+    {
+        free(items[x]->name) ;
+        free(items[x]) ;
     }
     
     return hMenu;
