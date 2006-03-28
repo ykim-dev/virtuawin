@@ -19,6 +19,10 @@
 //  USA.
 //
 
+// Must compile with define of _WIN32_IE=0x0200 otherwise the setup dialog
+// will not open on NT/95 without a patch (known MS issue) 
+#define _WIN32_IE 0x0200
+
 // Includes
 #include "VirtuaWin.h"
 #include "SetupDialog.h"
@@ -35,6 +39,8 @@
 #include <shellapi.h>
 #include <prsht.h>
 #include <commctrl.h>
+
+#define vwPROPSHEET_PAGE_COUNT 6
 
 static int pageChangeMask=0 ;
 static int pageApplyMask=0 ;
@@ -71,26 +77,9 @@ BOOL APIENTRY keys(HWND hDlg, UINT message, UINT wParam, LONG lParam)
     switch (message) {
     case WM_INITDIALOG:
         {
-            int monitor_width, monitor_height, dialog_width, dialog_height ; 
-
             GetWindowRect(GetParent(hDlg), &config_dlg_rect);
-
-            // Reposition the dialog to the center of the monitor that
-            // was selected
-            
-            // GetSystemMetrics returns the primary monitor for backward
-            // compatiblity.  I used this rather than GetMonitorInfo
-            // because some versions of MingW don't have that function
-            // and because those other functions only work on 98+ and
-            // 2000+
-            monitor_width  = GetSystemMetrics(SM_CXSCREEN); // get the width of the PRIMARY display monitor
-            monitor_height = GetSystemMetrics(SM_CYSCREEN); // get the height of the PRIMARY display monitor
-            dialog_width   = config_dlg_rect.right  - config_dlg_rect.left;
-            dialog_height  = config_dlg_rect.bottom - config_dlg_rect.top;
-
-            config_dlg_rect.left = (monitor_width  - dialog_width)  / 2;
-            config_dlg_rect.top  = (monitor_height - dialog_height) / 2;
-            
+            config_dlg_rect.left = (screenLeft + screenRight - (config_dlg_rect.right - config_dlg_rect.left)) / 2 ;
+            config_dlg_rect.top  = (screenTop + screenBottom - (config_dlg_rect.bottom - config_dlg_rect.top)) / 2 ;
             SetWindowPos(GetParent(hDlg), 0, config_dlg_rect.left, config_dlg_rect.top, 0, 0, SWP_NOZORDER | SWP_NOSIZE | SWP_NOACTIVATE);
             
             /* Control keys */
@@ -950,7 +939,7 @@ int CALLBACK propCallBack( HWND hwndDlg, UINT uMsg, LPARAM lParam )
  */
 int createPropertySheet(HINSTANCE theHinst, HWND theHwndOwner)
 {
-    PROPSHEETPAGE psp[6]; // How many sheets
+    PROPSHEETPAGE psp[vwPROPSHEET_PAGE_COUNT];
     PROPSHEETHEADER psh;
     
     int xIcon = GetSystemMetrics(SM_CXSMICON);
@@ -1009,18 +998,14 @@ int createPropertySheet(HINSTANCE theHinst, HWND theHwndOwner)
     psp[5].pfnDlgProc = about;
     psp[5].pszTitle = "About";
     psp[5].lParam = 0;
-    
+
     psh.dwSize = sizeof(PROPSHEETHEADER);
-    // the use of Apply button is dangerous as it does not save the config
-    // properly, this is only done when Okay is pressed, if the user selects
-    // Apply and then Cancel their settings are lost which is bad behaviour
-    // so remove the Apply button 
     psh.dwFlags = PSH_USECALLBACK | PSH_PROPSHEETPAGE | PSH_USEHICON ;
     psh.hwndParent = theHwndOwner;
     psh.hInstance = theHinst;
     psh.pszIcon = NULL;
     psh.pszCaption = (LPSTR) "VirtuaWin - Properties";
-    psh.nPages = sizeof(psp) / sizeof(PROPSHEETPAGE);
+    psh.nPages = vwPROPSHEET_PAGE_COUNT ;
     psh.ppsp = (LPCPROPSHEETPAGE) &psp;
     psh.nStartPage = 0;
     psh.hIcon = (HICON) LoadImage(theHinst, MAKEINTRESOURCE(IDI_VIRTWIN), IMAGE_ICON, xIcon, yIcon, 0);
