@@ -11,8 +11,8 @@ LDFLAGSD= /DEBUG /SUBSYSTEM:windows /NOLOGO /INCREMENTAL:no /MACHINE:IX86 /PDB:N
 LIBS	= shell32.lib user32.lib gdi32.lib comctl32.lib
 
 SRC	= VirtuaWin.c DiskRoutines.c SetupDialog.c ModuleRoutines.c
-SRCRC   = VirtuaWin.rc
-OBJRES  = $(SRCRC:.rc=.res)
+COFFS   = VirtuaWin.coff
+OBJRES  = VirtuaWin.res
 
 TARGET	= VirtuaWin.exe
 OBJS    = $(SRC:.c=.o)
@@ -35,9 +35,12 @@ $(TARGET): $(OBJS) $(OBJRES)
 $(TARGETD): $(OBJSD) $(OBJRES)
 	$(LD) $(LDFLAGSD) /out:$@ $(OBJSD) $(OBJRES) $(LIBS)
 
-clean: 
-	- erase $(OBJS) $(OBJSD) $(COFFS)
-
 all:    clean $(TARGET)
 
 alld:   clean $(TARGETD)
+
+clean: 
+	- erase $(OBJS) $(OBJSD) $(OBJRES) vc60.pch
+
+spotless: clean
+	- erase $(TARGET) $(TARGETD) $(COFFS)

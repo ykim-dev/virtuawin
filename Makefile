@@ -32,8 +32,9 @@ STRIP	= strip
 endif
 
 SRC	= VirtuaWin.c DiskRoutines.c SetupDialog.c ModuleRoutines.c
-LIBS	= -lshell32 -luser32 -lgdi32 -lcomctl32
 COFFS   = VirtuaWin.coff
+OBJRES  = VirtuaWin.res
+LIBS	= -lshell32 -luser32 -lgdi32 -lcomctl32
 
 TARGET	= VirtuaWin.exe
 OBJS    = $(SRC:.c=.o)
@@ -57,9 +58,12 @@ $(TARGETD): $(OBJSD) $(COFFS)
 VirtuaWin.coff: VirtuaWin.rc
 	$(RC) --input-format rc --output-format coff -o $@ -i $<
 
-clean: 
-	rm -f $(OBJS) $(OBJSD) $(COFFS)
-
 all:    clean $(TARGET)
 
 alld:   clean $(TARGETD)
+
+clean: 
+	rm -f $(OBJS) $(OBJSD) $(COFFS)
+
+spotless: clean 
+	rm -f  $(TARGET) $(TARGETD) $(OBJRES) vc60.pch
