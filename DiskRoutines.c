@@ -19,6 +19,7 @@
 //  USA.
 //
 
+#include <windows.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -26,15 +27,15 @@
 #include <errno.h>
 #include <assert.h>
 #include <shlobj.h>  // for SHGetFolderPath
-#include <winbase.h> // for GetTempPath
-#include <stddef.h>  // for size_t
 #include <direct.h>  // for mkdir
-#include <winreg.h>  // For regisry calls
 
 #include "VirtuaWin.h"
 #include "DiskRoutines.h"
 #include "ConfigParameters.h"
 
+#ifndef INVALID_FILE_ATTRIBUTES
+#define INVALID_FILE_ATTRIBUTES	((DWORD)-1)
+#endif
 #define VIRTUAWIN_SUBDIR vwVIRTUAWIN_NAME
 
 char *VirtuaWinPath=NULL ;
@@ -495,7 +496,7 @@ void readConfig(void)
     int ii, jj ;
     
     GetFilename(vwCONFIG,1,buff);
-    if(GetFileAttributes(buff) < 0)
+    if(GetFileAttributes(buff) == INVALID_FILE_ATTRIBUTES)
     {
         /* config file does not exist - new user, setup configuration, check the user path exists first */
         ss = strrchr(buff,'\\') ;
