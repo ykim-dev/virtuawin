@@ -540,9 +540,6 @@ BOOL APIENTRY misc(HWND hDlg, UINT message, UINT wParam, LONG lParam)
 {
     static int tmpDesksY;
     static int tmpDesksX;
-    static HWND xBuddy;
-    static HWND yBuddy;
-    static int spinPressed;
     WORD wRawHotKey;
     int maxDesk ;
     
@@ -552,12 +549,9 @@ BOOL APIENTRY misc(HWND hDlg, UINT message, UINT wParam, LONG lParam)
         SetDlgItemInt(hDlg, IDC_DESKX, nDesksX, FALSE);
         tmpDesksY = nDesksY;
         tmpDesksX = nDesksX;
-        // Get a handle to desktop edit controls 
-        xBuddy = GetDlgItem(hDlg, IDC_DESKX);
-        yBuddy = GetDlgItem(hDlg, IDC_DESKY);
         // Set the spin buddy controls
-        SendMessage(GetDlgItem(hDlg, IDC_SLIDERX), UDM_SETBUDDY, (LONG)xBuddy, 0L );
-        SendMessage(GetDlgItem(hDlg, IDC_SLIDERY), UDM_SETBUDDY, (LONG)yBuddy, 0L );
+        SendMessage(GetDlgItem(hDlg, IDC_SLIDERX), UDM_SETBUDDY, (LONG) GetDlgItem(hDlg, IDC_DESKX), 0L );
+        SendMessage(GetDlgItem(hDlg, IDC_SLIDERY), UDM_SETBUDDY, (LONG) GetDlgItem(hDlg, IDC_DESKY), 0L );
         // Set spin ranges
         SendMessage(GetDlgItem(hDlg, IDC_SLIDERX), UDM_SETRANGE, 0L, MAKELONG(9, 1));
         SendMessage(GetDlgItem(hDlg, IDC_SLIDERY), UDM_SETRANGE, 0L, MAKELONG(9, 1));
@@ -716,12 +710,8 @@ BOOL APIENTRY misc(HWND hDlg, UINT message, UINT wParam, LONG lParam)
         else if(LOWORD(wParam) == IDC_SAVESTICKY) {
             saveStickyWindows(nWin, winList);
         }
-        if (LOWORD(wParam) == IDC_SLIDERX)
-            spinPressed = 1;
-        else if (LOWORD(wParam) == IDC_SLIDERY)
-            spinPressed = 2;
-        
-        if (LOWORD(wParam) == IDC_DESKX && spinPressed == 1)
+            
+        if (LOWORD(wParam) == IDC_DESKX)
         {
             pageChangeMask |= 0x04 ;
             SendMessage(GetParent(hDlg), PSM_CHANGED, (WPARAM)hDlg, 0L);
@@ -731,7 +721,7 @@ BOOL APIENTRY misc(HWND hDlg, UINT message, UINT wParam, LONG lParam)
                 SendMessage(GetDlgItem(hDlg, IDC_SLIDERY), UDM_SETPOS, 0L, MAKELONG( tmpDesksY, 0));
             }
         }
-        else if(LOWORD(wParam) == IDC_DESKY && spinPressed == 2)
+        else if(LOWORD(wParam) == IDC_DESKY)
         {
             pageChangeMask |= 0x04 ;
             SendMessage(GetParent(hDlg), PSM_CHANGED, (WPARAM)hDlg, 0L);
