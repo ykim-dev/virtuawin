@@ -26,9 +26,11 @@
 #include <windows.h>
 
 // externally accessible variables
-extern HWND hWnd; // The handle to VirtuaWin 
-extern int screenRight;	  // the width of screen, from VirtuaWin.h
-extern int screenBottom;  // the height of screen, from VirtuaWin.h
+extern HWND hWnd;          // The handle to VirtuaWin 
+extern int screenLeft;	   // the screen dimensions, from VirtuaWin.h
+extern int screenRight;	  
+extern int screenTop;	  
+extern int screenBottom;
 
 extern int curDisabledMod; // how many disabled modules we have
 extern int taskbarOffset;  // Default 3, 0 if XP skinned taskbar is used.
