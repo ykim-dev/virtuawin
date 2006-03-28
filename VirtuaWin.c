@@ -185,6 +185,7 @@ BOOL showHideWindow(windowType *aWindow, int shwFlags, unsigned char show);
 
 #ifndef NDEBUG
 #define vwLOG_PRINT_ENABLED
+#define vwLOG_PRINT_TIMING
 #define vwLOG_DEBUG_ENABLED
 #endif
 
@@ -1505,12 +1506,12 @@ static int changeDesk(int newDesk, WPARAM msgWParam)
     if(newDesk == currentDesk)
         // Nothing to do
         return 0;
-#ifdef vwLOG_DEBUG_ENABLED
+#ifdef vwLOG_PRINT_TIMING
     {
         SYSTEMTIME stime;
     
         GetLocalTime (&stime);
-        vwLogDebug((vwLog, "[%04d-%02d-%02d %02d:%02d:%02d] Step Desk Start: %d -> %d\n",
+        vwLogPrint((vwLog, "[%04d-%02d-%02d %02d:%02d:%02d] Step Desk Start: %d -> %d\n",
                     stime.wYear, stime.wMonth, stime.wDay, stime.wHour,
                     stime.wMinute, stime.wSecond, currentDesk, newDesk)) ;
     }
@@ -1602,7 +1603,7 @@ static int changeDesk(int newDesk, WPARAM msgWParam)
         RedrawWindow( NULL, NULL, NULL, RDW_INVALIDATE | RDW_ERASE | RDW_ALLCHILDREN );
     
     postModuleMessage(MOD_CHANGEDESK,msgWParam,currentDesk);
-#ifdef vwLOG_DEBUG_ENABLED
+#ifdef vwLOG_PRINT_TIMING
     {
         SYSTEMTIME stime;
     
@@ -2219,7 +2220,8 @@ static int setSticky(HWND theWin, int state)
  */
 static int windowDismiss(HWND theWin)
 {
-    int ret, idx, activeZOrder ;
+    unsigned long activeZOrder ;
+    int ret, idx ;
     HWND hwnd ;
     
     vwLogPrint((vwLog,"Dismissing window: %x\n",(int) theWin)) ;
