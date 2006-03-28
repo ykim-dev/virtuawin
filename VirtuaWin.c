@@ -786,24 +786,6 @@ void getTaskbarLocation(void)
 }
 
 /************************************************
- * Show the setup dialog and perform some stuff before and after display
- */
-static void showSetup(void)
-{
-    if(!setupOpen)
-    {   // Stupid fix, can't get this modal
-        setupOpen = TRUE;
-        // reload load current config
-        readConfig();
-        createPropertySheet(hInst,hWnd);
-        setupOpen = FALSE;
-    }
-    else
-        // setup dialog has probably been lost under the windows raise it.
-        SetForegroundWindow(hWnd);
-}
-
-/************************************************
  * Show the VirtuaWin help pages
  */
 void showHelp(HWND aHWnd, UINT context)
@@ -979,6 +961,28 @@ static void setForegroundWin(HWND theWin, int makeTop)
     /* bring to the front if requested as swapping desks can muddle the order */
     if(makeTop)
         BringWindowToTop(theWin);
+}
+
+/************************************************
+ * Show the setup dialog and perform some stuff before and after display
+ */
+static void showSetup(void)
+{
+    if(!setupOpen)
+    {   // Stupid fix, can't get this modal
+        setupOpen = TRUE;
+        // reload load current config
+        readConfig();
+        createPropertySheet(hInst,hWnd);
+        setupOpen = FALSE;
+    }
+    else
+    {
+        // setup dialog has probably been lost under the windows raise it.
+        setForegroundWin(NULL,0);
+        SetWindowPos(hWnd,HWND_NOTOPMOST,0,0,0,0,
+                     SWP_DEFERERASE | SWP_NOSIZE | SWP_NOACTIVATE | SWP_NOSENDCHANGING | SWP_NOMOVE) ;
+    }
 }
 
 /************************************************
@@ -2619,7 +2623,7 @@ skipMouseWarp:  // goto label for skipping mouse stuff
                 /* dont allow access to this menu while setup is open as its
                  * behaviour is less predictable (shutting down while setup
                  * is open will hang the virtuawin process) */
-                SetForegroundWindow(hWnd);
+                showSetup() ;
             }
             else
             {
