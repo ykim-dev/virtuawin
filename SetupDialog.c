@@ -35,7 +35,6 @@
 
 // Standard includes
 #include <stdlib.h>
-#include <stdio.h>
 #include <shellapi.h>
 #include <prsht.h>
 #include <commctrl.h>

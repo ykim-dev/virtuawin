@@ -7,6 +7,7 @@ OPTIONS=
 LOGFILE=
 LOGFILEA=
 VWDEBUG=
+VWVERBOSE=
 MAKEFILE=
 while [ ".$1" != "." ]
 do
@@ -15,17 +16,23 @@ do
         echo ""
         echo "Where options can be:-"
         echo "   -C   : Build clean."
-        echo "   -d   : For debug build (output is med)."
+        echo "   -d   : For debug build (output is VirtuaWinD.exe)."
         echo "   -h   : For this help page."
         echo "   -l <logfile>"
-        echo "        : Set the compile log file"
+        echo "        : Set the compile log file."
         echo "   -la <logfile>"
-        echo "        : Append the compile log to the given file"
+        echo "        : Append the compile log to the given file."
         echo "   -m <makefile>"
-        echo "        : Sets the makefile to use where <makefile> can be"
+        echo "        : Sets the makefile to use where <makefile> can be:-"
         echo "             Makefile     Build using Cygwin, MinGW or Linux GNU GCC"
         echo "             win32v6.mak  Build using MS VC version 6 onwards"
         echo "   -S   : Build clean spotless."
+        echo "   -vb  : Build with basic verbosity logging."
+        echo "   -vd  : Build with debug verbosity logging (large output)."
+        echo "   -vt  : Build with basic verbosity logging with timing information."
+        echo ""
+        echo "When a verbosity option is used the log file created is c:\VirtuaWin.log"
+        echo "If you change the verbosity options used do a clean buiild (build -C) first."
         echo ""
         exit 1
     elif [ $1 = "-C" ] ; then
@@ -43,6 +50,12 @@ do
         MAKEFILE=$1
     elif [ $1 = "-S" ] ; then
         OPTIONS=spotless
+    elif [ $1 = "-vb" ] ; then
+        VWVERBOSE="$VWVERBOSE vwVERBOSEB=1"
+    elif [ $1 = "-vd" ] ; then
+        VWVERBOSE="$VWVERBOSE vwVERBOSED=1"
+    elif [ $1 = "-vt" ] ; then
+        VWVERBOSE="$VWVERBOSE vwVERBOSET=1"
     else
         echo "Error: Unkown option $1, run build -h for help"
         echo ""
@@ -87,15 +100,15 @@ if [ -r $MAKEFILE ] ; then
         OPTIONS="$VWDEBUG"
     fi
     if [ ".$LOGFILE" != "." ] ; then
-        echo "$MAKE -f $MAKEFILE $OPTIONS" > $LOGFILE 2>&1
-        $MAKE -f $MAKEFILE $OPTIONS > $LOGFILE 2>&1
+        echo "$MAKE -f $MAKEFILE $VWVERBOSE $OPTIONS" > $LOGFILE 2>&1
+        $MAKE -f $MAKEFILE $VWVERBOSE $OPTIONS > $LOGFILE 2>&1
     else
         if [ ".$LOGFILEA" != "." ] ; then
-            echo "$MAKE -f $MAKEFILE $OPTIONS" >> $LOGFILEA 2>&1
-            $MAKE -f $MAKEFILE $OPTIONS >> $LOGFILEA 2>&1
+            echo "$MAKE -f $MAKEFILE $VWVERBOSE $OPTIONS" >> $LOGFILEA 2>&1
+            $MAKE -f $MAKEFILE $VWVERBOSE $OPTIONS >> $LOGFILEA 2>&1
         else
-            echo "$MAKE -f $MAKEFILE $OPTIONS"
-            $MAKE -f $MAKEFILE $OPTIONS
+            echo "$MAKE -f $MAKEFILE $VWVERBOSE $OPTIONS"
+            $MAKE -f $MAKEFILE $VWVERBOSE $OPTIONS
         fi
     fi
 else

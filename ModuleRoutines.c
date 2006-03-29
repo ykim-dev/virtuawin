@@ -19,11 +19,6 @@
 //  USA.
 //
 
-// Standard includes
-#include <io.h>
-#include <stdio.h>
-#include <string.h>
-
 // Includes
 #include "VirtuaWin.h"
 #include "ModuleRoutines.h"
@@ -32,6 +27,10 @@
 #include "ConfigParameters.h"
 #include "ListStructures.h"
 #include "DiskRoutines.h"
+
+// Standard includes
+#include <io.h>
+#include <string.h>
 
 
 /*************************************************

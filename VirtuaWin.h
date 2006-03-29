@@ -24,6 +24,30 @@
 
 // Standard includes
 #include <windows.h>
+#include <stdio.h>
+
+// Verbose logging macros
+#ifdef vwVERBOSE_TIMING
+#ifndef vwVERBOSE_BASIC
+#define vwVERBOSE_BASIC
+#endif
+#endif
+
+#ifdef vwVERBOSE_DEBUG
+#ifndef vwVERBOSE_BASIC
+#define vwVERBOSE_BASIC
+#endif
+#define vwVerboseDebug(a) (fprintf a , fflush(vwVerboseFile))
+#else
+#define vwVerboseDebug(a)
+#endif
+
+#ifdef vwVERBOSE_BASIC
+extern FILE *vwVerboseFile ;
+#define vwVerbosePrint(a) (fprintf a , fflush(vwVerboseFile))
+#else
+#define vwVerbosePrint(a)
+#endif
 
 // externally accessible variables
 extern HWND hWnd;          // The handle to VirtuaWin 

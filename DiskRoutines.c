@@ -19,8 +19,7 @@
 //  USA.
 //
 
-#include <windows.h>
-#include <stdio.h>
+#include "VirtuaWin.h"
 #include <stdlib.h>
 #include <string.h>
 #include <io.h>
@@ -29,7 +28,6 @@
 #include <shlobj.h>  // for SHGetFolderPath
 #include <direct.h>  // for mkdir
 
-#include "VirtuaWin.h"
 #include "DiskRoutines.h"
 #include "ConfigParameters.h"
 

@@ -10,6 +10,16 @@ LDFLAGS	= /SUBSYSTEM:windows /NOLOGO /INCREMENTAL:no /MACHINE:IX86 /PDB:NONE "/L
 LDFLAGSD= /DEBUG /SUBSYSTEM:windows /NOLOGO /INCREMENTAL:no /MACHINE:IX86 /PDB:NONE "/LIBPATH:$(TOOLSDIR)\lib"
 LIBS	= shell32.lib user32.lib gdi32.lib comctl32.lib
 
+!IFDEF vwVERBOSEB
+CVBDEFS = -DvwVERBOSE_BASIC
+!ENDIF
+!IFDEF vwVERBOSED
+CVDDEFS = -DvwVERBOSE_DEBUG
+!ENDIF
+!IFDEF vwVERBOSET
+CVTDEFS = -DvwVERBOSE_TIMING
+!ENDIF
+
 SRC	= VirtuaWin.c DiskRoutines.c SetupDialog.c ModuleRoutines.c
 COFFS   = VirtuaWin.coff
 OBJRES  = VirtuaWin.res
@@ -22,9 +32,9 @@ OBJSD   = $(SRC:.c=.od)
 
 .SUFFIXES: .rc .res .coff .c .o .od
 .c.o:
-	$(CC) $(CFLAGS) -c $< -Fo$@
+	$(CC) $(CFLAGS) $(CVBDEFS) $(CVDDEFS) $(CVTDEFS) -c $< -Fo$@
 .c.od:
-	$(CC) $(CFLAGSD) -c $< -Fo$@
+	$(CC) $(CFLAGSD) $(CVBDEFS) $(CVDDEFS) $(CVTDEFS) -c $< -Fo$@
 .rc.res:	
 	$(RC) -v -i "$(TOOLSDIR)\include" -i "$(TOOLSDIR)\mfc\include" -fo $@ $*.rc 
 

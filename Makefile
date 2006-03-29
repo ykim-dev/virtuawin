@@ -31,6 +31,16 @@ RC	= i586-mingw32msvc-windres
 STRIP	= strip
 endif
 
+ifeq ($(vwVERBOSEB),1)
+CVBDEFS = -DvwVERBOSE_BASIC
+endif
+ifeq ($(vwVERBOSED),1)
+CVDDEFS = -DvwVERBOSE_DEBUG
+endif
+ifeq ($(vwVERBOSET),1)
+CVTDEFS = -DvwVERBOSE_TIMING
+endif
+
 SRC	= VirtuaWin.c DiskRoutines.c SetupDialog.c ModuleRoutines.c
 COFFS   = VirtuaWin.coff
 OBJRES  = VirtuaWin.res
@@ -44,9 +54,9 @@ OBJSD   = $(SRC:.c=.od)
 
 .SUFFIXES: .rc .res .coff .c .o .od
 .c.o:
-	$(CC) $(CFLAGS) -c -o $@ $<
+	$(CC) $(CFLAGS) $(CVBDEFS) $(CVDDEFS) $(CVTDEFS) -c -o $@ $<
 .c.od:
-	$(CC) $(CFLAGSD) -c -o $@ $<
+	$(CC) $(CFLAGSD) $(CVBDEFS) $(CVDDEFS) $(CVTDEFS) -c -o $@ $<
 
 $(TARGET): $(OBJS) $(COFFS)
 	$(CC) $(LDFLAGS) -o $(TARGET) $(OBJS) $(COFFS) $(LIBS)
