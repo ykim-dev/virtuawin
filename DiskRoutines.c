@@ -66,7 +66,11 @@ static void getUserAppPath(char* path)
                 if((cc == '$') && (*ss == '{') && ((se=strchr(ss,'}')) != NULL))
                 {
                     *se++ = '\0' ;
-                    if((ss=getenv(ss+1)) != NULL)
+                    if(!strcmp(ss+1,"VIRTUAWIN_PATH"))
+                        ss = VirtuaWinPath ;
+                    else
+                        ss = getenv(ss+1) ;
+                    if(ss != NULL)
                     {
                         strcpy(path+len,ss) ;
                         len += strlen(ss) ;
@@ -74,7 +78,12 @@ static void getUserAppPath(char* path)
                     ss = se ;
                 }
                 else
-                    path[len++] = cc ;
+                {
+                    if(cc == '/')
+                        cc = '\\' ;
+                    if((cc != '\\') || (len == 0) || (path[len-1] != '\\'))
+                        path[len++] = cc ;
+                }
             }
             if(len && (path[len-1] != '\\'))
                 path[len++] = '\\' ;
@@ -601,7 +610,7 @@ void readConfig(void)
             exit(1) ;
         }
             
-        sprintf(buff2,"Welcome to %s\n\nA new config been been created, right click on tray icon to access the Setup dialog.",vwVIRTUAWIN_NAME_VERSION) ;
+        sprintf(buff2,"Welcome to %s\n\nA new user configuration has been created in directory:\n\n    %s\n\nRight click on tray icon to access the Setup dialog.",vwVIRTUAWIN_NAME_VERSION,UserAppPath) ;
         MessageBox(hWnd,buff2,vwVIRTUAWIN_NAME,MB_ICONINFORMATION);
     }
     if((fp = fopen(buff,"r")) == NULL)
