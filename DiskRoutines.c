@@ -46,29 +46,64 @@ char *UserAppPath=NULL ;
 static void getUserAppPath(char* path)
 {
     LPITEMIDLIST idList ;
+    char buff[MAX_PATH], *ss, *se, cc ;
+    FILE *fp ;
     int len ;
     
     path[0] = '\0' ;
-    if(SUCCEEDED(SHGetSpecialFolderLocation(NULL,CSIDL_APPDATA,&idList)) && (idList != NULL))
-    {
-        IMalloc *im ;
-        SHGetPathFromIDList(idList,path);
-        if(SUCCEEDED(SHGetMalloc(&im)) && (im != NULL))
-        {
-            im->lpVtbl->Free(im,idList) ;
-            im->lpVtbl->Release(im);
-        }
-    }
     
-    if(path[0] != '\0')
+    /* look for a userpath.cfg file */
+    strcpy(buff,VirtuaWinPath) ;
+    strcat(buff,"userpath.cfg") ;
+    if((fp = fopen(buff,"r")) != NULL)
     {
-        len = strlen(path) ;
-        if(path[len - 1] != '\\')
+        if((fgets(buff,MAX_PATH,fp) != NULL) && (buff[0] != '\0'))
+        {
+            len = 0 ;
+            ss = buff ;
+            while(((cc=*ss++) != '\0') && (cc !='\n'))
+            {
+                if((cc == '$') && (*ss == '{') && ((se=strchr(ss,'}')) != NULL))
+                {
+                    *se++ = '\0' ;
+                    if((ss=getenv(ss+1)) != NULL)
+                    {
+                        strcpy(path+len,ss) ;
+                        len += strlen(ss) ;
+                    }
+                    ss = se ;
+                }
+                else
+                    path[len++] = cc ;
+            }
+            if(len && (path[len-1] != '\\'))
+                path[len++] = '\\' ;
+            path[len] = '\0' ;
+        }
+        fclose(fp) ;
+    }
+    if(path[0] == '\0')
+    {
+        if(SUCCEEDED(SHGetSpecialFolderLocation(NULL,CSIDL_APPDATA,&idList)) && (idList != NULL))
+        {
+            IMalloc *im ;
+            SHGetPathFromIDList(idList,path);
+            if(SUCCEEDED(SHGetMalloc(&im)) && (im != NULL))
+            {
+                im->lpVtbl->Free(im,idList) ;
+                im->lpVtbl->Release(im);
+            }
+        }
+        if(path[0] != '\0')
+        {
+            len = strlen(path) ;
+            if(path[len - 1] != '\\')
+                path[len++] = '\\' ;
+            strncpy(path+len,VIRTUAWIN_SUBDIR,MAX_PATH - len) ;
+            len += strlen(path+len) ;
             path[len++] = '\\' ;
-        strncpy(path+len,VIRTUAWIN_SUBDIR,MAX_PATH - len) ;
-        len += strlen(path+len) ;
-        path[len++] = '\\' ;
-        path[len] = '\0' ;
+            path[len] = '\0' ;
+        }
     }
 }
 
@@ -102,12 +137,14 @@ int GetFilename(eFileNames filetype, int location, char* outStr)
         GetModuleFileName(GetModuleHandle(NULL),path,MAX_PATH) ;
         ss = strrchr(path,'\\') ;
         ss[1] = '\0' ;
-        VirtuaWinPath = strdup(path) ;
-        getUserAppPath(path) ;  // for now I only want multiuser, we'll probably get rid of the registry entry
-        if(path[0] == '\0')
-            UserAppPath = VirtuaWinPath ;
-        else
-            UserAppPath = strdup(path) ;
+        if((VirtuaWinPath = strdup(path)) != NULL)
+        {
+            getUserAppPath(path) ;
+            if(path[0] == '\0')
+                UserAppPath = VirtuaWinPath ;
+            else
+                UserAppPath = strdup(path) ;
+        }
         if((VirtuaWinPath == NULL) || (UserAppPath == NULL))
         {
             MessageBox(hWnd, "Memory resources appear to be very low, try rebooting.\nIf you still have problems, send a mail to \n" vwVIRTUAWIN_EMAIL,vwVIRTUAWIN_NAME " Error", MB_ICONWARNING);
@@ -496,40 +533,60 @@ void readConfig(void)
     GetFilename(vwCONFIG,1,buff);
     if(GetFileAttributes(buff) == INVALID_FILE_ATTRIBUTES)
     {
-        /* config file does not exist - new user, setup configuration, check the user path exists first */
-        ss = strrchr(buff,'\\') ;
-        *ss = '\0' ;
-        if(((GetFileAttributes(buff) & (0xf0000000|FILE_ATTRIBUTE_DIRECTORY)) != FILE_ATTRIBUTE_DIRECTORY) &&
-           (CreateDirectory(buff,NULL) == 0))
+        /* config file does not exist - new user, setup configuration, check
+         * the user path exists first and if not try to create it - note that
+         * multiple levels may need to be created due to the userpath.cfg */
+        if((ss = strchr(buff,':')) != NULL)
+            ss++ ;
+        else
+            ss = buff ;
+        while((ss = strchr(ss+1,'\\')) != NULL)
         {
-            sprintf(buff2,vwVIRTUAWIN_NAME " cannot create the user config directory:\n\n    %s\n\nPlease check file permissions. If you continue to have problems, send e-mail to:\n\n    " vwVIRTUAWIN_EMAIL,buff);
-            MessageBox(hWnd,buff2,vwVIRTUAWIN_NAME " Error",MB_ICONERROR);
-            exit(1) ;
-        }
-        /* now copy all the config files across to the user area */
-        ii = vwFILE_COUNT ;
-        while(--ii >= vwCONFIG)
-        {
-            GetFilename(ii,0,buff);
-            if((fp = fopen(buff, "rb")) != NULL)
+            *ss = '\0' ;
+            if(((GetFileAttributes(buff) & (0xf0000000|FILE_ATTRIBUTE_DIRECTORY)) != FILE_ATTRIBUTE_DIRECTORY) &&
+               (CreateDirectory(buff,NULL) == 0))
             {
-                GetFilename(ii,1,buff2);
-                if((wfp = fopen(buff2, "wb")) == NULL)
-                    break ;
-                for(;;)
-                {
-                    if((jj=fread(buff2,1,2048,fp)) <= 0)
-                        break ;
-                    if(fwrite(buff2,1,jj,wfp) != (size_t) jj)
-                    {
-                        jj = -1 ;
-                        break ;
-                    }
-                }
-                fclose(fp) ;
-                if((fclose(wfp) != 0) || (jj < 0))
-                    break ;
+                sprintf(buff2,vwVIRTUAWIN_NAME " cannot create the user config directory:\n\n    %s\n\nPlease check file permissions. If you continue to have problems, send e-mail to:\n\n    " vwVIRTUAWIN_EMAIL,buff);
+                MessageBox(hWnd,buff2,vwVIRTUAWIN_NAME " Error",MB_ICONERROR);
+                exit(1) ;
             }
+            *ss = '\\' ;
+        }
+        
+        /* If the user path is not the installation path then copy all the
+         * config files across to the user area */
+        if(stricmp(VirtuaWinPath,UserAppPath))
+        {
+            ii = vwFILE_COUNT ;
+            while(--ii >= vwCONFIG)
+            {
+                GetFilename(ii,0,buff);
+                if((fp = fopen(buff, "rb")) != NULL)
+                {
+                    GetFilename(ii,1,buff2);
+                    if((wfp = fopen(buff2, "wb")) == NULL)
+                        break ;
+                    for(;;)
+                    {
+                        if((jj=fread(buff2,1,2048,fp)) <= 0)
+                            break ;
+                        if(fwrite(buff2,1,jj,wfp) != (size_t) jj)
+                        {
+                            jj = -1 ;
+                            break ;
+                        }
+                    }
+                    fclose(fp) ;
+                    if((fclose(wfp) != 0) || (jj < 0))
+                        break ;
+                }
+            }
+        }
+        else
+        {
+            /* must create the main VirtuaWin.cfg file */
+            ii = vwCONFIG - 1 ;
+            fp = NULL ;
         }
         GetFilename(vwCONFIG,1,buff);
         /* check a main config file has been copied, if not create a dummy one */
