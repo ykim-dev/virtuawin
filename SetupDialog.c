@@ -142,8 +142,32 @@ BOOL APIENTRY keys(HWND hDlg, UINT message, UINT wParam, LONG lParam)
             // Initialize the controls.
             break;
         case PSN_APPLY: // Apply, OK
-            // Cycle hot keys
-            if(SendDlgItemMessage(hDlg, IDC_CYCLINGKEYS, BM_GETCHECK, 0, 0) == BST_CHECKED) {
+            // Control keys
+            if(SendDlgItemMessage(hDlg, IDC_KEYS, BM_GETCHECK, 0, 0) == BST_CHECKED) {
+                keyEnable = TRUE;
+                if(SendDlgItemMessage(hDlg, IDC_ALT, BM_GETCHECK, 0, 0) == BST_CHECKED)
+                    modAlt = MOD_ALT;
+                else
+                    modAlt = FALSE;
+                if(SendDlgItemMessage(hDlg, IDC_SHIFT, BM_GETCHECK, 0, 0) == BST_CHECKED)
+                    modShift = MOD_SHIFT;
+                else
+                    modShift = FALSE;
+                if(SendDlgItemMessage(hDlg, IDC_CTRL, BM_GETCHECK, 0, 0) == BST_CHECKED)
+                    modCtrl = MOD_CONTROL;
+                else
+                    modCtrl = FALSE;
+                if(SendDlgItemMessage(hDlg, IDC_WIN, BM_GETCHECK, 0, 0) == BST_CHECKED)
+                    modWin = MOD_WIN;
+                else
+                    modWin = FALSE;
+            }
+            else
+                keyEnable = FALSE;
+            
+            // Desktop Cycling hot keys
+            if(SendDlgItemMessage(hDlg, IDC_CYCLINGKEYS, BM_GETCHECK, 0, 0) == BST_CHECKED)
+            {
                 cyclingKeysEnabled = TRUE;
                 wRawHotKey = (WORD)SendDlgItemMessage(hDlg, IDC_HOTCYCLEUP, HKM_GETHOTKEY, 0, 0);
                 hotCycleUp = LOBYTE(wRawHotKey);
@@ -163,8 +187,9 @@ BOOL APIENTRY keys(HWND hDlg, UINT message, UINT wParam, LONG lParam)
             else
                 cyclingKeysEnabled = FALSE;
             
-            // Hot key controls
-            if(SendDlgItemMessage(hDlg, IDC_HOTKEYS, BM_GETCHECK, 0, 0) == BST_CHECKED) {
+            // Direct Desktop Access Hot keys
+            if(SendDlgItemMessage(hDlg, IDC_HOTKEYS, BM_GETCHECK, 0, 0) == BST_CHECKED)
+            {
                 hotKeyEnable = TRUE;
                 wRawHotKey = (WORD)SendDlgItemMessage(hDlg, IDC_HOT1, HKM_GETHOTKEY, 0, 0);
                 deskHotkey[1] = LOBYTE(wRawHotKey);
@@ -238,56 +263,9 @@ BOOL APIENTRY keys(HWND hDlg, UINT message, UINT wParam, LONG lParam)
                 else
                     deskHotkeyWin[9] = FALSE;
             }
-            hotKeyEnable = FALSE;
-            
-            // Control keys
-            if(SendDlgItemMessage(hDlg, IDC_KEYS, BM_GETCHECK, 0, 0) == BST_CHECKED) {
-                keyEnable = TRUE;
-                if(SendDlgItemMessage(hDlg, IDC_ALT, BM_GETCHECK, 0, 0) == BST_CHECKED)
-                    modAlt = MOD_ALT;
-                else
-                    modAlt = FALSE;
-                if(SendDlgItemMessage(hDlg, IDC_SHIFT, BM_GETCHECK, 0, 0) == BST_CHECKED)
-                    modShift = MOD_SHIFT;
-                else
-                    modShift = FALSE;
-                if(SendDlgItemMessage(hDlg, IDC_CTRL, BM_GETCHECK, 0, 0) == BST_CHECKED)
-                    modCtrl = MOD_CONTROL;
-                else
-                    modCtrl = FALSE;
-                if(SendDlgItemMessage(hDlg, IDC_WIN, BM_GETCHECK, 0, 0) == BST_CHECKED)
-                    modWin = MOD_WIN;
-                else
-                    modWin = FALSE;
-            }
-            else {
-                keyEnable = FALSE;
-            }
-            
-            // Hot keys
-            if(SendDlgItemMessage(hDlg, IDC_HOTKEYS, BM_GETCHECK, 0, 0) == BST_CHECKED)
-            {
-                hotKeyEnable = TRUE;
-                if(SendDlgItemMessage(hDlg, IDC_ALTHOT, BM_GETCHECK, 0, 0) == BST_CHECKED)
-                    hotModAlt = MOD_ALT;
-                else
-                    hotModAlt = FALSE;
-                if(SendDlgItemMessage(hDlg, IDC_SHIFTHOT, BM_GETCHECK, 0, 0) == BST_CHECKED)
-                    hotModShift = MOD_SHIFT;
-                else
-                    hotModShift = FALSE;
-                if(SendDlgItemMessage(hDlg, IDC_CTRLHOT, BM_GETCHECK, 0, 0) == BST_CHECKED)
-                    hotModCtrl = MOD_CONTROL;
-                else
-                    hotModCtrl = FALSE;
-                if(SendDlgItemMessage(hDlg, IDC_WINHOT, BM_GETCHECK, 0, 0) == BST_CHECKED)
-                    hotModWin = MOD_WIN;
-                else
-                    hotModWin = FALSE;
-            }
-            else {
+            else
                 hotKeyEnable = FALSE;
-            }
+            
             vwSetupApply(hDlg,0x01) ;
             SetWindowLong(hDlg, DWL_MSGRESULT, TRUE);
             break;
@@ -345,11 +323,11 @@ BOOL APIENTRY mouse(HWND hDlg, UINT message, UINT wParam, LONG lParam)
             SendDlgItemMessage(hDlg, IDC_KEYCONTROL, BM_SETCHECK, 1,0);
         }
         if(mouseModAlt)
-            SendDlgItemMessage(hDlg, IDC_ALT, BM_SETCHECK, 1,0);
+            SendDlgItemMessage(hDlg, IDC_MALT, BM_SETCHECK, 1,0);
         if(mouseModShift)
-            SendDlgItemMessage(hDlg, IDC_SHIFT, BM_SETCHECK, 1,0);
+            SendDlgItemMessage(hDlg, IDC_MSHIFT, BM_SETCHECK, 1,0);
         if(mouseModCtrl)
-            SendDlgItemMessage(hDlg, IDC_CTRL, BM_SETCHECK, 1,0);
+            SendDlgItemMessage(hDlg, IDC_MCTRL, BM_SETCHECK, 1,0);
         if(mouseEnable) 
             SendDlgItemMessage(hDlg, IDC_MOUSWARP, BM_SETCHECK, 1,0);
         if(taskBarWarp)
@@ -389,11 +367,11 @@ BOOL APIENTRY mouse(HWND hDlg, UINT message, UINT wParam, LONG lParam)
                 mouseModShift = FALSE;
                 mouseModAlt = FALSE;
                 mouseModCtrl = FALSE;
-                if(SendDlgItemMessage(hDlg, IDC_ALT, BM_GETCHECK, 0, 0) == BST_CHECKED)
+                if(SendDlgItemMessage(hDlg, IDC_MALT, BM_GETCHECK, 0, 0) == BST_CHECKED)
                     mouseModAlt = TRUE;
-                if(SendDlgItemMessage(hDlg, IDC_SHIFT, BM_GETCHECK, 0, 0) == BST_CHECKED)
+                if(SendDlgItemMessage(hDlg, IDC_MSHIFT, BM_GETCHECK, 0, 0) == BST_CHECKED)
                     mouseModShift = TRUE;
-                if(SendDlgItemMessage(hDlg, IDC_CTRL, BM_GETCHECK, 0, 0) == BST_CHECKED)
+                if(SendDlgItemMessage(hDlg, IDC_MCTRL, BM_GETCHECK, 0, 0) == BST_CHECKED)
                     mouseModCtrl = TRUE;
             }
             else
@@ -417,9 +395,9 @@ BOOL APIENTRY mouse(HWND hDlg, UINT message, UINT wParam, LONG lParam)
         
     case WM_COMMAND:
         if(LOWORD(wParam) == IDC_MOUSWARP || LOWORD(wParam) == IDC_TASKBAR || 
-           LOWORD(wParam) == IDC_JUMP || LOWORD(wParam) == IDC_KEYCONTROL || 
-           LOWORD(wParam) == IDC_CTRL || LOWORD(wParam) == IDC_ALT || 
-           LOWORD(wParam) == IDC_SHIFT || 
+           LOWORD(wParam) == IDC_JUMP     || LOWORD(wParam) == IDC_KEYCONTROL || 
+           LOWORD(wParam) == IDC_MCTRL    || LOWORD(wParam) == IDC_MALT || 
+           LOWORD(wParam) == IDC_MSHIFT   || 
            LOWORD(wParam) == IDC_MOUSEWRAP)
         {
             pageChangeMask |= 0x02 ;

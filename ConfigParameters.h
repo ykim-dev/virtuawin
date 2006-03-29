@@ -40,17 +40,13 @@ extern BOOL keyEnable;		// key support
 extern BOOL hotKeyEnable;      // hot key support
 extern BOOL releaseFocus;	// release focus on switch
 extern BOOL minSwitch;		// if we should switch minimized windows
-extern BOOL modAlt;		// switch key
-extern BOOL modShift;		// switch key
-extern BOOL modCtrl;		// switch key
-extern BOOL modWin;		// switch key
-extern BOOL hotModAlt;		// hot switch key
-extern BOOL hotModShift;	// hot switch key
-extern BOOL hotModCtrl;	        // hot switch key
-extern BOOL hotModWin;		// hot switch key
-extern BOOL mouseModAlt;	// mouse warp key
-extern BOOL mouseModShift;	// mouse warp key
-extern BOOL mouseModCtrl;	// mouse warp key
+extern UINT modAlt;		// switch key
+extern UINT modShift;		// switch key
+extern UINT modCtrl;		// switch key
+extern UINT modWin;		// switch key
+extern UINT mouseModAlt;	// mouse warp key
+extern UINT mouseModShift;	// mouse warp key
+extern UINT mouseModCtrl;	// mouse warp key
 extern BOOL taskBarWarp;        // if removing taskbar height when warping down
 extern BOOL saveSticky;         // if we shall save sticky win. on exit
 extern BOOL mouseWarpCalled;    // if MouseDll has posted a warp message
