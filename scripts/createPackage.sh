@@ -18,7 +18,7 @@ else
         cvs tag -R -F $LABEL
     endif
 
-    emacs VirtuaWin.h VirtuaWin.rc
+    emacs Defines.h
     echo "Start compilation? [y/n]"
     if ( $< == 'y' ) then
         make
@@ -93,6 +93,9 @@ endif
 
 #
 # $Log$
+# Revision 1.3  2005/03/15 07:09:30  jopi
+# Minor update
+#
 # Revision 1.2  2005/03/15 06:58:22  jopi
 # Minor update
 #
