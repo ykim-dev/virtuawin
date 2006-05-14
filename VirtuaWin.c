@@ -2213,7 +2213,9 @@ static int windowDismiss(HWND theWin)
 
     lockMutex();
     winListUpdate();
-    if(((idx = winListFind(theWin)) >= 0) && (winList[idx].Visible == vwVISIBLE_YESTEMP))
+    if((idx = winListFind(theWin)) < 0)
+        ret = 0 ;
+    else if(winList[idx].Visible == vwVISIBLE_YESTEMP)
         ret = windowSetDesk(theWin,winList[idx].Desk,1) ;
     else
     {
