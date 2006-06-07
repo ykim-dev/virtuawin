@@ -171,6 +171,16 @@ UINT hotkeyDismissWin = 0;
 int curDisabledMod = 0; 
 unsigned long vwZOrder=0 ;
 
+enum {
+    OSVERSION_UNKNOWN=0,
+    OSVERSION_31,
+    OSVERSION_9X,
+    OSVERSION_NT,
+    OSVERSION_2000,
+    OSVERSION_XP
+} ;
+int osVersion ;
+    
 #define windowIsNotHung(hWnd,waitTime) (SendMessageTimeout(hWnd,(int)NULL,0,0,SMTO_ABORTIFHUNG|SMTO_BLOCK,waitTime,NULL))
 
 #define vwSHWIN_TRYHARD   0x01
@@ -347,10 +357,12 @@ static void loadIcons(void)
     int ii, iconId ;
     char buff[16] ;
     
-    if(nDesksY == 2 && nDesksX == 2) // if 2 by 2 mode
-        iconId = IDI_SMALL_DIS ;
+    if(nDesksY != 2 || nDesksX != 2) // if 2 by 2 mode
+        iconId = IDI_ST_0 ;
+    else if(osVersion > OSVERSION_2000)
+        iconId = IDI_ST_DIS_2 ;
     else
-        iconId = IDI_ICON0 ;
+        iconId = IDI_ST_DIS_1 ;
     
     strcpy(buff,"icons/X.ico") ;
     ii = nDesksY * nDesksX ;
@@ -2671,31 +2683,44 @@ skipMouseWarp:  // goto label for skipping mouse stuff
     return DefWindowProc(aHWnd, message, wParam, lParam);
 }
 
-/*************************************************
- * VirtuaWin start point
- */
-int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
+static int
+VirtuaWinInit(HINSTANCE hInstance)
 {
-    MSG msg;
+    OSVERSIONINFO os;
     WNDCLASSEX wc;
     DWORD threadID;
     BOOL awStore;
     char *classname = vwVIRTUAWIN_NAME "MainClass";
     hInst = hInstance;
-    
+
     /* Only one instance may be started */
     hMutex = CreateMutex(NULL, FALSE, vwVIRTUAWIN_NAME "PreventSecond");
-    
     if(GetLastError() == ERROR_ALREADY_EXISTS)
     {
         // Display configuration window...
-        PostMessage( FindWindow(classname, NULL), VW_SETUP, 0, 0);
+        PostMessage(FindWindow(classname, NULL), VW_SETUP, 0, 0);
         return 0; // ...and quit 
     }
     
 #ifdef vwVERBOSE_BASIC
     vwVerboseFile = fopen("c:\\" vwVIRTUAWIN_NAME ".log","w+") ;
 #endif
+    
+    os.dwOSVersionInfoSize = sizeof(os);
+    GetVersionEx(&os);
+    if(os.dwPlatformId == VER_PLATFORM_WIN32s)
+        osVersion = OSVERSION_31 ;
+    else if(os.dwPlatformId == VER_PLATFORM_WIN32_WINDOWS)
+        osVersion = OSVERSION_9X ;
+    else if(os.dwPlatformId == VER_PLATFORM_WIN32_NT)
+    {
+        if(os.dwMajorVersion < 5)
+            osVersion = OSVERSION_NT ;
+        else if(os.dwMinorVersion == 0)
+            osVersion = OSVERSION_2000 ;
+        else
+            osVersion = OSVERSION_XP ;
+    }
     
     /* Create a window class for the window that receives systray notifications.
        The window will never be displayed */
@@ -2704,15 +2729,19 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     wc.lpfnWndProc = wndProc;
     wc.cbClsExtra = wc.cbWndExtra = 0;
     wc.hInstance = hInstance;
-    wc.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_VIRTWIN));
+    wc.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_VIRTUAWIN));
     wc.hCursor = LoadCursor(NULL, IDC_ARROW);
     wc.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
     wc.lpszMenuName = NULL;
     wc.lpszClassName = classname;
-    wc.hIconSm = (HICON) LoadImage(hInstance, MAKEINTRESOURCE(IDI_VIRTWIN), IMAGE_ICON,
+    wc.hIconSm = (HICON) LoadImage(hInstance, MAKEINTRESOURCE(IDI_VIRTUAWIN), IMAGE_ICON,
                                    GetSystemMetrics(SM_CXSMICON),
                                    GetSystemMetrics(SM_CYSMICON), 0);
-    RegisterClassEx(&wc);
+    if(RegisterClassEx(&wc) == 0)
+    {
+        MessageBox(hWnd, "Failed to register class!",vwVIRTUAWIN_NAME " Error", MB_ICONWARNING);
+        return 0 ;
+    }
     
     /* set the window to give focus to when releasing focus on switch also used to refresh */
     desktopHWnd = GetDesktopWindow();
@@ -2735,8 +2764,12 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     recoverWindows();
     
     /* Create window. Note that WS_VISIBLE is not used, and window is never shown. */
-    hWnd = CreateWindowEx(0, classname, classname, WS_POPUP, CW_USEDEFAULT, 0,
-                          CW_USEDEFAULT, 0, NULL, NULL, hInstance, NULL);
+    if((hWnd = CreateWindowEx(0, classname, classname, WS_POPUP, CW_USEDEFAULT, 0,
+                              CW_USEDEFAULT, 0, NULL, NULL, hInstance, NULL)) == NULL)
+    {
+        MessageBox(hWnd, "Failed to create window!",vwVIRTUAWIN_NAME " Error", MB_ICONWARNING);
+        return 0 ;
+    }
     
     nIconD.cbSize = sizeof(NOTIFYICONDATA); // size
     nIconD.hWnd = hWnd;		    // window to receive notifications
@@ -2791,9 +2824,22 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     //SuspendThread(mouseThread);
     
     // if on win9x the tricky windows need to be continually hidden
-    taskbarFixRequired = (GetVersion() >= 0x80000000) ;
+    taskbarFixRequired = (osVersion <= OSVERSION_9X) ;
     SetTimer(hWnd, 0x29a, 250, monitorTimerProc); 
+    
+    return 1 ;
+}
 
+/*************************************************
+ * VirtuaWin start point
+ */
+int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
+{
+    MSG msg;
+    
+    if(!VirtuaWinInit(hInstance))
+        return 0 ;
+    
     /* Main message loop */
     while(GetMessage(&msg, NULL, 0, 0))
     {

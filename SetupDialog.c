@@ -975,7 +975,7 @@ int createPropertySheet(HINSTANCE theHinst, HWND theHwndOwner)
     psh.nPages = vwPROPSHEET_PAGE_COUNT ;
     psh.ppsp = (LPCPROPSHEETPAGE) &psp;
     psh.nStartPage = 0;
-    psh.hIcon = (HICON) LoadImage(theHinst, MAKEINTRESOURCE(IDI_VIRTWIN), IMAGE_ICON, xIcon, yIcon, 0);
+    psh.hIcon = (HICON) LoadImage(theHinst, MAKEINTRESOURCE(IDI_VIRTUAWIN), IMAGE_ICON, xIcon, yIcon, 0);
     psh.pfnCallback = (PFNPROPSHEETCALLBACK)propCallBack;
     
     return (PropertySheet(&psh));

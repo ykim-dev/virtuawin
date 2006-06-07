@@ -2,13 +2,27 @@
 #include "Defines.h"
 #include "Resource.h"
 
-107 ICON Icons/APPICONSMALL.ICO
-108 ICON Icons/APPICONLARGE.ICO
-109 ICON Icons/SMALL.ICO
-110 ICON Icons/SMALLNW.ICO
-111 ICON Icons/SMALLNE.ICO
-112 ICON Icons/SMALLSW.ICO
-113 ICON Icons/SMALLSE.ICO
+107 ICON icons/virtuawin.ico
+108 ICON icons/st_dis_1.ico
+109 ICON icons/st_nw_1.ico
+110 ICON icons/st_ne_1.ico
+111 ICON icons/st_sw_1.ico
+112 ICON icons/st_se_1.ico
+113 ICON icons/st_dis_2.ico
+114 ICON icons/st_nw_2.ico
+115 ICON icons/st_ne_2.ico
+116 ICON icons/st_sw_2.ico
+117 ICON icons/st_se_2.ico
+118 ICON icons/st_0.ico
+119 ICON icons/st_1.ico
+120 ICON icons/st_2.ico
+121 ICON icons/st_3.ico
+122 ICON icons/st_4.ico
+123 ICON icons/st_5.ico
+124 ICON icons/st_6.ico
+125 ICON icons/st_7.ico
+126 ICON icons/st_8.ico
+127 ICON icons/st_9.ico
 
 IDD_PROPPAGE_KEYS DIALOG 0, 0, 150, 250
 STYLE DS_3DLOOK | WS_CHILD | WS_DISABLED | WS_BORDER
@@ -170,7 +184,7 @@ STYLE DS_3DLOOK | WS_CHILD | WS_DISABLED | WS_BORDER
 FONT 8, "MS Sans Serif"
 BEGIN
     GROUPBOX        vwVIRTUAWIN_NAME_VERSION, IDC_STATIC, 4, 5, 202, 81, 0x0300
-    ICON            IDI_LARGEAPP, IDC_STATIC, 95, 16, 20, 20
+    ICON            IDI_VIRTUAWIN, IDC_STATIC, 95, 16, 20, 20
     CTEXT           "Copyright (c) 1999-2005 and 2006 Johan Piculell", IDC_STATIC, 10, 40, 190, 8
     CTEXT           vwVIRTUAWIN_EMAIL, IDC_MAILTO, 10, 50, 190, 8, 0x0100
     CTEXT           "Latest version, info, source, etc. visit:", IDC_STATIC, 10, 62, 190, 8
@@ -190,16 +204,6 @@ BEGIN
     PUSHBUTTON      "Reload",    IDC_MODRELOAD, 55, 120, 40, 14
     PUSHBUTTON      "Enable/Disable",  IDC_MODDISABLE, 100, 120, 60, 14
 END
-159 ICON icons/0.ico
-160 ICON icons/1.ico
-161 ICON icons/2.ico
-162 ICON icons/3.ico
-163 ICON icons/4.ico
-164 ICON icons/5.ico
-165 ICON icons/6.ico
-166 ICON icons/7.ico
-167 ICON icons/8.ico
-168 ICON icons/9.ico
 IDR_MENU1 MENU
 BEGIN
     POPUP "emty"
