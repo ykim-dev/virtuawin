@@ -2,7 +2,7 @@
 
 [Setup]
 AppName=VirtuaWin
-AppVerName=VirtuaWin 2.X
+AppVerName=VirtuaWin 3.X
 DefaultDirName={pf}\VirtuaWin
 DefaultGroupName=VirtuaWin
 MinVersion=4,4
@@ -24,14 +24,15 @@ Name: "{app}\icons"; Flags: uninsalwaysuninstall
 Name: "{app}\modules"; Flags: uninsalwaysuninstall 
 
 [Files]
-Source: "VirtuaWin.exe"; DestDir: "{app}"
-Source: "VirtuaWin.hlp"; DestDir: "{app}"
-Source: "WinList.exe";   DestDir: "{app}\Modules\"
-Source: "UserList.cfg";  DestDir: "{app}"; Flags: onlyifdoesntexist;
-Source: "Tricky.cfg";    DestDir: "{app}"; Flags: onlyifdoesntexist;
-Source: "COPYING.TXT";   DestDir: "{app}"
-Source: "HISTORY.TXT";   DestDir: "{app}"
-Source: "README.TXT";    DestDir: "{app}"; Flags: isreadme
+Source: "VirtuaWin.exe";  DestDir: "{app}"
+Source: "VirtuaWin.hlp";  DestDir: "{app}"
+Source: "WinList.exe";    DestDir: "{app}\Modules\"
+Source: "VWAssigner.exe"; DestDir: "{app}\Modules\"
+Source: "UserList.cfg";   DestDir: "{app}"; Flags: onlyifdoesntexist;
+Source: "Tricky.cfg";     DestDir: "{app}"; Flags: onlyifdoesntexist;
+Source: "COPYING.TXT";    DestDir: "{app}"
+Source: "HISTORY.TXT";    DestDir: "{app}"
+Source: "README.TXT";     DestDir: "{app}"; Flags: isreadme
 
 [Icons]
 Name: "{commonstartup}\VirtuaWin"; Filename: "{app}\VirtuaWin.exe"; Tasks: autostart

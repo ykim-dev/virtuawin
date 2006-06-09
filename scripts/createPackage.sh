@@ -25,6 +25,9 @@ else
         cd WinList
         make
         cd ../..
+        cd Modules/Assigner/
+        make
+        cd ../..
         echo done compiling!
     endif
 
@@ -32,6 +35,7 @@ else
 
     cp ./$1/VirtuaWin.exe ./tmp/
     cp ./$1/WinList/WinList.exe ./tmp/
+    cp ./$1/Modules/Assigner/VWAssigner.exe ./tmp/
     cp ./$1/READMEII.TXT ./tmp/README.TXT
     cp ./$1/HISTORY.TXT ./tmp/
     cp ./$1/COPYING.TXT ./tmp/
@@ -93,6 +97,9 @@ endif
 
 #
 # $Log$
+# Revision 1.4  2006/04/05 15:10:31  jopi
+# version info moved
+#
 # Revision 1.3  2005/03/15 07:09:30  jopi
 # Minor update
 #
