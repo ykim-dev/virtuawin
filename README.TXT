@@ -18,11 +18,11 @@ in VirtuaWin itself.
 
 Code comments
 --------------------------------------------------------------
-I use the gcc compiler for this project with MINGW addon.
-It should be possible to compile with other win32 C compilers with 
-perhaps minor changes.
+The source has been compiled using the MINGW & Cygwin gcc compiler as well as
+Microsoft MSVC v6.0. It should be possible to compile with other win32 C
+compilers with perhaps minor changes.
 
-Check my website for info on module development.
+Check our website for info on module development.
 
 
 Files
@@ -30,6 +30,10 @@ Files
 README.TXT      This file.
 HISTORY.TXT     Description of changes.
 COPYING.TXT     GNU General Public License Version 2.
+build           Build script for MINGW MSYS & Cygwin bash.
+build.bat       Build script for Microsoft cmd. 
+Makefile        Makefile for MINGW & Cygwin.
+win32v6.mak     Makefile for Microsoft MSVC v6.0.
 *.c *.h	        Source files.
 
 
@@ -44,6 +48,9 @@ the problem as possible.
 
 Copyright
 --------------------------------------------------------------
-VirtuaWin is copyright (c) 1999-2005, and 2006 by Johan Piculell and is 
-licensed through the GNU General Public License. Read the 
-COPYING.TXT file for the complete license.
+VirtuaWin is a freely distributed program and is licensed under the GNU
+General Public License.
+
+Copyright (c) 1999-2005 Johan Piculell
+Copyright (c) 2006 VirtuaWin (VirtuaWin@home.se)
+

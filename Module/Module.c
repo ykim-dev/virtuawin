@@ -1,13 +1,32 @@
 /*
+ *  VirtuaWin - Virtual Desktop Manager (virtuawin.sourceforge.net)
+ *  Module.c - Example user module for VirtuaWin.
+ * 
+ *  Copyright (c) 1999-2005 Johan Piculell
+ *  Copyright (c) 2006 VirtuaWin (VirtuaWin@home.se)
+ * 
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, 
+ *  USA.
+ * 
+ *************************************************************************
+ * 
  * Simple module skeleton for VirtuaWin. These are the minimal requirements.
  * It is a simple application with a hidden window that receives messages from virtuawin
  * Look in Messages.h to see what can be sent to and from VirtuaWin
  * 
  * Note that the classname must be the same as the filename including the '.exe'
- *
- * Created by jopi 1999
- * VirtuaWin@home.se
- * Feel free to use in any way you like(well, almost)
  */
 #include <windows.h>
 #include <string.h>

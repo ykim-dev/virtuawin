@@ -183,14 +183,15 @@ IDD_PROPPAGE_ABOUT DIALOG 0, 0, 150, 150
 STYLE DS_3DLOOK | WS_CHILD | WS_DISABLED | WS_BORDER
 FONT 8, "MS Sans Serif"
 BEGIN
-    GROUPBOX        vwVIRTUAWIN_NAME_VERSION, IDC_STATIC, 4, 5, 202, 81, 0x0300
+    GROUPBOX        vwVIRTUAWIN_NAME_VERSION, IDC_STATIC, 4, 5, 202, 91, 0x0300
     ICON            IDI_VIRTUAWIN, IDC_STATIC, 95, 16, 20, 20
-    CTEXT           "Copyright (c) 1999-2005 and 2006 Johan Piculell", IDC_STATIC, 10, 40, 190, 8
-    CTEXT           vwVIRTUAWIN_EMAIL, IDC_MAILTO, 10, 50, 190, 8, 0x0100
-    CTEXT           "Latest version, info, source, etc. visit:", IDC_STATIC, 10, 62, 190, 8
-    CTEXT           "http://virtuawin.sourceforge.net/", IDC_HTTP, 10, 72, 190, 10, 0x0100
-    GROUPBOX        "License", IDC_STATIC, 4, 89, 202, 140, 0x0300
-    EDITTEXT        IDC_LICENSE, 10, 100, 190, 125, ES_MULTILINE | ES_READONLY |NOT WS_TABSTOP | NOT WS_BORDER
+    LTEXT           "Copyright (c) 1999-2005 Johan Piculell", IDC_STATIC, 35, 40, 150, 8
+    LTEXT           "Copyright (c) 2006 VirtuaWin", IDC_STATIC, 35, 50, 150, 8
+    LTEXT           vwVIRTUAWIN_EMAIL, IDC_MAILTO, 50, 60, 190, 8, 0x0100
+    LTEXT           "Latest version, info, source, etc. visit:", IDC_STATIC, 35, 72, 150, 8
+    LTEXT           "http://virtuawin.sourceforge.net/", IDC_HTTP, 50, 82, 190, 10, 0x0100
+    GROUPBOX        "License", IDC_STATIC, 4, 99, 202, 140, 0x0300
+    EDITTEXT        IDC_LICENSE, 10, 110, 190, 125, ES_MULTILINE | ES_READONLY |NOT WS_TABSTOP | NOT WS_BORDER
 END
 
 IDD_PROPPAGE_MODULES DIALOG 0, 0, 150, 150

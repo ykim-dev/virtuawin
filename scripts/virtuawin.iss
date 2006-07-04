@@ -50,3 +50,4 @@ Type: files; Name: "{app}\USERLIST.CFG"
 Type: files; Name: "{app}\VWSTATE.CFG"
 Type: files; Name: "{app}\VWDISABLED.CFG"
 Type: files; Name: "{app}\VWWINDOWSSTATE.CFG"
+

@@ -1,5 +1,54 @@
 ***   VirtuaWin Revision History   ***
 --------------------------------------
+
+Ver 3.0 2006
+* Implemented support of owned windows (fixes winamp and bug SF939132 etc)
+* Fixed issues caused by minimized windows with sub windows, fixes SF1457569.
+* Fixed VirtuaWin lock-up issues caused by hung Tricky windows.
+* SF874409, maintained list of hung windows and continue to attempt recovery -
+  windows will not be lost (tray icon continues to flash)
+* Re-implemented  crash  recovery  so that it does  not  have to write to disk
+  every minute (uses window  positioning),  removed  setup option as it is for
+  free. Better z-order storage so sticky windows are handled better.
+* Changed the initial start-up process to copy any installation cfg files into
+  the user area so the VW installation can have a 'recommended'  setup but the
+  user has access to all cfg files. Fixes SF1178901, SF950115 & SF1210922.
+* Changed  the  default  location  of the  user  config  files  to the  user's
+  'Application   data/VirtuaWin'  (uses   SHGetSpecialFolderLocation   as  its
+  supported on all OSs)
+* SF1435429,  added new  userpath.cfg  to set the  location of the user config
+  directory to support roaming profile.
+* Implemented  support for hidden  applications  popping up due to some event,
+  fixes  SF1017408  &  SF1358979.  Added new  options  'Pop-up  raised  hidden
+  windows' & 'Move  popped-up  hidden windows' to control this. Note that some
+  apps (like Opera) must be made Tricky windows to work correctly.
+* Implemented a Z-order preservation feature, fixes SF1008751 & SF1314574.
+* Improved the  reliability  of setting the  foreground  window (this function
+  failing is the biggest cause of 'odd' behaviour).
+* Fixed  SF1324555,  SF1004564 & SF807794,  bug in window  drag code makes the
+  window appear sticky.
+* SF1421175, added  alternative  fallback method in case the application  icon
+  cannot be retrieved with GetClassLong
+* SF1046367, changed setup to allow multiple modifiers.
+* Added MSVC v6 make files and build scripts for MINGW & cmd.
+* Found that a mutex was  released  twice, not sure about the  sideffects  but
+  could possibly cause a crash when displaying the window list
+* Bound  middle  mouse  button  click and shift  click on the taskbar  icon to
+  change  desktop,  also added Next and  Previous to the right button  context
+  menu.
+* Added new 'Move window immediately' option to Desktop State Handling.
+* Added support for  "class_name_*" in cfg files (e.g. tricky.cfg)  which will
+  match any window with a class name that starts with "class_name_"
+* Changed  Access  window menu list to contain all  windows, now this could be
+  used as an alternative to Windows Alt+Tab
+* Changed the Setup Dialog help to open the right page in the help docs.
+* Improved sdk VW_ASSIGNWIN mesage handling so VW will follow the window being
+  assigned  if the desktop  number is less than zero (i.e. if desk given is -2
+  the window is moved to desk 2 and VW changes to desk 2)
+* Added  a sdk  interface  to get  VirtuaWin's  installation  & user's  config
+  directory.
+----------------------------
+
 Ver 2.11 2005/10/13
 * Better multi-user support. Store config files in home directory
 * Removed the need for registry entry
@@ -300,3 +349,4 @@ Ver 0.7 1999/03/27
 Ver 0.5 1999/03/19
  * First public version, no configure possibilities 
 ----------------------------
+

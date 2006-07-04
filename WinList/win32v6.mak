@@ -1,5 +1,5 @@
 # VirtuaWin (virtuawin.sourceforge.net)
-# win32v6.mak - VirtuaWin make file for Microsoft MSVC v6.0
+# win32v6.mak - WinList make file for Microsoft MSVC v6.0
 #
 # Copyright (c) 2006 VirtuaWin (VirtuaWin@home.se)
 #
@@ -29,24 +29,14 @@ LDFLAGS	= /SUBSYSTEM:windows /NOLOGO /INCREMENTAL:no /MACHINE:IX86 /PDB:NONE "/L
 LDFLAGSD= /DEBUG /SUBSYSTEM:windows /NOLOGO /INCREMENTAL:no /MACHINE:IX86 /PDB:NONE "/LIBPATH:$(TOOLSDIR)\lib"
 LIBS	= shell32.lib user32.lib gdi32.lib comctl32.lib
 
-!IFDEF vwVERBOSEB
-CVBDEFS = -DvwVERBOSE_BASIC
-!ENDIF
-!IFDEF vwVERBOSED
-CVDDEFS = -DvwVERBOSE_DEBUG
-!ENDIF
-!IFDEF vwVERBOSET
-CVTDEFS = -DvwVERBOSE_TIMING
-!ENDIF
+SRC	= winlist.c
+COFFS   = winlist.coff
+OBJRES  = winlist.res
 
-SRC	= VirtuaWin.c DiskRoutines.c SetupDialog.c ModuleRoutines.c
-COFFS   = VirtuaWin.coff
-OBJRES  = VirtuaWin.res
-
-TARGET	= VirtuaWin.exe
+TARGET	= WinList.exe
 OBJS    = $(SRC:.c=.o)
 
-TARGETD	= VirtuaWinD.exe
+TARGETD	= WinListD.exe
 OBJSD   = $(SRC:.c=.od)
 
 .SUFFIXES: .rc .res .coff .c .o .od

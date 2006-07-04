@@ -1,7 +1,9 @@
 //
-//  VirtuaWin - Virtual Desktop Manager for Win9x/NT/Win2K/XP
+//  VirtuaWin - Virtual Desktop Manager (virtuawin.sourceforge.net)
+//  DiskRoutines.h - Setup dialog function definitions.
 // 
-//  Copyright (c) 1999-2003, 2004 Johan Piculell
+//  Copyright (c) 1999-2005 Johan Piculell
+//  Copyright (c) 2006 VirtuaWin (VirtuaWin@home.se)
 // 
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by

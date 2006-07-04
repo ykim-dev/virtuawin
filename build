@@ -1,8 +1,11 @@
 #!/bin/sh -f
-# VirtuaWin - virtuawin.sourceforge.net
-# build - VirtuaWin build shell script for unix platforms
-# Copyright (C) 2006 Johan Piculell (virtuawin.sourceforge.net)
+# VirtuaWin (virtuawin.sourceforge.net)
+# build - VirtuaWin build shell script for MINGW MSYS & Cygwin bash.
+#
+# Copyright (c) 2006 VirtuaWin (VirtuaWin@home.se)
+#
 # See the file VirtuaWin.c for copying and conditions.
+#
 OPTIONS=
 LOGFILE=
 LOGFILEA=

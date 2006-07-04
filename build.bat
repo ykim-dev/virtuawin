@@ -1,8 +1,11 @@
 @echo off
-rem VirtuaWin - virtuawin.sourceforge.net
-rem build - VirtuaWin build script for MS windows
-rem Copyright (C) 2006 Johan Piculell (virtuawin.sourceforge.net)
+rem VirtuaWin (virtuawin.sourceforge.net)
+rem build - VirtuaWin build script for Microsoft cmd.
+rem
+rem Copyright (c) 2006 VirtuaWin (VirtuaWin@home.se)
+rem
 rem See the file VirtuaWin.c for copying and conditions.
+rem
 set OPTIONS=
 set LOGFILE=
 set LOGFILEA=

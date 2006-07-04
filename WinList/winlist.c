@@ -1,10 +1,9 @@
 //
-//  VirtuaWin - Virtual Desktop Manager for Win9x/NT/Win2K/XP
+//  VirtuaWin - Virtual Desktop Manager (virtuawin.sourceforge.net)
+//  winlist.c - VirtuaWin module for restoring lost windows.
 // 
-//  This is a module for VirtuaWin that are used for 
-//  restoring lost windows. 
-// 
-//  Copyright (c) 1999, 2000, 2001, 2002, 2003 Johan Piculell
+//  Copyright (c) 1999-2005 Johan Piculell
+//  Copyright (c) 2006 VirtuaWin (VirtuaWin@home.se)
 // 
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -21,7 +20,6 @@
 //  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, 
 //  USA.
 //
-
 
 #include <windows.h>
 #include <string.h>
@@ -199,11 +197,32 @@ static void goGetTheTaskbarHandle(HWND hDlg)
  */
 static int InitializeApp(HWND hDlg, WPARAM wParam, LPARAM lParam)
 {
+    /* The virtual screen size system matrix values were only added for WINVER >= 0x0500 (Win2k) */
+#ifndef SM_XVIRTUALSCREEN
+#define SM_XVIRTUALSCREEN       76
+#define SM_YVIRTUALSCREEN       77
+#define SM_CXVIRTUALSCREEN      78
+#define SM_CYVIRTUALSCREEN      79
+#endif
     int tabstops[2] ;
-    screenLeft = GetSystemMetrics(SM_XVIRTUALSCREEN);
-    screenRight = GetSystemMetrics(SM_CXVIRTUALSCREEN);
-    screenTop = GetSystemMetrics(SM_YVIRTUALSCREEN);
-    screenBottom = GetSystemMetrics(SM_CYVIRTUALSCREEN);
+    if((screenRight  = GetSystemMetrics(SM_CXVIRTUALSCREEN)) <= 0)
+    {
+        /* The virtual screen size system matrix values are not supported on
+         * this OS (Win95 & NT), use the desktop window size */
+        RECT r;
+        GetClientRect(GetDesktopWindow(), &r);
+        screenLeft   = r.left;
+        screenRight  = r.right;
+        screenTop    = r.top;
+        screenBottom = r.bottom;
+    }
+    else
+    {
+        screenLeft   = GetSystemMetrics(SM_XVIRTUALSCREEN);
+        screenRight += screenLeft;
+        screenTop    = GetSystemMetrics(SM_YVIRTUALSCREEN);
+        screenBottom = GetSystemMetrics(SM_CYVIRTUALSCREEN)+screenTop;
+    }
     SendDlgItemMessage(hDlg,ID_WINLIST,LB_SETHORIZONTALEXTENT,vwCLASSNAME_MAX+vwCLASSNAME_MAX+4, 0);
     tabstops[0] = 14 ;
     tabstops[1] = 140 ;

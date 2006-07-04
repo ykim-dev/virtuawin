@@ -35,9 +35,8 @@ the problem as possible.
 
 Copyright
 --------------------------------------------------------------
-VirtuaWin is copyright (c) 1999-2005, and 2006 by Johan Piculell and is 
-licensed through the GNU General Public License. Read the 
-COPYING.TXT file for the complete license.
+VirtuaWin is a freely distributed program and is licensed under the GNU
+General Public License.
 
-
-
+Copyright (c) 1999-2005 Johan Piculell
+Copyright (c) 2006 VirtuaWin (VirtuaWin@home.se)
