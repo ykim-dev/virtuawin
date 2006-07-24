@@ -24,16 +24,8 @@
 #ifndef _SETUPDIALOG_H_
 #define _SETUPDIALOG_H_
 
-#include <windows.h>
-
-int createPropertySheet(HINSTANCE theHinst, HWND theHwndOwner);
-
-extern void registerAllKeys();
-extern void unRegisterAllKeys();
-extern void reLoadIcons();
-extern void unloadModules();
-extern void loadModules();
-extern void enableMouse(BOOL);
-extern void setMouseKey();
+void createPropertySheet(HINSTANCE theHinst, HWND theHwndOwner);
+void initDeskHotkey(void) ;
+void storeDeskHotkey(void) ;
 
 #endif

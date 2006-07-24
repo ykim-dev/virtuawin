@@ -24,6 +24,9 @@
 #ifndef _CONFIGPARAMETERS_H_
 #define _CONFIGPARAMETERS_H_
 
+extern HWND setupHWnd;   // handle to the setup dialog, NULL if not open
+extern BOOL setupOpen;         
+
 extern int saveInterval; // Number of time loops before saving desktop state
 extern int nOfModules;   // Number of loaded modules
 extern int nWin;         // Number of windows in the system
@@ -57,7 +60,6 @@ extern BOOL stickyKeyRegistered; // if the sticky hot key is registered
 extern BOOL preserveZOrder;     // Should we preserve the window Z order
 extern BOOL crashRecovery;      // Should we use recovery functionality
 extern BOOL deskWrap;           // If we want to have desktop cycling
-extern BOOL setupOpen;          // if setup dialog is visible
 extern BOOL invertY;            // if up/down should be inverted
 extern short stickyMenu;        // if sticky window menu should be shown
 extern short assignMenu;        // if assign window menu should be shown

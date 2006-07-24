@@ -89,6 +89,8 @@ int  lastFGStyle;               // style of the last foreground window
 HWND lastBOFGHWnd;		// handle to the last but one foreground window
 int  lastBOFGStyle;             // style of the last but one foreground window
 HWND lastLostHWnd;		// handle to the last lost window
+HWND setupHWnd;       		// handle to the setup dialog, NULL if not open
+BOOL setupOpen;         
 
 // vector holding icon handles for the systray
 HICON icons[MAXDESK];           // 0=disabled, 1=9=nromal desks, 10=private desk
@@ -109,6 +111,7 @@ int nDesksY = 2;
 int warpLength = 20; 
 int warpMultiplier = 0;
 int configMultiplier = 1;
+int preserveZOrder = 0;      
 BOOL noMouseWrap = FALSE;
 BOOL mouseEnable = FALSE; 
 BOOL useMouseKey = FALSE;
@@ -128,9 +131,7 @@ BOOL saveSticky = FALSE;
 BOOL refreshOnWarp = FALSE;     
 BOOL stickyKeyRegistered = FALSE;
 BOOL dismissKeyRegistered = FALSE;
-BOOL preserveZOrder = FALSE;      
 BOOL deskWrap = FALSE;          
-BOOL setupOpen = FALSE;         
 BOOL invertY = FALSE;           
 short stickyMenu = 1;         
 short assignMenu = 1;
@@ -958,18 +959,19 @@ static void setForegroundWin(HWND theWin, int makeTop)
 static void showSetup(void)
 {
     if(!setupOpen)
-    {   // Stupid fix, can't get this modal
-        setupOpen = TRUE;
+    {
         // reload load current config
         readConfig();
+        vwVerboseDebug((vwVerboseFile,"About to call createPropertySheet\n")) ;
         createPropertySheet(hInst,hWnd);
-        setupOpen = FALSE;
+        vwVerboseDebug((vwVerboseFile,"createPropertySheet returned\n")) ;
     }
-    else
+    else if((setupHWnd != NULL) && (GetForegroundWindow() != setupHWnd))
     {
         // setup dialog has probably been lost under the windows raise it.
         setForegroundWin(NULL,0);
-        SetWindowPos(hWnd,HWND_NOTOPMOST,0,0,0,0,
+        SetForegroundWindow(setupHWnd) ;
+        SetWindowPos(setupHWnd,HWND_NOTOPMOST,0,0,0,0,
                      SWP_DEFERERASE | SWP_NOSIZE | SWP_NOACTIVATE | SWP_NOSENDCHANGING | SWP_NOMOVE) ;
     }
 }
@@ -1493,8 +1495,8 @@ static VOID CALLBACK monitorTimerProc(HWND hwnd, UINT uMsg, UINT idEvent, DWORD 
 static int changeDesk(int newDesk, WPARAM msgWParam)
 {
     HWND activeHWnd, zoh ;
-    unsigned long activeZOrder, zox, zoy, zob ;
-    int x, y, notHung=0 ;
+    unsigned long activeZOrder=0, zox, zoy, zob ;
+    int notHung, x, y, b ;
     
     if(newDesk == currentDesk)
         // Nothing to do
@@ -1535,6 +1537,8 @@ static int changeDesk(int newDesk, WPARAM msgWParam)
             }
         } while((activeHWnd = ownerWnd) != 0) ;
     }
+    if(setupOpen)
+        storeDeskHotkey() ;
     
     currentDesk = newDesk;
     /* Calculations for getting the x and y positions */
@@ -1542,46 +1546,108 @@ static int changeDesk(int newDesk, WPARAM msgWParam)
     currentDeskX = nDesksX + currentDesk - (currentDeskY * nDesksX);
     
     activeHWnd = NULL;
-    activeZOrder = 0;
-    for (x = 0; x < nWin ; ++x)
+    if(preserveZOrder == 1)
     {
-        if(winList[x].Sticky || (!minSwitch && (winList[x].Style & WS_MINIMIZE)))
-            winList[x].Desk = currentDesk ;
-        if(winList[x].Desk == currentDesk)
+        for (x = 0; x < nWin ; ++x)
         {
-            // Show these windows
-            if(!winList[x].Visible)
-                notHung = showHideWindow(&winList[x],0,vwVISIBLE_YES) ;
-            else if(preserveZOrder)
-                notHung = windowIsNotHung(winList[x].Handle,100) ;
-            if(((winList[x].Style & (WS_MINIMIZE|WS_VISIBLE)) == WS_VISIBLE) && 
-               (winList[x].ZOrder[currentDesk] > activeZOrder))
+            if(winList[x].Sticky || (!minSwitch && (winList[x].Style & WS_MINIMIZE)))
+                winList[x].Desk = currentDesk ;
+            if((winList[x].Desk != currentDesk) && winList[x].Visible)
+                // Hide these, not iconic or "Switch minimized" enabled
+                showHideWindow(&winList[x],0,vwVISIBLE_NO) ;
+        }
+        y = nWin ;
+        zoy = 0xffffffff ;
+        zoh = HWND_NOTOPMOST ;
+        for(;;)
+        {
+            b = -1 ;
+            zob = 0 ;
+            for(x = 0; x < nWin ; ++x)
             {
-                activeHWnd = winList[x].Handle;
-                activeZOrder = winList[x].ZOrder[currentDesk];
-            }
-            if(preserveZOrder && notHung && ((winList[x].ExStyle & WS_EX_TOPMOST) == 0))
-            {
-                zox = winList[x].ZOrder[currentDesk] ;
-                zoh = HWND_NOTOPMOST ;
-                zob = 0xffffffff ;
-                y = x ;
-                while(--y >= 0)
+                if((winList[x].Desk == currentDesk) && ((zox=winList[x].ZOrder[currentDesk]) >= zob) &&
+                   ((zox < zoy) || ((zox == zoy) && (x < y))))
                 {
-                    if((winList[y].Desk == currentDesk) &&
-                       ((zoy=winList[y].ZOrder[currentDesk]) > zox) && (zoy < zob))
+                    zob = zox ;
+                    b = x ;
+                }
+            }
+            if(b < 0)
+                break ;
+            // Show these windows
+            if(!winList[b].Visible)
+                notHung = showHideWindow(&winList[b],0,vwVISIBLE_YES) ;
+            else
+                notHung = windowIsNotHung(winList[b].Handle,100) ;
+            vwVerboseDebug((vwVerboseFile, "ZOrder: %d %d %x -> %d %d %x (%d)\n",y,zoy,zoh,b,zob,winList[b].Handle,notHung)) ;
+            if(notHung)
+            {
+                SetWindowPos(winList[b].Handle,zoh,0,0,0,0,SWP_DEFERERASE|SWP_NOSIZE|SWP_NOACTIVATE|SWP_NOSENDCHANGING|SWP_NOMOVE) ;
+                zoh = winList[b].Handle ;
+            }
+            if((activeHWnd == NULL) && ((winList[b].Style & (WS_MINIMIZE|WS_VISIBLE)) == WS_VISIBLE))
+            {
+                activeHWnd = winList[b].Handle;
+                activeZOrder = winList[b].ZOrder[currentDesk];
+            }
+            y = b ;
+            zoy = zob ;
+        }
+    }
+    else
+    {
+        for (x = 0; x < nWin ; ++x)
+        {
+            if(winList[x].Sticky || (!minSwitch && (winList[x].Style & WS_MINIMIZE)))
+                winList[x].Desk = currentDesk ;
+            if(winList[x].Desk == currentDesk)
+            {
+                // Show these windows
+                if(!winList[x].Visible)
+                    showHideWindow(&winList[x],0,vwVISIBLE_YES) ;
+                if(((winList[x].Style & (WS_MINIMIZE|WS_VISIBLE)) == WS_VISIBLE) && 
+                   (winList[x].ZOrder[currentDesk] > activeZOrder))
+                {
+                    activeHWnd = winList[x].Handle;
+                    activeZOrder = winList[x].ZOrder[currentDesk];
+                }
+            }
+            else if(winList[x].Visible)
+                // Hide these, not iconic or "Switch minimized" enabled
+                showHideWindow(&winList[x],0,vwVISIBLE_NO) ;
+        }
+        if(preserveZOrder)
+        {
+            y = nWin ;
+            zoy = 0xffffffff ;
+            zoh = HWND_NOTOPMOST ;
+            for(;;)
+            {
+                b = -1 ;
+                zob = 0 ;
+                for(x = 0; x < nWin ; ++x)
+                {
+                    if((winList[x].Desk == currentDesk) && ((zox=winList[x].ZOrder[currentDesk]) >= zob) &&
+                       ((zox < zoy) || ((zox == zoy) && (x < y))))
                     {
-                        zob = zoy ;
-                        zoh = winList[y].Handle ;
+                        zob = zox ;
+                        b = x ;
                     }
                 }
-                SetWindowPos(winList[x].Handle, zoh, 0, 0, 0, 0,
-                             SWP_DEFERERASE | SWP_NOSIZE | SWP_NOACTIVATE | SWP_NOSENDCHANGING | SWP_NOMOVE) ;
+                if(b < 0)
+                    break ;
+                // Show these windows
+                notHung = windowIsNotHung(winList[b].Handle,100) ;
+                vwVerboseDebug((vwVerboseFile, "TBZOrder: %d %d %x -> %d %d %x (%d)\n",y,zoy,zoh,b,zob,winList[b].Handle,notHung)) ;
+                if(notHung)
+                {
+                    SetWindowPos(winList[b].Handle,zoh,0,0,0,0,SWP_DEFERERASE|SWP_NOSIZE|SWP_NOACTIVATE|SWP_NOSENDCHANGING|SWP_NOMOVE) ;
+                    zoh = winList[b].Handle ;
+                }
+                y = b ;
+                zoy = zob ;
             }
         }
-        else if(winList[x].Visible)
-            // Hide these, not iconic or "Switch minimized" enabled
-            showHideWindow(&winList[x],0,vwVISIBLE_NO) ;
     }
     if(releaseFocus)     // Release focus maybe?
         activeHWnd = NULL ;
@@ -1591,6 +1657,11 @@ static int changeDesk(int newDesk, WPARAM msgWParam)
     SetTimer(hWnd, 0x29a, 250, monitorTimerProc);
     releaseMutex();
     
+    if(setupOpen)
+    {
+        initDeskHotkey() ;
+        showSetup() ;
+    }
     setIcon(currentDesk) ;
     if(refreshOnWarp) // Refresh the desktop 
         RedrawWindow( NULL, NULL, NULL, RDW_INVALIDATE | RDW_ERASE | RDW_ALLCHILDREN );

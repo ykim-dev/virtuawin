@@ -62,6 +62,7 @@ extern int curDisabledMod; // how many disabled modules we have
 extern int taskbarOffset;  // Default 3, 0 if XP skinned taskbar is used.
 
 // Forward declarations of functions
+void enableMouse(BOOL turnOn) ;
 void setMouseKey(void);
 void reLoadIcons(void);
 void registerAllKeys(void);
