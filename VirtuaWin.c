@@ -1186,7 +1186,7 @@ static BOOL CALLBACK enumWindowsProc(HWND hwnd, LPARAM lParam)
     else if(winList[idx].Tricky)
     {
         GetWindowRect(hwnd,&pos) ;
-        if((pos.left > -10000) || (pos.top > -10000))
+        if(pos.top >= -5000)
         {
             /* Something has moved this window back into a visible area (or
              * at least outside VirtuaWins domain) so make it belong to this
@@ -2028,23 +2028,22 @@ static BOOL CALLBACK recoverWindowsEnumProc(HWND hwnd, LPARAM lParam)
     int info;
     
     /* any window that VirtuaWin may have lost would be a managed window
-     * positioned at least -1000,-1000. Note the only different in the
+     * with a top positioned < -5000. Note the only different in the
      * criteria here to the main winListUpdate is that window may be
      * invisible or a toolwindow */
     GetWindowRect(hwnd,&pos) ;
     if((style & WS_CHILD) ||                                                   // No child windows
        (((style & WS_VISIBLE) == 0) ^ ((exstyle & WS_EX_TOOLWINDOW) == 0)) ||  // Must be (not visible) xor (a toolwindow)
-       (((pos.left > -10000) || (pos.top > -10000) ||                          // Not a hidden position
-         (pos.left < -30000) || (pos.top < -30000)) &&
+       (((pos.top >= -5000) || (pos.top <= -30000)) &&                          // Not a hidden position
         (((style & WS_VISIBLE) == 0) || (pos.left != -32000) || (pos.top != -32000))) ||
-       ((GetParent(hwnd) != NULL) && (GetParent(hwnd) != desktopHWnd)))         // Only toplevel or owned by desktop
+       ((GetParent(hwnd) != NULL) && (GetParent(hwnd) != desktopHWnd)))        // Only toplevel or owned by desktop
     {
         // Ignore this window
-        vwVerboseDebug((vwVerboseFile,"Ignore  %x %d %d %d %d %d %d %d\n",(int) hwnd,
-                    (pos.left > -10000),(pos.top > -10000),(style & WS_CHILD),
-                    ((style & WS_VISIBLE) == 0),((exstyle & WS_EX_TOOLWINDOW) != 0),
-                    (((style & WS_VISIBLE) == 0) ^ ((exstyle & WS_EX_TOOLWINDOW) != 0)),
-                    (GetParent(hwnd) != NULL))) ;
+        vwVerboseDebug((vwVerboseFile,"Ignore  %x %d %d %d %d %d %d %d\n",
+                        (int) hwnd,pos.top,(style & WS_CHILD),
+                        ((style & WS_VISIBLE) == 0),((exstyle & WS_EX_TOOLWINDOW) != 0),
+                        (((style & WS_VISIBLE) == 0) ^ ((exstyle & WS_EX_TOOLWINDOW) != 0)),
+                        (GetParent(hwnd) != NULL))) ;
         return TRUE;
     }
     
@@ -2078,10 +2077,9 @@ static BOOL CALLBACK recoverWindowsEnumProc(HWND hwnd, LPARAM lParam)
                 PostMessage(taskHWnd, RM_Shellhook, HSHELL_WINDOWCREATED, (LPARAM) hwnd );
             }
             // Bring back to visible area, SWP_FRAMECHANGED makes it repaint
-            if(pos.left != -32000)
+            if(pos.top != -32000)
             {
-                pos.left += 20000 ;
-                pos.top += 20000 ;
+                pos.top += 25000 ;
                 if(pos.left < screenLeft)
                     pos.left = screenLeft + 10 ;
                 else if(pos.left > screenRight)
@@ -2176,18 +2174,15 @@ BOOL showHideWindow(windowType* aWindow, int shwFlags, unsigned char show)
         }
         if(show)
         {
-            if((pos.left <= -10000) && (pos.top <= -10000) &&
-               (pos.left >= -30000) && (pos.top >= -30000))
+            if((pos.top < -5000) && (pos.top > -30000))
             {   // Move the window back onto visible area
-                pos.left += 20000 ;
-                pos.top += 20000 ;
+                pos.top += 25000 ;
                 swpFlags |= SWP_NOMOVE ;
             }
         }
-        else if((pos.left > -10000) && (pos.top > -10000))
+        else if((pos.top > -5000) && (pos.top < 20000))
         {   // Move the window off visible area
-            pos.left -= 20000 ;
-            pos.top -= 20000 ;
+            pos.top -= 25000 ;
             swpFlags |= SWP_NOMOVE ;
         }
         // SWP_NOMOVE is set when a move IS required

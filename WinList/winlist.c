@@ -144,15 +144,14 @@ __inline BOOL CALLBACK enumWindowsProc(HWND hwnd, LPARAM lParam)
     GetWindowRect(hwnd,&rect);
     
     if(!(style & WS_CHILD) && (!GetParent(hwnd) || GetParent(hwnd) == GetDesktopWindow()) &&
-       (!(exstyle & WS_EX_TOOLWINDOW) || (rect.left <= -10000) || (rect.top <= -10000)))
+       (!(exstyle & WS_EX_TOOLWINDOW) || (rect.top < -5000)))
     {
         char *ss, buff[vwCLASSNAME_MAX+vwCLASSNAME_MAX+4];
         ss = buff ;
         
         // Add window to the windowlist
         // If at the hidden position then flag as likely lost
-        if((rect.left <= -10000) && (rect.top <= -10000) &&
-           (rect.left >= -30000) && (rect.top >= -30000))
+        if((rect.top < -5000) && (rect.top > -30000))
             *ss++ = '*' ;
         else if(style & WS_VISIBLE)
             *ss++ = ' ' ;
@@ -266,22 +265,12 @@ static BOOL CALLBACK DialogFunc(HWND hwndDlg, UINT msg, WPARAM wParam, LPARAM lP
                 }
                 left = windowList[curSel].rect.left ;
                 top = windowList[curSel].rect.top ;
-                if((left == -22000) && (top == -22000))
+                /* some apps hide the window by pushing it to -32000,
+                 * VirtuaWin does not move these windows */
+                if((left != -32000) || (top != -32000))
                 {
-                    /* some apps hide the window by pushing it to -32000,
-                     * VirtuaWin handles these by moving to -22000 when it
-                     * 'hides' them. Restore it back to -32000 first, if the
-                     * user closes WinList, reopens and selects Restore again
-                     * on this window it will be moved to the visible area */
-                    left = -32000 ;
-                    top = -32000 ;
-                }
-                else
-                {
-                    if(left < -10000)
-                        left += 20000 ;
-                    if(top < -10000)
-                        top += 20000 ;
+                    if(top < -5000)
+                        top += 25000 ;
                     if(left < screenLeft)
                         left = screenLeft + 10 ;
                     else if(left > screenRight)
@@ -290,9 +279,9 @@ static BOOL CALLBACK DialogFunc(HWND hwndDlg, UINT msg, WPARAM wParam, LPARAM lP
                         top = screenTop + 10 ;
                     else if(top > screenBottom)
                         top = screenTop + 10 ;
+                    SetWindowPos(windowList[curSel].handle, 0, left, top, 0, 0,
+                                 SWP_FRAMECHANGED | SWP_NOZORDER | SWP_NOSIZE | SWP_NOACTIVATE ); 
                 }
-                SetWindowPos(windowList[curSel].handle, 0, left, top, 0, 0,
-                             SWP_FRAMECHANGED | SWP_NOZORDER | SWP_NOSIZE | SWP_NOACTIVATE ); 
                 SetForegroundWindow(windowList[curSel].handle);
             }
             return 1;
