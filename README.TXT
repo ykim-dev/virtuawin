@@ -8,11 +8,11 @@
 
 Description
 --------------------------------------------------------------
-This is a small, fast and easy to use virtual desktop manager for 
-Windows9x/ME/NT/2000/XP with no unnecessary features. 
-It indicates current desktop in the system tray for saving space. 
-A lot of configuration possibilities for both mouse and key control.
-It also supports modules for adding features without decreasing performance 
+VirtuaWin is a small, fast and easy to use virtual desktop manager for
+Windows9x/ME/NT/2000/XP with no unnecessary features. The current desktop is
+indicated by a small icon in the system tray to conserve space. There are many
+configuration possibilities for both mouse and keyboard control. VirtuaWin
+also supports modules for adding features without decreasing the performance
 in VirtuaWin itself.
 
 
@@ -39,11 +39,11 @@ win32v6.mak     Makefile for Microsoft MSVC v6.0.
 
 Bugs
 --------------------------------------------------------------
-If you discover any bugs in this software, please register a bug 
-in SourceForge tracking system, http://sourceforge.net/projects/virtuawin/
+If you discover any bugs in this software, please register a bug in the
+SourceForge tracking system at http://sourceforge.net/projects/virtuawin/
 
-Please include version number and as much information about 
-the problem as possible.
+Please include version number and as much information about the problem as
+possible.
 
 
 Copyright
