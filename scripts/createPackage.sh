@@ -97,8 +97,8 @@ else
 
     echo "Upload to SourceForge? [y/n]"
     if ( $< == 'y' ) then
-        ncftpput -d ./ftpsession.log -u anonymous -p virtuawin@home.se shell.sf.net /incoming ./Distribution/vwsetup$1.exe
-        ncftpput -d ./ftpsession.log -u anonymous -p virtuawin@home.se shell.sf.net /incoming ./Distribution/source$1.zip
+        ncftpput -d ./ftpsession.log -u anonymous -p virtuawin@home.se upload.sourceforge.net /incoming ./Distribution/vwsetup$1.exe
+        ncftpput -d ./ftpsession.log -u anonymous -p virtuawin@home.se upload.sourceforge.net /incoming ./Distribution/source$1.zip
         echo Done! Go to SourceForge and click Admin-Edit/Release Files-Add Release and then type $1 and follow the instructions.
     endif
 
@@ -116,6 +116,9 @@ endif
 
 #
 # $Log$
+# Revision 1.6  2006/06/22 22:17:49  jopi
+# Updated with description and variables
+#
 # Revision 1.5  2006/06/09 18:06:13  jopi
 # Updated packaging scripts
 #
