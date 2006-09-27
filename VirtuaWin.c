@@ -2102,7 +2102,7 @@ static BOOL CALLBACK recoverWindowsEnumProc(HWND hwnd, LPARAM lParam)
 static void recoverWindows(void)
 {
     int info ;
-    char buff[32];
+    char buff[128];
     
     info = 0 ;
     EnumWindows(recoverWindowsEnumProc,(LPARAM) &info);
