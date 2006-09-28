@@ -1152,7 +1152,7 @@ static BOOL CALLBACK enumWindowsProc(HWND hwnd, LPARAM lParam)
         /* Criterias for a window to be handeled by VirtuaWin */
         if(!(style & WS_VISIBLE) ||                                       // Must be visible
            (exstyle & WS_EX_TOOLWINDOW) ||                                // No toolwindows
-           (GetParent(hwnd) && (GetParent(hwnd) != desktopHWnd)))          // Only toplevel or owned by desktop
+           (GetParent(hwnd) && (GetParent(hwnd) != desktopHWnd)))         // Only toplevel or owned by desktop
             // Ignore this window
             return TRUE;
             
@@ -1868,8 +1868,19 @@ static HMENU createSortedWinList_cos(void)
     i = 0 ;
     for(c = 0; c < nWin; ++c)
     {
-        // ignore owned windows and ones on a private desktop
-        if((winList[c].Owner == NULL) && (winList[c].Desk < vwDESK_PRIVATE1))
+        // ignore owned windows if we are managing the owner and ones on a private desktop
+        if(winList[c].Desk >= vwDESK_PRIVATE1)
+            x = 0 ;
+        else if(winList[c].Owner == NULL)
+            x = -1 ;
+        else
+        {
+            x = nWin ;
+            while(--x >= 0)
+                if(winList[x].Handle == winList[c].Owner)
+                    break ;
+        }
+        if(x < 0)
         {
             HICON hSmallIcon ;
             
@@ -1879,9 +1890,17 @@ static HMENU createSortedWinList_cos(void)
 #else
             sprintf(title, "%d - %s (%x)", winList[c].Desk, buff,(int) winList[c].Handle);
 #endif
-            item = malloc(sizeof(MenuItem));
+            if(((item = malloc(sizeof(MenuItem))) == NULL) ||
+               ((item->name = strdup(title)) == NULL))
+            {
+                while(--i >= 0)
+                {
+                    free(items[i]->name) ;
+                    free(items[i]) ;
+                }
+                return NULL ;
+            }
             items[i++] = item;
-            item->name = strdup(title) ;
             
             if((hSmallIcon = (HICON)GetClassLong(winList[c].Handle, GCL_HICON)) == NULL)
             {
@@ -1911,8 +1930,15 @@ static HMENU createSortedWinList_cos(void)
     }
     releaseMutex();
     if((i == 0) || ((stickyMenu + directMenu + doAssignMenu) == 0))
+    {
         // Either user has no apps, disabled all 3 menus or only enable assign and all are on the current desk
+        for (x=0; x<i; x++)
+        {
+            free(items[x]->name) ;
+            free(items[x]) ;
+        }
         return NULL ;
+    }
     
     if((stickyMenu + directMenu + assignMenu) == 1)
         // Don't show titles if only one menu is enabled
@@ -2027,20 +2053,27 @@ static BOOL CALLBACK recoverWindowsEnumProc(HWND hwnd, LPARAM lParam)
     RECT pos;
     int info;
     
-    /* any window that VirtuaWin may have lost would be a managed window
-     * with a top positioned < -5000. Note the only different in the
-     * criteria here to the main winListUpdate is that window may be
-     * invisible or a toolwindow */
+    /* any window that VirtuaWin may have lost would be a managed window with
+     * a top positioned < -5000. Note the only different in the criteria here
+     * to the main winListUpdate is that window may be invisible or a
+     * toolwindow
+     * 
+     * Note: Roxio creates a hidden window at -23001,-23001, to avoid false
+     * identify this window, check the top position != the left which is can't
+     * do for a winodw hidden via VW. An alternative may be to check the
+     * left/right poistion overlapped the screen at some point as VW only
+     * changes the y position.
+     */
     GetWindowRect(hwnd,&pos) ;
-    if((style & WS_CHILD) ||                                                   // No child windows
-       (((style & WS_VISIBLE) == 0) ^ ((exstyle & WS_EX_TOOLWINDOW) == 0)) ||  // Must be (not visible) xor (a toolwindow)
-       (((pos.top >= -5000) || (pos.top <= -30000)) &&                          // Not a hidden position
+    if((style & WS_CHILD) ||                                                    // No child windows
+       (((style & WS_VISIBLE) == 0) ^ ((exstyle & WS_EX_TOOLWINDOW) == 0)) ||   // Must be (not visible) xor (a toolwindow)
+       (((pos.top >= -5000) || (pos.top <= -30000) || (pos.top == pos.left)) && // Not a hidden position
         (((style & WS_VISIBLE) == 0) || (pos.left != -32000) || (pos.top != -32000))) ||
-       ((GetParent(hwnd) != NULL) && (GetParent(hwnd) != desktopHWnd)))        // Only toplevel or owned by desktop
+       ((GetParent(hwnd) != NULL) && (GetParent(hwnd) != desktopHWnd)))         // Only toplevel or owned by desktop
     {
         // Ignore this window
-        vwVerboseDebug((vwVerboseFile,"Ignore  %x %d %d %d %d %d %d %d\n",
-                        (int) hwnd,pos.top,(style & WS_CHILD),
+        vwVerboseDebug((vwVerboseFile,"Ignore  %x %d %d %d %d %d %d %d %d\n",
+                        (int) hwnd,pos.top,pos.left,(style & WS_CHILD),
                         ((style & WS_VISIBLE) == 0),((exstyle & WS_EX_TOOLWINDOW) != 0),
                         (((style & WS_VISIBLE) == 0) ^ ((exstyle & WS_EX_TOOLWINDOW) != 0)),
                         (GetParent(hwnd) != NULL))) ;
