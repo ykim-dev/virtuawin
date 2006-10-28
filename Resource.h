@@ -97,6 +97,7 @@
 #define IDC_HOTDISMISSEN  1092
 #define IDC_HOTDISMISS    1093
 #define IDC_HOTDISMISSW   1094
+#define IDC_EXPLORECNFG   1095
 
 #define	ID_SETUP	32771
 #define	ID_EXIT	        32772

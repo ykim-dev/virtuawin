@@ -1149,9 +1149,13 @@ static BOOL CALLBACK enumWindowsProc(HWND hwnd, LPARAM lParam)
     if((idx=winListFind(hwnd)) < 0)
     {
         exstyle = GetWindowLong(hwnd, GWL_EXSTYLE) ;
-        /* Criterias for a window to be handeled by VirtuaWin */
+        /* Criterias for a window to be handeled by VirtuaWin
+         * Note: some apps like winamp use the WS_EX_TOOLWINDOW flag to remove themselves from
+         * the taskbar so VW will manage toolwin windows if they are not popups or have owners
+         */
         if(!(style & WS_VISIBLE) ||                                       // Must be visible
-           (exstyle & WS_EX_TOOLWINDOW) ||                                // No toolwindows
+           ((exstyle & WS_EX_TOOLWINDOW) &&                               // No toolwindows
+            ((style & WS_POPUP) || (GetWindow(hwnd,GW_OWNER) != NULL))) ||
            (GetParent(hwnd) && (GetParent(hwnd) != desktopHWnd)))         // Only toplevel or owned by desktop
             // Ignore this window
             return TRUE;
@@ -1192,9 +1196,9 @@ static BOOL CALLBACK enumWindowsProc(HWND hwnd, LPARAM lParam)
              * at least outside VirtuaWins domain) so make it belong to this
              * desktop, update the list entry, also check the location as the
              * app may have only made the window visible */
-            vwVerboseDebug((vwVerboseFile,"Got tricky window state change: %x %d (%d) %d -> %d %d\n",
-                        (int) winList[idx].Handle,winList[idx].Desk,currentDesk,
-                        winList[idx].Visible,(int)pos.left,(int)pos.top)) ;
+            vwVerbosePrint((vwVerboseFile,"Got tricky window state change: %x %d (%d) %d -> %d %d\n",
+                            (int) winList[idx].Handle,winList[idx].Desk,currentDesk,
+                            winList[idx].Visible,(int)pos.left,(int)pos.top)) ;
             winList[idx].State = 2 ;
         }
     }
@@ -1271,9 +1275,16 @@ static int winListUpdate(void)
                     ((j = checkIfAssignedDesktop(buf)) != currentDesk))
                 windowSetDesk(winList[i].Handle,j,assignImmediately) ;
         }
-        vwVerbosePrint((vwVerboseFile,"Got new window %8x %x %x Desk %d Stk %d Trk %d Vis %d Own %x Pos %d %d\n",(int) winList[i].Handle,
-                    (int)winList[i].Style,(int)winList[i].ExStyle,winList[i].Desk,winList[i].Sticky,winList[i].Tricky,
-                    winList[i].Visible,(int) winList[i].Owner,(int) pos.left,(int) pos.top)) ;
+#ifdef vwVERBOSE_BASIC
+        vwVerbosePrint((vwVerboseFile,"Got new window %8x %08x %08x Desk %d Stk %d Trk %d Vis %d Own %x Pos %d %d\n  Class \"%s\"",(int) winList[i].Handle,
+                        (int)winList[i].Style,(int)winList[i].ExStyle,winList[i].Desk,winList[i].Sticky,winList[i].Tricky,
+                        winList[i].Visible,(int) winList[i].Owner,(int) pos.left,(int) pos.top,buf)) ;
+        if(GetWindowText(winList[i].Handle,buf,vwCLASSNAME_MAX))
+            buf[vwCLASSNAME_MAX] = '\0' ;
+        else
+            strcpy(buf, "<None>");
+        vwVerbosePrint((vwVerboseFile," Title \"%s\"\n",buf)) ;
+#endif
     }
           
     // remove windows that have gone.
@@ -1320,7 +1331,7 @@ static int winListUpdate(void)
     
     // Handle the re-assignment of any popped up window, set the zorder and count hung windows
     vwVerboseDebug((vwVerboseFile,"Active %8x Last %8x %x LBO %8x %x\n",(int) activeHWnd,
-                (int) lastFGHWnd, lastFGStyle, (int) lastBOFGHWnd, lastBOFGStyle)) ;
+                    (int) lastFGHWnd, lastFGStyle, (int) lastBOFGHWnd, lastBOFGStyle)) ;
     i = nWin ;
     while(--i >= 0)
     {
@@ -1349,7 +1360,7 @@ static int winListUpdate(void)
                     if(!winList[i].Visible && hiddenWindowRaise)
                     {
                         vwVerbosePrint((vwVerboseFile,"Got Popup - Active %8x Last %8x %x LBO %8x %x\n",(int) activeHWnd,
-                                    (int) lastFGHWnd, lastFGStyle, (int) lastBOFGHWnd, lastBOFGStyle)) ;
+                                        (int) lastFGHWnd, lastFGStyle, (int) lastBOFGHWnd, lastBOFGStyle)) ;
                         windowSetDesk(winList[i].Handle,currentDesk,2-hiddenWindowPopup) ;
                     }
                     winList[i].ZOrder[currentDesk] = ++vwZOrder ;
@@ -2049,7 +2060,8 @@ static BOOL CALLBACK recoverWindowsEnumProc(HWND hwnd, LPARAM lParam)
     int style = GetWindowLong(hwnd, GWL_STYLE);
     int exstyle = GetWindowLong(hwnd, GWL_EXSTYLE);
     char buf[vwCLASSNAME_MAX+1];
-    unsigned char Tricky;
+    unsigned char Tricky=0 ;
+    HWND phwnd=0 ;
     RECT pos;
     int info;
     
@@ -2066,36 +2078,41 @@ static BOOL CALLBACK recoverWindowsEnumProc(HWND hwnd, LPARAM lParam)
      */
     GetWindowRect(hwnd,&pos) ;
     if((style & WS_CHILD) ||                                                    // No child windows
-       (((style & WS_VISIBLE) == 0) ^ ((exstyle & WS_EX_TOOLWINDOW) == 0)) ||   // Must be (not visible) xor (a toolwindow)
        (((pos.top >= -5000) || (pos.top <= -30000) || (pos.top == pos.left)) && // Not a hidden position
         (((style & WS_VISIBLE) == 0) || (pos.left != -32000) || (pos.top != -32000))) ||
-       ((GetParent(hwnd) != NULL) && (GetParent(hwnd) != desktopHWnd)))         // Only toplevel or owned by desktop
+       (((phwnd=GetParent(hwnd)) != NULL) && (phwnd != desktopHWnd)))           // Only toplevel or owned by desktop
+        info = 1 ;
+    else if(style & WS_VISIBLE)
     {
-        // Ignore this window
-        vwVerboseDebug((vwVerboseFile,"Ignore  %x %d %d %d %d %d %d %d %d\n",
-                        (int) hwnd,pos.top,pos.left,(style & WS_CHILD),
-                        ((style & WS_VISIBLE) == 0),((exstyle & WS_EX_TOOLWINDOW) != 0),
-                        (((style & WS_VISIBLE) == 0) ^ ((exstyle & WS_EX_TOOLWINDOW) != 0)),
-                        (GetParent(hwnd) != NULL))) ;
+        /* For VW to have moved it here and it still be visible it must be a tricky window */
+        if(!(exstyle & WS_EX_TOOLWINDOW))
+            info = 1 ;
+        else
+        {
+            GetClassName(hwnd,buf,vwCLASSNAME_MAX);
+            buf[vwCLASSNAME_MAX] = '\0' ;
+            Tricky = isTrickyWindow(buf,&pos) ;
+            info = (Tricky == 0) ;
+        }
+    }
+    else
+        info = ((exstyle & WS_EX_TOOLWINDOW) &&
+                ((style & WS_POPUP) || (GetWindow(hwnd,GW_OWNER) != NULL))) ;
+    
+    if(info)
+    {
+        /* Ignore this window */
+        vwVerboseDebug((vwVerboseFile,"Ignore  %x %d %d %d %08x %08x %x\n",
+                        (int) hwnd,Tricky,pos.top,pos.left,style,exstyle,(int) phwnd)) ;
         return TRUE;
     }
     
-    GetClassName(hwnd,buf,vwCLASSNAME_MAX);
-    buf[vwCLASSNAME_MAX] = '\0' ;
-    Tricky = isTrickyWindow(buf,&pos) ;
-    
-    // tricky windows are changed to toolwindows, non-tricky are hidden, ignore others
-    if(((exstyle & WS_EX_TOOLWINDOW) == 0) ^ (Tricky == 0))
+    info = *((int *) lParam) ;
+    vwVerbosePrint((vwVerboseFile,"Recover %x %d %d %d %08x %08x %x - %d\n",
+                    (int) hwnd,Tricky,pos.top,pos.left,style,exstyle,(int) phwnd,info)) ;
+    if(info < 0)
     {
-        vwVerboseDebug((vwVerboseFile,"Ignore  %x %d %d\n",(int) hwnd,((exstyle & WS_EX_TOOLWINDOW) == 0),(Tricky == 0))) ;
-        return TRUE;
-    }
-            
-    if(windowIsNotHung(hwnd,2000))
-    {
-        info = *((int *) lParam) ;
-        vwVerbosePrint((vwVerboseFile,"Recover %x %d - %d\n",(int) hwnd,Tricky,info)) ;
-        if(info < 0)
+        if(windowIsNotHung(hwnd,2000))
         {
             if(!Tricky)
             {
@@ -2125,9 +2142,10 @@ static BOOL CALLBACK recoverWindowsEnumProc(HWND hwnd, LPARAM lParam)
                              SWP_FRAMECHANGED | SWP_NOZORDER | SWP_NOSIZE | SWP_NOACTIVATE ); 
             }
         }
-        else
-            *((int *) lParam) = info + 1 ;
     }
+    else
+        *((int *) lParam) = info + 1 ;
+    
     return TRUE;
 }
 
@@ -2803,10 +2821,6 @@ VirtuaWinInit(HINSTANCE hInstance)
         return 0; // ...and quit 
     }
     
-#ifdef vwVERBOSE_BASIC
-    vwVerboseFile = fopen("c:\\" vwVIRTUAWIN_NAME ".log","w+") ;
-#endif
-    
     os.dwOSVersionInfoSize = sizeof(os);
     GetVersionEx(&os);
     if(os.dwPlatformId == VER_PLATFORM_WIN32s)
@@ -2844,11 +2858,20 @@ VirtuaWinInit(HINSTANCE hInstance)
         return 0 ;
     }
     
+    readConfig();	// Read the config file
+#ifdef vwVERBOSE_BASIC
+    {
+        char logFname[MAX_PATH] ;
+        GetFilename(vwCONFIG,1,logFname) ;
+        strcpy(logFname+strlen(logFname)-3,"log") ;
+        vwVerboseFile = fopen(logFname,"w+") ;
+    }
+#endif
+    
+    
     /* set the window to give focus to when releasing focus on switch also used to refresh */
     desktopHWnd = GetDesktopWindow();
     getScreenSize();
-    
-    readConfig();	// Read the config file
     getTaskbarLocation(); // This is dependent on the config
     
     // Fix some things for the alternate hide method

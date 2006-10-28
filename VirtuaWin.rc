@@ -84,7 +84,7 @@ BEGIN
     EDITTEXT        IDC_JUMP, 87, 43, 20, 12, ES_AUTOHSCROLL
     AUTOCHECKBOX    "Taskbar warp", IDC_TASKBAR, 22, 59, 59, 10
     AUTOCHECKBOX    "No mouse move", IDC_MOUSEWRAP, 22, 70, 67, 10
-    AUTOCHECKBOX    "Use modifier key control", IDC_KEYCONTROL, 10, 82, 65, 10
+    AUTOCHECKBOX    "Use modifier key control", IDC_KEYCONTROL, 10, 82, 90, 10
     LTEXT           "Modifier", IDC_STATIC, 22, 94, 30, 8
     AUTOCHECKBOX    "Shift", IDC_MSHIFT, 55, 94, 34, 10
     AUTOCHECKBOX    "Ctrl", IDC_MCTRL, 90, 94, 30, 10
@@ -147,6 +147,8 @@ BEGIN
     AUTOCHECKBOX    "Enable alternative hiding method for tricky windows", IDC_TRICKYSUPPORT, 10, 147, 180, 10
     AUTOCHECKBOX    "Enable XP themed taskbar support", IDC_XPSTYLETASKBAR,      10, 158, 130, 10
     AUTOCHECKBOX    "Treat a raised hidden window as a pop-up", IDC_POPUPRHWIN,  10, 169, 150, 10
+
+    PUSHBUTTON      "Explore Config",  IDC_EXPLORECNFG, 140, 230, 60, 14
 END
 
 IDD_PROPPAGE_ABOUT DIALOG 0, 0, 150, 150

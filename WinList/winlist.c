@@ -143,8 +143,8 @@ __inline BOOL CALLBACK enumWindowsProc(HWND hwnd, LPARAM lParam)
     
     GetWindowRect(hwnd,&rect);
     
-    if(!(style & WS_CHILD) && (!GetParent(hwnd) || GetParent(hwnd) == GetDesktopWindow()) &&
-       (!(exstyle & WS_EX_TOOLWINDOW) || (rect.top < -5000)))
+    if(!(style & WS_CHILD) && ((GetParent(hwnd) == NULL) || (GetParent(hwnd) == GetDesktopWindow())) &&
+       (!(exstyle & WS_EX_TOOLWINDOW) || (!(style & WS_POPUP) && (GetWindow(hwnd,GW_OWNER) != NULL)) || (rect.top < -5000)))
     {
         char *ss, buff[vwCLASSNAME_MAX+vwCLASSNAME_MAX+4];
         ss = buff ;

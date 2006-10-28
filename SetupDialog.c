@@ -745,13 +745,44 @@ BOOL APIENTRY setupExpert(HWND hDlg, UINT message, UINT wParam, LONG lParam)
         break;
         
     case WM_COMMAND:
-        if(LOWORD(wParam) == IDC_FOCUS      || LOWORD(wParam) == IDC_TRICKYSUPPORT ||
-           LOWORD(wParam) == IDC_MINIMIZED  || LOWORD(wParam) == IDC_REFRESH ||
-           LOWORD(wParam) == IDC_PERMSTICKY || LOWORD(wParam) == IDC_DISPLAYICON ||
-           LOWORD(wParam) == IDC_INVERTY    || LOWORD(wParam) == IDC_TASKBARDETECT ||
-           LOWORD(wParam) == IDC_HWINPOPUP  || LOWORD(wParam) == IDC_XPSTYLETASKBAR ||
-           LOWORD(wParam) == IDC_POPUPRHWIN ||
-           (LOWORD(wParam) == IDC_PRESORDER && HIWORD(wParam) == LBN_SELCHANGE) )
+        if(LOWORD((wParam) == IDC_EXPLORECNFG))
+        {   // Explore Config
+            STARTUPINFO si;
+            PROCESS_INFORMATION pi;  
+            char cmdLn[MAX_PATH+9], *ss ;
+            
+            strcpy(cmdLn,"explorer ") ;
+            GetFilename(vwCONFIG,1,cmdLn+9) ;
+            if((ss = strrchr(cmdLn,'\\')) != NULL)
+                *ss = '\0' ;
+            memset(&si, 0, sizeof(si)); 
+            si.cb = sizeof(si); 
+            if(CreateProcess(NULL,cmdLn, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi))
+            {
+                CloseHandle(pi.hThread);
+                CloseHandle(pi.hProcess);
+            }
+            else
+            {
+                LPTSTR  lpszLastErrorMsg; 
+                FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM, NULL, 
+                              GetLastError(), 
+                              MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), //The user default language 
+                              (LPTSTR) &lpszLastErrorMsg, 
+                              0, 
+                              NULL ); 
+                
+                sprintf(cmdLn,"Failed to launch explorer.\n %s",lpszLastErrorMsg);
+                MessageBox(hWnd,cmdLn,vwVIRTUAWIN_NAME " Error",MB_ICONWARNING) ;
+            }
+        }
+        else if(LOWORD(wParam) == IDC_FOCUS      || LOWORD(wParam) == IDC_TRICKYSUPPORT ||
+                LOWORD(wParam) == IDC_MINIMIZED  || LOWORD(wParam) == IDC_REFRESH ||
+                LOWORD(wParam) == IDC_PERMSTICKY || LOWORD(wParam) == IDC_DISPLAYICON ||
+                LOWORD(wParam) == IDC_INVERTY    || LOWORD(wParam) == IDC_TASKBARDETECT ||
+                LOWORD(wParam) == IDC_HWINPOPUP  || LOWORD(wParam) == IDC_XPSTYLETASKBAR ||
+                LOWORD(wParam) == IDC_POPUPRHWIN ||
+                (LOWORD(wParam) == IDC_PRESORDER && HIWORD(wParam) == LBN_SELCHANGE) )
         {
             pageChangeMask |= 0x08 ;
             SendMessage(GetParent(hDlg), PSM_CHANGED, (WPARAM)hDlg, 0L);
