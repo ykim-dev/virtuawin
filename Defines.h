@@ -27,7 +27,7 @@
 // application name and version defines
 #define vwVIRTUAWIN_NAME    "VirtuaWin"
 #define vwVIRTUAWIN_EMAIL   "VirtuaWin@home.se"
-#define vwVIRTUAWIN_NAME_VERSION "VirtuaWin v3.0 beta 2"
+#define vwVIRTUAWIN_NAME_VERSION "VirtuaWin v3.0 test 1"
 
 // Various defines used on several places 
 #define MAXWIN 100                // max number of windows to handle
