@@ -7,10 +7,11 @@ STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "WinList - 1.2"
 FONT 8, "Helv"
 BEGIN
-    DEFPUSHBUTTON   "Restore", IDOK, 129, 206, 40, 14
-    PUSHBUTTON      "Done", IDCANCEL, 217, 206, 40, 14
-    PUSHBUTTON      "Undo", IDUNDO, 173, 206, 40, 14
-    LISTBOX         ID_WINLIST, 6, 31, 365, 179, WS_VSCROLL | WS_HSCROLL | LBS_USETABSTOPS
     LTEXT           "Use this module to restore windows that might have been lost. Mark the window that you want to restore and press the Restore button. Press Undo if you accidently restored the wrong window.", 
                     102, 6, 6, 364, 21
+    LISTBOX         ID_WINLIST, 6, 31, 365, 179, WS_VSCROLL | WS_HSCROLL | LBS_USETABSTOPS
+    DEFPUSHBUTTON   "Done", IDCANCEL, 261, 206, 40, 14
+    PUSHBUTTON      "Restore", IDOK,  129, 206, 40, 14
+    PUSHBUTTON      "Undo", IDUNDO,   173, 206, 40, 14
+    PUSHBUTTON      "Save", IDSAVE,   217, 206, 40, 14
 END

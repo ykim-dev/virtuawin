@@ -29,6 +29,10 @@
 #include "../Defines.h"
 #include "../Messages.h"
 
+#ifndef INVALID_FILE_ATTRIBUTES
+#define INVALID_FILE_ATTRIBUTES	((DWORD)-1)
+#endif
+
 HINSTANCE hInst;   // Instance handle
 HWND hwndMain;	   // Main window handle
 HWND vwHandle;     // Handle to VirtuaWin
@@ -36,13 +40,15 @@ HWND vwHandle;     // Handle to VirtuaWin
 typedef struct {
     HWND handle;
     RECT rect;
-    int style;
-    int exstyle;
+    int  style;
+    int  exstyle;
+    int  restored;
 } winType;
 
 winType windowList[999]; // should be enough
+char userAppPath[MAX_PATH] ;
+int initialised=0 ;
 int noOfWin;
-int curSel;
 int screenLeft;
 int screenRight;
 int screenTop;
@@ -75,6 +81,15 @@ static BOOL InitApplication(void)
     return 1;
 }
 
+static VOID CALLBACK startupFailureTimerProc(HWND hwnd, UINT uMsg, UINT idEvent, DWORD dwTime)
+{
+    if(!initialised)
+    {
+        MessageBox(hwnd, "VirtuaWin failed to send the UserApp path.", "VirtuaWinList Error", MB_ICONWARNING);
+        exit(1) ;
+    }
+}
+
 LRESULT CALLBACK MainWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     switch (msg) {
@@ -82,7 +97,30 @@ LRESULT CALLBACK MainWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
     case MOD_INIT: // This must be taken care of in order to get the handle to VirtuaWin. 
         // The handle to VirtuaWin comes in the wParam 
         vwHandle = (HWND) wParam; // Should be some error handling here if NULL 
+        if(!initialised)
+        {
+            // Get the VW user's path - give VirtuaWin 10 seconds to do this
+            SendMessage(vwHandle, VW_USERAPPPATH, 0, 0);
+            SetTimer(hwnd, 0x29a, 10000, startupFailureTimerProc);
+        }
         break;
+    case WM_COPYDATA:
+        if(!initialised)
+        {
+            COPYDATASTRUCT *cds;         
+            cds = (COPYDATASTRUCT *) lParam ;         
+            if(cds->dwData == (0-VW_USERAPPPATH))
+            {
+                if((cds->cbData < 2) || (cds->lpData == NULL))
+                {
+                    MessageBox(hwnd, "VirtuaWin returned a bad UserApp path.", "VirtuaWinList Error", MB_ICONWARNING);
+                    exit(1) ;
+                }
+                strcpy(userAppPath,(char *) cds->lpData) ;
+                initialised = 1 ;
+            }
+        }
+        return TRUE ;
     case MOD_QUIT: // This must be handeled, otherwise VirtuaWin can't shut down the module 
         PostQuitMessage(0);
         break;
@@ -171,8 +209,34 @@ __inline BOOL CALLBACK enumWindowsProc(HWND hwnd, LPARAM lParam)
         windowList[noOfWin].style = style;
         windowList[noOfWin].exstyle = exstyle;
         windowList[noOfWin].rect = rect ;
+        windowList[noOfWin].restored = 0 ;
         noOfWin++;
     }
+    
+    return TRUE;
+}
+
+BOOL CALLBACK enumWindowsSaveListProc(HWND hwnd, LPARAM lParam) 
+{
+    FILE *wdFp=(FILE *) lParam ;
+    DWORD procId, threadId ;
+    int style, exstyle ;
+    RECT pos ;
+    char text[100] ;
+    char class[100] ;
+    
+    style = GetWindowLong(hwnd, GWL_STYLE);
+    exstyle = GetWindowLong(hwnd, GWL_EXSTYLE);
+    threadId = GetWindowThreadProcessId(hwnd,&procId) ;
+    GetWindowRect(hwnd,&pos);
+    if(!GetWindowText(hwnd,text,99))
+        strcpy(text,"<None>");
+    GetClassName(hwnd,class,99);
+    
+    fprintf(wdFp,"%8x %08x %08x %8x %8x %8x %s\n%8d %8x %8d %8d %8d %8d %s\n",
+            (int)hwnd,style,exstyle,(int)GetParent(hwnd),
+            (int)GetWindow(hwnd,GW_OWNER),(int)GetClassLong(hwnd,GCL_HICON),text,
+            (int)procId,(int)threadId,(int)pos.top,(int)pos.bottom,(int)pos.left,(int)pos.right,class) ;
     
     return TRUE;
 }
@@ -230,7 +294,6 @@ static int InitializeApp(HWND hDlg, WPARAM wParam, LPARAM lParam)
     EnumWindows(enumWindowsProc, (LPARAM) hDlg);   // get all windows
     RM_Shellhook = RegisterWindowMessage("SHELLHOOK");
     goGetTheTaskbarHandle(hDlg) ;
-    curSel = LB_ERR;
     return 1;
 }
 
@@ -239,6 +302,7 @@ static int InitializeApp(HWND hDlg, WPARAM wParam, LPARAM lParam)
  */
 static BOOL CALLBACK DialogFunc(HWND hwndDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
+    int curSel;
     switch (msg) {
     case WM_INITDIALOG:
         InitializeApp(hwndDlg, wParam, lParam);
@@ -256,7 +320,7 @@ static BOOL CALLBACK DialogFunc(HWND hwndDlg, UINT msg, WPARAM wParam, LPARAM lP
                     ShowWindow(windowList[curSel].handle, SW_SHOWNA);
                     ShowOwnedPopups(windowList[curSel].handle, SW_SHOWNA);
                 }
-                if(windowList[curSel].exstyle & WS_EX_TOOLWINDOW)
+                if((windowList[curSel].style & WS_VISIBLE) && (windowList[curSel].exstyle & WS_EX_TOOLWINDOW))
                 {
                     // Restore the window mode
                     SetWindowLong(windowList[curSel].handle, GWL_EXSTYLE, (windowList[curSel].exstyle & (~WS_EX_TOOLWINDOW))) ;  
@@ -283,29 +347,57 @@ static BOOL CALLBACK DialogFunc(HWND hwndDlg, UINT msg, WPARAM wParam, LPARAM lP
                                  SWP_FRAMECHANGED | SWP_NOZORDER | SWP_NOSIZE | SWP_NOACTIVATE ); 
                 }
                 SetForegroundWindow(windowList[curSel].handle);
+                windowList[curSel].restored = 1 ;
             }
             return 1;
         case IDUNDO:
+            curSel = SendDlgItemMessage(hwndDlg, ID_WINLIST, LB_GETCURSEL, 0, 0);
             if(curSel != LB_ERR)
             {
-                if((windowList[curSel].style & WS_VISIBLE) == 0)
+                if(windowList[curSel].restored)
                 {
-                    ShowWindow(windowList[curSel].handle, SW_HIDE);
-                    ShowOwnedPopups(windowList[curSel].handle, SW_HIDE);
+                    if((windowList[curSel].style & WS_VISIBLE) == 0)
+                    {
+                        ShowWindow(windowList[curSel].handle, SW_HIDE);
+                        ShowOwnedPopups(windowList[curSel].handle, SW_HIDE);
+                    }
+                    if((windowList[curSel].style & WS_VISIBLE) && (windowList[curSel].exstyle & WS_EX_TOOLWINDOW))
+                    {
+                        // Restore the window mode
+                        SetWindowLong(windowList[curSel].handle, GWL_EXSTYLE, windowList[curSel].exstyle) ;  
+                        // Notify taskbar of the change
+                        PostMessage( hwndTask, RM_Shellhook, 2, (LPARAM) windowList[curSel].handle);
+                    }
+                    SetWindowPos(windowList[curSel].handle, 0, windowList[curSel].rect.left, windowList[curSel].rect.top, 0, 0,
+                                 SWP_FRAMECHANGED | SWP_NOZORDER | SWP_NOSIZE | SWP_NOACTIVATE ); 
+                    windowList[curSel].restored = 0 ;
                 }
-                if(windowList[curSel].exstyle & WS_EX_TOOLWINDOW)
-                {
-                    // Restore the window mode
-                    SetWindowLong(windowList[curSel].handle, GWL_EXSTYLE, windowList[curSel].exstyle) ;  
-                    // Notify taskbar of the change
-                    PostMessage( hwndTask, RM_Shellhook, 2, (LPARAM) windowList[curSel].handle);
-                }
-                SetWindowPos(windowList[curSel].handle, 0, windowList[curSel].rect.left, windowList[curSel].rect.top, 0, 0,
-                             SWP_FRAMECHANGED | SWP_NOZORDER | SWP_NOSIZE | SWP_NOACTIVATE ); 
-                curSel = LB_ERR;
+                else
+                    MessageBox(vwHandle, "Cannot undo, not restored.", "VirtuaWinList Error", MB_ICONWARNING);
             }
-            else
-                MessageBox(vwHandle, "Cannot undo", "Undo", 0);
+            return 1;
+        
+        case IDSAVE:
+            {
+                FILE *wdFp ;
+                char fname[MAX_PATH] ;
+                int ii=1 ;
+                while(ii < 1000)
+                {
+                    sprintf(fname,"%sWinList_%d.log",userAppPath,ii) ;
+                    if(GetFileAttributes(fname) == INVALID_FILE_ATTRIBUTES)
+                        break ;
+                    ii++ ;
+                }
+                if(ii == 1000)
+                    MessageBox(hwndDlg, "Cannot create a WinList_#.log file, please clean up your user directory.", "VirtuaWinList Error", MB_ICONWARNING);
+                else
+                {
+                    wdFp = fopen(fname,"w+") ;
+                    EnumWindows(enumWindowsSaveListProc,(LPARAM) wdFp) ;
+                    fclose(wdFp) ;
+                }
+            }
             return 1;
         case IDCANCEL:
             EndDialog(hwndDlg,0);
