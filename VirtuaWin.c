@@ -1120,7 +1120,6 @@ static void findUserWindows(void)
         
         if(tmpHnd != NULL)
         {
-            lockMutex();
             if(winListFind(tmpHnd) < 0)
             {
                 winList[nWin].Handle = tmpHnd;
@@ -1128,7 +1127,6 @@ static void findUserWindows(void)
                 winList[nWin].ExStyle = GetWindowLong(tmpHnd, GWL_EXSTYLE);
                 nWin++;
             }
-            releaseMutex();
         }
         else
             userList[i].isClass ^= TRUE;
@@ -1242,40 +1240,57 @@ static int winListUpdate(void)
         buf[vwCLASSNAME_MAX] = '\0' ;
         GetWindowRect(winList[i].Handle,&pos) ;
         winList[i].Tricky = isTrickyWindow(buf,&pos) ;
-        winList[i].Visible = TRUE;
         winList[i].Desk = currentDesk;
         winList[i].ZOrder[currentDesk] = 1;
-        winList[i].menuId = 0 ;
+        winList[i].Visible = TRUE;
         winList[i].State = 1 ;
-        if(((winList[i].Owner = GetWindow(winList[i].Handle, GW_OWNER)) != NULL) && IsWindowVisible(winList[i].Owner))
+        winList[i].menuId = 0 ;
+        if(((winList[i].Owner = GetWindow(winList[i].Handle, GW_OWNER)) != NULL) && !IsWindowVisible(winList[i].Owner))
+            winList[i].Owner = NULL ;
+        // isn't part of an existing app thats opened a new window
+        if((winList[i].Sticky=checkIfSavedSticky(buf)))
+            windowSetSticky(winList[i].Handle,TRUE) ;
+        else if(useDeskAssignment &&
+                ((j = checkIfAssignedDesktop(buf)) != currentDesk))
+            windowSetDesk(winList[i].Handle,j,assignImmediately) ;
+    }
+    // now finish of initialization of owned windows
+    for(i=inWin ; i < nWin ; ++i)
+    {
+        if(winList[i].Owner != NULL)
         {
-            j = inWin ;
+            j = nWin ;
             while(--j >= 0)
                 if(winList[j].State && (winList[j].Handle == winList[i].Owner))
                 {
                     // an existing app has either unhidden an old window or popped up a new one 
                     // use the existing window's settings for this one
-                    winList[i].Sticky = winList[j].Sticky ;
+                    if(!winList[i].Sticky)
+                        winList[i].Sticky = winList[j].Sticky ;
                     if((winList[i].Desk=winList[j].Desk) != currentDesk)
                         winList[i].State = 2 ;
+                    /* Fix a .Net horror - If a .Net app has opened a child
+                     * window we must not hide parent window otherwise the
+                     * child will be closed, so we must make it tricky
+                     * instead */
+                    if((winList[i].ExStyle & WS_EX_APPWINDOW) && (winList[j].ExStyle & WS_EX_APPWINDOW) && 
+                       trickyWindows && (GetWindowLong(winList[j].Handle,GWL_STYLE) & WS_DISABLED))
+                    {
+                        winList[i].Tricky = vwTRICKY_WINDOW ;
+                        if(winList[j].Visible)
+                            winList[j].Tricky = vwTRICKY_WINDOW ;
+                        vwVerbosePrint((vwVerboseFile,"Making potential .Net window %x and parent %x tricky\n",
+                                        (int) winList[i].Handle,(int) winList[j].Handle)) ;
+                    }
                     break ;
                 }
         }
-        else
-        {
-            winList[i].Owner = NULL ;
-            j = -1 ;
-        }
-        if(j < 0)
-        {
-            // isn't part of an existing app thats opened a new window
-            if((winList[i].Sticky=checkIfSavedSticky(buf)))
-                windowSetSticky(winList[i].Handle,TRUE) ;
-            else if(useDeskAssignment &&
-                    ((j = checkIfAssignedDesktop(buf)) != currentDesk))
-                windowSetDesk(winList[i].Handle,j,assignImmediately) ;
-        }
+    }
 #ifdef vwVERBOSE_BASIC
+    for(i=inWin ; i < nWin ; ++i)
+    {
+        GetClassName(winList[i].Handle,buf,vwCLASSNAME_MAX);
+        buf[vwCLASSNAME_MAX] = '\0' ;
         vwVerbosePrint((vwVerboseFile,"Got new window %8x %08x %08x Desk %d Stk %d Trk %d Vis %d Own %x Pos %d %d\n  Class \"%s\"",(int) winList[i].Handle,
                         (int)winList[i].Style,(int)winList[i].ExStyle,winList[i].Desk,winList[i].Sticky,winList[i].Tricky,
                         winList[i].Visible,(int) winList[i].Owner,(int) pos.left,(int) pos.top,buf)) ;
@@ -1284,8 +1299,8 @@ static int winListUpdate(void)
         else
             strcpy(buf, "<None>");
         vwVerbosePrint((vwVerboseFile," Title \"%s\"\n",buf)) ;
-#endif
     }
+#endif
           
     // remove windows that have gone.
     // Note that when a window is closed it takes a while for the window to
@@ -2203,7 +2218,8 @@ BOOL showHideWindow(windowType* aWindow, int shwFlags, unsigned char show)
             if(!(aWindow->Style & WS_MINIMIZE))
                 ShowOwnedPopups(aWindow->Handle,(show) ? TRUE:FALSE) ;
         }
-        else if(aWindow->Owner == NULL)
+        else
+/*            if(aWindow->Owner == NULL)*/
         {
             // show/hide the window in the toolbar
             if(show)
