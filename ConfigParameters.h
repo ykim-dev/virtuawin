@@ -34,15 +34,17 @@ extern int currentDeskX; // Current desktop x wise
 extern int currentDeskY; // Current desktop y wise
 extern int currentDesk;  // Current desktop
 extern int nDesksX;      // indicates the number of desks wide the virtual area is
-extern int nDesksY;      // indicates the number of desks tall the virtual area is
-extern int warpLength;    // How far to jump into new desktop
-extern int warpMultiplier; // Counts the emouse delay
-extern int configMultiplier;   // Mouse warp delay 250ms*warpMultiplier 
-extern BOOL noMouseWrap;   // if we don't want to move the mouse pointer after switch
-extern BOOL mouseEnable;    // mouse support
-extern BOOL useMouseKey;   // if user must use a modify key to warp with mouse
+extern int nDesksY;             // indicates the number of desks tall the virtual area is
+extern int warpLength;          // How far to jump into new desktop
+extern int warpMultiplier;      // Counts the emouse delay
+extern int configMultiplier;    // Mouse warp delay 250ms*warpMultiplier 
+extern int preserveZOrder;      // Should we preserve the window Z order
+extern int hiddenWindowAct;     // Hidden window activation action
+extern BOOL noMouseWrap;        // if we don't want to move the mouse pointer after switch
+extern BOOL mouseEnable;        // mouse support
+extern BOOL useMouseKey;        // if user must use a modify key to warp with mouse
 extern BOOL keyEnable;		// key support
-extern BOOL hotKeyEnable;      // hot key support
+extern BOOL hotKeyEnable;       // hot key support
 extern BOOL releaseFocus;	// release focus on switch
 extern BOOL minSwitch;		// if we should switch minimized windows
 extern UINT modAlt;		// switch key
@@ -57,7 +59,6 @@ extern BOOL saveSticky;         // if we shall save sticky win. on exit
 extern BOOL mouseWarpCalled;    // if MouseDll has posted a warp message
 extern BOOL refreshOnWarp;      // if we should refresh desktop after switch
 extern BOOL stickyKeyRegistered; // if the sticky hot key is registered
-extern BOOL preserveZOrder;     // Should we preserve the window Z order
 extern BOOL crashRecovery;      // Should we use recovery functionality
 extern BOOL deskWrap;           // If we want to have desktop cycling
 extern BOOL invertY;            // if up/down should be inverted
@@ -72,8 +73,6 @@ extern BOOL displayTaskbarIcon; // Should we display the systray icon
 extern BOOL noTaskbarCheck;     // Should we skip the taskbar search
 extern BOOL trickyWindows;      // Use the alternate hiding technique
 extern BOOL permanentSticky;    // If a sticky classname should be permanent
-extern BOOL hiddenWindowRaise;  // Pop-up a hidden window if it is raised to foreground
-extern BOOL hiddenWindowPopup;  // Move or temp copy a popped up hidden window
 
 extern BOOL cyclingKeysEnabled; // If we are using the cycling hotkeys
 extern UINT hotCycleUp;

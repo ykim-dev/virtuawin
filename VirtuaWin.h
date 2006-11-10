@@ -28,38 +28,30 @@
 #include <windows.h>
 #include <stdio.h>
 
-// Verbose logging macros
-#ifdef vwVERBOSE_TIMING
-#ifndef vwVERBOSE_BASIC
-#define vwVERBOSE_BASIC
-#endif
-#endif
-
-#ifdef vwVERBOSE_DEBUG
-#ifndef vwVERBOSE_BASIC
-#define vwVERBOSE_BASIC
-#endif
-#define vwVerboseDebug(a) (fprintf a , fflush(vwVerboseFile))
-#else
-#define vwVerboseDebug(a)
-#endif
-
-#ifdef vwVERBOSE_BASIC
-extern FILE *vwVerboseFile ;
-#define vwVerbosePrint(a) (fprintf a , fflush(vwVerboseFile))
-#else
-#define vwVerbosePrint(a)
-#endif
-
 // externally accessible variables
-extern HWND hWnd;          // The handle to VirtuaWin 
-extern int screenLeft;	   // the screen dimensions, from VirtuaWin.h
+extern HWND hWnd;             // The handle to VirtuaWin 
+extern int screenLeft;	      // the screen dimensions, from VirtuaWin.h
 extern int screenRight;	  
 extern int screenTop;	  
 extern int screenBottom;
 
-extern int curDisabledMod; // how many disabled modules we have
-extern int taskbarOffset;  // Default 3, 0 if XP skinned taskbar is used.
+extern int curDisabledMod;    // how many disabled modules we have
+extern int taskbarOffset;     // Default 3, 0 if XP skinned taskbar is used.
+
+// logging defines & macros
+extern int   vwLogFlag ;
+extern FILE *vwLogFile ;
+
+#define vwLogPrint(a)         (fprintf a , fflush(vwLogFile))
+
+#define vwLogEnabled()        (vwLogFile != NULL)
+#define vwLogBasic(a)         (vwLogEnabled() ? vwLogPrint(a):0)
+
+#ifdef vwLOG_VERBOSE
+#define vwLogVerbose(a)       (vwLogEnabled() ? vwLogPrint(a):0)
+#else
+#define vwLogVerbose(a)
+#endif
 
 // Forward declarations of functions
 void enableMouse(BOOL turnOn) ;

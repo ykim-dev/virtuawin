@@ -307,7 +307,8 @@ BOOL APIENTRY setupMouse(HWND hDlg, UINT message, UINT wParam, LONG lParam)
 {
     char buff[5];
     
-    switch (message) {
+    switch (message)
+    {
     case WM_INITDIALOG:
         SetDlgItemInt(hDlg, IDC_TIME, configMultiplier * 50, FALSE);
         SendDlgItemMessage(hDlg, IDC_SLIDER, TBM_SETRANGE, TRUE, MAKELONG(1, 80));
@@ -333,7 +334,8 @@ BOOL APIENTRY setupMouse(HWND hDlg, UINT message, UINT wParam, LONG lParam)
         return TRUE;
         
     case WM_NOTIFY:
-        switch (((NMHDR FAR *) lParam)->code) {
+        switch (((NMHDR FAR *) lParam)->code)
+        {
         case PSN_SETACTIVE:
             // Initialize the controls. Only if we want to reinitialize on tab change.
             break;
@@ -416,9 +418,11 @@ BOOL APIENTRY setupModules(HWND hDlg, UINT message, UINT wParam, LONG lParam)
     int index;
     char tmpName[80];
     
-    switch (message) {
+    switch (message)
+    {
     case WM_INITDIALOG:
-        for(index = 0; index < nOfModules; index++) {
+        for(index = 0; index < nOfModules; index++)
+        {
             if(moduleList[index].Disabled)
                 sprintf(tmpName, "* %s", moduleList[index].description);
             else
@@ -427,7 +431,8 @@ BOOL APIENTRY setupModules(HWND hDlg, UINT message, UINT wParam, LONG lParam)
         }
         return TRUE;
     case WM_NOTIFY:
-        switch (((NMHDR FAR *) lParam)->code) {
+        switch (((NMHDR FAR *) lParam)->code)
+        {
         case PSN_SETACTIVE:
             // Initialize the controls.
             break;
@@ -459,39 +464,52 @@ BOOL APIENTRY setupModules(HWND hDlg, UINT message, UINT wParam, LONG lParam)
             SendDlgItemMessage(hDlg, IDC_MODLIST, LB_RESETCONTENT, 0, 0);
             saveDisabledList(nOfModules, moduleList);
             unloadModules();
-            for(index = 0; index < MAXMODULES; index++) {
+            for(index = 0; index < MAXMODULES; index++)
+            {
                 moduleList[index].Handle = NULL;
                 moduleList[index].description[0] = '\0';
             }
             nOfModules = 0;
+            /* sleep for a second to allow the modules to exit cleanly */
+            Sleep(1000) ;
             curDisabledMod = loadDisabledModules(disabledModules);
             loadModules();
-            for(index = 0; index < nOfModules; index ++) {
+            for(index = 0; index < nOfModules; index ++)
+            {
                 if(moduleList[index].Disabled)
                     sprintf(tmpName, "* %s", moduleList[index].description);
                 else
                     sprintf(tmpName, "%s", moduleList[index].description);
                 SendDlgItemMessage(hDlg, IDC_MODLIST, LB_ADDSTRING, 0, (LONG)tmpName);
             }
-        } else if(LOWORD((wParam) == IDC_MODDISABLE)) { // Enable/Disable
+        }
+        else if(LOWORD((wParam) == IDC_MODDISABLE))
+        {   // Enable/Disable
             int curSel = SendDlgItemMessage(hDlg, IDC_MODLIST, LB_GETCURSEL, 0, 0);
-            if(curSel != LB_ERR) {
-                if(moduleList[curSel].Disabled == FALSE) { // let's disable
+            if(curSel != LB_ERR)
+            {
+                if(moduleList[curSel].Disabled == FALSE)
+                {   // let's disable
                     moduleList[curSel].Disabled = TRUE;
                     PostMessage(moduleList[curSel].Handle, MOD_QUIT, 0, 0);
                     SendDlgItemMessage(hDlg, IDC_MODLIST, LB_RESETCONTENT, 0, 0);
-                    for(index = 0; index < nOfModules; index ++) {
+                    for(index = 0; index < nOfModules; index ++)
+                    {
                         if(moduleList[index].Disabled)
                             sprintf(tmpName, "* %s", moduleList[index].description);
                         else
                             sprintf(tmpName, "%s", moduleList[index].description);
                         SendDlgItemMessage(hDlg, IDC_MODLIST, LB_ADDSTRING, 0, (LONG)tmpName);
                     }
-                } else { // let's enable
-                    MessageBox(hDlg, "Press reload or restart VirtuaWin to enable the module", "Note!", 0);
+                }
+                else
+                {   // let's enable
+                    MessageBox(hDlg, "Press reload or restart VirtuaWin to enable the module",
+                               vwVIRTUAWIN_NAME " Note", MB_ICONINFORMATION);
                     moduleList[curSel].Disabled = FALSE;
                     SendDlgItemMessage(hDlg, IDC_MODLIST, LB_RESETCONTENT, 0, 0);
-                    for(index = 0; index < nOfModules; index ++) {
+                    for(index = 0; index < nOfModules; index ++)
+                    {
                         if(moduleList[index].Disabled)
                             sprintf(tmpName, "* %s", moduleList[index].description);
                         else
@@ -670,12 +688,20 @@ BOOL APIENTRY setupMisc(HWND hDlg, UINT message, UINT wParam, LONG lParam)
  */
 BOOL APIENTRY setupExpert(HWND hDlg, UINT message, UINT wParam, LONG lParam)
 {
-    switch (message) {
+    int newLogFlag ;
+    
+    switch (message)
+    {
     case WM_INITDIALOG:
         SendDlgItemMessage(hDlg, IDC_PRESORDER, CB_ADDSTRING, 0, (LONG) "Taskbar order");
         SendDlgItemMessage(hDlg, IDC_PRESORDER, CB_ADDSTRING, 0, (LONG) "Z order");
         SendDlgItemMessage(hDlg, IDC_PRESORDER, CB_ADDSTRING, 0, (LONG) "Taskbar & Z order");
         SendDlgItemMessage(hDlg, IDC_PRESORDER, CB_SETCURSEL, preserveZOrder, 0) ;
+        SendDlgItemMessage(hDlg, IDC_HIDWINACT, CB_ADDSTRING, 0, (LONG) "Ignore the event");
+        SendDlgItemMessage(hDlg, IDC_HIDWINACT, CB_ADDSTRING, 0, (LONG) "Move window to current desktop");
+        SendDlgItemMessage(hDlg, IDC_HIDWINACT, CB_ADDSTRING, 0, (LONG) "Copy window to current desktop");
+        SendDlgItemMessage(hDlg, IDC_HIDWINACT, CB_ADDSTRING, 0, (LONG) "Change to window's desktop");
+        SendDlgItemMessage(hDlg, IDC_HIDWINACT, CB_SETCURSEL, hiddenWindowAct, 0) ;
         if(minSwitch)
             SendDlgItemMessage(hDlg, IDC_MINIMIZED, BM_SETCHECK, 1,0);
         if(releaseFocus)
@@ -694,19 +720,19 @@ BOOL APIENTRY setupExpert(HWND hDlg, UINT message, UINT wParam, LONG lParam)
             SendDlgItemMessage(hDlg, IDC_XPSTYLETASKBAR, BM_SETCHECK, 1,0);
         if(permanentSticky)
             SendDlgItemMessage(hDlg, IDC_PERMSTICKY, BM_SETCHECK, 1,0);
-        if(hiddenWindowRaise)
-            SendDlgItemMessage(hDlg, IDC_POPUPRHWIN, BM_SETCHECK, 1,0);
-        if(hiddenWindowPopup)
-            SendDlgItemMessage(hDlg, IDC_HWINPOPUP, BM_SETCHECK, 1,0);
+        if(vwLogFlag)
+            SendDlgItemMessage(hDlg, IDC_DEBUGLOGGING, BM_SETCHECK, 1,0);
         return TRUE;
         
     case WM_NOTIFY:
-        switch (((NMHDR FAR *) lParam)->code) {
+        switch (((NMHDR FAR *) lParam)->code)
+        {
         case PSN_SETACTIVE:
             // Initialize the controls.
             break;
         case PSN_APPLY:
             preserveZOrder = SendDlgItemMessage(hDlg, IDC_PRESORDER, CB_GETCURSEL, 0, 0) ;
+            hiddenWindowAct = SendDlgItemMessage(hDlg, IDC_HIDWINACT, CB_GETCURSEL, 0, 0) ;
             minSwitch = (SendDlgItemMessage(hDlg, IDC_MINIMIZED, BM_GETCHECK, 0, 0) == BST_CHECKED) ;
             releaseFocus = (SendDlgItemMessage(hDlg, IDC_FOCUS, BM_GETCHECK, 0, 0) == BST_CHECKED) ;
             refreshOnWarp = (SendDlgItemMessage(hDlg, IDC_REFRESH, BM_GETCHECK, 0, 0) == BST_CHECKED) ;
@@ -718,8 +744,6 @@ BOOL APIENTRY setupExpert(HWND hDlg, UINT message, UINT wParam, LONG lParam)
             else
                 taskbarOffset = 3;
             permanentSticky = (SendDlgItemMessage(hDlg, IDC_PERMSTICKY, BM_GETCHECK, 0, 0) == BST_CHECKED) ;
-            hiddenWindowRaise = (SendDlgItemMessage(hDlg, IDC_POPUPRHWIN, BM_GETCHECK, 0, 0) == BST_CHECKED) ;
-            hiddenWindowPopup = (SendDlgItemMessage(hDlg, IDC_HWINPOPUP, BM_GETCHECK, 0, 0) == BST_CHECKED) ;
             if(SendDlgItemMessage(hDlg, IDC_DISPLAYICON, BM_GETCHECK, 0, 0) == BST_CHECKED)
             {
                 displayTaskbarIcon = FALSE;
@@ -731,6 +755,13 @@ BOOL APIENTRY setupExpert(HWND hDlg, UINT message, UINT wParam, LONG lParam)
                 PostMessage(hWnd, VW_SHOWICON, 0, 0);
             }
             vwSetupApply(hDlg,0x08) ;
+            newLogFlag = (SendDlgItemMessage(hDlg,IDC_DEBUGLOGGING,BM_GETCHECK, 0, 0) == BST_CHECKED) ;
+            if(vwLogFlag != newLogFlag)
+            {
+                vwLogFlag = newLogFlag ;
+                MessageBox(hDlg, vwVIRTUAWIN_NAME " must be restarted for the debug logging change to take effect.",
+                           vwVIRTUAWIN_NAME " Note", MB_ICONINFORMATION);
+            }
             break;
         case PSN_KILLACTIVE:
             SetWindowLong(hDlg, DWL_MSGRESULT, FALSE);
@@ -777,12 +808,12 @@ BOOL APIENTRY setupExpert(HWND hDlg, UINT message, UINT wParam, LONG lParam)
             }
         }
         else if(LOWORD(wParam) == IDC_FOCUS      || LOWORD(wParam) == IDC_TRICKYSUPPORT ||
-                LOWORD(wParam) == IDC_MINIMIZED  || LOWORD(wParam) == IDC_REFRESH ||
+                LOWORD(wParam) == IDC_MINIMIZED  || LOWORD(wParam) == IDC_XPSTYLETASKBAR ||
                 LOWORD(wParam) == IDC_PERMSTICKY || LOWORD(wParam) == IDC_DISPLAYICON ||
                 LOWORD(wParam) == IDC_INVERTY    || LOWORD(wParam) == IDC_TASKBARDETECT ||
-                LOWORD(wParam) == IDC_HWINPOPUP  || LOWORD(wParam) == IDC_XPSTYLETASKBAR ||
-                LOWORD(wParam) == IDC_POPUPRHWIN ||
-                (LOWORD(wParam) == IDC_PRESORDER && HIWORD(wParam) == LBN_SELCHANGE) )
+                LOWORD(wParam) == IDC_REFRESH    || LOWORD(wParam) == IDC_DEBUGLOGGING ||
+                (LOWORD(wParam) == IDC_PRESORDER && HIWORD(wParam) == LBN_SELCHANGE) ||
+                (LOWORD(wParam) == IDC_HIDWINACT && HIWORD(wParam) == LBN_SELCHANGE) )
         {
             pageChangeMask |= 0x08 ;
             SendMessage(GetParent(hDlg), PSM_CHANGED, (WPARAM)hDlg, 0L);
@@ -799,14 +830,16 @@ BOOL APIENTRY setupAbout(HWND hDlg, UINT message, UINT wParam, LONG lParam)
 {
     char license[] = "This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later version.\r\n \r\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details. \r\n \r\nYou should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.";
     
-    switch (message) {
+    switch (message)
+    {
     case WM_INITDIALOG:
         SetDlgItemText(hDlg, IDC_LICENSE, license);
         return TRUE;
         
     case WM_CTLCOLORSTATIC:
         if((HWND)lParam == GetDlgItem(hDlg, IDC_MAILTO) ||
-           (HWND)lParam == GetDlgItem(hDlg, IDC_HTTP)) {
+           (HWND)lParam == GetDlgItem(hDlg, IDC_HTTP))
+        {
             SetBkMode((HDC)wParam, TRANSPARENT); // Don't overwrite background
             SetTextColor((HDC)wParam, RGB(0, 0, 255)); // Blue 
             return (BOOL) GetStockObject(HOLLOW_BRUSH);
@@ -814,7 +847,8 @@ BOOL APIENTRY setupAbout(HWND hDlg, UINT message, UINT wParam, LONG lParam)
         return FALSE;
         
     case WM_NOTIFY:
-        switch (((NMHDR FAR *) lParam)->code) {
+        switch (((NMHDR FAR *) lParam)->code)
+        {
         case PSN_HELP:
             showHelp(hDlg,0);
             break;
@@ -822,19 +856,19 @@ BOOL APIENTRY setupAbout(HWND hDlg, UINT message, UINT wParam, LONG lParam)
         break;
     
     case WM_COMMAND:
-        if(LOWORD(wParam) == IDC_MAILTO) {
+        if(LOWORD(wParam) == IDC_MAILTO)
+        {
             HINSTANCE h = ShellExecute(NULL, "open", "mailto:" vwVIRTUAWIN_EMAIL, 
                                        NULL, NULL, SW_SHOWNORMAL);
-            if ((UINT)h < 33) {
-                MessageBox(hDlg, "Error executing mail program.", "VirtuawWin", MB_ICONWARNING);
-            }  
+            if((UINT)h < 33)
+                MessageBox(hDlg, "Error executing mail program.",vwVIRTUAWIN_NAME " Error",MB_ICONWARNING);
         }
-        else if(LOWORD(wParam) == IDC_HTTP) {
+        else if(LOWORD(wParam) == IDC_HTTP)
+        {
             HINSTANCE h = ShellExecute(NULL, "open", "http://virtuawin.sourceforge.net", 
                                        NULL, NULL, SW_SHOWNORMAL);
-            if ((UINT)h < 33) {
-                MessageBox(hDlg, "Error open web link.", "VirtuawWin", MB_ICONWARNING);
-            }
+            if((UINT)h < 33)
+                MessageBox(hDlg, "Error open web link.",vwVIRTUAWIN_NAME " Error",MB_ICONWARNING);
         }
         return TRUE;
     }

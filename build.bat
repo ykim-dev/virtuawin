@@ -21,7 +21,6 @@ if "%1" == "-l"    goto build_logf
 if "%1" == "-la"   goto build_logfa
 if "%1" == "-m"    goto build_mkfl
 if "%1" == "-S"    set  OPTIONS=spotless
-if "%1" == "-vb"   set  VWVERBOSE=%VWVERBOSE% vwVERBOSEB=1
 if "%1" == "-vd"   set  VWVERBOSE=%VWVERBOSE% vwVERBOSED=1
 if "%1" == "-vt"   set  VWVERBOSE=%VWVERBOSE% vwVERBOSET=1
 shift

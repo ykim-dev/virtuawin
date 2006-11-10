@@ -51,14 +51,11 @@ RC	= i586-mingw32msvc-windres
 STRIP	= strip
 endif
 
-ifeq ($(vwVERBOSEB),1)
-CVBDEFS = -DvwVERBOSE_BASIC
-endif
 ifeq ($(vwVERBOSED),1)
-CVDDEFS = -DvwVERBOSE_DEBUG
+CVDDEFS = -DvwLOG_VERBOSE
 endif
 ifeq ($(vwVERBOSET),1)
-CVTDEFS = -DvwVERBOSE_TIMING
+CVTDEFS = -DvwLOG_TIMING
 endif
 
 SRC	= VirtuaWin.c DiskRoutines.c SetupDialog.c ModuleRoutines.c

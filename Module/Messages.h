@@ -34,6 +34,9 @@
  * PostMessage(VirtuaWin HWND, VW_CHANGEDESK, VW_STEPLEFT, 0);
  * For messages where you expect a return value, use the SendMessage
  * function instead, see some win32 documentation for more info.
+ * 
+ * Note: the message numbers is not all in sequence!
+ * 
  *************************************************************************/
 
 /* Message, switch to a specified desktop, sent with following lParam or 1..9 */
@@ -49,7 +52,7 @@
 /* Message, remove the systray icon */
 #define VW_DELICON    (WM_USER + 17) 
 /* Message, displays the systray icon */
-#define VW_SHOWICON    (WM_USER + 18) 
+#define VW_SHOWICON   (WM_USER + 18) 
 /* Message, bring up the help */ 
 #define VW_HELP       (WM_USER + 19) 
 /* Message, gather all windows */
@@ -63,19 +66,30 @@
 /* Message, returns the current desktop number */
 #define VW_CURDESK    (WM_USER + 24)
 /* Message, assign a window to the specified desktop 
-   wParam is the window handle (HWND) and lParam is the desktop number */
+   wParam is the window handle (HWND) and lParam is the desktop number.
+   If desk is -ve window is assigned to desk (-lParam) and Vw change to the desk. 
+   Returns 0 if window was not found (i.e. not managed by VW), non-zero otherwise */
 #define VW_ASSIGNWIN  (WM_USER + 25)
 /* Message, set the sticky state of a window. wParam is the 
    window handle (HWND) and lParam should be -1 for toggle, 0 for unset
    and 1 for set sticky state. */
-#define VW_SETSTICKY (WM_USER + 26)
+#define VW_SETSTICKY  (WM_USER + 26)
 /* Message, make a window the foreground, only if visible 
    wParam is the window handle (HWND) */
-#define VW_FOREGDWIN   (WM_USER + 27)
+#define VW_FOREGDWIN  (WM_USER + 27)
 /* Message, return VirtuaWin's installation path. List will be returned with WM_COPYDATA */
 #define VW_INSTALLPATH (WM_USER + 28)
 /* Message, return VirtuaWin's user path. List will be returned with WM_COPYDATA */
 #define VW_USERAPPPATH (WM_USER + 29)
+/* Message, access a window, wParam is the window handle (HWND) and lParam is the method:
+            0 - Use user's 'On hidden window activation' preference (ignore -> move)
+            1 - Move window to this desk
+            2 - Copy window to this disk
+            3 - Change to window's desk
+   Returns 0 if window was not found (i.e. not managed by VW), non-zero otherwise */
+#define VW_ACCESSWIN  (WM_USER + 39)
+/* Message, return the desk number of a window, 0 if not found (i.e. not managed) */
+#define VW_GETWINDESK (WM_USER + 40)
 
 
 /* Message, sent by VirtuaWin after a switch. lParam will contain current desktop number 
@@ -91,12 +105,12 @@
 #define MOD_STEPDOWN   (WM_USER + 34) // wParam
 
 /* Message, sent just after the module is started. wParam will contain VirtuaWin hWnd */ 
-#define MOD_INIT      (WM_USER + 35)
+#define MOD_INIT       (WM_USER + 35)
 /* Message, sent when VirtuaWin quits or reloads its modules */
-#define MOD_QUIT      (WM_USER + 36)
+#define MOD_QUIT       (WM_USER + 36)
 /* Message, sent by VirtuaWin when setup button is pressed in "module tab" */
-#define MOD_SETUP     (WM_USER + 37)
+#define MOD_SETUP      (WM_USER + 37)
 /* Message, sent by VirtuaWin when the configuration has been updated */
-#define MOD_CFGCHANGE (WM_USER + 38)
+#define MOD_CFGCHANGE  (WM_USER + 38)
 
 #endif

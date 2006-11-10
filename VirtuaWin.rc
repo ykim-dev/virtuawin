@@ -131,22 +131,23 @@ IDD_PROPPAGE_EXPERT DIALOG 0, 0, 150, 150
 STYLE DS_3DLOOK | WS_CHILD | WS_DISABLED | WS_BORDER
 FONT 8, "MS Sans Serif"
 BEGIN
-    GROUPBOX        "Advanced Options", IDC_STATIC, 4, 5, 202, 106
-    LTEXT           "On desktop change preserve:", IDC_STATIC, 10, 16, 120, 10
-    COMBOBOX        IDC_PRESORDER, 22, 27, 80, 45, CBS_AUTOHSCROLL | CBS_DROPDOWNLIST | WS_TABSTOP
-    AUTOCHECKBOX    "Release focus on desktop change", IDC_FOCUS,                10,  42, 125, 10
-    AUTOCHECKBOX    "Hide minimized windows on desktop change", IDC_MINIMIZED,   10,  53, 155, 10
-    AUTOCHECKBOX    "Invert Up/Down", IDC_INVERTY,                               10,  64, 70,  10
-    AUTOCHECKBOX    "Hide system tray icon", IDC_DISPLAYICON,                    10,  75, 80,  10
-    AUTOCHECKBOX    "Remember sticky state throughout session", IDC_PERMSTICKY,  10,  86, 150, 10
-    AUTOCHECKBOX    "Assign popped-up hidden window to current desktop", IDC_HWINPOPUP, 10, 97, 180, 10
+    GROUPBOX        "Advanced Options", IDC_STATIC, 4, 5, 202, 121
+    LTEXT           "On desktop change preserve:", IDC_STATIC,  10, 16, 120, 10
+    COMBOBOX        IDC_PRESORDER, 22, 27, 120, 45, CBS_AUTOHSCROLL | CBS_DROPDOWNLIST | WS_TABSTOP
+    LTEXT           "On hidden window activation:", IDC_STATIC, 10, 42, 120, 10
+    COMBOBOX        IDC_HIDWINACT, 22, 53, 120, 56, CBS_AUTOHSCROLL | CBS_DROPDOWNLIST | WS_TABSTOP
+    AUTOCHECKBOX    "Release focus on desktop change", IDC_FOCUS,                10,  68, 125, 10
+    AUTOCHECKBOX    "Hide minimized windows on desktop change", IDC_MINIMIZED,   10,  79, 155, 10
+    AUTOCHECKBOX    "Invert Up/Down", IDC_INVERTY,                               10,  90, 70,  10
+    AUTOCHECKBOX    "Hide system tray icon", IDC_DISPLAYICON,                    10,  101, 80,  10
+    AUTOCHECKBOX    "Remember sticky state throughout session", IDC_PERMSTICKY,  10,  112, 150, 10
 
-    GROUPBOX        "Workarounds", IDC_STATIC, 4, 114, 202, 69
-    AUTOCHECKBOX    "Force refresh after desktop change", IDC_REFRESH,           10, 125, 130, 10
-    AUTOCHECKBOX    "Enable taskbar detection", IDC_TASKBARDETECT,               10, 136, 100, 10
-    AUTOCHECKBOX    "Enable alternative hiding method for tricky windows", IDC_TRICKYSUPPORT, 10, 147, 180, 10
-    AUTOCHECKBOX    "Enable XP themed taskbar support", IDC_XPSTYLETASKBAR,      10, 158, 130, 10
-    AUTOCHECKBOX    "Treat a raised hidden window as a pop-up", IDC_POPUPRHWIN,  10, 169, 150, 10
+    GROUPBOX        "Workarounds", IDC_STATIC, 4, 129, 202, 69
+    AUTOCHECKBOX    "Force refresh after desktop change", IDC_REFRESH,           10, 140, 130, 10
+    AUTOCHECKBOX    "Enable taskbar detection", IDC_TASKBARDETECT,               10, 151, 100, 10
+    AUTOCHECKBOX    "Enable alternative hiding method for tricky windows", IDC_TRICKYSUPPORT, 10, 162, 180, 10
+    AUTOCHECKBOX    "Enable XP themed taskbar support", IDC_XPSTYLETASKBAR,      10, 173, 130, 10
+    AUTOCHECKBOX    "Write events to virtuawin.log", IDC_DEBUGLOGGING,           10, 184, 130, 10
 
     PUSHBUTTON      "Explore Config",  IDC_EXPLORECNFG, 140, 230, 60, 14
 END

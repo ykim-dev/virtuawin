@@ -466,7 +466,7 @@ void writeConfig(void)
         fprintf(fp, "Mouse_delay# %i\n", configMultiplier);
         fprintf(fp, "Key_support# %i\n", keyEnable);
         fprintf(fp, "Release_focus# %i\n", releaseFocus);
-        fprintf(fp, "Keep_active# %i\n", 1);
+        fprintf(fp, "Not_used# 0\n");
         fprintf(fp, "Control_key_alt# %i\n", modAlt);
         fprintf(fp, "Control_key_shift# %i\n", modShift);
         fprintf(fp, "Control_key_ctrl# %i\n", modCtrl);
@@ -522,12 +522,13 @@ void writeConfig(void)
         fprintf(fp, "Hot_key_Mod10# %i\n",deskHotkeyMod[10]);
         fprintf(fp, "Hot_key_Win10# %i\n",deskHotkeyWin[10]);
         fprintf(fp, "AssignImmediately# %i\n", assignImmediately);
-        fprintf(fp, "HiddenWindowRaise# %i\n", hiddenWindowRaise);
-        fprintf(fp, "HiddenWindowPopup# %i\n", hiddenWindowPopup);
+        fprintf(fp, "HiddenWindowAct# %i\n", hiddenWindowAct);
+        fprintf(fp, "Not_used# 0\n");
         fprintf(fp, "DismissHotkeyEn# %i\n", hotkeyDismissEn);
         fprintf(fp, "DismissHotkey# %i\n", hotkeyDismiss);
         fprintf(fp, "DismissHotkeyMod# %i\n", hotkeyDismissMod);
         fprintf(fp, "DismissHotkeyWin# %i\n", hotkeyDismissWin);
+        fprintf(fp, "LogFlag# %i\n", vwLogFlag);
         fclose(fp);
     }
 }
@@ -684,12 +685,13 @@ void readConfig(void)
         fscanf(fp, "%s%i", buff, deskHotkeyMod + 10);
         fscanf(fp, "%s%i", buff, deskHotkeyWin + 10);
         fscanf(fp, "%s%i", buff, &assignImmediately);
-        fscanf(fp, "%s%i", buff, &hiddenWindowRaise);
-        fscanf(fp, "%s%i", buff, &hiddenWindowPopup);
+        fscanf(fp, "%s%i", buff, &hiddenWindowAct);
+        fscanf(fp, "%s%i", buff, &ii);
         fscanf(fp, "%s%i", buff, &hotkeyDismissEn);
         fscanf(fp, "%s%i", buff, &hotkeyDismiss);
         fscanf(fp, "%s%i", buff, &hotkeyDismissMod);
         fscanf(fp, "%s%i", buff, &hotkeyDismissWin);
+        fscanf(fp, "%s%i", buff, &vwLogFlag);
         fclose(fp);
     }
 }
