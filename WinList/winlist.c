@@ -40,6 +40,7 @@ HWND vwHandle;     // Handle to VirtuaWin
 typedef struct {
     HWND handle;
     RECT rect;
+    int  desk;
     int  style;
     int  exstyle;
     int  restored;
@@ -62,8 +63,23 @@ static BOOL CALLBACK DialogFunc(HWND hwndDlg, UINT msg, WPARAM wParam, LPARAM lP
 /* Main message handler */
 LRESULT CALLBACK MainWndProc(HWND hwnd,UINT msg,WPARAM wParam,LPARAM lParam);
 
+static void goGetTheTaskbarHandle(void)
+{
+    HWND hwndTray = FindWindowEx(NULL, NULL, "Shell_TrayWnd", NULL);
+    HWND hwndBar = FindWindowEx(hwndTray, NULL, "ReBarWindow32", NULL );
+    
+    // Maybe "RebarWindow32" is not a child to "Shell_TrayWnd", then try this
+    if(hwndBar == NULL)
+        hwndBar = hwndTray;
+    
+    hwndTask = FindWindowEx(hwndBar, NULL, "MSTaskSwWClass", NULL);
+    
+    if(hwndTask == NULL)
+        MessageBox(hwndMain, "Could not locate handle to the taskbar.\n This will disable the ability to hide troublesome windows correctly.", "VirtuaWinList Error", MB_ICONWARNING); 
+}
+
 /* Initializes the window */ 
-static BOOL InitApplication(void)
+static BOOL WinListInit(void)
 {
     WNDCLASS wc;
     
@@ -77,6 +93,23 @@ static BOOL InitApplication(void)
     
     if (!RegisterClass(&wc))
         return 0;
+    
+    // the window is never shown
+    if ((hwndMain = CreateWindow("WinList.exe", 
+                                 "WinList", 
+                                 WS_POPUP,
+                                 CW_USEDEFAULT, 
+                                 0, 
+                                 CW_USEDEFAULT, 
+                                 0,
+                                 NULL,
+                                 NULL,
+                                 hInst,
+                                 NULL)) == (HWND)0)
+        return 0;
+    
+    RM_Shellhook = RegisterWindowMessage("SHELLHOOK");
+    goGetTheTaskbarHandle() ;
     
     return 1;
 }
@@ -92,7 +125,8 @@ static VOID CALLBACK startupFailureTimerProc(HWND hwnd, UINT uMsg, UINT idEvent,
 
 LRESULT CALLBACK MainWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
-    switch (msg) {
+    switch (msg)
+    {
         
     case MOD_INIT: // This must be taken care of in order to get the handle to VirtuaWin. 
         // The handle to VirtuaWin comes in the wParam 
@@ -144,26 +178,12 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 {
     MSG msg;
     hInst = hInstance;
-    if (!InitApplication())
+    if(!WinListInit())
         return 0;
-    
-    // the window is never shown
-    if ((hwndMain = CreateWindow("WinList.exe", 
-                                 "WinList", 
-                                 WS_POPUP,
-                                 CW_USEDEFAULT, 
-                                 0, 
-                                 CW_USEDEFAULT, 
-                                 0,
-                                 NULL,
-                                 NULL,
-                                 hInst,
-                                 NULL)) == (HWND)0)
-        return 0;
-    
     
     // main messge loop
-    while (GetMessage(&msg, NULL, 0, 0)) {
+    while (GetMessage(&msg, NULL, 0, 0))
+    {
         TranslateMessage(&msg);
         DispatchMessage(&msg);
     }
@@ -175,43 +195,54 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
  */
 __inline BOOL CALLBACK enumWindowsProc(HWND hwnd, LPARAM lParam) 
 {
+    char *ss, buff[vwCLASSNAME_MAX+vwCLASSNAME_MAX+4];
+    int desk, exstyle, style = GetWindowLong(hwnd, GWL_STYLE);
     RECT rect ;
-    int style = GetWindowLong(hwnd, GWL_STYLE);
-    int exstyle = GetWindowLong(hwnd, GWL_EXSTYLE);
     
+    if(style & WS_CHILD)
+        return TRUE ;
+
     GetWindowRect(hwnd,&rect);
+    exstyle = GetWindowLong(hwnd, GWL_EXSTYLE);
     
-    if(!(style & WS_CHILD) && ((GetParent(hwnd) == NULL) || (GetParent(hwnd) == GetDesktopWindow())) &&
-       (!(exstyle & WS_EX_TOOLWINDOW) || (!(style & WS_POPUP) && (GetWindow(hwnd,GW_OWNER) != NULL)) || (rect.top < -5000)))
-    {
-        char *ss, buff[vwCLASSNAME_MAX+vwCLASSNAME_MAX+4];
-        ss = buff ;
+    if((desk = SendMessage(vwHandle,VW_GETWINDESK,(WPARAM) hwnd,0)) > 0)
+        ;
+    else if(((GetParent(hwnd) == NULL) || 
+             (GetParent(hwnd) == GetDesktopWindow())) &&
+            (!(exstyle & WS_EX_TOOLWINDOW) || (!(style & WS_POPUP) && (GetWindow(hwnd,GW_OWNER) != NULL)) || (rect.top < -5000)))
+        ;
+    else
+        return TRUE ;
         
-        // Add window to the windowlist
+    ss = buff ;
+    // Add window to the windowlist
+    if(desk > 0)
+        // This is a currently managed window
+        *ss++ = '0' + desk ;
+    else if((rect.top < -5000) && (rect.top > -30000))
         // If at the hidden position then flag as likely lost
-        if((rect.top < -5000) && (rect.top > -30000))
-            *ss++ = '*' ;
-        else if(style & WS_VISIBLE)
-            *ss++ = ' ' ;
-        else
-            *ss++ = 'H' ;
-        *ss++ = '\t' ;
-        GetClassName(hwnd,ss,vwCLASSNAME_MAX);
+        *ss++ = '*' ;
+    else if(style & WS_VISIBLE)
+        *ss++ = ' ' ;
+    else
+        *ss++ = 'H' ;
+    *ss++ = '\t' ;
+    GetClassName(hwnd,ss,vwCLASSNAME_MAX);
+    ss[vwCLASSNAME_MAX] = '\0' ;
+    ss += strlen(ss) ;
+    *ss++ = '\t' ;
+    if(GetWindowText(hwnd,ss,vwCLASSNAME_MAX))
         ss[vwCLASSNAME_MAX] = '\0' ;
-        ss += strlen(ss) ;
-        *ss++ = '\t' ;
-        if(GetWindowText(hwnd,ss,vwCLASSNAME_MAX))
-            ss[vwCLASSNAME_MAX] = '\0' ;
-        else
-            strcpy(ss, "<None>");
-        SendDlgItemMessage((HWND) lParam, ID_WINLIST, LB_ADDSTRING, 0, (LONG) buff);
-        windowList[noOfWin].handle = hwnd;
-        windowList[noOfWin].style = style;
-        windowList[noOfWin].exstyle = exstyle;
-        windowList[noOfWin].rect = rect ;
-        windowList[noOfWin].restored = 0 ;
-        noOfWin++;
-    }
+    else
+        strcpy(ss, "<None>");
+    SendDlgItemMessage((HWND) lParam, ID_WINLIST, LB_ADDSTRING, 0, (LONG) buff);
+    windowList[noOfWin].handle = hwnd;
+    windowList[noOfWin].style = style;
+    windowList[noOfWin].exstyle = exstyle;
+    windowList[noOfWin].desk = desk ;
+    windowList[noOfWin].rect = rect ;
+    windowList[noOfWin].restored = 0 ;
+    noOfWin++;
     
     return TRUE;
 }
@@ -241,24 +272,9 @@ BOOL CALLBACK enumWindowsSaveListProc(HWND hwnd, LPARAM lParam)
     return TRUE;
 }
 
-static void goGetTheTaskbarHandle(HWND hDlg)
-{
-    HWND hwndTray = FindWindowEx(NULL, NULL, "Shell_TrayWnd", NULL);
-    HWND hwndBar = FindWindowEx(hwndTray, NULL, "ReBarWindow32", NULL );
-    
-    // Maybe "RebarWindow32" is not a child to "Shell_TrayWnd", then try this
-    if( hwndBar == NULL )
-        hwndBar = hwndTray;
-    
-    hwndTask = FindWindowEx(hwndBar, NULL, "MSTaskSwWClass", NULL);
-    
-    if( hwndTask == NULL )
-        MessageBox(hDlg, "Could not locate handle to the taskbar.\n This will disable the ability to hide troublesome windows correctly.", "VirtuaWinList", 0); 
-}
-
 /*
  */
-static int InitializeApp(HWND hDlg, WPARAM wParam, LPARAM lParam)
+static int GenerateWinList(HWND hDlg)
 {
     /* The virtual screen size system matrix values were only added for WINVER >= 0x0500 (Win2k) */
 #ifndef SM_XVIRTUALSCREEN
@@ -292,8 +308,6 @@ static int InitializeApp(HWND hDlg, WPARAM wParam, LPARAM lParam)
     SendDlgItemMessage(hDlg,ID_WINLIST,LB_SETTABSTOPS,(WPARAM)2,(LPARAM)tabstops);
     noOfWin = 0;
     EnumWindows(enumWindowsProc, (LPARAM) hDlg);   // get all windows
-    RM_Shellhook = RegisterWindowMessage("SHELLHOOK");
-    goGetTheTaskbarHandle(hDlg) ;
     return 1;
 }
 
@@ -305,16 +319,25 @@ static BOOL CALLBACK DialogFunc(HWND hwndDlg, UINT msg, WPARAM wParam, LPARAM lP
     int curSel;
     switch (msg) {
     case WM_INITDIALOG:
-        InitializeApp(hwndDlg, wParam, lParam);
+        GenerateWinList(hwndDlg);
         return TRUE;
         
     case WM_COMMAND:
-        switch (LOWORD(wParam)) {
+        switch (LOWORD(wParam))
+        {
+        case IDREFRESH:
+            SendDlgItemMessage(hwndDlg,ID_WINLIST,LB_RESETCONTENT,0, 0);
+            GenerateWinList(hwndDlg) ;
+            return TRUE;
+            
         case IDOK:
             curSel = SendDlgItemMessage(hwndDlg, ID_WINLIST, LB_GETCURSEL, 0, 0);
             if(curSel != LB_ERR)
             {
                 int left, top;
+                if(windowList[curSel].desk > 0)
+                    /* make VW display the window */
+                    SendMessage(vwHandle,VW_ACCESSWIN,(WPARAM) windowList[curSel].handle,1) ;
                 if((windowList[curSel].style & WS_VISIBLE) == 0)
                 {
                     ShowWindow(windowList[curSel].handle, SW_SHOWNA);
@@ -356,6 +379,9 @@ static BOOL CALLBACK DialogFunc(HWND hwndDlg, UINT msg, WPARAM wParam, LPARAM lP
             {
                 if(windowList[curSel].restored)
                 {
+                    if(windowList[curSel].desk > 0)
+                        /* make VW display the window */
+                        SendMessage(vwHandle,VW_ASSIGNWIN,(WPARAM) windowList[curSel].handle,windowList[curSel].desk) ;
                     if((windowList[curSel].style & WS_VISIBLE) == 0)
                     {
                         ShowWindow(windowList[curSel].handle, SW_HIDE);
@@ -373,7 +399,7 @@ static BOOL CALLBACK DialogFunc(HWND hwndDlg, UINT msg, WPARAM wParam, LPARAM lP
                     windowList[curSel].restored = 0 ;
                 }
                 else
-                    MessageBox(vwHandle, "Cannot undo, not restored.", "VirtuaWinList Error", MB_ICONWARNING);
+                    MessageBox(hwndDlg, "Cannot undo, not restored.", "VirtuaWinList Error", MB_ICONWARNING);
             }
             return 1;
         
