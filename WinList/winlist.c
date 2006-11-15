@@ -197,6 +197,7 @@ __inline BOOL CALLBACK enumWindowsProc(HWND hwnd, LPARAM lParam)
 {
     char *ss, buff[vwCLASSNAME_MAX+vwCLASSNAME_MAX+4];
     int desk, exstyle, style = GetWindowLong(hwnd, GWL_STYLE);
+    HWND phwnd, gphwnd ;
     RECT rect ;
     
     if(style & WS_CHILD)
@@ -207,8 +208,9 @@ __inline BOOL CALLBACK enumWindowsProc(HWND hwnd, LPARAM lParam)
     
     if((desk = SendMessage(vwHandle,VW_GETWINDESK,(WPARAM) hwnd,0)) > 0)
         ;
-    else if(((GetParent(hwnd) == NULL) || 
-             (GetParent(hwnd) == GetDesktopWindow())) &&
+    else if((((phwnd=GetParent(hwnd)) == NULL) || (phwnd == GetDesktopWindow()) ||
+             (!(GetWindowLong(phwnd, GWL_STYLE) & WS_VISIBLE) &&
+              ((gphwnd=GetParent(phwnd)) == NULL) || (gphwnd == GetDesktopWindow()))) &&
             (!(exstyle & WS_EX_TOOLWINDOW) || (!(style & WS_POPUP) && (GetWindow(hwnd,GW_OWNER) != NULL)) || (rect.top < -5000)))
         ;
     else

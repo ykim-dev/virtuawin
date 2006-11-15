@@ -1139,6 +1139,7 @@ static void findUserWindows(void)
 static BOOL CALLBACK enumWindowsProc(HWND hwnd, LPARAM lParam) 
 {
     int idx, style, exstyle ;
+    HWND phwnd, gphwnd ;
     RECT pos ;
     
     if((style = GetWindowLong(hwnd, GWL_STYLE)) & WS_CHILD)                // No child windows
@@ -1150,13 +1151,28 @@ static BOOL CALLBACK enumWindowsProc(HWND hwnd, LPARAM lParam)
          * Note: some apps like winamp use the WS_EX_TOOLWINDOW flag to remove themselves from
          * the taskbar so VW will manage toolwin windows if they are not popups or have owners
          */
-        if(!(style & WS_VISIBLE) ||                                       // Must be visible
-           ((exstyle & WS_EX_TOOLWINDOW) &&                               // No toolwindows
-            ((style & WS_POPUP) || (GetWindow(hwnd,GW_OWNER) != NULL))) ||
-           (GetParent(hwnd) && (GetParent(hwnd) != desktopHWnd)))         // Only toplevel or owned by desktop
+        if(!(style & WS_VISIBLE) ||                                        // Must be visible
+           ((exstyle & WS_EX_TOOLWINDOW) &&                                // No toolwindows
+            ((style & WS_POPUP) || (GetWindow(hwnd,GW_OWNER) != NULL))))
             // Ignore this window
             return TRUE;
-            
+           
+        // Only toplevel or owned by desktop
+        if(((phwnd=GetParent(hwnd)) != NULL) && (phwnd != desktopHWnd))
+        {
+            if((idx=winListFind(phwnd)) >= 0)
+            {
+                // The method used to hide tricky windows requires us to manage sub dialogs as well
+                if(!winList[idx].Tricky)
+                    return TRUE;
+            }                
+            else if((GetWindowLong(phwnd, GWL_STYLE) & WS_VISIBLE) || 
+                    ((gphwnd=GetParent(phwnd)) != NULL) && (gphwnd != desktopHWnd))
+                // Some apps like Word attach sub dialogs to a hidden parent window rather
+                // than to the main window and as the window is hidden it won't be managed
+                // so the sub-dialog will not be hidden. 
+                return TRUE;
+        }
         if(nWin >= MAXWIN)
         {
             static BOOL printedError=FALSE ;
@@ -2134,7 +2150,7 @@ static BOOL CALLBACK recoverWindowsEnumProc(HWND hwnd, LPARAM lParam)
     int exstyle = GetWindowLong(hwnd, GWL_EXSTYLE);
     char buf[vwCLASSNAME_MAX+1];
     unsigned char Tricky=0 ;
-    HWND phwnd=0 ;
+    HWND phwnd=0, gphwnd ;
     RECT pos;
     int info;
     
@@ -2153,7 +2169,9 @@ static BOOL CALLBACK recoverWindowsEnumProc(HWND hwnd, LPARAM lParam)
     if((style & WS_CHILD) ||                                                    // No child windows
        (((pos.top >= -5000) || (pos.top <= -30000) || (pos.top == pos.left)) && // Not a hidden position
         (((style & WS_VISIBLE) == 0) || (pos.left != -32000) || (pos.top != -32000))) ||
-       (((phwnd=GetParent(hwnd)) != NULL) && (phwnd != desktopHWnd)))           // Only toplevel or owned by desktop
+       (((phwnd=GetParent(hwnd)) != NULL) && (phwnd != desktopHWnd) &&          // Only toplevel or owned by desktop
+        ((GetWindowLong(phwnd, GWL_STYLE) & WS_VISIBLE) || 
+         ((gphwnd=GetParent(phwnd)) != NULL) && (gphwnd != desktopHWnd))))
         info = 1 ;
     else if(style & WS_VISIBLE)
     {
