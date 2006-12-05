@@ -195,7 +195,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
  */
 __inline BOOL CALLBACK enumWindowsProc(HWND hwnd, LPARAM lParam) 
 {
-    char *ss, buff[vwCLASSNAME_MAX+vwCLASSNAME_MAX+4];
+    char *ss, buff[vwCLASSNAME_MAX+vwWINDOWNAME_MAX+4];
     int desk, exstyle, style = GetWindowLong(hwnd, GWL_STYLE);
     HWND phwnd, gphwnd ;
     RECT rect ;
@@ -210,7 +210,7 @@ __inline BOOL CALLBACK enumWindowsProc(HWND hwnd, LPARAM lParam)
         ;
     else if((((phwnd=GetParent(hwnd)) == NULL) || (phwnd == GetDesktopWindow()) ||
              (!(GetWindowLong(phwnd, GWL_STYLE) & WS_VISIBLE) &&
-              ((gphwnd=GetParent(phwnd)) == NULL) || (gphwnd == GetDesktopWindow()))) &&
+              (((gphwnd=GetParent(phwnd)) == NULL) || (gphwnd == GetDesktopWindow())))) &&
             (!(exstyle & WS_EX_TOOLWINDOW) || (!(style & WS_POPUP) && (GetWindow(hwnd,GW_OWNER) != NULL)) || (rect.top < -5000)))
         ;
     else
@@ -230,12 +230,9 @@ __inline BOOL CALLBACK enumWindowsProc(HWND hwnd, LPARAM lParam)
         *ss++ = 'H' ;
     *ss++ = '\t' ;
     GetClassName(hwnd,ss,vwCLASSNAME_MAX);
-    ss[vwCLASSNAME_MAX] = '\0' ;
     ss += strlen(ss) ;
     *ss++ = '\t' ;
-    if(GetWindowText(hwnd,ss,vwCLASSNAME_MAX))
-        ss[vwCLASSNAME_MAX] = '\0' ;
-    else
+    if(!GetWindowText(hwnd,ss,vwWINDOWNAME_MAX))
         strcpy(ss, "<None>");
     SendDlgItemMessage((HWND) lParam, ID_WINLIST, LB_ADDSTRING, 0, (LONG) buff);
     windowList[noOfWin].handle = hwnd;
@@ -255,16 +252,16 @@ BOOL CALLBACK enumWindowsSaveListProc(HWND hwnd, LPARAM lParam)
     DWORD procId, threadId ;
     int style, exstyle ;
     RECT pos ;
-    char text[100] ;
-    char class[100] ;
+    char text[vwWINDOWNAME_MAX] ;
+    char class[vwCLASSNAME_MAX] ;
     
     style = GetWindowLong(hwnd, GWL_STYLE);
     exstyle = GetWindowLong(hwnd, GWL_EXSTYLE);
     threadId = GetWindowThreadProcessId(hwnd,&procId) ;
     GetWindowRect(hwnd,&pos);
-    if(!GetWindowText(hwnd,text,99))
+    if(!GetWindowText(hwnd,text,vwWINDOWNAME_MAX))
         strcpy(text,"<None>");
-    GetClassName(hwnd,class,99);
+    GetClassName(hwnd,class,vwCLASSNAME_MAX);
     
     fprintf(wdFp,"%8x %08x %08x %8x %8x %8x %s\n%8d %8x %8d %8d %8d %8d %s\n",
             (int)hwnd,style,exstyle,(int)GetParent(hwnd),

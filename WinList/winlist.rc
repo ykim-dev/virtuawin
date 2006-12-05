@@ -4,7 +4,7 @@
 
 IDD_MAINDIALOG DIALOG 79, 25, 377, 226
 STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "WinList - 3.0"
+CAPTION "WinList - 3.0 test 3"
 FONT 8, "Helv"
 BEGIN
     LTEXT           "Use this module to restore windows that might have been lost. Mark the window that you want to restore and press the Restore button. Press Undo if you accidently restored the wrong window.", 

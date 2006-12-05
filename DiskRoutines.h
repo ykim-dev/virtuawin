@@ -32,14 +32,14 @@ extern char *VirtuaWinPath ;
 extern char *UserAppPath ;
 
 int  GetFilename(eFileNames filetype, int location, char* outStr);
-int  loadDisabledModules(disModules* theDisList);
+int  loadDisabledModules(disModules *theDisList);
 void saveDisabledList(int theNOfModules, moduleType* theModList);
-int  loadTrickyList(stickyType *theTrickyList);
-int  loadStickyList(stickyType *theStickyList);
-void saveStickyWindows(int theNOfWin, windowType* theWinList);
-int  loadAssignedList(assignedType* theAssignList);
-void saveAssignedList(int theNOfWin, windowType* theWinList);
-int  loadUserList(userType *theUserList);
+int  loadTrickyList(vwWindowMatch *theTrickyList);
+int  loadStickyList(vwWindowMatch *theStickyList);
+void saveStickyWindows(int theNOfWin, windowType *theWinList);
+int  loadAssignedList(vwWindowMatch *theAssignList);
+void saveAssignedList(int theNOfWin, windowType *theWinList);
+int  loadUserList(vwWindowMatch *theUserList);
 void writeConfig(void);
 void readConfig(void);
 

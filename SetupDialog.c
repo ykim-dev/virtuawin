@@ -974,8 +974,8 @@ void createPropertySheet(HINSTANCE theHinst, HWND theHwndOwner)
     psh.pfnCallback = (PFNPROPSHEETCALLBACK)propCallBack;
     
     setupKeysHWnd = NULL;
-    setupHWnd = NULL;
     setupOpen = TRUE;
     PropertySheet(&psh);
     setupOpen = FALSE;
+    setupHWnd = NULL;
 }

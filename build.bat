@@ -93,11 +93,10 @@ echo            Sets the makefile to use where {makefile} can be:-
 echo              Makefile     Build using Cygwin, MinGW or Linux GNU GCC
 echo              win32v6.mak  Build using MS VC version 6 onwards
 echo     -S   : Build clean spotless.
-echo     -vb  : Build with basic verbosity logging.
 echo     -vd  : Build with debug verbosity logging (large output).
-echo     -vt  : Build with basic verbosity logging with timing information.
+echo     -vt  : Build with timing information in verbosity logging.
 echo .
-echo When a verbosity option is used the log file created is c:\VirtuaWin.log
+echo When a verbosity option is used the log file created is (usr-path)\VirtuaWin.log
 echo If you change the verbosity options used do a clean buiild (build -C) first.
 
 :build_exit

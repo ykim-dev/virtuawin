@@ -29,6 +29,7 @@
 #include "Messages.h"
 #include "Resource.h"
 #include "ModuleRoutines.h"
+#include "regex.h"
 
 // Standard includes
 #include <stdlib.h>
@@ -798,20 +799,41 @@ static int winListFind(HWND hwnd)
     return index ;
 }
 
+static BOOL checkIfWindowMatch(vwWindowMatch *wm, char *className, char *windowName)
+{
+    if(wm->type & 0x02)
+    {
+        static meRegex regex ;
+        int ll ;
+        if(meRegexComp(&regex,wm->match,0) != meREGEX_OKAY)
+            return 0 ;
+        if(wm->type & 0x01)
+        {
+            ll = strlen(windowName) ;
+            return meRegexMatch(&regex,windowName,ll,0,ll,(meREGEX_BEGBUFF|meREGEX_ENDBUFF)) ;
+        }
+        ll = strlen(className) ;
+        return meRegexMatch(&regex,className,ll,0,ll,(meREGEX_BEGBUFF|meREGEX_ENDBUFF)) ;
+    }
+    else if(wm->type & 0x01)
+        return (!strcmp(wm->match,windowName)) ;
+    return (!strcmp(wm->match,className)) ;
+}
+
 /************************************************
  * Checks if this window is saved as a tricky window that needs the 
  * "move technique" to be hidden.
  */
-static BOOL isTrickyWindow(char *className, RECT *pos)
+static BOOL checkIfTricky(char *className, char *windowName, RECT *pos)
 {
     int ii, ret=0 ; 
+    vwLogVerbose((vwLogFile, "checkIfTricky [%s] [%s] %d %d\n",className,windowName,(int)pos->left,(int)pos->top)) ;
     if(trickyWindows)
     {
         ii = curTricky ;
         while(--ii >= 0)
         {
-            vwLogVerbose((vwLogFile, "Tricky comparing [%s] with %d [%s]\n",className,trickyList[ii].winClassLen,trickyList[ii].winClassName)) ;
-            if(!strncmp(trickyList[ii].winClassName,className,trickyList[ii].winClassLen)) 
+            if(checkIfWindowMatch(&(trickyList[ii]),className,windowName)) 
             {
                 ret = vwTRICKY_WINDOW ;
                 break ;
@@ -829,13 +851,14 @@ static BOOL isTrickyWindow(char *className, RECT *pos)
 /*************************************************
  * Checks if a window is a previous saved sticky window
  */
-static BOOL checkIfSavedSticky(char *className)
+static BOOL checkIfSticky(char *className, char *windowName)
 {
     int i=curSticky ;
+    
+    vwLogVerbose((vwLogFile,"checkIfSticky [%s] [%s]\n",className,windowName)) ;
     while(--i >= 0)
     {
-        vwLogVerbose((vwLogFile, "Sticky comparing [%s] with %d [%s]\n",className,stickyList[i].winClassLen,stickyList[i].winClassName)) ;
-        if(!strncmp(stickyList[i].winClassName, className, stickyList[i].winClassLen))
+        if(checkIfWindowMatch(&(stickyList[i]),className,windowName)) 
             // Typically user windows will loose their stickiness if
             // minimized, therefore we do not remove their name from 
             // the list as done above.
@@ -847,22 +870,25 @@ static BOOL checkIfSavedSticky(char *className)
 /*************************************************
  * Checks if a window is an predifined desktop to go to
  */
-static int checkIfAssignedDesktop(char *className)
+static int checkIfAssigned(char *className, char *windowName)
 {
     int i;
+    vwLogVerbose((vwLogFile,"checkIfAssigned [%s] [%s]\n",className,windowName)) ;
     for(i = 0; i < curAssigned; ++i) 
     {
-        vwLogVerbose((vwLogFile, "Assign comparing [%s] with %d [%s]\n",className,assignedList[i].winClassLen,assignedList[i].winClassName)) ;
-        
-        if((assignedList[i].winClassLen > 0) &&
-           !strncmp(assignedList[i].winClassName, className, assignedList[i].winClassLen))
+        if((assignedList[i].type & 0x04) == 0)
         {
-            if(assignOnlyFirst)
-                assignedList[i].winClassLen = 0 ;
-            if((assignedList[i].desktop > (nDesksX * nDesksY)) && (assignedList[i].desktop != vwDESK_PRIVATE1))
-                MessageBox(hWnd, "Tried to assign an application to an unavaliable desktop.\nIt will not be assigned.\nCheck desktop assignmet configuration.",vwVIRTUAWIN_NAME " Error", 0); 
-            else
-                return assignedList[i].desktop; // Yes, assign
+            vwLogVerbose((vwLogFile, "Assign comparing [%s] [%s] with %d [%s]\n",className,windowName,(int) assignedList[i].type,assignedList[i].match)) ;
+            
+            if(checkIfWindowMatch(&(assignedList[i]),className,windowName)) 
+            {
+                if(assignOnlyFirst)
+                    assignedList[i].type |= 0x04 ;
+                if((assignedList[i].desk > (nDesksX * nDesksY)) && (assignedList[i].desk != vwDESK_PRIVATE1))
+                    MessageBox(hWnd, "Tried to assign an application to an unavaliable desktop.\nIt will not be assigned.\nCheck desktop assignmet configuration.",vwVIRTUAWIN_NAME " Error", MB_ICONERROR); 
+                else
+                    return assignedList[i].desk ; // Yes, assign
+            }
         }
     }
     return currentDesk; // No assignment, return current
@@ -1112,23 +1138,18 @@ static void findUserWindows(void)
     
     for(i = 0; i < curUser; ++i)
     {
-        if(userList[i].isClass)
-            tmpHnd = FindWindow(userList[i].winNameClass, NULL);
+        if(userList[i].type & 1)
+            tmpHnd = FindWindow(NULL, userList[i].match);
         else
-            tmpHnd = FindWindow(NULL, userList[i].winNameClass);
+            tmpHnd = FindWindow(userList[i].match, NULL);
         
-        if(tmpHnd != NULL)
+        if((tmpHnd != NULL) && (winListFind(tmpHnd) < 0))
         {
-            if(winListFind(tmpHnd) < 0)
-            {
-                winList[nWin].Handle = tmpHnd;
-                winList[nWin].Style = GetWindowLong(tmpHnd, GWL_STYLE);
-                winList[nWin].ExStyle = GetWindowLong(tmpHnd, GWL_EXSTYLE);
-                nWin++;
-            }
+            winList[nWin].Handle = tmpHnd;
+            winList[nWin].Style = GetWindowLong(tmpHnd, GWL_STYLE);
+            winList[nWin].ExStyle = GetWindowLong(tmpHnd, GWL_EXSTYLE);
+            nWin++;
         }
-        else
-            userList[i].isClass ^= TRUE;
     }
 }
 
@@ -1153,7 +1174,8 @@ static BOOL CALLBACK enumWindowsProc(HWND hwnd, LPARAM lParam)
          */
         if(!(style & WS_VISIBLE) ||                                        // Must be visible
            ((exstyle & WS_EX_TOOLWINDOW) &&                                // No toolwindows
-            ((style & WS_POPUP) || (GetWindow(hwnd,GW_OWNER) != NULL))))
+            ((style & WS_POPUP) || (GetWindow(hwnd,GW_OWNER) != NULL))) ||
+           (hwnd == setupHWnd))                                            // Dont manage VW setup
             // Ignore this window
             return TRUE;
            
@@ -1167,7 +1189,7 @@ static BOOL CALLBACK enumWindowsProc(HWND hwnd, LPARAM lParam)
                     return TRUE;
             }                
             else if((GetWindowLong(phwnd, GWL_STYLE) & WS_VISIBLE) || 
-                    ((gphwnd=GetParent(phwnd)) != NULL) && (gphwnd != desktopHWnd))
+                    (((gphwnd=GetParent(phwnd)) != NULL) && (gphwnd != desktopHWnd)))
                 // Some apps like Word attach sub dialogs to a hidden parent window rather
                 // than to the main window and as the window is hidden it won't be managed
                 // so the sub-dialog will not be hidden. 
@@ -1239,7 +1261,7 @@ static int winListUpdate(void)
     DWORD iprocId, jprocId ;
     HWND activeHWnd ;
     RECT pos ;
-    char buf[vwCLASSNAME_MAX+1];
+    char cname[vwCLASSNAME_MAX], wname[vwWINDOWNAME_MAX] ;
     int inWin, newDesk=0, i, j, hungCount=0 ;
     
     vwLogVerbose((vwLogFile,"Updating winList, nWin %d, fgw %x tpw %x\n",nWin,
@@ -1258,22 +1280,23 @@ static int winListUpdate(void)
     for(i=inWin ; i < nWin ; ++i)
     {
         // Store the owner if there is one, but only if the owner is visible
-        GetClassName(winList[i].Handle,buf,vwCLASSNAME_MAX);
-        buf[vwCLASSNAME_MAX] = '\0' ;
+        GetClassName(winList[i].Handle,cname,vwCLASSNAME_MAX);
+        if(!GetWindowText(winList[i].Handle,wname,vwWINDOWNAME_MAX))
+            strcpy(wname,"<None>");
         GetWindowRect(winList[i].Handle,&pos) ;
-        winList[i].Tricky = isTrickyWindow(buf,&pos) ;
+        winList[i].Tricky = checkIfTricky(cname,wname,&pos) ;
         winList[i].Desk = currentDesk;
         winList[i].ZOrder[currentDesk] = 1;
         winList[i].Visible = TRUE;
         winList[i].State = 1 ;
         winList[i].menuId = 0 ;
-        if(((winList[i].Owner = GetWindow(winList[i].Handle, GW_OWNER)) != NULL) && !IsWindowVisible(winList[i].Owner))
+        if(((winList[i].Owner = GetWindow(winList[i].Handle,GW_OWNER)) != NULL) && !IsWindowVisible(winList[i].Owner))
             winList[i].Owner = NULL ;
         // isn't part of an existing app thats opened a new window
-        if((winList[i].Sticky=checkIfSavedSticky(buf)))
+        if((winList[i].Sticky=checkIfSticky(cname,wname)))
             windowSetSticky(winList[i].Handle,TRUE) ;
         else if(useDeskAssignment &&
-                ((j = checkIfAssignedDesktop(buf)) != currentDesk))
+                ((j = checkIfAssigned(cname,wname)) != currentDesk))
             windowSetDesk(winList[i].Handle,j,assignImmediately) ;
     }
     // now finish of initialization of owned windows
@@ -1311,19 +1334,6 @@ static int winListUpdate(void)
                         winList[i].Sticky = winList[j].Sticky ;
                     if((winList[i].Desk=winList[j].Desk) != currentDesk)
                         winList[i].State = 2 ;
-                    /* Fix a .Net horror - If a .Net app has opened a child
-                     * window we must not hide parent window otherwise the
-                     * child will be closed, so we must make it tricky
-                     * instead */
-                    if((winList[i].ExStyle & WS_EX_APPWINDOW) && (winList[j].ExStyle & WS_EX_APPWINDOW) && 
-                       trickyWindows && (GetWindowLong(winList[j].Handle,GWL_STYLE) & WS_DISABLED))
-                    {
-                        winList[i].Tricky |= vwTRICKY_WINDOW ;
-                        if(winList[j].Visible)
-                            winList[j].Tricky |= vwTRICKY_WINDOW ;
-                        vwLogBasic((vwLogFile,"Making potential .Net window %x and parent %x tricky\n",
-                                        (int) winList[i].Handle,(int) winList[j].Handle)) ;
-                    }
                     break ;
                 }
         }
@@ -1332,16 +1342,12 @@ static int winListUpdate(void)
     {
         for(i=inWin ; i < nWin ; ++i)
         {
-            GetClassName(winList[i].Handle,buf,vwCLASSNAME_MAX);
-            buf[vwCLASSNAME_MAX] = '\0' ;
-            vwLogBasic((vwLogFile,"Got new window %8x %08x %08x Desk %d Stk %d Trk %d Vis %d Own %x Pos %d %d\n  Class \"%s\"",(int) winList[i].Handle,
-                        (int)winList[i].Style,(int)winList[i].ExStyle,winList[i].Desk,winList[i].Sticky,winList[i].Tricky,
-                        winList[i].Visible,(int) winList[i].Owner,(int) pos.left,(int) pos.top,buf)) ;
-            if(GetWindowText(winList[i].Handle,buf,vwCLASSNAME_MAX))
-                buf[vwCLASSNAME_MAX] = '\0' ;
-            else
-                strcpy(buf, "<None>");
-            vwLogBasic((vwLogFile," Title \"%s\"\n",buf)) ;
+            GetClassName(winList[i].Handle,cname,vwCLASSNAME_MAX);
+            if(!GetWindowText(winList[i].Handle,wname,vwWINDOWNAME_MAX))
+                strcpy(wname,"<None>");
+            vwLogBasic((vwLogFile,"Got new window %8x %08x %08x Desk %d Stk %d Trk %d Vis %d Own %x Pos %d %d\n  Class \"%s\" Title \"%s\"\n",
+                        (int) winList[i].Handle,(int)winList[i].Style,(int)winList[i].ExStyle,winList[i].Desk,winList[i].Sticky,winList[i].Tricky,
+                        winList[i].Visible,(int) winList[i].Owner,(int) pos.left,(int) pos.top,cname,wname)) ;
         }
     }
           
@@ -2141,123 +2147,6 @@ static HMENU createSortedWinList_cos(void)
     return hMenu;
 }
 
-/*************************************************
- * Tries to find windows saved before a crash by classname matching
- */
-static BOOL CALLBACK recoverWindowsEnumProc(HWND hwnd, LPARAM lParam) 
-{
-    int style = GetWindowLong(hwnd, GWL_STYLE);
-    int exstyle = GetWindowLong(hwnd, GWL_EXSTYLE);
-    char buf[vwCLASSNAME_MAX+1];
-    unsigned char Tricky=0 ;
-    HWND phwnd=0, gphwnd ;
-    RECT pos;
-    int info;
-    
-    /* any window that VirtuaWin may have lost would be a managed window with
-     * a top positioned < -5000. Note the only different in the criteria here
-     * to the main winListUpdate is that window may be invisible or a
-     * toolwindow
-     * 
-     * Note: Roxio creates a hidden window at -23001,-23001, to avoid false
-     * identify this window, check the top position != the left which is can't
-     * do for a winodw hidden via VW. An alternative may be to check the
-     * left/right poistion overlapped the screen at some point as VW only
-     * changes the y position.
-     */
-    GetWindowRect(hwnd,&pos) ;
-    if((style & WS_CHILD) ||                                                    // No child windows
-       (((pos.top >= -5000) || (pos.top <= -30000) || (pos.top == pos.left)) && // Not a hidden position
-        (((style & WS_VISIBLE) == 0) || (pos.left != -32000) || (pos.top != -32000))) ||
-       (((phwnd=GetParent(hwnd)) != NULL) && (phwnd != desktopHWnd) &&          // Only toplevel or owned by desktop
-        ((GetWindowLong(phwnd, GWL_STYLE) & WS_VISIBLE) || 
-         ((gphwnd=GetParent(phwnd)) != NULL) && (gphwnd != desktopHWnd))))
-        info = 1 ;
-    else if(style & WS_VISIBLE)
-    {
-        /* For VW to have moved it here and it still be visible it must be a tricky window */
-        if(!(exstyle & WS_EX_TOOLWINDOW))
-            info = 1 ;
-        else
-        {
-            GetClassName(hwnd,buf,vwCLASSNAME_MAX);
-            buf[vwCLASSNAME_MAX] = '\0' ;
-            Tricky = isTrickyWindow(buf,&pos) ;
-            info = (Tricky == 0) ;
-        }
-    }
-    else
-        info = ((exstyle & WS_EX_TOOLWINDOW) &&
-                ((style & WS_POPUP) || (GetWindow(hwnd,GW_OWNER) != NULL))) ;
-    
-    if(info)
-    {
-        /* Ignore this window */
-        vwLogVerbose((vwLogFile,"Ignore  %x %d %d %d %08x %08x %x\n",
-                        (int) hwnd,Tricky,(int) pos.top,(int) pos.left,style,exstyle,(int) phwnd)) ;
-        return TRUE;
-    }
-    
-    info = *((int *) lParam) ;
-    vwLogBasic((vwLogFile,"Recover %x %d %d %d %08x %08x %x - %d\n",
-                    (int) hwnd,Tricky,(int) pos.top,(int) pos.left,style,exstyle,(int) phwnd,info)) ;
-    if(info < 0)
-    {
-        if(windowIsNotHung(hwnd,2000))
-        {
-            if(!Tricky)
-            {
-                ShowWindow(hwnd,SW_SHOWNA);
-                ShowOwnedPopups(hwnd,TRUE);
-            }
-            else
-            {
-                // Restore the window mode
-                SetWindowLong(hwnd, GWL_EXSTYLE, (exstyle & (~WS_EX_TOOLWINDOW))) ;  
-                // Notify taskbar of the change
-                PostMessage(taskHWnd, RM_Shellhook, HSHELL_WINDOWCREATED, (LPARAM) hwnd );
-            }
-            // Bring back to visible area, SWP_FRAMECHANGED makes it repaint
-            if(pos.top != -32000)
-            {
-                pos.top += 25000 ;
-                if(pos.left < screenLeft)
-                    pos.left = screenLeft + 10 ;
-                else if(pos.left > screenRight)
-                    pos.left = screenLeft + 10 ;
-                if(pos.top < screenTop)
-                    pos.top = screenTop + 10 ;
-                else if(pos.top > screenBottom)
-                    pos.top = screenTop + 10 ;
-                SetWindowPos(hwnd, 0, pos.left, pos.top, 0, 0,
-                             SWP_FRAMECHANGED | SWP_NOZORDER | SWP_NOSIZE | SWP_NOACTIVATE ); 
-            }
-        }
-    }
-    else
-        *((int *) lParam) = info + 1 ;
-    
-    return TRUE;
-}
-
-
-static void recoverWindows(void)
-{
-    int info ;
-    char buff[128];
-    
-    info = 0 ;
-    EnumWindows(recoverWindowsEnumProc,(LPARAM) &info);
-    if(info > 0)
-    {
-        sprintf(buff, "%d hidden window%s been found, recover them?",info,(info == 1) ? " has":"s have");
-        if(MessageBox(hWnd, buff,vwVIRTUAWIN_NAME, MB_YESNO|MB_ICONQUESTION) == IDYES)
-        {
-            info = -1 ;
-            EnumWindows(recoverWindowsEnumProc,(LPARAM) &info);
-        }
-    }
-}
 
 /************************************************
  * This function decides what switching technique that should be used
@@ -2289,7 +2178,6 @@ static BOOL showHideWindow(windowType* aWindow, int shwFlags, unsigned char show
             if(!show)
                 Tricky = aWindow->Tricky ;
         }
-        swpFlags = SWP_DEFERERASE | SWP_NOZORDER | SWP_NOSIZE | SWP_NOACTIVATE | SWP_NOSENDCHANGING ;
         if(!Tricky)
         {
             ShowWindow(aWindow->Handle,(show) ? SW_SHOWNA:SW_HIDE) ;
@@ -2299,13 +2187,19 @@ static BOOL showHideWindow(windowType* aWindow, int shwFlags, unsigned char show
         }
         else
         {
-            // show/hide the window in the toolbar
+            // show/hide the window in the toolbar and move off screen
+            swpFlags = SWP_FRAMECHANGED | SWP_DEFERERASE | SWP_NOZORDER | SWP_NOSIZE | SWP_NOACTIVATE | SWP_NOSENDCHANGING | SWP_NOMOVE ;
             if(show)
             {
                 // Restore the window mode
                 SetWindowLong( aWindow->Handle, GWL_EXSTYLE, aWindow->ExStyle );  
                 // Notify taskbar of the change
                 PostMessage(taskHWnd, RM_Shellhook, HSHELL_WINDOWCREATED, (LPARAM) aWindow->Handle );
+                if((pos.top < -5000) && (pos.top > -30000))
+                {   // Move the window back onto visible area
+                    pos.top += 25000 ;
+                    swpFlags ^= SWP_NOMOVE ;
+                }
             }
             else
             {
@@ -2314,25 +2208,14 @@ static BOOL showHideWindow(windowType* aWindow, int shwFlags, unsigned char show
                                (aWindow->ExStyle & (~WS_EX_APPWINDOW)) | WS_EX_TOOLWINDOW);
                 // Notify taskbar of the change
                 PostMessage(taskHWnd, RM_Shellhook, HSHELL_WINDOWDESTROYED, (LPARAM) aWindow->Handle);
+                if((pos.top > -5000) && (pos.top < 20000))
+                {   // Move the window off visible area
+                    pos.top -= 25000 ;
+                    swpFlags ^= SWP_NOMOVE ;
+                }
             }
-            swpFlags |= SWP_FRAMECHANGED ;
+            SetWindowPos(aWindow->Handle, 0, pos.left, pos.top, 0, 0, swpFlags) ; 
         }
-        if(show)
-        {
-            if((pos.top < -5000) && (pos.top > -30000))
-            {   // Move the window back onto visible area
-                pos.top += 25000 ;
-                swpFlags |= SWP_NOMOVE ;
-            }
-        }
-        else if((pos.top > -5000) && (pos.top < 20000))
-        {   // Move the window off visible area
-            pos.top -= 25000 ;
-            swpFlags |= SWP_NOMOVE ;
-        }
-        // SWP_NOMOVE is set when a move IS required
-        if(swpFlags & (SWP_FRAMECHANGED | SWP_NOMOVE))
-            SetWindowPos(aWindow->Handle, 0, pos.left, pos.top, 0, 0, (swpFlags ^ SWP_NOMOVE)) ; 
     }
     aWindow->Visible = show;
     return TRUE ;
@@ -3035,9 +2918,6 @@ VirtuaWinInit(HINSTANCE hInstance)
     // Load tricky windows, must be done before the crashRecovery checks
     if(trickyWindows)
         curTricky = loadTrickyList(trickyList) ;
-    
-    /* Now, check for any windows that may have been lost from last time */
-    recoverWindows();
     
     /* Create window. Note that WS_VISIBLE is not used, and window is never shown. */
     if((hWnd = CreateWindowEx(0, classname, classname, WS_POPUP, CW_USEDEFAULT, 0,

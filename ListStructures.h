@@ -28,26 +28,6 @@
 #include <windows.h>
 #include "Defines.h"
 
-// Structures
-typedef struct _MenuItems
-{
-    char          *name;
-    HBITMAP        icon; 
-    unsigned short id;
-    unsigned short desk;
-    unsigned char  sticky;
-} MenuItem;
-
-typedef struct { // Holds user added windows
-    char *winNameClass;
-    BOOL  isClass;
-} userType;
-
-typedef struct { // Holds saved sticky and tricky windows
-    char *winClassName;
-    int   winClassLen;
-} stickyType;
-
 #define vwTRICKY_POSITION 1
 #define vwTRICKY_WINDOW   2
 
@@ -80,18 +60,28 @@ typedef struct { // Holds disabled modules
     char moduleName[vwMODULENAME_MAX+1];
 } disModules;
 
-typedef struct { // Holds desktop assigned windows
-    char *winClassName;
-    int   winClassLen;
-    int   desktop;
-} assignedType;
+typedef struct _MenuItems
+{
+    char          *name;
+    HBITMAP        icon; 
+    unsigned short id;
+    unsigned short desk;
+    unsigned char  sticky;
+} MenuItem;
 
-userType userList[MAXUSER];               // list for holding user added applications
+typedef struct { // Holds desktop assigned windows
+    char          *match;
+    unsigned short desk;
+    unsigned char  type;
+} vwWindowMatch ;
+
+windowType winList[MAXWIN];               // list for holding windows
 moduleType moduleList[MAXMODULES];        // list that holds modules
 disModules disabledModules[MAXMODULES*2]; // list with disabled modules
-stickyType stickyList[MAXWIN];            // list with saved sticky windows
-stickyType trickyList[MAXWIN];            // list with saved tricky windows
-assignedType assignedList[MAXWIN];        // list with all windows that have a predefined desktop
-windowType winList[MAXWIN];               // list for holding windows
+
+vwWindowMatch userList[MAXUSER];          // list for holding user added applications
+vwWindowMatch stickyList[MAXWIN];         // list with saved sticky windows
+vwWindowMatch trickyList[MAXWIN];         // list with saved tricky windows
+vwWindowMatch assignedList[MAXWIN];       // list with all windows that have a predefined desktop
 
 #endif

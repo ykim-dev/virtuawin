@@ -158,7 +158,7 @@ int GetFilename(eFileNames filetype, int location, char* outStr)
         }
         if((VirtuaWinPath == NULL) || (UserAppPath == NULL))
         {
-            MessageBox(hWnd, "Memory resources appear to be very low, try rebooting.\nIf you still have problems, send a mail to \n" vwVIRTUAWIN_EMAIL,vwVIRTUAWIN_NAME " Error", MB_ICONWARNING);
+            MessageBox(hWnd, "Memory resources appear to be very low, try rebooting.\nIf you still have problems, send a mail to \n" vwVIRTUAWIN_EMAIL,vwVIRTUAWIN_NAME " Error", MB_ICONERROR);
             exit(1);
         }
     }
@@ -183,7 +183,7 @@ void saveDisabledList(int theNOfModules, moduleType* theModList)
     GetFilename(vwDISABLED,1,DisabledFileList);
     
     if(!(fp = fopen(DisabledFileList, "w")))
-        MessageBox(hWnd, "Error saving disabled module state", NULL, MB_ICONWARNING);
+        MessageBox(hWnd, "Error saving disabled module state",vwVIRTUAWIN_NAME " Error",MB_ICONERROR);
     else
     {
         int i;
@@ -226,46 +226,68 @@ int loadDisabledModules(disModules *theDisList)
 }
 
 /*************************************************
- * Loads window classnames from sticky file
+ * Loads window match list from a file
  */
-int loadStickyList(stickyType *theStickyList) 
+static int
+loadWindowMatchList(char *fname, BOOL hasDesk, vwWindowMatch *matchList)
 {
-    char buff[MAX_PATH];
-    int len, nOfSticky = 0, winClassLen;
-    FILE* fp;
+    unsigned short desk=0 ;
+    unsigned char type ;
+    char buff[1024], *ss ;
+    int len, matchCount=0 ;
+    FILE *fp ;
     
-    GetFilename(vwSTICKY,1,buff);
-    
-    if((fp = fopen(buff,"r")) != NULL)
+    if((fp = fopen(fname,"r")) != NULL)
     {
-        while(fgets(buff,MAX_PATH,fp) != NULL)
+        while(fgets(buff,1024,fp) != NULL)
         {
-            if((len = strlen(buff)) > 1)
+            ss = NULL ;
+            if(buff[0] != ':')
             {
-                winClassLen = vwCLASSNAME_MAX ;
-                if(len > vwCLASSNAME_MAX)
-                    buff[vwCLASSNAME_MAX] = '\0' ;
+                if(!hasDesk)
+                    ss = buff ;
+                else if(((desk = (unsigned short) atoi(buff)) > 0) &&
+                        ((ss=strchr(buff,' ')) != NULL))
+                    ss++ ;
+            }            
+            if((ss != NULL) && ((len = strlen(ss)) > 1))
+            {
+                if(ss[len-1] == '\n')
+                    ss[--len] = '\0' ;
+                if((ss[2] == ':') &&
+                   ((ss[0] == 'c') || (ss[0] == 'w')) &&
+                   ((ss[1] == 'n') || (ss[1] == 'r')))
+                {
+                    len -= 3 ;
+                    type = (ss[0] == 'w') | ((ss[1] == 'r') ? 2:0) ;
+                    ss += 3 ;
+                }
                 else
+                    type = 0 ;
+                if(((type & 2) == 0) && (len > vwCLASSNAME_MAX))
+                    ss[vwCLASSNAME_MAX] = '\0' ;
+                if((matchList[matchCount].match = strdup(ss)) != NULL)
                 {
-                    if(buff[len-1] == '\n')
-                        len-- ;
-                    if(buff[len-1] == '*')
-                    {
-                        len-- ;
-                        winClassLen = len ;
-                    }
-                    buff[len] = '\0' ;
-                }                    
-                if((theStickyList[nOfSticky].winClassName = strdup(buff)) != NULL)
-                {
-                    theStickyList[nOfSticky].winClassLen = winClassLen ;
-                    nOfSticky++;
+                    matchList[matchCount].type = type ;
+                    matchList[matchCount].desk = desk ;
+                    matchCount++ ;
                 }
             }
         }
-        fclose(fp);
+        fclose(fp) ;
     }
-    return nOfSticky;
+    return matchCount;
+}
+
+/*************************************************
+ * Loads window classnames from sticky file
+ */
+int loadStickyList(vwWindowMatch *theStickyList) 
+{
+    char fname[MAX_PATH];
+    
+    GetFilename(vwSTICKY,1,fname);
+    return loadWindowMatchList(fname,0,theStickyList) ;
 }
 
 /*************************************************
@@ -276,14 +298,12 @@ int loadStickyList(stickyType *theStickyList)
  */
 void saveStickyWindows(int theNOfWin, windowType *theWinList)
 {
-    char className[vwCLASSNAME_MAX+2];
+    char buff[MAX_PATH] ;
     FILE* fp;
     
-    char vwStickyList[MAX_PATH];
-    GetFilename(vwSTICKY,1,vwStickyList);
-    
-    if((fp = fopen(vwStickyList, "w")) == NULL)
-        MessageBox(hWnd, "Error writing sticky file", NULL, MB_ICONWARNING);
+    GetFilename(vwSTICKY,1,buff);
+    if((fp = fopen(buff, "w")) == NULL)
+        MessageBox(hWnd, "Error writing sticky file",vwVIRTUAWIN_NAME " Error",MB_ICONERROR) ;
     else
     {
         int i;
@@ -291,9 +311,9 @@ void saveStickyWindows(int theNOfWin, windowType *theWinList)
         {
             if(theWinList[i].Sticky)
             {
-                GetClassName(theWinList[i].Handle,className,vwCLASSNAME_MAX);
-                className[vwCLASSNAME_MAX] = '\0' ;
-                fprintf(fp, "%s\n",className);
+                GetClassName(theWinList[i].Handle,buff,vwCLASSNAME_MAX);
+                buff[vwCLASSNAME_MAX] = '\0' ;
+                fprintf(fp, "cn:%s\n",buff);
             }
         }
         fclose(fp);
@@ -303,43 +323,12 @@ void saveStickyWindows(int theNOfWin, windowType *theWinList)
 /*************************************************
  * Loads window classnames from tricky file
  */
-int loadTrickyList(stickyType *theTrickyList) 
+int loadTrickyList(vwWindowMatch *theTrickyList) 
 {
-    char buff[MAX_PATH];
-    int len, nOfTricky = 0, winClassLen;
-    FILE* fp;
+    char fname[MAX_PATH];
     
-    GetFilename(vwTRICKY,1,buff);
-    if((fp = fopen(buff, "r")) != NULL) 
-    {
-        while(fgets(buff,MAX_PATH,fp) != NULL)
-        {
-            if((len = strlen(buff)) > 1)
-            {
-                winClassLen = vwCLASSNAME_MAX ;
-                if(len > vwCLASSNAME_MAX)
-                    buff[vwCLASSNAME_MAX] = '\0' ;
-                else
-                {
-                    if(buff[len-1] == '\n')
-                        len-- ;
-                    if(buff[len-1] == '*')
-                    {
-                        len-- ;
-                        winClassLen = len ;
-                    }
-                    buff[len] = '\0' ;
-                }                    
-                if((theTrickyList[nOfTricky].winClassName = strdup(buff)) != NULL)
-                {
-                    theTrickyList[nOfTricky].winClassLen = winClassLen ;
-                    nOfTricky++;
-                }
-            }
-        }
-        fclose(fp);
-    }
-    return nOfTricky;
+    GetFilename(vwTRICKY,1,fname);
+    return loadWindowMatchList(fname,0,theTrickyList) ;
 }
 
 
@@ -355,8 +344,8 @@ void saveAssignedList(int theNOfWin, windowType *theWinList)
     FILE *fp;
     
     GetFilename(vwWINDOWS_STATE,1,buff);
-    if((fp = fopen(buff, "w")) == NULL)
-        MessageBox(hWnd, "Error writing desktop configuration file", NULL, MB_ICONWARNING);
+    if((fp = fopen(buff,"w")) == NULL)
+        MessageBox(hWnd,"Error writing desktop configuration file",vwVIRTUAWIN_NAME " Error",MB_ICONERROR) ;
     else
     {
         int i;
@@ -364,7 +353,7 @@ void saveAssignedList(int theNOfWin, windowType *theWinList)
         {
             GetClassName(theWinList[i].Handle,buff,vwCLASSNAME_MAX);
             buff[vwCLASSNAME_MAX] = '\0' ;
-            fprintf(fp, "%d %s\n",theWinList[i].Desk,buff);
+            fprintf(fp, "%d cn:%s\n",theWinList[i].Desk,buff);
         }
         fclose(fp);
     }
@@ -373,79 +362,23 @@ void saveAssignedList(int theNOfWin, windowType *theWinList)
 /*************************************************
  * Loads the list with classnames that has an desktop assigned
  */
-int loadAssignedList(assignedType *theAssignList) 
+int loadAssignedList(vwWindowMatch *theAssignList) 
 {
-    char buff[MAX_PATH], *ss ;
-    int curAssigned = 0, desk, len, winClassLen ;
-    FILE *fp;
+    char fname[MAX_PATH];
     
-    GetFilename(vwWINDOWS_STATE,1,buff) ;
-    if((fp = fopen(buff, "r")) != NULL)
-    {
-        while(fgets(buff,MAX_PATH,fp) != NULL)
-        {
-            
-            if(((desk = atoi(buff)) > 0) &&
-               ((ss=strchr(buff,' ')) != NULL) && ((len = strlen(ss+1)) > 1))
-            {
-                ss += 1 ;
-                winClassLen = vwCLASSNAME_MAX ;
-                if(len > vwCLASSNAME_MAX)
-                    ss[vwCLASSNAME_MAX] = '\0' ;
-                else
-                {
-                    if(ss[len-1] == '\n')
-                        len-- ;
-                    if(ss[len-1] == '*')
-                    {
-                        len-- ;
-                        winClassLen = len ;
-                    }
-                    ss[len] = '\0' ;
-                }
-                if((theAssignList[curAssigned].winClassName = strdup(ss)) != NULL)
-                {
-                    theAssignList[curAssigned].winClassLen = winClassLen ;
-                    theAssignList[curAssigned].desktop = desk ;
-                    curAssigned++;
-                }
-            }
-        }
-        fclose(fp);
-    }
-    return curAssigned;
+    GetFilename(vwWINDOWS_STATE,1,fname);
+    return loadWindowMatchList(fname,1,theAssignList) ;
 }
 
 /*************************************************
  * Loads window titles/classnames from user file 
  */
-int loadUserList(userType* theUserList) 
+int loadUserList(vwWindowMatch *theUserList) 
 {
-    char buff[MAX_PATH];
-    FILE* fp;
-    int curUser = 0;
+    char fname[MAX_PATH];
     
-    GetFilename(vwLIST,1,buff);
-    
-    if((fp = fopen(buff, "r")))
-    {
-        while(!feof(fp))
-        {
-            fgets(buff, 99, fp);
-            // Remove the newline
-            if(buff[strlen(buff) - 1] == '\n')
-                buff[strlen(buff) - 1] = '\0';
-            if(curUser < MAXUSER && buff[0] != ':' && (strlen(buff) != 0) && !feof(fp) &&
-               ((theUserList[curUser].winNameClass = strdup(buff)) != NULL))
-            {
-                theUserList[curUser].isClass = TRUE;
-                curUser++;
-            } 
-        }
-        fclose(fp);
-    }
-    
-    return curUser;
+    GetFilename(vwLIST,1,fname);
+    return loadWindowMatchList(fname,0,theUserList) ;
 }
 
 /************************************************
@@ -459,9 +392,12 @@ void writeConfig(void)
     char VWConfigFile[MAX_PATH];
     GetFilename(vwCONFIG,1,VWConfigFile);
     
-    if((fp = fopen(VWConfigFile, "w")) == NULL) {
-        MessageBox(NULL, "Error writing config file", NULL, MB_ICONWARNING);
-    } else {
+    if((fp = fopen(VWConfigFile, "w")) == NULL)
+    {
+        MessageBox(NULL, "Error writing config file",vwVIRTUAWIN_NAME " Error",MB_ICONERROR);
+    }
+    else
+    {
         fprintf(fp, "Mouse_warp# %i\n", mouseEnable);
         fprintf(fp, "Mouse_delay# %i\n", configMultiplier);
         fprintf(fp, "Key_support# %i\n", keyEnable);
