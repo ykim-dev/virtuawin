@@ -58,7 +58,9 @@ ifeq ($(vwVERBOSET),1)
 CVTDEFS = -DvwLOG_TIMING
 endif
 
-SRC	= VirtuaWin.c DiskRoutines.c SetupDialog.c ModuleRoutines.c
+SRC	= VirtuaWin.c DiskRoutines.c SetupDialog.c ModuleRoutines.c regex.c
+HEADERS = VirtuaWin.h SetupDialog.h Resource.h regex.h ModuleRoutines.h Messages.h \
+	  ListStructures.h DiskRoutines.h Defines.h ConfigParameters.h
 COFFS   = VirtuaWin.coff
 OBJRES  = VirtuaWin.res
 LIBS	= -lshell32 -luser32 -lgdi32 -lcomctl32
@@ -94,3 +96,7 @@ clean:
 
 spotless: clean 
 	rm -f  $(TARGET) $(TARGETD) $(OBJRES) vc60.pch
+
+# Dependancies
+$(OBJS):  $(HEADERS)
+$(OBJSD): $(HEADERS)

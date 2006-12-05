@@ -36,7 +36,9 @@ CVDDEFS = -DvwLOG_VERBOSE
 CVTDEFS = -DvwLOG_TIMING
 !ENDIF
 
-SRC	= VirtuaWin.c DiskRoutines.c SetupDialog.c ModuleRoutines.c
+SRC	= VirtuaWin.c DiskRoutines.c SetupDialog.c ModuleRoutines.c regex.c
+HEADERS = VirtuaWin.h SetupDialog.h Resource.h regex.h ModuleRoutines.h Messages.h \
+	  ListStructures.h DiskRoutines.h Defines.h ConfigParameters.h
 COFFS   = VirtuaWin.coff
 OBJRES  = VirtuaWin.res
 
@@ -70,3 +72,7 @@ clean:
 
 spotless: clean
 	- erase $(TARGET) $(TARGETD) $(COFFS)
+
+# Dependancies
+$(OBJS):  $(HEADERS)
+$(OBJSD): $(HEADERS)
