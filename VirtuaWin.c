@@ -1334,6 +1334,13 @@ static int winListUpdate(void)
                         winList[i].Sticky = winList[j].Sticky ;
                     if((winList[i].Desk=winList[j].Desk) != currentDesk)
                         winList[i].State = 2 ;
+                    if((winList[i].Tricky & vwTRICKY_WINDOW) && winList[j].Visible)
+                    {
+                        // if an owned window is flagged as tricky we must make the parent window
+                        // tricky otherwise the call to ShowOwnedPopups is likely to break things
+                        winList[j].Tricky |= vwTRICKY_WINDOW ;
+                        vwLogBasic((vwLogFile,"Making parent window %x tricky\n",(int) winList[j].Handle)) ;
+                    }
                     break ;
                 }
         }
@@ -2402,6 +2409,7 @@ static void winListPopupMenu(HWND aHWnd)
     retItem = TrackPopupMenu(hpopup, TPM_RETURNCMD |  // Return menu code
                              TPM_LEFTBUTTON, (pt.x-2), (pt.y-2), // screen coordinates
                              0, aHWnd, NULL);
+    vwLogBasic((vwLogFile,"Window menu returned: %x\n",(int) retItem)) ;
     
     if(retItem)
     {
