@@ -83,7 +83,7 @@ static void getUserAppPath(char* path)
                 {
                     if(cc == '/')
                         cc = '\\' ;
-                    if((cc != '\\') || (len == 0) || (path[len-1] != '\\'))
+                    if((cc != '\\') || (len <= 1) || (path[len-1] != '\\'))
                         path[len++] = cc ;
                 }
             }
@@ -486,8 +486,10 @@ void readConfig(void)
         /* config file does not exist - new user, setup configuration, check
          * the user path exists first and if not try to create it - note that
          * multiple levels may need to be created due to the userpath.cfg */
-        if((ss = strchr(buff,':')) != NULL)
-            ss++ ;
+        if((buff[0] == '\\') && (buff[1] == '\\') && ((ss = strchr(buff+2,'\\')) != NULL) && (ss[1] != '\0'))
+            ;
+        else if(buff[1] == ':')
+            ss = buff + 2 ;
         else
             ss = buff ;
         while((ss = strchr(ss+1,'\\')) != NULL)
