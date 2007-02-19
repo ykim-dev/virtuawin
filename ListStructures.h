@@ -63,7 +63,7 @@ typedef struct { // Holds disabled modules
 typedef struct _MenuItems
 {
     char          *name;
-    HBITMAP        icon; 
+    HICON          icon; 
     unsigned short id;
     unsigned short desk;
     unsigned char  sticky;

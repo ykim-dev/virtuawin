@@ -130,7 +130,8 @@ static void getUserAppPath(char* path)
  * type bool after porting to cpp)
  */
 
-int GetFilename(eFileNames filetype, int location, char* outStr)
+void
+GetFilename(eFileNames filetype, int location, char* outStr)
 {
     static char *subPath[vwFILE_COUNT] = {
         "modules\\*.exe", "virtuawin", "virtuawin.cfg", "userlist.cfg", "tricky.cfg",
@@ -163,19 +164,20 @@ int GetFilename(eFileNames filetype, int location, char* outStr)
         }
     }
     
-    if(filetype >= vwFILE_COUNT)
-        return 0 ;
     strncpy(outStr,(location) ? UserAppPath:VirtuaWinPath, MAX_PATH);
-    len = MAX_PATH - strlen(outStr) ;
-    strncat(outStr,subPath[filetype],len) ;
-    return 1;
+    if(filetype < vwFILE_COUNT)
+    {
+        len = MAX_PATH - strlen(outStr) ;
+        strncat(outStr,subPath[filetype],len) ;
+    }
 }
 
 
 /*************************************************
  * Write out the disabled modules
  */
-void saveDisabledList(int theNOfModules, moduleType* theModList)
+void
+saveDisabledList(int theNOfModules, moduleType* theModList)
 {
     FILE* fp;
     

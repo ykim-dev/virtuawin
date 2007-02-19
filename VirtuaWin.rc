@@ -23,6 +23,7 @@
 125 ICON icons/st_7.ico
 126 ICON icons/st_8.ico
 127 ICON icons/st_9.ico
+128 ICON icons/check.ico
 
 IDD_PROPPAGE_GENERAL DIALOG 0, 0, 150, 250
 STYLE DS_3DLOOK | WS_CHILD | WS_DISABLED | WS_BORDER

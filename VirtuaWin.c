@@ -36,6 +36,12 @@
 #include <string.h>
 #include <commctrl.h>
 
+/*#define _WIN32_MEMORY_DEBUG*/
+#ifdef _WIN32_MEMORY_DEBUG
+#define _CRTDBG_MAP_ALLOC
+#include <crtdbg.h>
+#endif
+
 #define calculateDesk(x,y) (((y) * nDesksX) - (nDesksX - (x)))
 
 // Variables
@@ -174,6 +180,16 @@ UINT hotkeyDismissWin = 0;
 
 int curDisabledMod = 0; 
 unsigned long vwZOrder=0 ;
+unsigned long timerCounter=0 ;
+
+/* desk image generation variables */
+int         deskImageCount=-1 ;
+HBITMAP     deskImageBitmap=NULL ;
+BITMAPINFO  deskImageInfo ;
+void       *deskImageData=NULL ;
+
+// icon for sticky checkmarks
+HICON   checkIcon;
 
 enum {
     OSVERSION_UNKNOWN=0,
@@ -275,12 +291,10 @@ DWORD WINAPI MouseProc(LPVOID lpParameter)
         // sleep between iterations of this function.  If we're using
         // modifier keys it loops more often to be sure to watch the
         // tendency.
-        if(useMouseKey) {
+        if(useMouseKey)
             Sleep(4);
-        }
-        else {
+        else
             Sleep(50); 
-        }
         
         // Now get the second point
         GetCursorPos(&pt);
@@ -378,6 +392,8 @@ static void loadIcons(void)
     if(deskHotkey[vwDESK_PRIVATE1] != 0)
         /* create icon for the private desktop - use the disabled icon */
         icons[vwDESK_PRIVATE1] = icons[0] ;
+    // Load checkmark icon for sticky
+    checkIcon=LoadIcon(hInst,MAKEINTRESOURCE(128));
 }
 
 /*************************************************
@@ -772,6 +788,153 @@ void getTaskbarLocation(void)
         }
     }
     vwLogBasic((vwLogFile,"Got taskbar location: %d %d -> %d %d\n",taskBarLeftWarp,taskBarRightWarp,taskBarTopWarp,taskBarBottomWarp)) ;
+}
+
+/************************************************
+ * desk image generation functions
+ */
+static int
+createDeskImage(int deskNo, int createDefault)
+{
+    HDC deskDC ;
+    HDC bitmapDC ;
+    HBITMAP oldmap;
+    char fname[MAX_PATH] ;
+    FILE *fp ;
+    int ret ;
+    
+    if((deskImageCount == 0) ||
+       ((deskDC = GetDC(desktopHWnd)) == NULL) ||
+       ((bitmapDC = CreateCompatibleDC(deskDC)) == NULL))
+        return 0 ;
+    
+    oldmap = (HBITMAP) SelectObject(bitmapDC,deskImageBitmap);
+    
+    if(createDefault || (deskNo >= vwDESK_PRIVATE1))
+    {
+        /* create a default image */
+        RECT rect;
+        rect.left   = 0 ;
+        rect.top    = 0 ;
+        rect.right  = deskImageInfo.bmiHeader.biWidth ;
+        rect.bottom = deskImageInfo.bmiHeader.biHeight ;
+        FillRect(bitmapDC,&rect,(HBRUSH) (COLOR_BACKGROUND+1)) ;
+    }
+    else
+    {
+        /* can set to HALFTONE for better quality, but not supported on Win95/98/Me */
+        SetStretchBltMode(bitmapDC,COLORONCOLOR);
+        StretchBlt(bitmapDC,0,0,deskImageInfo.bmiHeader.biWidth,deskImageInfo.bmiHeader.biHeight,deskDC,
+                   screenLeft,screenTop,screenRight-screenLeft,screenBottom-screenTop,SRCCOPY);    
+    }
+
+    /* Create the desk_#.bmp file */ 
+    GetFilename(vwFILE_COUNT,1,fname) ;
+    sprintf(fname+strlen(fname),"desk_%d.bmp",deskNo) ;
+    if(GetDIBits(bitmapDC,deskImageBitmap,0,deskImageInfo.bmiHeader.biHeight,deskImageData,&deskImageInfo,DIB_RGB_COLORS) &&
+       ((fp = fopen(fname,"wb+")) != NULL))
+    {
+        BITMAPFILEHEADER hdr ;
+        hdr.bfType = 0x4d42 ;
+        hdr.bfOffBits = (DWORD) (sizeof(BITMAPFILEHEADER) + deskImageInfo.bmiHeader.biSize) ;
+        hdr.bfSize = hdr.bfOffBits + deskImageInfo.bmiHeader.biSizeImage ; 
+        hdr.bfReserved1 = 0 ;
+        hdr.bfReserved2 = 0 ;
+        
+        ret = ((fwrite(&hdr,sizeof(BITMAPFILEHEADER),1,fp) == 1) &&  
+               (fwrite(&deskImageInfo,deskImageInfo.bmiHeader.biSize,1,fp) == 1) &&
+               (fwrite(deskImageData,deskImageInfo.bmiHeader.biSizeImage,1,fp) == 1)) ;
+        
+        fclose(fp) ;
+        if(!ret)
+            DeleteFile(fname) ;
+    }
+    else
+        ret = 0 ;
+    SelectObject(bitmapDC,oldmap);
+    DeleteDC(bitmapDC);
+    ReleaseDC(desktopHWnd,deskDC) ;
+    vwLogBasic((vwLogFile,"createDeskImage: %d: %d %d - %d %d\n",ret,deskNo,createDefault,deskImageInfo.bmiHeader.biWidth,deskImageInfo.bmiHeader.biHeight)) ;
+    return ret ;
+}
+
+static int
+disableDeskImage(int count)
+{
+    if(deskImageCount <= 0)
+        return 0 ;
+    if((deskImageCount -= count) <= 0)
+    {
+        if(deskImageData != NULL)
+        {
+            free(deskImageData) ;
+            deskImageData = NULL ;
+        }
+        if(deskImageBitmap != NULL)
+        {
+            DeleteObject(deskImageBitmap) ;
+            deskImageBitmap = NULL ;
+        }
+        deskImageInfo.bmiHeader.biHeight = 0 ;
+        deskImageCount = 0 ;
+    }
+    return 1 ;
+}
+
+static int
+enableDeskImage(int height)
+{
+    int width, biSizeImage, count=deskImageCount ;
+    
+    if(height <= 0)
+        return 0 ;
+    if((count <= 0) || (deskImageInfo.bmiHeader.biHeight < height))
+    {
+        HDC deskDC = GetDC(desktopHWnd) ;
+        
+        if(count > 0)
+            disableDeskImage(count) ;
+        
+        if((width = (height * (screenRight-screenLeft)) / (screenBottom-screenTop)) <= 0)
+            width = 1 ;
+        /* the GetDIBits function returns 24 bit RGB even if the bitmap is set to 32 bit rgba so fix
+         * the BMP to 24 bit RGB, not sure what would happen on a palette based system. However VW
+         * crashes if deskImageData is only w*h*3, found w*h*4 avoids the problem. */
+        biSizeImage = (((width * 3) + 3) & ~3) * height ; 
+        if(((deskImageBitmap = CreateCompatibleBitmap(deskDC,width,height)) != NULL) &&
+           ((deskImageData = malloc(biSizeImage)) != NULL))
+        {
+            deskImageInfo.bmiHeader.biSize = sizeof(BITMAPINFOHEADER); 
+            deskImageInfo.bmiHeader.biWidth = width ; 
+            deskImageInfo.bmiHeader.biHeight = height ; 
+            deskImageInfo.bmiHeader.biPlanes = 1 ; 
+            deskImageInfo.bmiHeader.biBitCount = 24 ; 
+            deskImageInfo.bmiHeader.biCompression = BI_RGB ;
+            deskImageInfo.bmiHeader.biSizeImage = biSizeImage ;
+            deskImageInfo.bmiHeader.biXPelsPerMeter = 0 ;
+            deskImageInfo.bmiHeader.biYPelsPerMeter = 0 ;
+            deskImageInfo.bmiHeader.biClrUsed = 0 ;
+            deskImageInfo.bmiHeader.biClrImportant = 0 ;
+            vwLogBasic((vwLogFile,"initDeskImage succeeded: %d - %d %d\n",
+                        height,deskImageInfo.bmiHeader.biWidth,deskImageInfo.bmiHeader.biHeight)) ;
+        }
+        else
+            vwLogBasic((vwLogFile,"initDeskImage failed: %d, %x, %x\n",height,deskImageBitmap,deskImageData)) ; 
+        ReleaseDC(desktopHWnd,deskDC);
+        if(deskImageData == NULL)
+            return 0 ;
+    }
+    if(count < 0)
+    {
+        /* first time enabled, create default images for all desks */
+        count = nDesksX * nDesksY ;
+        do
+            createDeskImage(count,1) ;
+        while(--count > 0) ;
+        count = 0 ;
+    }
+    deskImageCount = count + 1 ;
+    return 1 ;
 }
 
 /************************************************
@@ -1523,7 +1686,8 @@ static void shutDown(void)
     unRegisterAllKeys();
     showAll(0);                            // gather all windows quickly
     Shell_NotifyIcon(NIM_DELETE, &nIconD); // This removes the icon
-    showAll(vwSHWIN_TRYHARD);            // try harder to gather remaining ones before exiting
+    showAll(vwSHWIN_TRYHARD);              // try harder to gather remaining ones before exiting
+    DeleteObject(checkIcon);               // Delete loaded icon resource
     PostQuitMessage(0);
 }
 
@@ -1536,6 +1700,7 @@ static VOID CALLBACK monitorTimerProc(HWND hwnd, UINT uMsg, UINT idEvent, DWORD 
     int index, hungCount ;
     
     lockMutex();
+    timerCounter++ ;
     hungCount = winListUpdate() ;
     if((index = (hungCount >> 16)) > 0)
     {
@@ -1611,6 +1776,11 @@ static int changeDesk(int newDesk, WPARAM msgWParam)
         // Nothing to do
         return 0;
     
+    /* don't bother generating an image unless the user has been on the
+     * desk for at least a second */
+    if(deskImageCount && (timerCounter >= 4))
+        createDeskImage(currentDesk,0) ;
+    
     if(vwLogEnabled())
     {
 #ifdef vwLOG_TIMING
@@ -1625,6 +1795,7 @@ static int changeDesk(int newDesk, WPARAM msgWParam)
 #endif
     }
     
+    timerCounter = 0 ;
     lockMutex();
     winListUpdate() ;
     
@@ -1730,6 +1901,9 @@ static int changeDesk(int newDesk, WPARAM msgWParam)
         }
         if(preserveZOrder)
         {
+            // very small sleep to allow system to catch up
+            Sleep(1);
+            
             y = nWin ;
             zoy = 0xffffffff ;
             zoh = HWND_NOTOPMOST ;
@@ -1912,48 +2086,6 @@ static int stepUp(void)
 }
 
 /*************************************************
- * Converts an icon to a bitmap representation
- */
-static HBITMAP createBitmapIcon(HICON anIcon)
-{
-    HDC aHDC = GetDC(hWnd);
-    HDC aCHDC = CreateCompatibleDC(aHDC);
-    HBITMAP hBMP = CreateCompatibleBitmap(aHDC, 13, 13);
-    RECT rect ;
-    hBMP = SelectObject(aCHDC, hBMP);    
-    rect.top = rect.left = 0 ;
-    rect.bottom = rect.right = 13 ;
-    FillRect(aCHDC,&rect,GetSysColorBrush(COLOR_WINDOW));
-    if(DrawIconEx(aCHDC, -1, -1, anIcon, 15, 15, 0, NULL, DI_NORMAL) == 0)
-    {
-        DeleteObject(hBMP);
-        hBMP = 0;
-    }
-    else
-    {
-        hBMP = SelectObject(aCHDC, hBMP);
-        iconReferenceVector[vectorPosition] = hBMP;
-        vectorPosition++;
-    }
-    DeleteDC(aCHDC);
-    ReleaseDC(hWnd, aHDC);
-    
-    return hBMP;
-}
-
-/*************************************************
- * Deletes bitmaps allocated when displaying window menu
- */
-static void clearBitmapVector(void)
-{
-    while(vectorPosition > 0)
-    {
-        vectorPosition--;
-        DeleteObject(iconReferenceVector[vectorPosition]);
-    }
-}
-
-/*************************************************
  * createSortedWinList_cos creates a popup menu for the window-hotkey
  * which displays all windows in one list vertically seperated by a line.
  * first column is sticky, second is direct access and third is assign.
@@ -1966,11 +2098,11 @@ static void clearBitmapVector(void)
 #define vwPMENU_ASSIGN 0x400
 #define vwPMENU_MASK   0xf00
 
-static HMENU createSortedWinList_cos(void)
+static HMENU createSortedWinList_cos(MenuItem **items,int *numitems)
 {
     HMENU hMenu;         // menu bar handle
     char title[48];
-    MenuItem *items[MAXWIN], *item;
+    MenuItem *item;
     char buff[MAX_PATH];
     int i,x,y,c,doAssignMenu=0;
     BOOL useTitle;    // Only use title if we have more than one menu
@@ -2028,10 +2160,7 @@ static HMENU createSortedWinList_cos(void)
                                        SMTO_ABORTIFHUNG | SMTO_BLOCK, 100, &theIcon);
                 hSmallIcon = (HICON)theIcon;
             }
-            if(hSmallIcon != NULL)
-                item->icon = createBitmapIcon(hSmallIcon);
-            else
-                item->icon = 0 ;
+            item->icon=hSmallIcon;
             if(((item->desk = winList[c].Desk) != currentDesk) && !winList[c].Sticky)
                 doAssignMenu = assignMenu ;
             item->sticky = winList[c].Sticky;
@@ -2088,10 +2217,8 @@ static HMENU createSortedWinList_cos(void)
             if((c != 0) && (c != items[x]->desk))
                 AppendMenu(hMenu, MF_SEPARATOR, 0, NULL );
             c = items[x]->desk;
-            AppendMenu( hMenu, MF_STRING | (items[x]->sticky ? MF_CHECKED: 0),
-                        vwPMENU_STICKY | (items[x]->id), items[x]->name );
-            if(items[x]->icon != 0)
-                SetMenuItemBitmaps(hMenu, vwPMENU_STICKY | (items[x]->id), MF_BYCOMMAND, items[x]->icon, 0);
+            AppendMenu( hMenu, MF_OWNERDRAW | (items[x]->sticky ? MF_CHECKED: 0),
+                        vwPMENU_STICKY | (items[x]->id), (const char *) items[x] );
         }
     }
     
@@ -2108,9 +2235,7 @@ static HMENU createSortedWinList_cos(void)
             if((c != 0) && (c != items[x]->desk))
                 AppendMenu(hMenu, MF_SEPARATOR, 0, NULL );
             c = items[x]->desk;
-            AppendMenu( hMenu, MF_STRING, vwPMENU_ACCESS | (items[x]->id), items[x]->name );
-            if(items[x]->icon != 0)
-                SetMenuItemBitmaps(hMenu, vwPMENU_ACCESS | (items[x]->id), MF_BYCOMMAND, items[x]->icon, 0);
+            AppendMenu( hMenu, MF_OWNERDRAW, vwPMENU_ACCESS | (items[x]->id), (const char *) items[x] );
         }
     }
     
@@ -2133,24 +2258,14 @@ static HMENU createSortedWinList_cos(void)
                     AppendMenu(hMenu, MF_SEPARATOR, 0, NULL );
                 c = items [x]->desk;
                 if(y)
-                {
-                    AppendMenu( hMenu, MF_STRING, (vwPMENU_ASSIGN | (items[x]->id)), items[x]->name );
-                    if(items[x]->icon != 0)
-                        SetMenuItemBitmaps(hMenu, (vwPMENU_ASSIGN | (items[x]->id)), MF_BYCOMMAND, items[x]->icon, 0);
-                }
+                    AppendMenu( hMenu, MF_OWNERDRAW, (vwPMENU_ASSIGN | (items[x]->id)), (const char *) items[x] );
                 else
-                    AppendMenu( hMenu, MF_DISABLED, 0, "") ;
+                    AppendMenu( hMenu, MF_OWNERDRAW, 0, 0) ;
             }
         }
     }
     
-    // destroy the generated window-list
-    for (x=0; x<i; x++)
-    {
-        free(items[x]->name) ;
-        free(items[x]) ;
-    }
-    
+    *numitems=i;
     return hMenu;
 }
 
@@ -2392,6 +2507,123 @@ static int windowDismiss(HWND theWin)
 }
 
 /*************************************************
+ * Retrieves the system menu font
+ */
+
+static HFONT getMenuFont()
+{
+    NONCLIENTMETRICS metrics;
+    HFONT menufont;
+
+    memset(&metrics,0,sizeof(NONCLIENTMETRICS));
+    metrics.cbSize=sizeof(NONCLIENTMETRICS);
+    SystemParametersInfo(SPI_GETNONCLIENTMETRICS,sizeof(NONCLIENTMETRICS),&metrics,0);
+
+    menufont=CreateFontIndirect(&metrics.lfMenuFont);
+
+    return menufont;
+}
+
+/*************************************************
+ * Returns the bounding rect for each menu item
+ * response to WM_MEASUREITEM
+ */
+
+#define MENU_X_PADDING 1
+#define MENU_Y_PADDING 1
+#define ICON_PADDING 2
+#define ICON_SIZE 16
+
+static void measureMenuItem(HWND hwnd,MEASUREITEMSTRUCT* mitem)
+{
+    HDC testdc;
+    HFONT menufont,oldfont;
+    MenuItem* item;
+    SIZE size;
+    char *measuretext;
+
+    item = (MenuItem*) mitem->itemData;
+
+    measuretext = (item != NULL) ? item->name : "D" ;
+
+    menufont=getMenuFont();
+    testdc=GetDC(hwnd);
+    oldfont=SelectObject(testdc,menufont);
+
+    GetTextExtentPoint32(testdc,measuretext,strlen(measuretext),&size);
+
+    // width + end padding + icon + icon padding
+    mitem->itemWidth = size.cx + ICON_SIZE + ICON_PADDING + (2*MENU_X_PADDING) ;
+
+    // height + padding (larger of text or icon)
+    mitem->itemHeight = (size.cy > ICON_SIZE) ? size.cy + (2*MENU_Y_PADDING) : ICON_SIZE + (2*MENU_Y_PADDING) ;
+
+    SelectObject(testdc,oldfont);
+    DeleteObject(menufont);
+    ReleaseDC(hwnd,testdc);
+}
+
+/*************************************************
+ * Renders menu item
+ * response to WM_DRAWIEM
+ */
+
+static void renderMenuItem(DRAWITEMSTRUCT* ditem)
+{
+    MenuItem* item;
+    HFONT menufont,oldfont;
+    HICON icon;
+    UINT oldalign;
+    HBRUSH focusbrush,oldbrush;
+    HPEN oldpen;
+    SIZE size;
+    int backgroundcolor,textcolor, ll;
+
+    item = (MenuItem*) ditem->itemData;
+
+    if((item != NULL) && (ditem->itemState & ODS_SELECTED))
+    {
+        backgroundcolor = COLOR_HIGHLIGHT ;
+        textcolor = COLOR_HIGHLIGHTTEXT ;
+    }
+    else
+    {
+        backgroundcolor = COLOR_MENU ;
+        textcolor = COLOR_MENUTEXT ;
+    }
+    focusbrush=GetSysColorBrush(backgroundcolor);
+    SetBkColor(ditem->hDC,GetSysColor(backgroundcolor));
+
+    // menu highlight rectangle
+    oldpen=SelectObject(ditem->hDC,GetStockObject(NULL_PEN));
+    oldbrush=SelectObject(ditem->hDC,focusbrush);
+    Rectangle(ditem->hDC,ditem->rcItem.left,ditem->rcItem.top,ditem->rcItem.right+1,ditem->rcItem.bottom+1);
+
+    menufont=getMenuFont();
+    oldfont=SelectObject(ditem->hDC,menufont);
+    oldalign=SetTextAlign(ditem->hDC,TA_BOTTOM);
+    SetTextColor(ditem->hDC,GetSysColor(textcolor));
+
+    if(item != NULL)
+    {
+        icon=(ditem->itemState & ODS_CHECKED) ? checkIcon : item->icon;
+        DrawIconEx(ditem->hDC,ditem->rcItem.left+MENU_X_PADDING,ditem->rcItem.top+MENU_Y_PADDING,icon,ICON_SIZE,ICON_SIZE,0,0,DI_NORMAL);
+        if((ll = strlen(item->name)) > 0)
+        {
+            GetTextExtentPoint32(ditem->hDC,item->name,ll,&size);
+            ExtTextOut(ditem->hDC,ditem->rcItem.left+MENU_X_PADDING+ICON_SIZE+ICON_PADDING,
+                       ditem->rcItem.bottom-((ditem->rcItem.bottom-ditem->rcItem.top-size.cy+1) >> 1),ETO_OPAQUE,0,item->name,strlen(item->name),0);
+        }
+    }
+    SetTextAlign(ditem->hDC,oldalign);
+    SelectObject(ditem->hDC,oldfont);
+    SelectObject(ditem->hDC,oldpen);
+    SelectObject(ditem->hDC,oldbrush);
+
+    DeleteObject(menufont);
+}
+
+/*************************************************
  * Pops up and handles the window list menu
  */
 static void winListPopupMenu(HWND aHWnd)
@@ -2401,7 +2633,12 @@ static void winListPopupMenu(HWND aHWnd)
     HWND hwnd ;
     int retItem, id, ii;
     
-    if((hpopup = createSortedWinList_cos()) == NULL)
+    // storage for list of MenuItem structs
+    MenuItem* items[MAXWIN];
+    int numitems=0;
+    int index;
+    
+    if((hpopup = createSortedWinList_cos(items,&numitems)) == NULL)
         return ;
     GetCursorPos(&pt);
     SetForegroundWindow(aHWnd);
@@ -2440,7 +2677,12 @@ static void winListPopupMenu(HWND aHWnd)
     
     PostMessage(aHWnd, 0, 0, 0);  // see above
     DestroyMenu(hpopup);       // Delete loaded menu and reclaim its resources
-    clearBitmapVector();
+    // delete MenuItem list
+    for (index=0;index<numitems;index++)
+    {
+        free(items[index]->name);
+        free(items[index]);
+    }
 }
 
 /*************************************************
@@ -2734,7 +2976,24 @@ skipMouseWarp:  // goto label for skipping mouse stuff
             sendModuleMessage(WM_COPYDATA, (WPARAM) aHWnd, (LPARAM)&cds); 
             return TRUE;
         }
-
+    case VW_DESKIMAGE:
+        if(wParam == 0)
+            return deskImageCount ;
+        else if(wParam == 1)
+            return enableDeskImage(lParam) ;
+        else if(deskImageCount == 0)
+            return 0 ;
+        else if(wParam == 2)
+            return disableDeskImage(1) ;
+        else if(wParam == 3)
+            return createDeskImage(currentDesk,0) ;
+        else if(wParam == 4)
+            return deskImageInfo.bmiHeader.biHeight ;
+        else if(wParam == 5)
+            return deskImageInfo.bmiHeader.biWidth ;
+        else
+            return 0 ;
+              
         // End plugin messages
         
     case WM_CREATE:		       // when main window is created
@@ -2832,7 +3091,12 @@ skipMouseWarp:  // goto label for skipping mouse stuff
     case WM_SETTINGCHANGE:
         getTaskbarLocation();
         return TRUE;
-        
+    case WM_MEASUREITEM:
+        measureMenuItem(aHWnd,(MEASUREITEMSTRUCT*)lParam);
+        break;
+    case WM_DRAWITEM:
+        renderMenuItem((DRAWITEMSTRUCT*)lParam);        
+        break;
     default:
         // If taskbar restarted
         if((message == taskbarRestart) && displayTaskbarIcon )
@@ -2854,7 +3118,13 @@ VirtuaWinInit(HINSTANCE hInstance)
     BOOL awStore;
     char *classname = vwVIRTUAWIN_NAME "MainClass";
     hInst = hInstance;
-
+    
+#ifdef _WIN32_MEMORY_DEBUG
+    /* Enable heap checking on each allocate and free */
+    _CrtSetDbgFlag (_CRTDBG_ALLOC_MEM_DF|_CRTDBG_DELAY_FREE_MEM_DF|
+                    _CRTDBG_LEAK_CHECK_DF|_CRTDBG_DELAY_FREE_MEM_DF);
+#endif
+    
     /* Only one instance may be started */
     hMutex = CreateMutex(NULL, FALSE, vwVIRTUAWIN_NAME "PreventSecond");
     if(GetLastError() == ERROR_ALREADY_EXISTS)
