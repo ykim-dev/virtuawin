@@ -1778,7 +1778,7 @@ static int changeDesk(int newDesk, WPARAM msgWParam)
     
     /* don't bother generating an image unless the user has been on the
      * desk for at least a second */
-    if(deskImageCount && (timerCounter >= 4))
+    if((deskImageCount > 0) && (timerCounter >= 4))
         createDeskImage(currentDesk,0) ;
     
     if(vwLogEnabled())
