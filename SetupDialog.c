@@ -106,9 +106,10 @@ BOOL APIENTRY setupGeneral(HWND hDlg, UINT message, UINT wParam, LONG lParam)
         {
             setupHWnd = GetParent(hDlg) ;
             setupKeysHWnd = hDlg ;
+            /* the setup dialog will be automatically positioned top left of the primary, move this 40 pixels in */
             GetWindowRect(setupHWnd, &config_dlg_rect);
-            config_dlg_rect.left = (screenLeft + screenRight - (config_dlg_rect.right - config_dlg_rect.left)) / 2 ;
-            config_dlg_rect.top  = (screenTop + screenBottom - (config_dlg_rect.bottom - config_dlg_rect.top)) / 2 ;
+            config_dlg_rect.left += 40 ;
+            config_dlg_rect.top  += 40 ;
             SetWindowPos(setupHWnd, 0, config_dlg_rect.left, config_dlg_rect.top, 0, 0, SWP_NOZORDER | SWP_NOSIZE | SWP_NOACTIVATE);
             
             SetDlgItemInt(hDlg, IDC_DESKY, nDesksY, FALSE);
@@ -413,22 +414,31 @@ BOOL APIENTRY setupMouse(HWND hDlg, UINT message, UINT wParam, LONG lParam)
 /*************************************************
  * The "Modules" tab callback
  */
+static void setupModulesList(HWND hDlg)
+{
+    int index;
+    char tmpName[128];
+    
+    SendDlgItemMessage(hDlg, IDC_MODLIST, LB_RESETCONTENT, 0, 0);
+    for(index = 0; index < nOfModules; index++)
+    {
+        strncpy(tmpName,moduleList[index].description,100) ;
+        tmpName[100] = '\0' ;
+        if(moduleList[index].Disabled)
+            strcat(tmpName," (disabled)") ;
+        SendDlgItemMessage(hDlg, IDC_MODLIST, LB_ADDSTRING, 0, (LONG)tmpName);
+    }
+}
+
 BOOL APIENTRY setupModules(HWND hDlg, UINT message, UINT wParam, LONG lParam)
 {
     int index;
-    char tmpName[80];
+    char tmpName[128];
     
     switch (message)
     {
     case WM_INITDIALOG:
-        for(index = 0; index < nOfModules; index++)
-        {
-            if(moduleList[index].Disabled)
-                sprintf(tmpName, "* %s", moduleList[index].description);
-            else
-                sprintf(tmpName, "%s", moduleList[index].description);
-            SendDlgItemMessage(hDlg, IDC_MODLIST, LB_ADDSTRING, 0, (LONG)tmpName);
-        }
+        setupModulesList(hDlg) ;
         return TRUE;
     case WM_NOTIFY:
         switch (((NMHDR FAR *) lParam)->code)
@@ -461,7 +471,6 @@ BOOL APIENTRY setupModules(HWND hDlg, UINT message, UINT wParam, LONG lParam)
         }
         else if(LOWORD((wParam) == IDC_MODRELOAD))
         {   // Reload
-            SendDlgItemMessage(hDlg, IDC_MODLIST, LB_RESETCONTENT, 0, 0);
             saveDisabledList(nOfModules, moduleList);
             unloadModules();
             for(index = 0; index < MAXMODULES; index++)
@@ -474,14 +483,7 @@ BOOL APIENTRY setupModules(HWND hDlg, UINT message, UINT wParam, LONG lParam)
             Sleep(1000) ;
             curDisabledMod = loadDisabledModules(disabledModules);
             loadModules();
-            for(index = 0; index < nOfModules; index ++)
-            {
-                if(moduleList[index].Disabled)
-                    sprintf(tmpName, "* %s", moduleList[index].description);
-                else
-                    sprintf(tmpName, "%s", moduleList[index].description);
-                SendDlgItemMessage(hDlg, IDC_MODLIST, LB_ADDSTRING, 0, (LONG)tmpName);
-            }
+            setupModulesList(hDlg) ;
         }
         else if(LOWORD((wParam) == IDC_MODDISABLE))
         {   // Enable/Disable
@@ -492,30 +494,14 @@ BOOL APIENTRY setupModules(HWND hDlg, UINT message, UINT wParam, LONG lParam)
                 {   // let's disable
                     moduleList[curSel].Disabled = TRUE;
                     PostMessage(moduleList[curSel].Handle, MOD_QUIT, 0, 0);
-                    SendDlgItemMessage(hDlg, IDC_MODLIST, LB_RESETCONTENT, 0, 0);
-                    for(index = 0; index < nOfModules; index ++)
-                    {
-                        if(moduleList[index].Disabled)
-                            sprintf(tmpName, "* %s", moduleList[index].description);
-                        else
-                            sprintf(tmpName, "%s", moduleList[index].description);
-                        SendDlgItemMessage(hDlg, IDC_MODLIST, LB_ADDSTRING, 0, (LONG)tmpName);
-                    }
+                    setupModulesList(hDlg) ;
                 }
                 else
                 {   // let's enable
                     MessageBox(hDlg, "Press reload or restart VirtuaWin to enable the module",
                                vwVIRTUAWIN_NAME " Note", MB_ICONINFORMATION);
                     moduleList[curSel].Disabled = FALSE;
-                    SendDlgItemMessage(hDlg, IDC_MODLIST, LB_RESETCONTENT, 0, 0);
-                    for(index = 0; index < nOfModules; index ++)
-                    {
-                        if(moduleList[index].Disabled)
-                            sprintf(tmpName, "* %s", moduleList[index].description);
-                        else
-                            sprintf(tmpName, "%s", moduleList[index].description);
-                        SendDlgItemMessage(hDlg, IDC_MODLIST, LB_ADDSTRING, 0, (LONG)tmpName);
-                    }
+                    setupModulesList(hDlg) ;
                 }
             }
         }
