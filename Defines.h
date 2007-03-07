@@ -42,10 +42,5 @@
 
 // Internal messages for mouse controlling
 #define VW_MOUSEWARP   WM_USER + 90
-#define VW_MOUSEUP     WM_USER + 91
-#define VW_MOUSEDOWN   WM_USER + 92
-#define VW_MOUSELEFT   WM_USER + 93
-#define VW_MOUSERIGHT  WM_USER + 94
-#define VW_MOUSERESET  WM_USER + 95
 
 #endif

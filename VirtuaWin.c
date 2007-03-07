@@ -59,6 +59,8 @@ int screenLeft;
 int screenRight;
 int screenTop;
 int screenBottom;
+int taskbarEdge;
+int desktopWorkArea[2][4] ;
 
 UINT RM_Shellhook;
 
@@ -81,12 +83,6 @@ ATOM dismissKey;
 BOOL enabled = TRUE;		// if VirtuaWin enabled or not
 BOOL isDragging = FALSE;	// if we are currently dragging a window
 
-int taskBarLeftWarp   = 0;      // the warp size for Left taskbar
-int taskBarRightWarp  = 0;      // the warp size for Right taskbar
-int taskBarTopWarp    = 0;      // the warp size for Top taskbar
-int taskBarBottomWarp = 0;      // the warp size for Bottom taskbar
-int taskbarOffset     = 3;      // Default 3, 0 if XP skinned taskbar is used.
-
 HINSTANCE hInst;		// current instance
 HWND taskHWnd;                  // handle to taskbar
 HWND desktopHWnd;		// handle to the desktop window
@@ -102,11 +98,7 @@ BOOL setupOpen;
 HICON icons[MAXDESK];           // 0=disabled, 1=9=nromal desks, 10=private desk
 NOTIFYICONDATA nIconD;
 
-HBITMAP iconReferenceVector[MAXWIN];
-int vectorPosition = 0;
-
 // Config parameters, see ConfigParameters.h for descriptions
-int saveInterval = 0;
 int nOfModules = 0;  
 int nWin = 0;        
 int currentDeskX = 1;
@@ -114,16 +106,16 @@ int currentDeskY = 1;
 int currentDesk = 1; 
 int nDesksX = 2;     
 int nDesksY = 2;     
-int warpLength = 20; 
-int warpMultiplier = 0;
-int configMultiplier = 1;
+int warpLength = 60;
+int knockMode = 2;
+int mouseDelay = 10;
 int preserveZOrder = 0;      
 int hiddenWindowAct = 1;
 int vwLogFlag = 0 ;
 FILE *vwLogFile ;
-BOOL noMouseWrap = FALSE;
 BOOL mouseEnable = FALSE; 
 BOOL useMouseKey = FALSE;
+BOOL noMouseWrap = TRUE;
 BOOL keyEnable = TRUE;		
 BOOL hotKeyEnable = FALSE;      
 BOOL releaseFocus = FALSE;	
@@ -134,8 +126,7 @@ UINT modCtrl = 0;
 UINT modWin = MOD_WIN;		
 UINT mouseModAlt = 0;	
 UINT mouseModShift = 0;	
-UINT mouseModCtrl = 0;	
-BOOL taskBarWarp = FALSE;       
+UINT mouseModCtrl = 1;	
 BOOL saveSticky = FALSE;        
 BOOL refreshOnWarp = FALSE;     
 BOOL stickyKeyRegistered = FALSE;
@@ -230,12 +221,15 @@ void releaseMutex(void)
  */
 static BOOL checkMouseState(void)
 {
-    if(!GetSystemMetrics(SM_SWAPBUTTON)) {  // Check the state of mouse button(s)
+    // Check the state of mouse button(s)
+    if(!GetSystemMetrics(SM_SWAPBUTTON))
+    {
         if(HIWORD(GetAsyncKeyState(VK_LBUTTON)))
             return TRUE;
         else
             return FALSE;
-    } else if(HIWORD(GetAsyncKeyState(VK_RBUTTON)))
+    }
+    else if(HIWORD(GetAsyncKeyState(VK_RBUTTON)))
         return TRUE;
     else
         return FALSE;
@@ -248,85 +242,84 @@ static BOOL checkMouseState(void)
  */
 DWORD WINAPI MouseProc(LPVOID lpParameter)
 {
-    // in this function I'm using int for bool & 0,1 rather than
-    // false,true since the file extension is .c and it's being compiled
-    // as C rather than C++ ... this should change when we port to C++
-    
-    int mousekeyPressed = 0, xDelta, yDelta ;
-    int movingLeft, movingRight, movingUp, movingDown ; 
-    POINT firstPoint;
+    int ii, mode, lastMode=0, state[4], pos[4], delayTime[4], newState ;
     POINT pt;
     
+    state[0] = state[1] = state[2] = state[3] = 0 ;
     // infinite loop
     while(1)
     {
-        // If the useMouseKey function is turned on (the function
-        // that requires a modifier key to be pressed to change
-        // desktops using the mouse) and that key is pressed, then
-        // we need to get the position at which the modifier key was
-        // pressed.  Later we'll use that first position to see if
-        // there's a motion tendency towards the edge of the screen that
-        // we're switching to.  If they're not moving the mouse in that
-        // general direction then we don't want to make the switch
-        // because that sometimes causes the screen to switch when the
-        // user presses the modifier key for some other purpose if the
-        // mouse is near the edge of the screen.  Checking for their
-        // general motion tendency feels natural and prevents accidental
-        // switching
+        Sleep(50); 
         
+        if((lastMode == -2) && checkMouseState())
+            continue ;
         if(useMouseKey)
         {   // Are we using a mouse key
-            if(HIWORD(GetAsyncKeyState(MOUSEKEY)))
+            if(!HIWORD(GetAsyncKeyState(MOUSEKEY)))
             {
-                if(!mousekeyPressed)
-                {
-                    mousekeyPressed = 1;
-                    GetCursorPos(&firstPoint);
-                }
+                lastMode = -1 ;
+                continue ;
             }
-            else
-                mousekeyPressed = 0;
         }
-
-        // sleep between iterations of this function.  If we're using
-        // modifier keys it loops more often to be sure to watch the
-        // tendency.
-        if(useMouseKey)
-            Sleep(4);
-        else
-            Sleep(50); 
-        
-        // Now get the second point
+        mode = checkMouseState() ;
         GetCursorPos(&pt);
-        
-        // Now figure out the motion tendency
-        xDelta = pt.x - firstPoint.x;
-        yDelta = pt.y - firstPoint.y;
-        
-        // If they're not using the modifier keys we'll just set all of
-        // these to true to simplify the logic later on
-        movingLeft  = !useMouseKey || (mousekeyPressed && (xDelta < -25)); // && (yDelta > -30 && yDelta < 30);
-        movingRight = !useMouseKey || (mousekeyPressed && (xDelta >  25)); // && (yDelta > -30 && yDelta < 30);
-        movingUp    = !useMouseKey || (mousekeyPressed && (yDelta < -25)); // && (xDelta > -30 && xDelta < 30);
-        movingDown  = !useMouseKey || (mousekeyPressed && (yDelta >  25)); // && (xDelta > -30 && xDelta < 30);
-        
-        // ...and if we're moving in the right direction and close
-        // enough to the side of the screen, send the message to switch
-        // desktops
-        if( movingLeft  &&  pt.x < (screenLeft   + 3 + (taskBarWarp * taskBarLeftWarp   * checkMouseState())))
-            // switch left
-            SendNotifyMessage(hWnd, VW_MOUSEWARP, 0, MAKELPARAM(checkMouseState(), VW_MOUSELEFT));
-        else if( movingRight && pt.x > (screenRight  - 3 - (taskBarWarp * taskBarRightWarp  * checkMouseState())))
-            // switch right
-            SendNotifyMessage(hWnd, VW_MOUSEWARP, 0, MAKELPARAM(checkMouseState(), VW_MOUSERIGHT));
-        else if( movingUp && pt.y < (screenTop    + 3 + (taskBarWarp * taskBarTopWarp    * checkMouseState())))
-            // switch up
-            SendNotifyMessage(hWnd, VW_MOUSEWARP, 0, MAKELPARAM(checkMouseState(), VW_MOUSEUP));
-        else if( movingDown && pt.y > (screenBottom - 3 - (taskBarWarp * taskBarBottomWarp * checkMouseState())))
-            // switch down
-            SendNotifyMessage(hWnd, VW_MOUSEWARP, 0, MAKELPARAM(checkMouseState(), VW_MOUSEDOWN));
-        else
-            SendNotifyMessage(hWnd, VW_MOUSEWARP, 0, MAKELPARAM(0, VW_MOUSERESET));
+        pos[0] = pt.x - desktopWorkArea[mode][0] ;
+        pos[1] = pt.y - desktopWorkArea[mode][1] ;
+        pos[2] = desktopWorkArea[mode][2] - pt.x ;
+        pos[3] = desktopWorkArea[mode][3] - pt.y ;
+        if(mode != lastMode)
+        {
+            if(mode && (pos[taskbarEdge] < 0))
+            {
+                lastMode = -2 ;
+                continue ;
+            }
+            state[0] = state[1] = state[2] = state[3] = 0 ;
+            lastMode = mode ;
+        }
+        ii = 3 ;
+        do {
+            if((newState = state[ii]) == 4)
+            {
+                if(pos[ii] > 0)
+                    newState = 3 ;
+                else if(++delayTime[ii] >= mouseDelay)
+                {
+                    vwLogBasic((vwLogFile,"Mouse desk change on edge %d\n",ii)) ;
+                    /* send the switch message and wait until done */
+                    SendMessage(hWnd, VW_MOUSEWARP, 0, MAKELPARAM(mode,ii)) ;
+                    newState = 1 ;
+                }
+                else
+                    continue ;
+            }
+            else if(pos[ii] >= warpLength)
+            {
+                if(newState == 0)
+                    newState = 1 ;
+            }
+            else if(pos[ii] <= 0)
+            {
+                if((knockMode & 1) && ((newState == 0) || ((newState == 1) && (knockMode & 2))))
+                    newState = 2 ;
+                else if((newState == 3) || (newState <= 1))
+                    newState = 4 ;
+            }
+            else if((newState == 2) && (pos[ii] >= (warpLength >> 2)))
+                newState = 3 ;
+            if(newState != state[ii])
+            {
+                vwLogVerbose((vwLogFile,"State %d (%d %d): Change %d -> %d\n",ii,mode,pos[ii],state[ii],newState)) ;
+                state[ii] = newState ;
+                delayTime[ii] = 0 ;
+            }
+            else if((state[ii] > 1) && (++delayTime[ii] >= 10))
+            {
+                /* burnt in 1sec timer, a knock must take no more than 1 sec second (2 * (10 * 50ms)) */
+                vwLogVerbose((vwLogFile,"State %d (%d %d): Changed %d -> 1 (timer)\n",ii,mode,pos[ii],newState)) ;
+                state[ii] = 1 ;
+            }
+        } while(--ii >= 0) ;
     }
     
     return TRUE;
@@ -759,35 +752,68 @@ static void goGetTheTaskbarHandle(void)
 /************************************************
  * Grabs and stores the taskbar coordinates
  */
-void getTaskbarLocation(void)
+void getWorkArea(void)
 {
+    /* the mouse has 2 modes, dragging a window and not dragging a window */
+    desktopWorkArea[0][0] = desktopWorkArea[1][0] = screenLeft ;
+    desktopWorkArea[0][1] = desktopWorkArea[1][1] = screenTop ;
+    desktopWorkArea[0][2] = desktopWorkArea[1][2] = screenRight - 1 ;
+    desktopWorkArea[0][3] = desktopWorkArea[1][3] = screenBottom - 1 ;
+    taskbarEdge = 3 ;
+    
     if(!noTaskbarCheck)
     {
-        RECT r;
-        taskBarLeftWarp   = 0;
-        taskBarRightWarp  = 0;
-        taskBarTopWarp    = 0;
-        taskBarBottomWarp = 0;
+        /* the task bar only affects the dragging work area */
+        APPBARDATA abd;
+        UINT uState ;
+        abd.cbSize=sizeof(abd) ;
+        uState = (UINT) SHAppBarMessage(ABM_GETSTATE, &abd);
         
-        /* Get the height of the task bar */
-        GetWindowRect(FindWindow("Shell_traywnd", ""), &r);
-        /* Determine position of task bar */
-        if ((r.bottom + r.top) == (screenBottom - screenTop)) // task bar is on side
+        if((uState & ABS_ALWAYSONTOP) && SHAppBarMessage(ABM_GETTASKBARPOS,&abd))
         {
-            if (r.left <= screenLeft)                          // task bar is on left
-                taskBarLeftWarp   = r.right - r.left - taskbarOffset;
-            else                                               // task bar is on right
-                taskBarRightWarp  = r.right - r.left - taskbarOffset;
-        }
-        else                                                  // task bar is on top/bottom
-        {
-            if (r.top <= screenTop)                            // task bar is on top
-                taskBarTopWarp    = r.bottom - r.top - taskbarOffset;
-            else                                               // task bar is on bottom
-                taskBarBottomWarp = r.bottom - r.top - taskbarOffset;
+            taskbarEdge = abd.uEdge ;
+            if(uState & ABS_AUTOHIDE)
+            {
+                /* allow 1 pixel for the hidden taskbar */
+                switch(abd.uEdge)
+                {
+                case ABE_LEFT:
+                    desktopWorkArea[1][0] += 1 ;
+                    break ;
+                case ABE_TOP:
+                    desktopWorkArea[1][1] += 1 ;
+                    break ;
+                case ABE_RIGHT:
+                    desktopWorkArea[1][2] -= 1 ;
+                    break ;
+                case ABE_BOTTOM:
+                    desktopWorkArea[1][3] -= 1 ;
+                    break ;
+                }
+            }
+            else
+            {
+                switch(abd.uEdge)
+                {
+                case ABE_LEFT:
+                    desktopWorkArea[1][0] = abd.rc.right ;
+                    break ;
+                case ABE_TOP:
+                    desktopWorkArea[1][1] = abd.rc.bottom ;
+                    break ;
+                case ABE_RIGHT:
+                    desktopWorkArea[1][2] = abd.rc.left ;
+                    break ;
+                case ABE_BOTTOM:
+                    desktopWorkArea[1][3] = abd.rc.top ;
+                    break ;
+                }
+            }
         }
     }
-    vwLogBasic((vwLogFile,"Got taskbar location: %d %d -> %d %d\n",taskBarLeftWarp,taskBarRightWarp,taskBarTopWarp,taskBarBottomWarp)) ;
+    vwLogBasic((vwLogFile,"Got work area (%d %d): %d %d -> %d %d  &  %d %d -> %d %d\n",noTaskbarCheck,taskbarEdge,
+                desktopWorkArea[0][0],desktopWorkArea[0][1],desktopWorkArea[0][2],desktopWorkArea[0][3],
+                desktopWorkArea[1][0],desktopWorkArea[1][1],desktopWorkArea[1][2],desktopWorkArea[1][3])) ;
 }
 
 /************************************************
@@ -1787,11 +1813,11 @@ static int changeDesk(int newDesk, WPARAM msgWParam)
         SYSTEMTIME stime;
     
         GetLocalTime (&stime);
-        vwLogPrint((vwLogFile, "[%04d-%02d-%02d %02d:%02d:%02d] Step Desk Start: %d -> %d\n",
+        vwLogBasic((vwLogFile, "[%04d-%02d-%02d %02d:%02d:%02d] Step Desk Start: %d -> %d\n",
                     stime.wYear, stime.wMonth, stime.wDay, stime.wHour,
                     stime.wMinute, stime.wSecond, currentDesk, newDesk)) ;
 #else
-        vwLogPrint((vwLogFile,"Step Desk Start: %d -> %d\n",currentDesk,newDesk)) ;
+        vwLogBasic((vwLogFile,"Step Desk Start: %d -> %d\n",currentDesk,newDesk)) ;
 #endif
     }
     
@@ -1959,11 +1985,11 @@ static int changeDesk(int newDesk, WPARAM msgWParam)
         SYSTEMTIME stime;
     
         GetLocalTime (&stime);
-        vwLogPrint((vwLogFile, "[%04d-%02d-%02d %02d:%02d:%02d] Step Desk End (%x)\n",
+        vwLogBasic((vwLogFile, "[%04d-%02d-%02d %02d:%02d:%02d] Step Desk End (%x)\n",
                     stime.wYear, stime.wMonth, stime.wDay, stime.wHour,
                     stime.wMinute, stime.wSecond,(int)GetForegroundWindow())) ;
 #else
-        vwLogPrint((vwLogFile,"Step Desk End (%x)\n",(int)GetForegroundWindow())) ;
+        vwLogBasic((vwLogFile,"Step Desk End (%x)\n",(int)GetForegroundWindow())) ;
 #endif
     }
     return currentDesk ;
@@ -2697,110 +2723,67 @@ wndProc(HWND aHWnd, UINT message, WPARAM wParam, LPARAM lParam)
     switch (message)
     {
     case VW_MOUSEWARP:
-        // Try to avoid switching if we press on the taskbar
-        if((LOWORD(lParam) && (GetForegroundWindow() == FindWindow("Shell_traywnd", ""))))
-            goto skipMouseWarp; // if so, skip whole sequence
         // Is virtuawin enabled
         if(enabled)
         {
-            // Are we using a mouse key
-            if(useMouseKey && !HIWORD(GetAsyncKeyState(MOUSEKEY)))
-                // If key not pressed skip whole sequence
-                goto skipMouseWarp;
-            
-            // Suspend mouse thread during message processing, 
-            // otherwise we might step over several desktops
-            SuspendThread(mouseThread); 
             GetCursorPos(&pt);
             
+            isDragging = LOWORD(lParam);
             switch HIWORD(lParam)
             {
-            case VW_MOUSELEFT:
-                warpMultiplier++;
-                if((warpMultiplier >= configMultiplier))
+            case 0:
+                /* left */
+                if(stepLeft() != 0)
                 {
-                    isDragging = LOWORD(lParam);
-                    if(stepLeft() != 0)
-                    {
-                        if(noMouseWrap)
-                            SetCursorPos(pt.x + warpLength, pt.y);
-                        else
-                            SetCursorPos(screenRight-warpLength, pt.y);
-                    }
-                    isDragging = FALSE;
-                    warpMultiplier = 0;
-                }
-                ResumeThread(mouseThread);
-                break;
-                
-            case VW_MOUSERIGHT:
-                warpMultiplier++;
-                if((warpMultiplier >= configMultiplier))
-                {
-                    isDragging = LOWORD(lParam);
-                    if(stepRight() != 0)
-                    {
-                        if(noMouseWrap)
-                            SetCursorPos(pt.x - warpLength, pt.y);
-                        else
-                            SetCursorPos(screenLeft+warpLength, pt.y);
-                    }
-                    isDragging = FALSE;
-                    warpMultiplier = 0;
-                }
-                ResumeThread(mouseThread);
-                break;
-                
-            case VW_MOUSEUP:
-                warpMultiplier++;
-                if((warpMultiplier >= configMultiplier))
-                {
-                    int switchVal;
-                    isDragging = LOWORD(lParam);
-                    if(invertY)
-                        switchVal = stepDown();
+                    if(noMouseWrap)
+                        SetCursorPos(pt.x + warpLength, pt.y);
                     else
-                        switchVal = stepUp();
-                    if(switchVal != 0)
-                    {
-                        if(noMouseWrap)
-                            SetCursorPos(pt.x, pt.y + warpLength);
-                        else
-                            SetCursorPos(pt.x, screenBottom-warpLength);
-                    }
-                    isDragging = FALSE;
-                    warpMultiplier = 0;
+                        SetCursorPos(screenRight-warpLength, pt.y);
                 }
-                ResumeThread(mouseThread);
                 break;
                 
-            case VW_MOUSEDOWN:
-                warpMultiplier++;
-                if((warpMultiplier >= configMultiplier))
+            case 2:
+                /* right */
+                if(stepRight() != 0)
                 {
-                    int switchVal;
-                    isDragging = LOWORD(lParam);
-                    if(invertY)
-                        switchVal = stepUp();
+                    if(noMouseWrap)
+                        SetCursorPos(pt.x - warpLength, pt.y);
                     else
-                        switchVal = stepDown();
-                    if(switchVal != 0)
-                    {
-                        if(noMouseWrap)
-                            SetCursorPos(pt.x, pt.y - warpLength);
-                        else
-                            SetCursorPos(pt.x, screenTop+warpLength);
-                    }
-                    isDragging = FALSE;
-                    warpMultiplier = 0;
+                        SetCursorPos(screenLeft+warpLength, pt.y);
                 }
-                ResumeThread(mouseThread);
                 break;
                 
-            case VW_MOUSERESET:
-                warpMultiplier = 0;
+            case 1:
+                /* up */
+                if(invertY)
+                    wParam = stepDown();
+                else
+                    wParam = stepUp();
+                if(wParam != 0)
+                {
+                    if(noMouseWrap)
+                        SetCursorPos(pt.x, pt.y + warpLength);
+                    else
+                        SetCursorPos(pt.x, screenBottom-warpLength);
+                }
+                break;
+                
+            case 3:
+                /* down */
+                if(invertY)
+                    wParam = stepUp();
+                else
+                    wParam = stepDown();
+                if(wParam != 0)
+                {
+                    if(noMouseWrap)
+                        SetCursorPos(pt.x, pt.y - warpLength);
+                    else
+                        SetCursorPos(pt.x, screenTop+warpLength);
+                }
+                break;
             }
-            ResumeThread(mouseThread);
+            isDragging = FALSE;
         }
 skipMouseWarp:  // goto label for skipping mouse stuff
         
@@ -3086,10 +3069,12 @@ skipMouseWarp:  // goto label for skipping mouse stuff
         return TRUE;
         
     case WM_DISPLAYCHANGE:
+        /* screen size has changed, get the new size and set the mouse work area */
         getScreenSize();
-        return TRUE;
+        /* no break */
     case WM_SETTINGCHANGE:
-        getTaskbarLocation();
+        /* the position and size of the taskbar may have changed */ 
+        getWorkArea();
         return TRUE;
     case WM_MEASUREITEM:
         measureMenuItem(aHWnd,(MEASUREITEMSTRUCT*)lParam);
@@ -3185,7 +3170,7 @@ VirtuaWinInit(HINSTANCE hInstance)
     /* set the window to give focus to when releasing focus on switch also used to refresh */
     desktopHWnd = GetDesktopWindow();
     getScreenSize();
-    getTaskbarLocation(); // This is dependent on the config
+    getWorkArea(); // This is dependent on the config
     
     // Fix some things for the alternate hide method
     RM_Shellhook = RegisterWindowMessage("SHELLHOOK");

@@ -54,7 +54,7 @@ static void vwSetupApply(HWND hDlg, int curPageMask)
     {
         // All pages have now got any changes from the GUI, save them and apply
         writeConfig();
-        getTaskbarLocation();
+        getWorkArea();
         unRegisterAllKeys();
         registerAllKeys();
         enableMouse(mouseEnable);
@@ -311,26 +311,26 @@ BOOL APIENTRY setupMouse(HWND hDlg, UINT message, UINT wParam, LONG lParam)
     switch (message)
     {
     case WM_INITDIALOG:
-        SetDlgItemInt(hDlg, IDC_TIME, configMultiplier * 50, FALSE);
+        SetDlgItemInt(hDlg, IDC_TIME, mouseDelay * 50, FALSE);
         SendDlgItemMessage(hDlg, IDC_SLIDER, TBM_SETRANGE, TRUE, MAKELONG(1, 80));
-        SendDlgItemMessage(hDlg, IDC_SLIDER, TBM_SETPOS, TRUE, configMultiplier);
+        SendDlgItemMessage(hDlg, IDC_SLIDER, TBM_SETPOS, TRUE, mouseDelay);
         SetDlgItemInt(hDlg, IDC_JUMP, warpLength, TRUE);
         
-        /* Mouse Control keys */
-        if(useMouseKey) {
+        if(mouseEnable) 
+            SendDlgItemMessage(hDlg, IDC_ENABLEMOUSE, BM_SETCHECK, 1,0);
+        if(useMouseKey)
             SendDlgItemMessage(hDlg, IDC_KEYCONTROL, BM_SETCHECK, 1,0);
-        }
         if(mouseModAlt)
             SendDlgItemMessage(hDlg, IDC_MALT, BM_SETCHECK, 1,0);
         if(mouseModShift)
             SendDlgItemMessage(hDlg, IDC_MSHIFT, BM_SETCHECK, 1,0);
         if(mouseModCtrl)
             SendDlgItemMessage(hDlg, IDC_MCTRL, BM_SETCHECK, 1,0);
-        if(mouseEnable) 
-            SendDlgItemMessage(hDlg, IDC_MOUSWARP, BM_SETCHECK, 1,0);
-        if(taskBarWarp)
-            SendDlgItemMessage(hDlg, IDC_TASKBAR, BM_SETCHECK, 1,0);
-        if(noMouseWrap)
+        if(knockMode & 1) 
+            SendDlgItemMessage(hDlg, IDC_KNOCKMODE1, BM_SETCHECK, 1,0);
+        if(knockMode & 2) 
+            SendDlgItemMessage(hDlg, IDC_KNOCKMODE2, BM_SETCHECK, 1,0);
+        if(!noMouseWrap)
             SendDlgItemMessage(hDlg, IDC_MOUSEWRAP, BM_SETCHECK, 1,0);
         return TRUE;
         
@@ -344,21 +344,19 @@ BOOL APIENTRY setupMouse(HWND hDlg, UINT message, UINT wParam, LONG lParam)
         case PSN_APPLY:
             GetDlgItemText(hDlg, IDC_JUMP, buff, 4);
             warpLength = atoi(buff);
-            configMultiplier = SendDlgItemMessage(hDlg, IDC_SLIDER, TBM_GETPOS, 0, 0);
-            if(SendDlgItemMessage(hDlg, IDC_MOUSWARP, BM_GETCHECK, 0, 0) == BST_CHECKED)
-                mouseEnable = TRUE;
-            else
-                mouseEnable = FALSE;
-            
-            if(SendDlgItemMessage(hDlg, IDC_TASKBAR, BM_GETCHECK, 0, 0) == BST_CHECKED)
-                taskBarWarp = TRUE;
-            else
-                taskBarWarp = FALSE;
-            if(SendDlgItemMessage(hDlg, IDC_MOUSEWRAP, BM_GETCHECK, 0, 0) == BST_CHECKED)
-                noMouseWrap = TRUE;
-            else
-                noMouseWrap= FALSE;
-            
+            mouseDelay = SendDlgItemMessage(hDlg, IDC_SLIDER, TBM_GETPOS, 0, 0);
+            mouseEnable = (SendDlgItemMessage(hDlg, IDC_ENABLEMOUSE, BM_GETCHECK, 0, 0) == BST_CHECKED) ;
+            noMouseWrap = (SendDlgItemMessage(hDlg, IDC_MOUSEWRAP, BM_GETCHECK, 0, 0) != BST_CHECKED) ;
+            knockMode = (SendDlgItemMessage(hDlg, IDC_KNOCKMODE1, BM_GETCHECK, 0, 0) == BST_CHECKED) ;
+            if(knockMode && (warpLength < 24))
+            {
+                knockMode = 0 ;
+                SendDlgItemMessage(hDlg, IDC_KNOCKMODE1, BM_SETCHECK, 0,0);
+                MessageBox(hDlg, "Mouse jump length is too small to support knocking, must be 24 or greater.",vwVIRTUAWIN_NAME " Error", MB_ICONERROR); 
+            }
+            if(SendDlgItemMessage(hDlg, IDC_KNOCKMODE2, BM_GETCHECK, 0, 0) == BST_CHECKED)
+                knockMode |= 2 ;
+                
             if(SendDlgItemMessage(hDlg, IDC_KEYCONTROL, BM_GETCHECK, 0, 0) == BST_CHECKED)
             {
                 useMouseKey = TRUE;
@@ -392,10 +390,11 @@ BOOL APIENTRY setupMouse(HWND hDlg, UINT message, UINT wParam, LONG lParam)
         break;
         
     case WM_COMMAND:
-        if(LOWORD(wParam) == IDC_MOUSWARP || LOWORD(wParam) == IDC_TASKBAR || 
-           LOWORD(wParam) == IDC_JUMP     || LOWORD(wParam) == IDC_KEYCONTROL || 
-           LOWORD(wParam) == IDC_MCTRL    || LOWORD(wParam) == IDC_MALT || 
-           LOWORD(wParam) == IDC_MSHIFT   || LOWORD(wParam) == IDC_MOUSEWRAP)
+        if(LOWORD(wParam) == IDC_JUMP     || LOWORD(wParam) == IDC_MOUSEWRAP ||
+           LOWORD(wParam) == IDC_MALT     || LOWORD(wParam) == IDC_KEYCONTROL || 
+           LOWORD(wParam) == IDC_MCTRL    || LOWORD(wParam) == IDC_ENABLEMOUSE || 
+           LOWORD(wParam) == IDC_MSHIFT   || LOWORD(wParam) == IDC_KNOCKMODE1 || 
+           LOWORD(wParam) == IDC_KNOCKMODE2)
         {
             pageChangeMask |= 0x02 ;
             SendMessage(GetParent(hDlg), PSM_CHANGED, (WPARAM)hDlg, 0L); // Enable apply
@@ -702,8 +701,6 @@ BOOL APIENTRY setupExpert(HWND hDlg, UINT message, UINT wParam, LONG lParam)
             SendDlgItemMessage(hDlg, IDC_TASKBARDETECT, BM_SETCHECK, 1,0);
         if(trickyWindows)
             SendDlgItemMessage(hDlg, IDC_TRICKYSUPPORT, BM_SETCHECK, 1,0);
-        if(!taskbarOffset)
-            SendDlgItemMessage(hDlg, IDC_XPSTYLETASKBAR, BM_SETCHECK, 1,0);
         if(permanentSticky)
             SendDlgItemMessage(hDlg, IDC_PERMSTICKY, BM_SETCHECK, 1,0);
         if(vwLogFlag)
@@ -725,10 +722,6 @@ BOOL APIENTRY setupExpert(HWND hDlg, UINT message, UINT wParam, LONG lParam)
             invertY = (SendDlgItemMessage(hDlg, IDC_INVERTY, BM_GETCHECK, 0, 0) == BST_CHECKED) ;
             noTaskbarCheck = (SendDlgItemMessage(hDlg, IDC_TASKBARDETECT, BM_GETCHECK, 0, 0) != BST_CHECKED) ;
             trickyWindows = (SendDlgItemMessage(hDlg, IDC_TRICKYSUPPORT, BM_GETCHECK, 0, 0) == BST_CHECKED) ;
-            if(SendDlgItemMessage(hDlg, IDC_XPSTYLETASKBAR, BM_GETCHECK, 0, 0) == BST_CHECKED)
-                taskbarOffset = 0;
-            else
-                taskbarOffset = 3;
             permanentSticky = (SendDlgItemMessage(hDlg, IDC_PERMSTICKY, BM_GETCHECK, 0, 0) == BST_CHECKED) ;
             if(SendDlgItemMessage(hDlg, IDC_DISPLAYICON, BM_GETCHECK, 0, 0) == BST_CHECKED)
             {
@@ -794,10 +787,10 @@ BOOL APIENTRY setupExpert(HWND hDlg, UINT message, UINT wParam, LONG lParam)
             }
         }
         else if(LOWORD(wParam) == IDC_FOCUS      || LOWORD(wParam) == IDC_TRICKYSUPPORT ||
-                LOWORD(wParam) == IDC_MINIMIZED  || LOWORD(wParam) == IDC_XPSTYLETASKBAR ||
+                LOWORD(wParam) == IDC_MINIMIZED  || LOWORD(wParam) == IDC_DEBUGLOGGING ||
                 LOWORD(wParam) == IDC_PERMSTICKY || LOWORD(wParam) == IDC_DISPLAYICON ||
                 LOWORD(wParam) == IDC_INVERTY    || LOWORD(wParam) == IDC_TASKBARDETECT ||
-                LOWORD(wParam) == IDC_REFRESH    || LOWORD(wParam) == IDC_DEBUGLOGGING ||
+                LOWORD(wParam) == IDC_REFRESH    || 
                 (LOWORD(wParam) == IDC_PRESORDER && HIWORD(wParam) == LBN_SELCHANGE) ||
                 (LOWORD(wParam) == IDC_HIDWINACT && HIWORD(wParam) == LBN_SELCHANGE) )
         {

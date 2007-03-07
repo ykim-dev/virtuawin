@@ -401,7 +401,7 @@ void writeConfig(void)
     else
     {
         fprintf(fp, "Mouse_warp# %i\n", mouseEnable);
-        fprintf(fp, "Mouse_delay# %i\n", configMultiplier);
+        fprintf(fp, "Mouse_delay# %i\n", mouseDelay);
         fprintf(fp, "Key_support# %i\n", keyEnable);
         fprintf(fp, "Release_focus# %i\n", releaseFocus);
         fprintf(fp, "Not_used# 0\n");
@@ -411,7 +411,7 @@ void writeConfig(void)
         fprintf(fp, "Control_key_win# %i\n", modWin);
         fprintf(fp, "Warp_jump# %i\n", warpLength);
         fprintf(fp, "Switch_minimized# %i\n", minSwitch);
-        fprintf(fp, "Taskbar_warp# %i\n", taskBarWarp);
+        fprintf(fp, "Not_used# 0\n");
         fprintf(fp, "Desk_Ysize# %i\n", nDesksY);
         fprintf(fp, "Desk_Xsize# %i\n", nDesksX);
         fprintf(fp, "Hot_key_support# %i\n", hotKeyEnable);
@@ -451,7 +451,7 @@ void writeConfig(void)
         fprintf(fp, "Sticky_Win# %i\n", hotkeyStickyWin);
         fprintf(fp, "Taskbar_detection# %i\n", noTaskbarCheck);
         fprintf(fp, "Use_trickywindows# %i\n", trickyWindows);
-        fprintf(fp, "XPStyleTaskbar# %i\n", taskbarOffset);
+        fprintf(fp, "Not_used# 0\n");
         fprintf(fp, "PermanentSticky# %i\n", permanentSticky);
         fprintf(fp, "CycleUpWin# %i\n", hotCycleUpWin);
         fprintf(fp, "CycleDownWin# %i\n", hotCycleDownWin);
@@ -467,6 +467,7 @@ void writeConfig(void)
         fprintf(fp, "DismissHotkeyMod# %i\n", hotkeyDismissMod);
         fprintf(fp, "DismissHotkeyWin# %i\n", hotkeyDismissWin);
         fprintf(fp, "LogFlag# %i\n", vwLogFlag);
+        fprintf(fp, "KnockMode# %i\n", knockMode);
         fclose(fp);
     }
 }
@@ -565,7 +566,7 @@ void readConfig(void)
     else
     {   
         fscanf(fp, "%s%i", buff, &mouseEnable);
-        fscanf(fp, "%s%i", buff, &configMultiplier);
+        fscanf(fp, "%s%i", buff, &mouseDelay);
         fscanf(fp, "%s%i", buff, &keyEnable);
         fscanf(fp, "%s%i", buff, &releaseFocus);
         fscanf(fp, "%s%i", buff, &ii);
@@ -575,7 +576,7 @@ void readConfig(void)
         fscanf(fp, "%s%i", buff, &modWin);
         fscanf(fp, "%s%i", buff, &warpLength);
         fscanf(fp, "%s%i", buff, &minSwitch);
-        fscanf(fp, "%s%i", buff, &taskBarWarp);
+        fscanf(fp, "%s%i", buff, &ii);
         fscanf(fp, "%s%i", buff, &nDesksY);
         fscanf(fp, "%s%i", buff, &nDesksX);
         fscanf(fp, "%s%i", buff, &hotKeyEnable);
@@ -616,7 +617,7 @@ void readConfig(void)
         fscanf(fp, "%s%i", buff, &hotkeyStickyWin);
         fscanf(fp, "%s%i", buff, &noTaskbarCheck);
         fscanf(fp, "%s%i", buff, &trickyWindows);
-        fscanf(fp, "%s%i", buff, &taskbarOffset);
+        fscanf(fp, "%s%i", buff, &ii);
         fscanf(fp, "%s%i", buff, &permanentSticky);
         fscanf(fp, "%s%i", buff, &hotCycleUpWin);
         fscanf(fp, "%s%i", buff, &hotCycleDownWin);
@@ -632,6 +633,7 @@ void readConfig(void)
         fscanf(fp, "%s%i", buff, &hotkeyDismissMod);
         fscanf(fp, "%s%i", buff, &hotkeyDismissWin);
         fscanf(fp, "%s%i", buff, &vwLogFlag);
+        fscanf(fp, "%s%i", buff, &knockMode);
         fclose(fp);
     }
 }

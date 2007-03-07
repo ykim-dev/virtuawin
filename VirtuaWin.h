@@ -36,7 +36,7 @@ extern int screenTop;
 extern int screenBottom;
 
 extern int curDisabledMod;    // how many disabled modules we have
-extern int taskbarOffset;     // Default 3, 0 if XP skinned taskbar is used.
+extern int knockMode;         // mouse edge kncking mode
 
 // logging defines & macros
 extern int   vwLogFlag ;
@@ -59,7 +59,7 @@ void setMouseKey(void);
 void reLoadIcons(void);
 void registerAllKeys(void);
 void unRegisterAllKeys(void);
-void getTaskbarLocation(void);
+void getWorkArea(void);
 int  assignWindow(HWND theWin, int theDesk, BOOL force);
 int  gotoDesk(int theDesk, BOOL force);
 void showHelp(HWND aHWnd, UINT context);

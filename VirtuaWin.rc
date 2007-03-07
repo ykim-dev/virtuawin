@@ -43,7 +43,7 @@ BEGIN
 
     GROUPBOX        "Cursor Keys", IDC_STATIC, 4, 38, 202, 37
     AUTOCHECKBOX    "Enable cursor key desktop navigation", IDC_KEYS, 10, 49, 135, 10
-    LTEXT           "Modifier", IDC_STATIC, 22, 61, 30, 8
+    LTEXT           "Modifier:", IDC_STATIC, 22, 61, 30, 8
     AUTOCHECKBOX    "Shift", IDC_SHIFT, 55, 61, 34, 10
     AUTOCHECKBOX    "Ctrl", IDC_CTRL, 90, 61, 30, 10
     AUTOCHECKBOX    "Alt", IDC_ALT, 120, 61, 30, 10
@@ -73,23 +73,25 @@ IDD_PROPPAGE_MOUSE DIALOGEX 0, 0, 150, 150
 STYLE DS_3DLOOK | WS_CHILD | WS_DISABLED | WS_BORDER
 FONT 8, "MS Sans Serif"
 BEGIN
-    GROUPBOX        "Mouse Support", IDC_STATIC, 4, 5, 202, 103
-    AUTOCHECKBOX    "Enable mouse support", IDC_MOUSWARP, 10, 16, 85, 10
-    LTEXT           "Delay", IDC_STATIC, 22, 29, 18, 8
+    GROUPBOX        "Mouse Support", IDC_STATIC, 4, 5, 202, 128
+    AUTOCHECKBOX    "Enable mouse support", IDC_ENABLEMOUSE, 10, 16, 85, 10
+    LTEXT           "Delay before changing desktop:", IDC_STATIC, 22, 27, 120, 8
     CONTROL         "Slider1", IDC_SLIDER, "msctls_trackbar32", 0x19 |
-                    WS_TABSTOP, 50, 27, 70, 15
-    EDITTEXT        IDC_TIME, 125, 29, 20, 12, ES_RIGHT | ES_AUTOHSCROLL |
+                    WS_TABSTOP, 34, 38, 80, 15
+    EDITTEXT        IDC_TIME, 125, 40, 20, 12, ES_RIGHT | ES_AUTOHSCROLL |
                     ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT           "ms", IDC_STATIC, 145, 29, 35, 10
-    LTEXT           "Mouse jump length", IDC_STATIC, 22, 45, 60, 8, 0
-    EDITTEXT        IDC_JUMP, 87, 43, 20, 12, ES_AUTOHSCROLL
-    AUTOCHECKBOX    "Taskbar warp", IDC_TASKBAR, 22, 59, 59, 10
-    AUTOCHECKBOX    "No mouse move", IDC_MOUSEWRAP, 22, 70, 67, 10
-    AUTOCHECKBOX    "Use modifier key control", IDC_KEYCONTROL, 10, 82, 90, 10
-    LTEXT           "Modifier", IDC_STATIC, 22, 94, 30, 8
-    AUTOCHECKBOX    "Shift", IDC_MSHIFT, 55, 94, 34, 10
-    AUTOCHECKBOX    "Ctrl", IDC_MCTRL, 90, 94, 30, 10
-    AUTOCHECKBOX    "Alt", IDC_MALT, 120, 94, 29, 10
+    LTEXT           "ms", IDC_STATIC, 145, 40, 35, 10
+    AUTOCHECKBOX    "Enable modifier key control", IDC_KEYCONTROL, 22, 54, 110, 10
+    LTEXT           "Modifier:", IDC_STATIC, 34, 65, 30, 8
+    AUTOCHECKBOX    "Shift", IDC_MSHIFT, 67, 65, 34, 10
+    AUTOCHECKBOX    "Ctrl", IDC_MCTRL, 102, 65, 30, 10
+    AUTOCHECKBOX    "Alt", IDC_MALT, 132, 65, 29, 10
+    AUTOCHECKBOX    "Enable desktop edge knocking", IDC_KNOCKMODE1, 22, 78, 125, 10
+    AUTOCHECKBOX    "Always required", IDC_KNOCKMODE2, 34, 89, 90, 10
+
+    LTEXT           "Mouse jump length", IDC_STATIC, 22, 105, 60, 8, 0
+    EDITTEXT        IDC_JUMP, 87, 103, 20, 12, ES_AUTOHSCROLL
+    AUTOCHECKBOX    "Enable mouse warping", IDC_MOUSEWRAP, 22, 119, 90, 10
 END
 
 IDD_PROPPAGE_MISC DIALOG 0, 0, 150, 150
@@ -143,12 +145,11 @@ BEGIN
     AUTOCHECKBOX    "Hide system tray icon", IDC_DISPLAYICON,                    10,  101, 80,  10
     AUTOCHECKBOX    "Remember sticky state throughout session", IDC_PERMSTICKY,  10,  112, 150, 10
 
-    GROUPBOX        "Workarounds", IDC_STATIC, 4, 129, 202, 69
+    GROUPBOX        "Workarounds", IDC_STATIC, 4, 129, 202, 58
     AUTOCHECKBOX    "Force refresh after desktop change", IDC_REFRESH,           10, 140, 130, 10
     AUTOCHECKBOX    "Enable taskbar detection", IDC_TASKBARDETECT,               10, 151, 100, 10
     AUTOCHECKBOX    "Enable alternative hiding method for tricky windows", IDC_TRICKYSUPPORT, 10, 162, 180, 10
-    AUTOCHECKBOX    "Enable XP themed taskbar support", IDC_XPSTYLETASKBAR,      10, 173, 130, 10
-    AUTOCHECKBOX    "Write events to virtuawin.log", IDC_DEBUGLOGGING,           10, 184, 130, 10
+    AUTOCHECKBOX    "Write events to virtuawin.log", IDC_DEBUGLOGGING,           10, 173, 130, 10
 
     PUSHBUTTON      "Explore Config",  IDC_EXPLORECNFG, 140, 230, 60, 14
 END

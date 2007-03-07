@@ -36,8 +36,7 @@ extern int currentDesk;  // Current desktop
 extern int nDesksX;      // indicates the number of desks wide the virtual area is
 extern int nDesksY;             // indicates the number of desks tall the virtual area is
 extern int warpLength;          // How far to jump into new desktop
-extern int warpMultiplier;      // Counts the emouse delay
-extern int configMultiplier;    // Mouse warp delay 250ms*warpMultiplier 
+extern int mouseDelay;          // Mouse change delay 50ms*mouseDelay 
 extern int preserveZOrder;      // Should we preserve the window Z order
 extern int hiddenWindowAct;     // Hidden window activation action
 extern BOOL noMouseWrap;        // if we don't want to move the mouse pointer after switch
