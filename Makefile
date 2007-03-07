@@ -51,11 +51,11 @@ RC	= i586-mingw32msvc-windres
 STRIP	= strip
 endif
 
+ifeq ($(vwUNICODE),1)
+CUCDEFS = -DUNICODE -D_UNICODE
+endif
 ifeq ($(vwVERBOSED),1)
 CVDDEFS = -DvwLOG_VERBOSE
-endif
-ifeq ($(vwVERBOSET),1)
-CVTDEFS = -DvwLOG_TIMING
 endif
 
 SRC	= VirtuaWin.c DiskRoutines.c SetupDialog.c ModuleRoutines.c regex.c
@@ -73,9 +73,9 @@ OBJSD   = $(SRC:.c=.od)
 
 .SUFFIXES: .rc .res .coff .c .o .od
 .c.o:
-	$(CC) $(CFLAGS) $(CVBDEFS) $(CVDDEFS) $(CVTDEFS) -c -o $@ $<
+	$(CC) $(CFLAGS) $(CVDDEFS) $(CUCDEFS) -c -o $@ $<
 .c.od:
-	$(CC) $(CFLAGSD) $(CVBDEFS) $(CVDDEFS) $(CVTDEFS) -c -o $@ $<
+	$(CC) $(CFLAGSD) $(CVDDEFS) $(CUCDEFS) -c -o $@ $<
 
 $(TARGET): $(OBJS) $(COFFS)
 	$(CC) $(LDFLAGS) -o $(TARGET) $(OBJS) $(COFFS) $(LIBS)
@@ -85,7 +85,7 @@ $(TARGETD): $(OBJSD) $(COFFS)
 	$(CC) $(LDFLAGSD) -o $(TARGETD) $(OBJSD) $(COFFS) $(LIBS)
 
 VirtuaWin.coff: VirtuaWin.rc
-	$(RC) --input-format rc --output-format coff -o $@ -i $<
+	$(RC) $(CUCDEFS) --input-format rc --output-format coff -o $@ -i $<
 
 all:    clean $(TARGET)
 
@@ -95,7 +95,7 @@ clean:
 	rm -f $(OBJS) $(OBJSD) $(COFFS)
 
 spotless: clean 
-	rm -f  $(TARGET) $(TARGETD) $(OBJRES) vc60.pch
+	rm -f $(TARGET) $(TARGETD) $(OBJRES) vc60.pch
 
 # Dependancies
 $(OBJS):  $(HEADERS)

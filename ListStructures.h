@@ -26,7 +26,6 @@
 
 // Standard includes
 #include <windows.h>
-#include "Defines.h"
 
 #define vwTRICKY_POSITION 1
 #define vwTRICKY_WINDOW   2
@@ -51,18 +50,18 @@ typedef struct { // Holds the windows in the list
 } windowType;
 
 typedef struct { // Holds data for modules
-    HWND Handle;
-    BOOL Disabled;
-    char description[vwMODULENAME_MAX+1];
+    HWND   Handle;
+    BOOL   Disabled;
+    TCHAR description[vwMODULENAME_MAX+1];
 } moduleType;
 
 typedef struct { // Holds disabled modules
-    char moduleName[vwMODULENAME_MAX+1];
+    TCHAR moduleName[vwMODULENAME_MAX+1];
 } disModules;
 
 typedef struct _MenuItems
 {
-    char          *name;
+    TCHAR        *name;
     HICON          icon; 
     unsigned short id;
     unsigned short desk;
@@ -70,7 +69,7 @@ typedef struct _MenuItems
 } MenuItem;
 
 typedef struct { // Holds desktop assigned windows
-    char          *match;
+    TCHAR        *match;
     unsigned short desk;
     unsigned char  type;
 } vwWindowMatch ;

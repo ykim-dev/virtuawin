@@ -24,7 +24,6 @@
 // Includes
 #include "VirtuaWin.h"
 #include "ModuleRoutines.h"
-#include "Defines.h"
 #include "Messages.h"
 #include "ConfigParameters.h"
 #include "ListStructures.h"
@@ -46,12 +45,12 @@ void unloadModules(void)
 /*************************************************
  * Checks if a module is disabled
  */
-static BOOL checkDisabledList(char* theModName)
+static BOOL checkDisabledList(TCHAR *theModName)
 {
     int modIndex;
     
     for (modIndex = 0; modIndex < curDisabledMod; ++modIndex)
-        if (!strncmp(disabledModules[modIndex].moduleName, theModName, (strlen(theModName) - 4)))
+        if(!_tcsncmp(disabledModules[modIndex].moduleName,theModName,(_tcslen(theModName) - 4)))
             return TRUE; // Module disabled
     return FALSE;  // Not disabled
 }
@@ -59,10 +58,10 @@ static BOOL checkDisabledList(char* theModName)
 /*************************************************
  * Adds a module to a list, found by loadModules()
  */
-static void addModule(char *moduleName, char *path)
+static void addModule(TCHAR *moduleName, TCHAR *path)
 {
-    char tmpPath[MAX_PATH];
-    char errMsg[150];
+    TCHAR tmpPath[MAX_PATH];
+    TCHAR errMsg[150];
     HWND myModule;
     STARTUPINFO si;
     PROCESS_INFORMATION pi;  
@@ -70,8 +69,8 @@ static void addModule(char *moduleName, char *path)
     
     if(nOfModules >= MAXMODULES)
     {
-        sprintf(errMsg, "Max number of modules where added.\n'%s' won't be loaded.", moduleName);
-        MessageBox(hWnd, errMsg, "Warning",0 );
+        _stprintf(errMsg,_T("Max number of modules where added.\n'%s' won't be loaded."), moduleName);
+        MessageBox(hWnd, errMsg,vwVIRTUAWIN_NAME _T(" Error"),MB_ICONWARNING);
         return;
     }
     
@@ -80,28 +79,28 @@ static void addModule(char *moduleName, char *path)
     {
         if((myModule = FindWindow(moduleName, NULL)))
         {
-            sprintf(errMsg, "The module '%s' seems to already be running and will be re-used. \nThis is probably due to incorrect shutdown of VirtuaWin" , moduleName);
-            MessageBox(hWnd, errMsg, "Module warning", 0);
+            _stprintf(errMsg,_T("The module '%s' seems to already be running and will be re-used. \nThis is probably due to incorrect shutdown of VirtuaWin"), moduleName);
+            MessageBox(hWnd,errMsg,vwVIRTUAWIN_NAME _T(" Error"),MB_ICONWARNING);
         }
         else
         {
             // Startup the module
-            strcpy(tmpPath,path) ;
-            strcat(tmpPath,moduleName) ;
+            _tcscpy(tmpPath,path) ;
+            _tcscat(tmpPath,moduleName) ;
             memset(&si, 0, sizeof(si)); 
             si.cb = sizeof(si); 
             if(!CreateProcess(tmpPath, NULL, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi))
             {
-                LPTSTR  lpszLastErrorMsg; 
+                TCHAR *lpszLastErrorMsg; 
                 FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM, NULL, 
                               GetLastError(), 
                               MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), //The user default language 
-                              (LPTSTR) &lpszLastErrorMsg, 
+                              (TCHAR *) &lpszLastErrorMsg, 
                               0, 
                               NULL ); 
                 
-                sprintf(errMsg, "Failed to load module '%s'.\n %s", moduleName, lpszLastErrorMsg);
-                MessageBox(hWnd, errMsg, "Module error",0 );
+                _stprintf(errMsg,_T("Failed to load module '%s'.\n %s"), moduleName, lpszLastErrorMsg);
+                MessageBox(hWnd,errMsg,vwVIRTUAWIN_NAME _T(" Error"),MB_ICONWARNING);
                 return;
             }
             // Wait max 5 sec for the module to initialize itself
@@ -112,15 +111,15 @@ static void addModule(char *moduleName, char *path)
         }
         if(!myModule)
         {
-            sprintf(errMsg, "Failed to load module '%s'.\n Maybe wrong class/filename.\nErrcode %d", moduleName, retVal);
-            MessageBox(hWnd, errMsg, "Module error",0 );
+            _stprintf(errMsg,_T("Failed to load module '%s'.\n Maybe wrong class/filename.\nErrcode %d"),moduleName,retVal);
+            MessageBox(hWnd,errMsg,vwVIRTUAWIN_NAME _T(" Error"),MB_ICONWARNING);
         }
         else
         {
             moduleList[nOfModules].Handle = myModule;
             moduleList[nOfModules].Disabled = FALSE;
-            moduleName[strlen(moduleName)-4] = '\0'; // remove .exe
-            strncpy(moduleList[nOfModules].description, moduleName, 79);
+            moduleName[_tcslen(moduleName)-4] = '\0'; // remove .exe
+            _tcsncpy(moduleList[nOfModules].description, moduleName, 79);
             PostMessage(myModule, MOD_INIT, (WPARAM) hWnd , 0);
             nOfModules++;
         }
@@ -129,8 +128,8 @@ static void addModule(char *moduleName, char *path)
     { // Module disabled
         moduleList[nOfModules].Handle = NULL;
         moduleList[nOfModules].Disabled = TRUE;
-        moduleName[strlen(moduleName)-4] = '\0'; // remove .exe
-        strncpy(moduleList[nOfModules].description, moduleName, 79);
+        moduleName[_tcslen(moduleName)-4] = '\0'; // remove .exe
+        _tcsncpy(moduleList[nOfModules].description, moduleName, 79);
         nOfModules++;
     }
 }
@@ -142,7 +141,7 @@ static void addModule(char *moduleName, char *path)
 void loadModules(void)
 {
     WIN32_FIND_DATA exe_file;
-    char buff[MAX_PATH], *ss ;
+    TCHAR buff[MAX_PATH], *ss ;
     HANDLE hFile;
     
     GetFilename(vwMODULES,0,buff);
@@ -150,7 +149,7 @@ void loadModules(void)
     // Find first .exe file in modules directory
     if((hFile = FindFirstFile(buff,&exe_file)) != INVALID_HANDLE_VALUE)
     {
-        if((ss = strrchr(buff,'\\')) != NULL)
+        if((ss = _tcsrchr(buff,'\\')) != NULL)
             ss[1] = '\0' ;
         do {
             addModule(exe_file.cFileName,buff);

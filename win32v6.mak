@@ -29,11 +29,11 @@ LDFLAGS	= /SUBSYSTEM:windows /NOLOGO /INCREMENTAL:no /MACHINE:IX86 /PDB:NONE "/L
 LDFLAGSD= /DEBUG /SUBSYSTEM:windows /NOLOGO /INCREMENTAL:no /MACHINE:IX86 /PDB:NONE "/LIBPATH:$(TOOLSDIR)\lib"
 LIBS	= shell32.lib user32.lib gdi32.lib comctl32.lib
 
+!IFDEF vwUNICODE
+CUCDEFS = -DUNICODE -D_UNICODE
+!ENDIF
 !IFDEF vwVERBOSED
 CVDDEFS = -DvwLOG_VERBOSE
-!ENDIF
-!IFDEF vwVERBOSET
-CVTDEFS = -DvwLOG_TIMING
 !ENDIF
 
 SRC	= VirtuaWin.c DiskRoutines.c SetupDialog.c ModuleRoutines.c regex.c
@@ -50,11 +50,11 @@ OBJSD   = $(SRC:.c=.od)
 
 .SUFFIXES: .rc .res .coff .c .o .od
 .c.o:
-	$(CC) $(CFLAGS) $(CVBDEFS) $(CVDDEFS) $(CVTDEFS) -c $< -Fo$@
+	$(CC) $(CFLAGS) $(CVDDEFS) $(CUCDEFS) -c $< -Fo$@
 .c.od:
-	$(CC) $(CFLAGSD) $(CVBDEFS) $(CVDDEFS) $(CVTDEFS) -c $< -Fo$@
+	$(CC) $(CFLAGSD) $(CVDDEFS) $(CUCDEFS) -c $< -Fo$@
 .rc.res:	
-	$(RC) -v -i "$(TOOLSDIR)\include" -i "$(TOOLSDIR)\mfc\include" -fo $@ $*.rc 
+	$(RC) -v $(CUCDEFS) -i "$(TOOLSDIR)\include" -i "$(TOOLSDIR)\mfc\include" -fo $@ $*.rc 
 
 
 $(TARGET): $(OBJS) $(OBJRES)

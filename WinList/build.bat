@@ -15,14 +15,13 @@ set MAKEFILE=
 :build_option
 if "%1." == "."    goto build_cont
 if "%1" == "-C"    set  TARGET=clean
-if "%1" == "-d"    set  DTARGET=VirtuaWinD.exe
+if "%1" == "-d"    set  DTARGET=WinListD.exe
 if "%1" == "-h"    goto build_help
 if "%1" == "-l"    goto build_logf
 if "%1" == "-la"   goto build_logfa
 if "%1" == "-m"    goto build_mkfl
 if "%1" == "-S"    set  TARGET=spotless
 if "%1" == "-u"    set  OPTIONS=%OPTIONS% vwUNICODE=1
-if "%1" == "-vd"   set  OPTIONS=%OPTIONS% vwVERBOSED=1
 shift
 goto build_option
 
@@ -84,7 +83,7 @@ echo Usage: build [options]
 echo .
 echo Where options can be:-
 echo     -C   : Build clean.
-echo     -d   : For debug build (output is VirtuaWinD.exe).
+echo     -d   : For debug build (output is WinListD.exe).
 echo     -h   : For this help page.
 echo     -l {logfile}
 echo          : Set the compile log file.
@@ -96,7 +95,6 @@ echo              Makefile     Build using Cygwin, MinGW or Linux GNU GCC
 echo              win32v6.mak  Build using MS VC version 6 onwards
 echo     -S   : Build clean spotless.
 echo     -u   : Build with UNICODE support.
-echo     -vd  : Build with debug verbosity logging (large output).
 echo .
 echo If you change the build options used do a clean build (build -C) first.
 

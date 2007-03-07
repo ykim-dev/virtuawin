@@ -2,6 +2,8 @@
 #include "Defines.h"
 #include "Resource.h"
 
+#define _T(x) x
+
 107 ICON icons/virtuawin.ico
 108 ICON icons/st_dis_1.ico
 109 ICON icons/st_nw_1.ico

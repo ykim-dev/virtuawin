@@ -33,14 +33,12 @@ LIBS	= shell32.lib user32.lib gdi32.lib comctl32.lib
 CUCDEFS = -DUNICODE -D_UNICODE
 !ENDIF
 
-SRC	= winlist.c
-COFFS   = winlist.coff
-OBJRES  = winlist.res
+SRC	= Module.c
 
-TARGET	= WinList.exe
+TARGET	= Module.exe
 OBJS    = $(SRC:.c=.o)
 
-TARGETD	= WinListD.exe
+TARGETD	= ModuleD.exe
 OBJSD   = $(SRC:.c=.od)
 
 .SUFFIXES: .rc .res .coff .c .o .od
@@ -48,14 +46,11 @@ OBJSD   = $(SRC:.c=.od)
 	$(CC) $(CFLAGS) $(CUCDEFS) -c $< -Fo$@
 .c.od:
 	$(CC) $(CFLAGSD) $(CUCDEFS) -c $< -Fo$@
-.rc.res:	
-	$(RC) -v -i "$(TOOLSDIR)\include" -i "$(TOOLSDIR)\mfc\include" -fo $@ $*.rc 
 
-
-$(TARGET): $(OBJS) $(OBJRES)
+$(TARGET): $(OBJS)
 	$(LD) $(LDFLAGS) /out:$@ $(OBJS) $(OBJRES) $(LIBS)
 
-$(TARGETD): $(OBJSD) $(OBJRES)
+$(TARGETD): $(OBJSD)
 	$(LD) $(LDFLAGSD) /out:$@ $(OBJSD) $(OBJRES) $(LIBS)
 
 all:    clean $(TARGET)
@@ -63,7 +58,7 @@ all:    clean $(TARGET)
 alld:   clean $(TARGETD)
 
 clean: 
-	- erase $(OBJS) $(OBJSD) $(OBJRES) vc60.pch
+	- erase $(OBJS) $(OBJSD) vc60.pch
 
 spotless: clean
-	- erase $(TARGET) $(TARGETD) $(COFFS)
+	- erase $(TARGET) $(TARGETD)

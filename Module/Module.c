@@ -31,35 +31,37 @@
 #include <windows.h>
 #include <string.h>
 #include <stdio.h>
+#include <tchar.h>
 #include "Messages.h"
 
 int initialised=0 ;
-HINSTANCE hInst;   // Instance handle
-HWND hwndMain;	   // Main window handle
-HWND vwHandle;     // Handle to VirtuaWin
-char installPath[MAX_PATH] ;
-char userAppPath[MAX_PATH] ;
+HWND vwHandle;                 /* Handle to VirtuaWin */
+TCHAR installPath[MAX_PATH] ;  /* VW install path */
+TCHAR userAppPath[MAX_PATH] ;  /* User's config path */
 
 
-static VOID CALLBACK startupFailureTimerProc(HWND hwnd, UINT uMsg, UINT idEvent, DWORD dwTime)
+static VOID CALLBACK
+startupFailureTimerProc(HWND hwnd, UINT uMsg, UINT idEvent, DWORD dwTime)
 {
     if(!initialised)
     {
-        MessageBox(hwnd, "VirtuaWin failed to send the UserApp path.", "Module Error", MB_ICONWARNING);
+        MessageBox(hwnd,_T("VirtuaWin failed to send the UserApp path."),_T("Module Error"), MB_ICONWARNING);
         exit(1) ;
     }
 }
 
-LRESULT CALLBACK MainWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
+LRESULT CALLBACK
+MainWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     switch (msg)
     {
-    case MOD_INIT: // This must be taken care of in order to get the handle to VirtuaWin. 
-        // The handle to VirtuaWin comes in the wParam 
-        vwHandle = (HWND) wParam; // Should be some error handling here if NULL 
+    case MOD_INIT: 
+        /* This must be taken care of in order to get the handle to VirtuaWin. */
+        /* The handle to VirtuaWin comes in the wParam */
+        vwHandle = (HWND) wParam; /* Should be some error handling here if NULL */
         if(!initialised)
         {
-            // Get the VW Install path and then the user's path - give VirtuaWin 10 seconds to do this
+            /* Get the VW Install path and then the user's path - give VirtuaWin 10 seconds to do this */
             SendMessage(vwHandle, VW_INSTALLPATH, 0, 0);
             SetTimer(hwnd, 0x29a, 10000, startupFailureTimerProc);
         }
@@ -74,34 +76,46 @@ LRESULT CALLBACK MainWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
             {
                 if((cds->cbData < 2) || (cds->lpData == NULL))
                 {
-                    MessageBox(hwnd, "VirtuaWin returned a bad Install path.", "Module Error", MB_ICONWARNING);
+                    MessageBox(hwnd,_T("VirtuaWin returned a bad Install path."),_T("Module Error"), MB_ICONWARNING);
                     exit(1) ;
                 }
+                /* the paths are always returned in a multibyte string so we do not need to know
+                 * whether we are talking to a unicode VW */
+#ifdef _UNICODE
+                MultiByteToWideChar(CP_ACP,0,(char *) cds->lpData,-1,installPath,MAX_PATH) ;
+#else
                 strcpy(installPath,(char *) cds->lpData) ;
-                // Now get the VW user's path
+#endif
+                /* Now get the VW user's path */
                 SendMessage(vwHandle, VW_USERAPPPATH, 0, 0);
             }
             else if(cds->dwData == (0-VW_USERAPPPATH))
             {
-                char buff[MAX_PATH+MAX_PATH];
+                TCHAR buff[MAX_PATH+MAX_PATH];
                 if((cds->cbData < 2) || (cds->lpData == NULL))
                 {
-                    MessageBox(hwnd, "VirtuaWin returned a bad UserApp path.", "Module Error", MB_ICONWARNING);
+                    MessageBox(hwnd,_T("VirtuaWin returned a bad UserApp path."),_T("Module Error"), MB_ICONWARNING);
                     exit(1) ;
                 }
+#ifdef _UNICODE
+                MultiByteToWideChar(CP_ACP,0,(char *) cds->lpData,-1,userAppPath,MAX_PATH) ;
+#else
                 strcpy(userAppPath,(char *) cds->lpData) ;
+#endif
                 initialised = 1 ;
-                sprintf(buff,"VirtuaWin Module initialized, install path:\n\t%s\nUser path:\n\t%s",installPath,userAppPath) ;
-                MessageBox(hwndMain,buff,"Module Plugin",0);
+                _stprintf(buff,_T("VirtuaWin Module initialized, install path:\n\t%s\nUser path:\n\t%s"),installPath,userAppPath) ;
+                MessageBox(hwnd,buff,_T("Module Plugin"),0);
             }
         }
         return TRUE ;
         
-    case MOD_QUIT: // This must be handeled, otherwise VirtuaWin can't shut down the module 
+    case MOD_QUIT:
+        /* This must be handled, otherwise VirtuaWin can't shut down the module */
         PostQuitMessage(0);
         break;
-    case MOD_SETUP: // Optional
-        MessageBox(hwndMain, "Add setup here!", "Module Plugin", 0);
+    case MOD_SETUP:
+        /* Optional */
+        MessageBox(hwnd,_T("Add setup here!"),_T("Module Plugin"), 0);
         break;
     case WM_DESTROY:
         PostQuitMessage(0);
@@ -116,39 +130,38 @@ LRESULT CALLBACK MainWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 /*
  * Main startup function
  */
-int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, INT nCmdShow)
+int WINAPI
+WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, INT nCmdShow)
 {
     WNDCLASS wc;
     MSG msg;
     
-    hInst = hInstance;
-
     memset(&wc, 0, sizeof(WNDCLASS));
     wc.style = 0;
     wc.lpfnWndProc = (WNDPROC)MainWndProc;
-    wc.hInstance = hInst;
+    wc.hInstance = hInstance ;
     /* IMPORTANT! The classname must be the same as the filename since VirtuaWin uses 
        this for locating the window */
-    wc.lpszClassName = "Module.exe";
+    wc.lpszClassName = _T("Module.exe");
   
     if (!RegisterClass(&wc))
         return 0;
   
-    // In this example, the window is never shown
-    if ((hwndMain = CreateWindow("Module.exe", 
-                                 "Module", 
-                                 WS_POPUP,
-                                 CW_USEDEFAULT, 
-                                 0, 
-                                 CW_USEDEFAULT, 
-                                 0,
-                                 NULL,
-                                 NULL,
-                                 hInst,
-                                 NULL)) == (HWND)0)
+    /* In this example, the window is never shown */
+    if (CreateWindow(_T("Module.exe"), 
+                     _T("Module"), 
+                     WS_POPUP,
+                     CW_USEDEFAULT, 
+                     0, 
+                     CW_USEDEFAULT, 
+                     0,
+                     NULL,
+                     NULL,
+                     hInstance,
+                     NULL) == (HWND) 0)
         return 0;
     
-    // main messge loop
+    /* main messge loop */
     while (GetMessage(&msg, NULL, 0, 0))
     {
         TranslateMessage(&msg);

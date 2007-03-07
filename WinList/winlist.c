@@ -24,6 +24,7 @@
 #include <windows.h>
 #include <string.h>
 #include <stdio.h>
+#include <tchar.h>
 
 #include "winlistres.h"
 #include "../Defines.h"
@@ -47,7 +48,7 @@ typedef struct {
 } winType;
 
 winType windowList[999]; // should be enough
-char userAppPath[MAX_PATH] ;
+TCHAR userAppPath[MAX_PATH] ;
 int initialised=0 ;
 int noOfWin;
 int screenLeft;
@@ -65,17 +66,17 @@ LRESULT CALLBACK MainWndProc(HWND hwnd,UINT msg,WPARAM wParam,LPARAM lParam);
 
 static void goGetTheTaskbarHandle(void)
 {
-    HWND hwndTray = FindWindowEx(NULL, NULL, "Shell_TrayWnd", NULL);
-    HWND hwndBar = FindWindowEx(hwndTray, NULL, "ReBarWindow32", NULL );
+    HWND hwndTray = FindWindowEx(NULL, NULL,_T("Shell_TrayWnd"), NULL);
+    HWND hwndBar = FindWindowEx(hwndTray, NULL,_T("ReBarWindow32"), NULL );
     
     // Maybe "RebarWindow32" is not a child to "Shell_TrayWnd", then try this
     if(hwndBar == NULL)
         hwndBar = hwndTray;
     
-    hwndTask = FindWindowEx(hwndBar, NULL, "MSTaskSwWClass", NULL);
+    hwndTask = FindWindowEx(hwndBar, NULL,_T("MSTaskSwWClass"), NULL);
     
     if(hwndTask == NULL)
-        MessageBox(hwndMain, "Could not locate handle to the taskbar.\n This will disable the ability to hide troublesome windows correctly.", "VirtuaWinList Error", MB_ICONWARNING); 
+        MessageBox(hwndMain,_T("Could not locate handle to the taskbar.\n This will disable the ability to hide troublesome windows correctly."), _T("VirtuaWinList Error"), MB_ICONWARNING); 
 }
 
 /* Initializes the window */ 
@@ -89,14 +90,14 @@ static BOOL WinListInit(void)
     wc.hInstance = hInst;
     /* IMPORTANT! The classname must be the same as the filename since VirtuaWin uses 
        this for locating the window */
-    wc.lpszClassName = "WinList.exe";
+    wc.lpszClassName = _T("WinList.exe");
     
     if (!RegisterClass(&wc))
         return 0;
     
     // the window is never shown
-    if ((hwndMain = CreateWindow("WinList.exe", 
-                                 "WinList", 
+    if ((hwndMain = CreateWindow(_T("WinList.exe"), 
+                                 _T("WinList"), 
                                  WS_POPUP,
                                  CW_USEDEFAULT, 
                                  0, 
@@ -108,7 +109,7 @@ static BOOL WinListInit(void)
                                  NULL)) == (HWND)0)
         return 0;
     
-    RM_Shellhook = RegisterWindowMessage("SHELLHOOK");
+    RM_Shellhook = RegisterWindowMessage(_T("SHELLHOOK"));
     goGetTheTaskbarHandle() ;
     
     return 1;
@@ -118,7 +119,7 @@ static VOID CALLBACK startupFailureTimerProc(HWND hwnd, UINT uMsg, UINT idEvent,
 {
     if(!initialised)
     {
-        MessageBox(hwnd, "VirtuaWin failed to send the UserApp path.", "VirtuaWinList Error", MB_ICONWARNING);
+        MessageBox(hwnd, _T("VirtuaWin failed to send the UserApp path."), _T("VirtuaWinList Error"), MB_ICONWARNING);
         exit(1) ;
     }
 }
@@ -147,10 +148,14 @@ LRESULT CALLBACK MainWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
             {
                 if((cds->cbData < 2) || (cds->lpData == NULL))
                 {
-                    MessageBox(hwnd, "VirtuaWin returned a bad UserApp path.", "VirtuaWinList Error", MB_ICONWARNING);
+                    MessageBox(hwnd, _T("VirtuaWin returned a bad UserApp path."), _T("VirtuaWinList Error"), MB_ICONWARNING);
                     exit(1) ;
                 }
+#ifdef _UNICODE
+                MultiByteToWideChar(CP_ACP,0,(char *) cds->lpData,-1,userAppPath,MAX_PATH) ;
+#else
                 strcpy(userAppPath,(char *) cds->lpData) ;
+#endif
                 initialised = 1 ;
             }
         }
@@ -195,7 +200,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
  */
 __inline BOOL CALLBACK enumWindowsProc(HWND hwnd, LPARAM lParam) 
 {
-    char *ss, buff[vwCLASSNAME_MAX+vwWINDOWNAME_MAX+4];
+    TCHAR *ss, buff[vwCLASSNAME_MAX+vwWINDOWNAME_MAX+4];
     int desk, exstyle, style = GetWindowLong(hwnd, GWL_STYLE);
     HWND phwnd, gphwnd ;
     RECT rect ;
@@ -230,10 +235,10 @@ __inline BOOL CALLBACK enumWindowsProc(HWND hwnd, LPARAM lParam)
         *ss++ = 'H' ;
     *ss++ = '\t' ;
     GetClassName(hwnd,ss,vwCLASSNAME_MAX);
-    ss += strlen(ss) ;
+    ss += _tcslen(ss) ;
     *ss++ = '\t' ;
     if(!GetWindowText(hwnd,ss,vwWINDOWNAME_MAX))
-        strcpy(ss, "<None>");
+        _tcscpy(ss,_T("<None>"));
     SendDlgItemMessage((HWND) lParam, ID_WINLIST, LB_ADDSTRING, 0, (LONG) buff);
     windowList[noOfWin].handle = hwnd;
     windowList[noOfWin].style = style;
@@ -252,16 +257,28 @@ BOOL CALLBACK enumWindowsSaveListProc(HWND hwnd, LPARAM lParam)
     DWORD procId, threadId ;
     int style, exstyle ;
     RECT pos ;
+#ifdef _UNICODE
+    WCHAR nameW[vwWINDOWNAME_MAX] ;
+#endif
     char text[vwWINDOWNAME_MAX] ;
     char class[vwCLASSNAME_MAX] ;
+    
     
     style = GetWindowLong(hwnd, GWL_STYLE);
     exstyle = GetWindowLong(hwnd, GWL_EXSTYLE);
     threadId = GetWindowThreadProcessId(hwnd,&procId) ;
     GetWindowRect(hwnd,&pos);
-    if(!GetWindowText(hwnd,text,vwWINDOWNAME_MAX))
-        strcpy(text,"<None>");
+#ifdef _UNICODE
+    GetClassName(hwnd,nameW,vwCLASSNAME_MAX);
+    WideCharToMultiByte(CP_ACP,0,nameW,-1,class,vwCLASSNAME_MAX, 0, 0) ;
+    if(GetWindowText(hwnd,nameW,vwWINDOWNAME_MAX))
+        WideCharToMultiByte(CP_ACP,0,nameW,-1,text,vwWINDOWNAME_MAX, 0, 0) ;
+    else
+#else
     GetClassName(hwnd,class,vwCLASSNAME_MAX);
+    if(!GetWindowText(hwnd,text,vwWINDOWNAME_MAX))
+#endif
+        strcpy(text,"<None>");
     
     fprintf(wdFp,"%8x %08x %08x %8x %8x %8x %s\n%8d %8x %8d %8d %8d %8d %s\n",
             (int)hwnd,style,exstyle,(int)GetParent(hwnd),
@@ -398,27 +415,27 @@ static BOOL CALLBACK DialogFunc(HWND hwndDlg, UINT msg, WPARAM wParam, LPARAM lP
                     windowList[curSel].restored = 0 ;
                 }
                 else
-                    MessageBox(hwndDlg, "Cannot undo, not restored.", "VirtuaWinList Error", MB_ICONWARNING);
+                    MessageBox(hwndDlg, _T("Cannot undo, not restored."), _T("VirtuaWinList Error"), MB_ICONWARNING);
             }
             return 1;
         
         case IDSAVE:
             {
+                TCHAR fname[MAX_PATH] ;
                 FILE *wdFp ;
-                char fname[MAX_PATH] ;
                 int ii=1 ;
                 while(ii < 1000)
                 {
-                    sprintf(fname,"%sWinList_%d.log",userAppPath,ii) ;
+                    _stprintf(fname,_T("%sWinList_%d.log"),userAppPath,ii) ;
                     if(GetFileAttributes(fname) == INVALID_FILE_ATTRIBUTES)
                         break ;
                     ii++ ;
                 }
                 if(ii == 1000)
-                    MessageBox(hwndDlg, "Cannot create a WinList_#.log file, please clean up your user directory.", "VirtuaWinList Error", MB_ICONWARNING);
+                    MessageBox(hwndDlg, _T("Cannot create a WinList_#.log file, please clean up your user directory."), _T("VirtuaWinList Error"), MB_ICONWARNING);
                 else
                 {
-                    wdFp = fopen(fname,"w+") ;
+                    wdFp = _tfopen(fname,_T("w+")) ;
                     EnumWindows(enumWindowsSaveListProc,(LPARAM) wdFp) ;
                     fclose(wdFp) ;
                 }

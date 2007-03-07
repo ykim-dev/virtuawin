@@ -26,7 +26,7 @@ CC      = gcc
 CFLAGS	= -mno-cygwin -Wall -O2 -DNDEBUG
 CFLAGSD = -mno-cygwin -Wall -g
 LDFLAGS	= -mwindows -mno-cygwin -O2
-LDFLAGS	= -mwindows -mno-cygwin -g
+LDFLAGSD= -mwindows -mno-cygwin -g
 RC      = windres 
 STRIP	= strip
 endif
@@ -51,20 +51,38 @@ RC	= i586-mingw32msvc-windres
 STRIP	= strip
 endif
 
+ifeq ($(vwUNICODE),1)
+CUCDEFS = -DUNICODE -D_UNICODE
+endif
+
+SRC=Module.c
+
+TARGET	= Module.exe
+OBJS    = $(SRC:.c=.o)
+
+TARGETD	= ModuleD.exe
+OBJSD   = $(SRC:.c=.od)
+
 .SUFFIXES: .rc .res .coff .c .o .od
 
 .c.o:
-	$(CC) $(CFLAGS) -c -o $@ $<
+	$(CC) $(CFLAGS) $(CUCDEFS) -c -o $@ $<
+.c.od:
+	$(CC) $(CFLAGSD) $(CUCDEFS) -c -o $@ $<
 
-PRG=Module.exe
-SRC=Module.c
-OBJ=$(SRC:.c=.o)
+$(TARGET): $(OBJS)
+	$(CC) $(LDFLAGS) -o $(TARGET) $(OBJS) $(LIBS)
+	$(STRIP) $(TARGET)
 
-$(PRG):	$(OBJ) Makefile
-	$(CC) $(LDFLAGS) -o $(PRG) $(OBJ) $(LIBS)
-	$(STRIP) $(PRG)
+$(TARGETD): $(OBJSD)
+	$(CC) $(LDFLAGSD) -o $(TARGETD) $(OBJSD) $(LIBS)
+
+all:    clean $(TARGET)
+
+alld:   clean $(TARGETD)
 
 clean: 
-	rm -f $(OBJ)
+	rm -f $(OBJS) $(OBJSD)
 
-all:    clean $(PRG)
+spotless: clean 
+	rm -f $(TARGET) $(TARGETD) vc60.pch

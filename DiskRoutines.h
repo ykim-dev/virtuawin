@@ -28,10 +28,18 @@
 #define _DISKROUTINES_H_
 
 typedef enum { vwMODULES, vwHELP, vwCONFIG, vwLIST, vwTRICKY, vwSTICKY, vwDISABLED, vwWINDOWS_STATE, vwFILE_COUNT } eFileNames;
-extern char *VirtuaWinPath ;
-extern char *UserAppPath ;
 
-void GetFilename(eFileNames filetype, int location, char* outStr);
+extern TCHAR *VirtuaWinPath ;
+extern TCHAR *UserAppPath ;
+#ifdef _UNICODE
+extern char *VirtuaWinPathStr ;
+extern char *UserAppPathStr ;
+#else
+#define VirtuaWinPathStr VirtuaWinPath
+#define UserAppPathStr   UserAppPath
+#endif
+
+void GetFilename(eFileNames filetype, int location, TCHAR *outStr);
 int  loadDisabledModules(disModules *theDisList);
 void saveDisabledList(int theNOfModules, moduleType* theModList);
 int  loadTrickyList(vwWindowMatch *theTrickyList);

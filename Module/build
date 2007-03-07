@@ -19,7 +19,7 @@ do
         echo ""
         echo "Where options can be:-"
         echo "   -C   : Build clean."
-        echo "   -d   : For debug build (output is VirtuaWinD.exe)."
+        echo "   -d   : For debug build (output is ModuleD.exe)."
         echo "   -h   : For this help page."
         echo "   -l <logfile>"
         echo "        : Set the compile log file."
@@ -31,7 +31,6 @@ do
         echo "             win32v6.mak  Build using MS VC version 6 onwards"
         echo "   -S   : Build clean spotless."
         echo "   -u   : Build with UNICODE support."
-        echo "   -vd  : Build with debug verbosity logging (large output)."
         echo ""
         echo "If you change the build options used do a clean build (build -C) first."
         echo ""
@@ -39,7 +38,7 @@ do
     elif [ $1 = "-C" ] ; then
         TARGET=clean
     elif [ $1 = "-d" ] ; then
-        DTARGET=VirtuaWinD.exe
+        DTARGET=ModuleD.exe
     elif [ $1 = "-l" ] ; then
         shift
         LOGFILE="$1"
@@ -53,8 +52,6 @@ do
         TARGET=spotless
     elif [ $1 = "-u" ] ; then
         OPTIONS="$OPTIONS vwUNICODE=1"
-    elif [ $1 = "-vd" ] ; then
-        OPTIONS="$OPTIONS vwVERBOSED=1"
     else
         echo "Error: Unkown option $1, run build -h for help"
         echo ""

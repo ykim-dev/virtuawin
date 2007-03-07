@@ -27,6 +27,9 @@
 // Standard includes
 #include <windows.h>
 #include <stdio.h>
+#include <tchar.h>
+
+#include "Defines.h"
 
 // externally accessible variables
 extern HWND hWnd;             // The handle to VirtuaWin 
@@ -42,18 +45,17 @@ extern int knockMode;         // mouse edge kncking mode
 extern int   vwLogFlag ;
 extern FILE *vwLogFile ;
 
-#define vwLogPrint(a)         (fprintf a , fflush(vwLogFile))
-
 #define vwLogEnabled()        (vwLogFile != NULL)
-#define vwLogBasic(a)         (vwLogEnabled() ? vwLogPrint(a):0)
+#define vwLogBasic(a)         (vwLogEnabled() ? vwLogPrint a :0)
 
 #ifdef vwLOG_VERBOSE
-#define vwLogVerbose(a)       (vwLogEnabled() ? vwLogPrint(a):0)
+#define vwLogVerbose(a)       (vwLogEnabled() ? vwLogPrint a :0)
 #else
 #define vwLogVerbose(a)
 #endif
 
 // Forward declarations of functions
+void vwLogPrint(const TCHAR *format, ...) ;
 void enableMouse(BOOL turnOn) ;
 void setMouseKey(void);
 void reLoadIcons(void);

@@ -68,8 +68,8 @@ static void vwSetupApply(HWND hDlg, int curPageMask)
 
 void initDeskHotkey(void)
 {
-    char buff[20] ;
-    sprintf(buff,"Desk %d",currentDesk) ;
+    TCHAR buff[20] ;
+    _stprintf(buff,_T("Desk %d"),currentDesk) ;
     SetDlgItemText(setupKeysHWnd, IDC_HOTDESKBTN, buff) ;
     SendDlgItemMessage(setupKeysHWnd, IDC_HOTDESK, HKM_SETHOTKEY, MAKEWORD(deskHotkey[currentDesk], deskHotkeyMod[currentDesk]), 0);
     SendDlgItemMessage(setupKeysHWnd, IDC_HOTDESKW, BM_SETCHECK, (deskHotkeyWin[currentDesk] != 0),0);
@@ -306,14 +306,14 @@ BOOL APIENTRY setupGeneral(HWND hDlg, UINT message, UINT wParam, LONG lParam)
  */
 BOOL APIENTRY setupMouse(HWND hDlg, UINT message, UINT wParam, LONG lParam)
 {
-    char buff[5];
+    TCHAR buff[5];
     
     switch (message)
     {
     case WM_INITDIALOG:
-        SetDlgItemInt(hDlg, IDC_TIME, mouseDelay * 50, FALSE);
+        SetDlgItemInt(hDlg, IDC_TIME, mouseDelay * 25, FALSE);
         SendDlgItemMessage(hDlg, IDC_SLIDER, TBM_SETRANGE, TRUE, MAKELONG(1, 80));
-        SendDlgItemMessage(hDlg, IDC_SLIDER, TBM_SETPOS, TRUE, mouseDelay);
+        SendDlgItemMessage(hDlg, IDC_SLIDER, TBM_SETPOS, TRUE, mouseDelay >> 1);
         SetDlgItemInt(hDlg, IDC_JUMP, warpLength, TRUE);
         
         if(mouseEnable) 
@@ -343,8 +343,8 @@ BOOL APIENTRY setupMouse(HWND hDlg, UINT message, UINT wParam, LONG lParam)
             
         case PSN_APPLY:
             GetDlgItemText(hDlg, IDC_JUMP, buff, 4);
-            warpLength = atoi(buff);
-            mouseDelay = SendDlgItemMessage(hDlg, IDC_SLIDER, TBM_GETPOS, 0, 0);
+            warpLength = _ttoi(buff);
+            mouseDelay = (SendDlgItemMessage(hDlg, IDC_SLIDER, TBM_GETPOS, 0, 0)) << 1 ;
             mouseEnable = (SendDlgItemMessage(hDlg, IDC_ENABLEMOUSE, BM_GETCHECK, 0, 0) == BST_CHECKED) ;
             noMouseWrap = (SendDlgItemMessage(hDlg, IDC_MOUSEWRAP, BM_GETCHECK, 0, 0) != BST_CHECKED) ;
             knockMode = (SendDlgItemMessage(hDlg, IDC_KNOCKMODE1, BM_GETCHECK, 0, 0) == BST_CHECKED) ;
@@ -352,7 +352,7 @@ BOOL APIENTRY setupMouse(HWND hDlg, UINT message, UINT wParam, LONG lParam)
             {
                 knockMode = 0 ;
                 SendDlgItemMessage(hDlg, IDC_KNOCKMODE1, BM_SETCHECK, 0,0);
-                MessageBox(hDlg, "Mouse jump length is too small to support knocking, must be 24 or greater.",vwVIRTUAWIN_NAME " Error", MB_ICONERROR); 
+                MessageBox(hDlg,_T("Mouse jump length is too small to support knocking, must be 24 or greater."),vwVIRTUAWIN_NAME _T(" Error"), MB_ICONERROR); 
             }
             if(SendDlgItemMessage(hDlg, IDC_KNOCKMODE2, BM_GETCHECK, 0, 0) == BST_CHECKED)
                 knockMode |= 2 ;
@@ -416,15 +416,15 @@ BOOL APIENTRY setupMouse(HWND hDlg, UINT message, UINT wParam, LONG lParam)
 static void setupModulesList(HWND hDlg)
 {
     int index;
-    char tmpName[128];
+    TCHAR tmpName[128];
     
     SendDlgItemMessage(hDlg, IDC_MODLIST, LB_RESETCONTENT, 0, 0);
     for(index = 0; index < nOfModules; index++)
     {
-        strncpy(tmpName,moduleList[index].description,100) ;
+        _tcsncpy(tmpName,moduleList[index].description,100) ;
         tmpName[100] = '\0' ;
         if(moduleList[index].Disabled)
-            strcat(tmpName," (disabled)") ;
+            _tcscat(tmpName,_T(" (disabled)")) ;
         SendDlgItemMessage(hDlg, IDC_MODLIST, LB_ADDSTRING, 0, (LONG)tmpName);
     }
 }
@@ -432,7 +432,6 @@ static void setupModulesList(HWND hDlg)
 BOOL APIENTRY setupModules(HWND hDlg, UINT message, UINT wParam, LONG lParam)
 {
     int index;
-    char tmpName[128];
     
     switch (message)
     {
@@ -497,8 +496,8 @@ BOOL APIENTRY setupModules(HWND hDlg, UINT message, UINT wParam, LONG lParam)
                 }
                 else
                 {   // let's enable
-                    MessageBox(hDlg, "Press reload or restart VirtuaWin to enable the module",
-                               vwVIRTUAWIN_NAME " Note", MB_ICONINFORMATION);
+                    MessageBox(hDlg,_T("Press reload or restart VirtuaWin to enable the module"),
+                               vwVIRTUAWIN_NAME _T(" Note"), MB_ICONINFORMATION);
                     moduleList[curSel].Disabled = FALSE;
                     setupModulesList(hDlg) ;
                 }
@@ -678,14 +677,14 @@ BOOL APIENTRY setupExpert(HWND hDlg, UINT message, UINT wParam, LONG lParam)
     switch (message)
     {
     case WM_INITDIALOG:
-        SendDlgItemMessage(hDlg, IDC_PRESORDER, CB_ADDSTRING, 0, (LONG) "Taskbar order");
-        SendDlgItemMessage(hDlg, IDC_PRESORDER, CB_ADDSTRING, 0, (LONG) "Z order");
-        SendDlgItemMessage(hDlg, IDC_PRESORDER, CB_ADDSTRING, 0, (LONG) "Taskbar & Z order");
+        SendDlgItemMessage(hDlg, IDC_PRESORDER, CB_ADDSTRING, 0, (LONG) _T("Taskbar order"));
+        SendDlgItemMessage(hDlg, IDC_PRESORDER, CB_ADDSTRING, 0, (LONG) _T("Z order"));
+        SendDlgItemMessage(hDlg, IDC_PRESORDER, CB_ADDSTRING, 0, (LONG) _T("Taskbar & Z order"));
         SendDlgItemMessage(hDlg, IDC_PRESORDER, CB_SETCURSEL, preserveZOrder, 0) ;
-        SendDlgItemMessage(hDlg, IDC_HIDWINACT, CB_ADDSTRING, 0, (LONG) "Ignore the event");
-        SendDlgItemMessage(hDlg, IDC_HIDWINACT, CB_ADDSTRING, 0, (LONG) "Move window to current desktop");
-        SendDlgItemMessage(hDlg, IDC_HIDWINACT, CB_ADDSTRING, 0, (LONG) "Copy window to current desktop");
-        SendDlgItemMessage(hDlg, IDC_HIDWINACT, CB_ADDSTRING, 0, (LONG) "Change to window's desktop");
+        SendDlgItemMessage(hDlg, IDC_HIDWINACT, CB_ADDSTRING, 0, (LONG) _T("Ignore the event"));
+        SendDlgItemMessage(hDlg, IDC_HIDWINACT, CB_ADDSTRING, 0, (LONG) _T("Move window to current desktop"));
+        SendDlgItemMessage(hDlg, IDC_HIDWINACT, CB_ADDSTRING, 0, (LONG) _T("Copy window to current desktop"));
+        SendDlgItemMessage(hDlg, IDC_HIDWINACT, CB_ADDSTRING, 0, (LONG) _T("Change to window's desktop"));
         SendDlgItemMessage(hDlg, IDC_HIDWINACT, CB_SETCURSEL, hiddenWindowAct, 0) ;
         if(minSwitch)
             SendDlgItemMessage(hDlg, IDC_MINIMIZED, BM_SETCHECK, 1,0);
@@ -738,8 +737,8 @@ BOOL APIENTRY setupExpert(HWND hDlg, UINT message, UINT wParam, LONG lParam)
             if(vwLogFlag != newLogFlag)
             {
                 vwLogFlag = newLogFlag ;
-                MessageBox(hDlg, vwVIRTUAWIN_NAME " must be restarted for the debug logging change to take effect.",
-                           vwVIRTUAWIN_NAME " Note", MB_ICONINFORMATION);
+                MessageBox(hDlg, vwVIRTUAWIN_NAME _T(" must be restarted for the debug logging change to take effect."),
+                           vwVIRTUAWIN_NAME _T(" Note"), MB_ICONINFORMATION);
             }
             break;
         case PSN_KILLACTIVE:
@@ -759,11 +758,11 @@ BOOL APIENTRY setupExpert(HWND hDlg, UINT message, UINT wParam, LONG lParam)
         {   // Explore Config
             STARTUPINFO si;
             PROCESS_INFORMATION pi;  
-            char cmdLn[MAX_PATH+9], *ss ;
+            TCHAR cmdLn[MAX_PATH+9], *ss ;
             
-            strcpy(cmdLn,"explorer ") ;
+            _tcscpy(cmdLn,_T("explorer ")) ;
             GetFilename(vwCONFIG,1,cmdLn+9) ;
-            if((ss = strrchr(cmdLn,'\\')) != NULL)
+            if((ss = _tcsrchr(cmdLn,'\\')) != NULL)
                 *ss = '\0' ;
             memset(&si, 0, sizeof(si)); 
             si.cb = sizeof(si); 
@@ -774,16 +773,16 @@ BOOL APIENTRY setupExpert(HWND hDlg, UINT message, UINT wParam, LONG lParam)
             }
             else
             {
-                LPTSTR  lpszLastErrorMsg; 
+                TCHAR *lpszLastErrorMsg; 
                 FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM, NULL, 
                               GetLastError(), 
                               MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), //The user default language 
-                              (LPTSTR) &lpszLastErrorMsg, 
+                              (TCHAR *) &lpszLastErrorMsg, 
                               0, 
                               NULL ); 
                 
-                sprintf(cmdLn,"Failed to launch explorer.\n %s",lpszLastErrorMsg);
-                MessageBox(hWnd,cmdLn,vwVIRTUAWIN_NAME " Error",MB_ICONWARNING) ;
+                _stprintf(cmdLn,_T("Failed to launch explorer.\n %s"),lpszLastErrorMsg);
+                MessageBox(hWnd,cmdLn,vwVIRTUAWIN_NAME _T(" Error"),MB_ICONWARNING) ;
             }
         }
         else if(LOWORD(wParam) == IDC_FOCUS      || LOWORD(wParam) == IDC_TRICKYSUPPORT ||
@@ -807,7 +806,7 @@ BOOL APIENTRY setupExpert(HWND hDlg, UINT message, UINT wParam, LONG lParam)
  */
 BOOL APIENTRY setupAbout(HWND hDlg, UINT message, UINT wParam, LONG lParam)
 {
-    char license[] = "This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later version.\r\n \r\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details. \r\n \r\nYou should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.";
+    TCHAR license[] = _T("This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later version.\r\n \r\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details. \r\n \r\nYou should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.");
     
     switch (message)
     {
@@ -837,17 +836,17 @@ BOOL APIENTRY setupAbout(HWND hDlg, UINT message, UINT wParam, LONG lParam)
     case WM_COMMAND:
         if(LOWORD(wParam) == IDC_MAILTO)
         {
-            HINSTANCE h = ShellExecute(NULL, "open", "mailto:" vwVIRTUAWIN_EMAIL, 
+            HINSTANCE h = ShellExecute(NULL,_T("open"),_T("mailto:") vwVIRTUAWIN_EMAIL, 
                                        NULL, NULL, SW_SHOWNORMAL);
             if((UINT)h < 33)
-                MessageBox(hDlg, "Error executing mail program.",vwVIRTUAWIN_NAME " Error",MB_ICONWARNING);
+                MessageBox(hDlg,_T("Error executing mail program."),vwVIRTUAWIN_NAME _T(" Error"),MB_ICONWARNING);
         }
         else if(LOWORD(wParam) == IDC_HTTP)
         {
-            HINSTANCE h = ShellExecute(NULL, "open", "http://virtuawin.sourceforge.net", 
+            HINSTANCE h = ShellExecute(NULL,_T("open"),_T("http://virtuawin.sourceforge.net"), 
                                        NULL, NULL, SW_SHOWNORMAL);
             if((UINT)h < 33)
-                MessageBox(hDlg, "Error open web link.",vwVIRTUAWIN_NAME " Error",MB_ICONWARNING);
+                MessageBox(hDlg,_T("Error open web link."),vwVIRTUAWIN_NAME _T(" Error"),MB_ICONWARNING);
         }
         return TRUE;
     }
@@ -892,7 +891,7 @@ void createPropertySheet(HINSTANCE theHinst, HWND theHwndOwner)
     psp[0].pszTemplate = MAKEINTRESOURCE(IDD_PROPPAGE_GENERAL);
     psp[0].pszIcon = NULL;
     psp[0].pfnDlgProc = setupGeneral;
-    psp[0].pszTitle = "General";
+    psp[0].pszTitle = _T("General");
     psp[0].lParam = 0;
     
     psp[1].dwSize = sizeof(PROPSHEETPAGE);
@@ -901,7 +900,7 @@ void createPropertySheet(HINSTANCE theHinst, HWND theHwndOwner)
     psp[1].pszTemplate = MAKEINTRESOURCE(IDD_PROPPAGE_MOUSE);
     psp[1].pszIcon = NULL;
     psp[1].pfnDlgProc = setupMouse;
-    psp[1].pszTitle = "Mouse";
+    psp[1].pszTitle = _T("Mouse");
     psp[1].lParam = 0;
     
     psp[2].dwSize = sizeof(PROPSHEETPAGE);
@@ -910,7 +909,7 @@ void createPropertySheet(HINSTANCE theHinst, HWND theHwndOwner)
     psp[2].pszTemplate = MAKEINTRESOURCE(IDD_PROPPAGE_MODULES);
     psp[2].pszIcon = NULL;
     psp[2].pfnDlgProc = setupModules;
-    psp[2].pszTitle = "Modules";
+    psp[2].pszTitle = _T("Modules");
     psp[2].lParam = 0;
     
     psp[3].dwSize = sizeof(PROPSHEETPAGE);
@@ -919,7 +918,7 @@ void createPropertySheet(HINSTANCE theHinst, HWND theHwndOwner)
     psp[3].pszTemplate = MAKEINTRESOURCE(IDD_PROPPAGE_MISC);
     psp[3].pszIcon = NULL;
     psp[3].pfnDlgProc = setupMisc;
-    psp[3].pszTitle = "Misc.";
+    psp[3].pszTitle = _T("Misc.");
     psp[3].lParam = 0;
     
     psp[4].dwSize = sizeof(PROPSHEETPAGE);
@@ -928,7 +927,7 @@ void createPropertySheet(HINSTANCE theHinst, HWND theHwndOwner)
     psp[4].pszTemplate = MAKEINTRESOURCE(IDD_PROPPAGE_EXPERT);
     psp[4].pszIcon = NULL;
     psp[4].pfnDlgProc = setupExpert;
-    psp[4].pszTitle = "Expert";
+    psp[4].pszTitle = _T("Expert");
     psp[4].lParam = 0;
     
     psp[5].dwSize = sizeof(PROPSHEETPAGE);
@@ -937,7 +936,7 @@ void createPropertySheet(HINSTANCE theHinst, HWND theHwndOwner)
     psp[5].pszTemplate = MAKEINTRESOURCE(IDD_PROPPAGE_ABOUT);
     psp[5].pszIcon = NULL;
     psp[5].pfnDlgProc = setupAbout;
-    psp[5].pszTitle = "About";
+    psp[5].pszTitle = _T("About");
     psp[5].lParam = 0;
 
     psh.dwSize = sizeof(PROPSHEETHEADER);
@@ -945,7 +944,7 @@ void createPropertySheet(HINSTANCE theHinst, HWND theHwndOwner)
     psh.hwndParent = theHwndOwner;
     psh.hInstance = theHinst;
     psh.pszIcon = NULL;
-    psh.pszCaption = (LPSTR) "VirtuaWin - Properties";
+    psh.pszCaption = _T("VirtuaWin - Properties") ;
     psh.nPages = vwPROPSHEET_PAGE_COUNT ;
     psh.ppsp = (LPCPROPSHEETPAGE) &psp;
     psh.nStartPage = 0;

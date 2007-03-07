@@ -34,6 +34,7 @@
 // Standard includes
 #include <stdlib.h>
 #include <string.h>
+#include <stdarg.h>
 #include <commctrl.h>
 
 /*#define _WIN32_MEMORY_DEBUG*/
@@ -108,7 +109,7 @@ int nDesksX = 2;
 int nDesksY = 2;     
 int warpLength = 60;
 int knockMode = 2;
-int mouseDelay = 10;
+int mouseDelay = 20;
 int preserveZOrder = 0;      
 int hiddenWindowAct = 1;
 int vwLogFlag = 0 ;
@@ -198,6 +199,25 @@ int osVersion ;
 static BOOL showHideWindow(windowType *aWindow, int shwFlags, unsigned char show);
 static int changeDesk(int newDesk, WPARAM msgWParam) ;
 
+void
+vwLogPrint(const TCHAR *format, ...)
+{
+    if(vwLogEnabled())
+    {
+        SYSTEMTIME stime;
+        va_list ap;
+    
+        GetLocalTime (&stime);
+        _ftprintf(vwLogFile,_T("[%04d-%02d-%02d %02d:%02d:%02d:%03d] "),
+                  stime.wYear, stime.wMonth, stime.wDay,
+                  stime.wHour, stime.wMinute, stime.wSecond, stime.wMilliseconds) ;
+        va_start(ap, format);
+        _vftprintf(vwLogFile,format,ap) ;
+        fflush(vwLogFile) ;
+        va_end(ap);
+    }
+}
+
 /************************************************
  * Locks the window list protection
  */
@@ -242,14 +262,14 @@ static BOOL checkMouseState(void)
  */
 DWORD WINAPI MouseProc(LPVOID lpParameter)
 {
-    int ii, mode, lastMode=0, state[4], pos[4], delayTime[4], newState ;
+    int ii, mode, lastMode=0, state[4], pos[4], statePos[4], delayTime[4], newState, newPos ;
     POINT pt;
     
     state[0] = state[1] = state[2] = state[3] = 0 ;
     // infinite loop
     while(1)
     {
-        Sleep(50); 
+        Sleep(25); 
         
         if((lastMode == -2) && checkMouseState())
             continue ;
@@ -285,7 +305,7 @@ DWORD WINAPI MouseProc(LPVOID lpParameter)
                     newState = 3 ;
                 else if(++delayTime[ii] >= mouseDelay)
                 {
-                    vwLogBasic((vwLogFile,"Mouse desk change on edge %d\n",ii)) ;
+                    vwLogBasic((_T("Mouse desk change on edge %d (%d,%d)\n"),ii,(int) pt.x,(int) pt.y)) ;
                     /* send the switch message and wait until done */
                     SendMessage(hWnd, VW_MOUSEWARP, 0, MAKELPARAM(mode,ii)) ;
                     newState = 1 ;
@@ -309,14 +329,30 @@ DWORD WINAPI MouseProc(LPVOID lpParameter)
                 newState = 3 ;
             if(newState != state[ii])
             {
-                vwLogVerbose((vwLogFile,"State %d (%d %d): Change %d -> %d\n",ii,mode,pos[ii],state[ii],newState)) ;
-                state[ii] = newState ;
-                delayTime[ii] = 0 ;
+                newPos = (ii & 0x01) ? pt.x:pt.y ;
+                if((state[ii] > 1) && (abs(statePos[ii]-newPos) > warpLength))
+                {
+                    /* newState must be greater than state[ii], check the mouse movement is accurate enough */
+                    vwLogBasic((_T("State %d (%d %d): Changed %d -> 1 (position: %d,%d)\n"),ii,mode,pos[ii],state[ii],(int) pt.x,(int) pt.y)) ;
+                    state[ii] = 1 ;
+                }
+                else
+                {
+#ifdef vwLOG_VERBOSE
+                    if(vwLogEnabled())
+#else
+                    if(vwLogEnabled() && ((newState > 1) || (state[ii] > 1)))
+#endif
+                        vwLogPrint(_T("State %d (%d %d): Change %d -> %d (%d,%d)\n"),ii,mode,pos[ii],state[ii],newState,(int) pt.x,(int) pt.y) ;
+                    state[ii] = newState ;
+                    statePos[ii] = newPos ;
+                    delayTime[ii] = 0 ;
+                }
             }
-            else if((state[ii] > 1) && (++delayTime[ii] >= 10))
+            else if((state[ii] > 1) && (++delayTime[ii] >= 20))
             {
-                /* burnt in 1sec timer, a knock must take no more than 1 sec second (2 * (10 * 50ms)) */
-                vwLogVerbose((vwLogFile,"State %d (%d %d): Changed %d -> 1 (timer)\n",ii,mode,pos[ii],newState)) ;
+                /* burnt in 1sec timer, a knock must take no more than 1 sec second (2 * (20 * 25ms)) */
+                vwLogBasic((_T("State %d (%d %d): Changed %d -> 1 (timer)\n"),ii,mode,pos[ii],newState)) ;
                 state[ii] = 1 ;
             }
         } while(--ii >= 0) ;
@@ -363,7 +399,7 @@ static void loadIcons(void)
     int xIcon = GetSystemMetrics(SM_CXSMICON);
     int yIcon = GetSystemMetrics(SM_CYSMICON);
     int ii, iconId ;
-    char buff[16] ;
+    TCHAR buff[16] ;
     
     if(nDesksY != 2 || nDesksX != 2) // if 2 by 2 mode
         iconId = IDI_ST_0 ;
@@ -372,7 +408,7 @@ static void loadIcons(void)
     else
         iconId = IDI_ST_DIS_1 ;
     
-    strcpy(buff,"icons/X.ico") ;
+    _tcscpy(buff,_T("icons/X.ico")) ;
     ii = nDesksY * nDesksX ;
     do {
         /* Try to load user defined icons */
@@ -424,16 +460,16 @@ static BOOL registerKeys(void)
     if(keyEnable && !keysRegistred) {
         keysRegistred = TRUE;
         MODKEY = modAlt | modShift | modCtrl | modWin;
-        vwLeft = GlobalAddAtom("atomKeyLeft");
+        vwLeft = GlobalAddAtom(_T("atomKeyLeft"));
         if((RegisterHotKey(hWnd, vwLeft, MODKEY, VK_LEFT) == FALSE))
             return FALSE;
-        vwRight = GlobalAddAtom("atomKeyRight");
+        vwRight = GlobalAddAtom(_T("atomKeyRight"));
         if((RegisterHotKey(hWnd, vwRight, MODKEY, VK_RIGHT) == FALSE))
             return FALSE;
-        vwUp = GlobalAddAtom("atomKeyUp");
+        vwUp = GlobalAddAtom(_T("atomKeyUp"));
         if((RegisterHotKey(hWnd, vwUp, MODKEY, VK_UP) == FALSE))
             return FALSE;
-        vwDown = GlobalAddAtom("atomKeyDown");
+        vwDown = GlobalAddAtom(_T("atomKeyDown"));
         if((RegisterHotKey(hWnd, vwDown, MODKEY, VK_DOWN) == FALSE))
             return FALSE;
         return TRUE;
@@ -475,12 +511,12 @@ static UINT hotKey2ModKey(UINT vModifiers)
  */
 static BOOL registerHotKeys(void)
 {
-    char buff[16];
+    TCHAR buff[16];
     int ii ;
     if(!hotKeysRegistred)
     {
         hotKeysRegistred = TRUE;
-        strcpy(buff,"atomKeyP") ;
+        _tcscpy(buff,_T("atomKeyP")) ;
         if(deskHotkey[vwDESK_PRIVATE1])
         {
             // private desktop
@@ -535,13 +571,13 @@ static BOOL registerCyclingKeys(void)
         cyclingKeysRegistered = TRUE;
         if(hotCycleUp)
         {
-            cyclingKeyUp = GlobalAddAtom("VWCyclingKeyUp");
+            cyclingKeyUp = GlobalAddAtom(_T("VWCyclingKeyUp"));
             if((RegisterHotKey(hWnd, cyclingKeyUp, hotKey2ModKey(hotCycleUpMod) | hotCycleUpWin, hotCycleUp) == FALSE))
                 return FALSE;
         }
         if(hotCycleDown)
         {
-            cyclingKeyDown = GlobalAddAtom("VWCyclingKeyDown");
+            cyclingKeyDown = GlobalAddAtom(_T("VWCyclingKeyDown"));
             if((RegisterHotKey(hWnd, cyclingKeyDown, hotKey2ModKey(hotCycleDownMod) | hotCycleDownWin, hotCycleDown) == FALSE))
                 return FALSE;
         }
@@ -568,7 +604,7 @@ static BOOL registerMenuHotKey(void)
 {
     if(!menuHotKeyRegistered && hotkeyMenuEn && hotkeyMenu) {
         menuHotKeyRegistered = TRUE;
-        vwMenu = GlobalAddAtom("atomKeyMenu");
+        vwMenu = GlobalAddAtom(_T("atomKeyMenu"));
         if(RegisterHotKey(hWnd, vwMenu, hotKey2ModKey(hotkeyMenuMod) | hotkeyMenuWin, hotkeyMenu) == FALSE)
             return FALSE;
     }
@@ -593,7 +629,7 @@ static BOOL registerStickyKey(void)
 {
     if(!stickyKeyRegistered && hotkeyStickyEn && hotkeySticky) {
         stickyKeyRegistered = TRUE;
-        stickyKey = GlobalAddAtom("VWStickyKey");
+        stickyKey = GlobalAddAtom(_T("VWStickyKey"));
         if((RegisterHotKey(hWnd, stickyKey, hotKey2ModKey(hotkeyStickyMod) | hotkeyStickyWin, hotkeySticky) == FALSE))
             return FALSE;
         else
@@ -620,7 +656,7 @@ static BOOL registerDismissKey(void)
 {
     if(!dismissKeyRegistered && hotkeyDismissEn && hotkeyDismiss) {
         dismissKeyRegistered = TRUE;
-        dismissKey = GlobalAddAtom("VWDismissKey");
+        dismissKey = GlobalAddAtom(_T("VWDismissKey"));
         if((RegisterHotKey(hWnd, dismissKey, hotKey2ModKey(hotkeyDismissMod) | hotkeyDismissWin, hotkeyDismiss) == FALSE))
             return FALSE;
         else
@@ -647,23 +683,23 @@ static void unRegisterDismissKey(void)
 void registerAllKeys(void)
 {
     if(!registerKeys())
-        MessageBox(hWnd, "Invalid key modifier combination, check cursor hotkeys!", 
-                   vwVIRTUAWIN_NAME " Error", MB_ICONWARNING);
+        MessageBox(hWnd,_T("Invalid key modifier combination, check cursor hotkeys!"),
+                   vwVIRTUAWIN_NAME _T(" Error"), MB_ICONWARNING);
     if(!registerCyclingKeys())
-        MessageBox(hWnd, "Invalid key modifier combination, check cycling hotkeys!", 
-                   vwVIRTUAWIN_NAME " Error", MB_ICONWARNING);
+        MessageBox(hWnd,_T("Invalid key modifier combination, check cycling hotkeys!"),
+                   vwVIRTUAWIN_NAME _T(" Error"), MB_ICONWARNING);
     if(!registerHotKeys())
-        MessageBox(hWnd, "Invalid key modifier combination, check hotkeys!", 
-                   vwVIRTUAWIN_NAME " Error", MB_ICONWARNING);
+        MessageBox(hWnd,_T("Invalid key modifier combination, check hotkeys!"),
+                   vwVIRTUAWIN_NAME _T(" Error"), MB_ICONWARNING);
     if(!registerMenuHotKey())
-        MessageBox(hWnd, "Invalid key modifier combination, check menu hotkey!", 
-                   vwVIRTUAWIN_NAME " Error", MB_ICONWARNING);
+        MessageBox(hWnd,_T("Invalid key modifier combination, check menu hotkey!"), 
+                   vwVIRTUAWIN_NAME _T(" Error"), MB_ICONWARNING);
     if(!registerStickyKey())
-        MessageBox(hWnd, "Invalid key modifier combination, check sticky hotkey!", 
-                   vwVIRTUAWIN_NAME " Error", MB_ICONWARNING);
+        MessageBox(hWnd,_T("Invalid key modifier combination, check sticky hotkey!"),
+                   vwVIRTUAWIN_NAME _T(" Error"), MB_ICONWARNING);
     if(!registerDismissKey())
-        MessageBox(hWnd, "Invalid key modifier combination, check dismiss window hotkey!", 
-                   vwVIRTUAWIN_NAME " Error", MB_ICONWARNING);
+        MessageBox(hWnd,_T("Invalid key modifier combination, check dismiss window hotkey!"),
+                   vwVIRTUAWIN_NAME _T(" Error"), MB_ICONWARNING);
 }
 
 /************************************************
@@ -693,20 +729,6 @@ static void getScreenSize(void)
 #define SM_CYVIRTUALSCREEN      79
 #endif
 
-#if 0
-    // TODO:  make a user configured flag to specify whether to only act on the primary display or not
-    if(0)
-    {
-        // TODO:  Figure out how to get the size of JUST the primary
-        // monitor... I have the width, but dont' know what to do to get
-        // the origin w/o using the GetDeviceCaps functions that don't
-        // seem to work in MingW
-        screenLeft   = GetSystemMetrics(SM_XVIRTUALSCREEN);
-        screenRight  = GetSystemMetrics(SM_CXVIRTUALSCREEN) + screenLeft;
-        screenTop    = GetSystemMetrics(SM_YVIRTUALSCREEN);
-        screenBottom = GetSystemMetrics(SM_CYVIRTUALSCREEN) + screenTop;
-    }
-#endif
     if((screenRight  = GetSystemMetrics(SM_CXVIRTUALSCREEN)) <= 0)
     {
         /* The virtual screen size system matrix values are not supported on
@@ -725,7 +747,7 @@ static void getScreenSize(void)
         screenTop    = GetSystemMetrics(SM_YVIRTUALSCREEN);
         screenBottom = GetSystemMetrics(SM_CYVIRTUALSCREEN)+screenTop;
     }
-    vwLogBasic((vwLogFile,"Got screen size: %d %d -> %d %d\n",screenLeft,screenRight,screenTop,screenBottom)) ;
+    vwLogBasic((_T("Got screen size: %d %d -> %d %d\n"),screenLeft,screenRight,screenTop,screenBottom)) ;
 }
 
 /************************************************
@@ -735,17 +757,17 @@ static void goGetTheTaskbarHandle(void)
 {
     if(!noTaskbarCheck)
     {
-        HWND hwndTray = FindWindowEx(NULL, NULL, "Shell_TrayWnd", NULL);
-        HWND hwndBar = FindWindowEx(hwndTray, NULL, "ReBarWindow32", NULL );
+        HWND hwndTray = FindWindowEx(NULL, NULL,_T("Shell_TrayWnd"), NULL);
+        HWND hwndBar = FindWindowEx(hwndTray, NULL,_T("ReBarWindow32"), NULL );
         
         // Maybe "RebarWindow32" is not a child to "Shell_TrayWnd", then try this
         if( hwndBar == NULL )
             hwndBar = hwndTray;
         
-        taskHWnd = FindWindowEx(hwndBar, NULL, "MSTaskSwWClass", NULL);
+        taskHWnd = FindWindowEx(hwndBar, NULL,_T("MSTaskSwWClass"), NULL);
         
         if( taskHWnd == NULL )
-            MessageBox(hWnd, "Could not locate handle to the taskbar.\n This will disable the ability to hide troublesome windows correctly.",vwVIRTUAWIN_NAME " Error", 0); 
+            MessageBox(hWnd,_T("Could not locate handle to the taskbar.\n This will disable the ability to hide troublesome windows correctly."),vwVIRTUAWIN_NAME _T(" Error"), 0); 
     }
 }
 
@@ -811,7 +833,7 @@ void getWorkArea(void)
             }
         }
     }
-    vwLogBasic((vwLogFile,"Got work area (%d %d): %d %d -> %d %d  &  %d %d -> %d %d\n",noTaskbarCheck,taskbarEdge,
+    vwLogBasic((_T("Got work area (%d %d): %d %d -> %d %d  &  %d %d -> %d %d\n"),noTaskbarCheck,taskbarEdge,
                 desktopWorkArea[0][0],desktopWorkArea[0][1],desktopWorkArea[0][2],desktopWorkArea[0][3],
                 desktopWorkArea[1][0],desktopWorkArea[1][1],desktopWorkArea[1][2],desktopWorkArea[1][3])) ;
 }
@@ -825,7 +847,7 @@ createDeskImage(int deskNo, int createDefault)
     HDC deskDC ;
     HDC bitmapDC ;
     HBITMAP oldmap;
-    char fname[MAX_PATH] ;
+    TCHAR fname[MAX_PATH] ;
     FILE *fp ;
     int ret ;
     
@@ -856,9 +878,9 @@ createDeskImage(int deskNo, int createDefault)
 
     /* Create the desk_#.bmp file */ 
     GetFilename(vwFILE_COUNT,1,fname) ;
-    sprintf(fname+strlen(fname),"desk_%d.bmp",deskNo) ;
+    _stprintf(fname+_tcslen(fname),_T("desk_%d.bmp"),deskNo) ;
     if(GetDIBits(bitmapDC,deskImageBitmap,0,deskImageInfo.bmiHeader.biHeight,deskImageData,&deskImageInfo,DIB_RGB_COLORS) &&
-       ((fp = fopen(fname,"wb+")) != NULL))
+       ((fp = _tfopen(fname,_T("wb+"))) != NULL))
     {
         BITMAPFILEHEADER hdr ;
         hdr.bfType = 0x4d42 ;
@@ -880,7 +902,7 @@ createDeskImage(int deskNo, int createDefault)
     SelectObject(bitmapDC,oldmap);
     DeleteDC(bitmapDC);
     ReleaseDC(desktopHWnd,deskDC) ;
-    vwLogBasic((vwLogFile,"createDeskImage: %d: %d %d - %d %d\n",ret,deskNo,createDefault,deskImageInfo.bmiHeader.biWidth,deskImageInfo.bmiHeader.biHeight)) ;
+    vwLogBasic((_T("createDeskImage: %d: %d %d - %d %d\n"),ret,deskNo,createDefault,(int) deskImageInfo.bmiHeader.biWidth,(int) deskImageInfo.bmiHeader.biHeight)) ;
     return ret ;
 }
 
@@ -941,11 +963,11 @@ enableDeskImage(int height)
             deskImageInfo.bmiHeader.biYPelsPerMeter = 0 ;
             deskImageInfo.bmiHeader.biClrUsed = 0 ;
             deskImageInfo.bmiHeader.biClrImportant = 0 ;
-            vwLogBasic((vwLogFile,"initDeskImage succeeded: %d - %d %d\n",
-                        height,deskImageInfo.bmiHeader.biWidth,deskImageInfo.bmiHeader.biHeight)) ;
+            vwLogBasic((_T("initDeskImage succeeded: %d - %d %d\n"),
+                        height,(int) deskImageInfo.bmiHeader.biWidth,(int) deskImageInfo.bmiHeader.biHeight)) ;
         }
         else
-            vwLogBasic((vwLogFile,"initDeskImage failed: %d, %x, %x\n",height,deskImageBitmap,deskImageData)) ; 
+            vwLogBasic((_T("initDeskImage failed: %d, %x, %x\n"),height,(int) deskImageBitmap,(int) deskImageData)) ; 
         ReleaseDC(desktopHWnd,deskDC);
         if(deskImageData == NULL)
             return 0 ;
@@ -968,7 +990,7 @@ enableDeskImage(int height)
  */
 void showHelp(HWND aHWnd, UINT context)
 {
-    char buff[MAX_PATH];
+    TCHAR buff[MAX_PATH];
     GetFilename(vwHELP,0,buff);
     if(context)
         WinHelp(aHWnd, buff, HELP_CONTEXT, context) ;
@@ -988,35 +1010,45 @@ static int winListFind(HWND hwnd)
     return index ;
 }
 
-static BOOL checkIfWindowMatch(vwWindowMatch *wm, char *className, char *windowName)
+static BOOL checkIfWindowMatch(vwWindowMatch *wm, TCHAR *className, TCHAR *windowName)
 {
+    /* this is not very optimal, ideally the match string and class/window
+     * name would all be in multibyte form as the regex does not support
+     * WCHAR. But because of the way the user list is currently implemented
+     * it is more efficient to convert the WCHAR to a byte string here */
     if(wm->type & 0x02)
     {
         static meRegex regex ;
         int ll ;
+#ifdef _UNICODE
+        char name[1024] ;
+        
+        if(!WideCharToMultiByte(CP_ACP,0,wm->match,-1,name,1024, 0, 0) ||
+           (meRegexComp(&regex,name,0) != meREGEX_OKAY) ||
+           !WideCharToMultiByte(CP_ACP,0,(wm->type & 0x01) ? windowName:className,-1,name,1024, 0, 0))
+            return 0 ;
+#else
+        char *name ;
         if(meRegexComp(&regex,wm->match,0) != meREGEX_OKAY)
             return 0 ;
-        if(wm->type & 0x01)
-        {
-            ll = strlen(windowName) ;
-            return meRegexMatch(&regex,windowName,ll,0,ll,(meREGEX_BEGBUFF|meREGEX_ENDBUFF)) ;
-        }
-        ll = strlen(className) ;
-        return meRegexMatch(&regex,className,ll,0,ll,(meREGEX_BEGBUFF|meREGEX_ENDBUFF)) ;
+        name = (wm->type & 0x01) ? windowName:className ;
+#endif
+        ll = strlen(name) ;
+        return meRegexMatch(&regex,name,ll,0,ll,(meREGEX_BEGBUFF|meREGEX_ENDBUFF)) ;
     }
     else if(wm->type & 0x01)
-        return (!strcmp(wm->match,windowName)) ;
-    return (!strcmp(wm->match,className)) ;
+        return (!_tcscmp(wm->match,windowName)) ;
+    return (!_tcscmp(wm->match,className)) ;
 }
 
 /************************************************
  * Checks if this window is saved as a tricky window that needs the 
  * "move technique" to be hidden.
  */
-static BOOL checkIfTricky(char *className, char *windowName, RECT *pos)
+static BOOL checkIfTricky(TCHAR *className, TCHAR *windowName, RECT *pos)
 {
     int ii, ret=0 ; 
-    vwLogVerbose((vwLogFile, "checkIfTricky [%s] [%s] %d %d\n",className,windowName,(int)pos->left,(int)pos->top)) ;
+    vwLogVerbose((_T("checkIfTricky [%s] [%s] %d %d\n"),className,windowName,(int)pos->left,(int)pos->top)) ;
     if(trickyWindows)
     {
         ii = curTricky ;
@@ -1040,11 +1072,11 @@ static BOOL checkIfTricky(char *className, char *windowName, RECT *pos)
 /*************************************************
  * Checks if a window is a previous saved sticky window
  */
-static BOOL checkIfSticky(char *className, char *windowName)
+static BOOL checkIfSticky(TCHAR *className, TCHAR *windowName)
 {
     int i=curSticky ;
     
-    vwLogVerbose((vwLogFile,"checkIfSticky [%s] [%s]\n",className,windowName)) ;
+    vwLogVerbose((_T("checkIfSticky [%s] [%s]\n"),className,windowName)) ;
     while(--i >= 0)
     {
         if(checkIfWindowMatch(&(stickyList[i]),className,windowName)) 
@@ -1059,22 +1091,22 @@ static BOOL checkIfSticky(char *className, char *windowName)
 /*************************************************
  * Checks if a window is an predifined desktop to go to
  */
-static int checkIfAssigned(char *className, char *windowName)
+static int checkIfAssigned(TCHAR *className, TCHAR *windowName)
 {
     int i;
-    vwLogVerbose((vwLogFile,"checkIfAssigned [%s] [%s]\n",className,windowName)) ;
+    vwLogVerbose((_T("checkIfAssigned [%s] [%s]\n"),className,windowName)) ;
     for(i = 0; i < curAssigned; ++i) 
     {
         if((assignedList[i].type & 0x04) == 0)
         {
-            vwLogVerbose((vwLogFile, "Assign comparing [%s] [%s] with %d [%s]\n",className,windowName,(int) assignedList[i].type,assignedList[i].match)) ;
+            vwLogVerbose((_T("Assign comparing [%s] [%s] with %d [%s]\n"),className,windowName,(int) assignedList[i].type,assignedList[i].match)) ;
             
             if(checkIfWindowMatch(&(assignedList[i]),className,windowName)) 
             {
                 if(assignOnlyFirst)
                     assignedList[i].type |= 0x04 ;
                 if((assignedList[i].desk > (nDesksX * nDesksY)) && (assignedList[i].desk != vwDESK_PRIVATE1))
-                    MessageBox(hWnd, "Tried to assign an application to an unavaliable desktop.\nIt will not be assigned.\nCheck desktop assignmet configuration.",vwVIRTUAWIN_NAME " Error", MB_ICONERROR); 
+                    MessageBox(hWnd,_T("Tried to assign an application to an unavaliable desktop.\nIt will not be assigned.\nCheck desktop assignmet configuration."),vwVIRTUAWIN_NAME _T(" Error"), MB_ICONERROR); 
                 else
                     return assignedList[i].desk ; // Yes, assign
             }
@@ -1094,7 +1126,7 @@ static void setForegroundWin(HWND theWin, int makeTop)
     HWND cwHwnd ;
     int index, err ;
     
-    vwLogBasic((vwLogFile,"setForegroundWin: %x %d (%x)\n",(int) theWin,makeTop,(int) hWnd)) ;
+    vwLogBasic((_T("setForegroundWin: %x %d (%x)\n"),(int) theWin,makeTop,(int) hWnd)) ;
     if(theWin == NULL)
     {
         /* releasing the focus, the current foreground window MUST be
@@ -1134,18 +1166,18 @@ static void setForegroundWin(HWND theWin, int makeTop)
                     err = SetForegroundWindow(hWnd) ; 
                     // Set VirtuaWin active. Don't no why, but it seems to work
                     AttachThreadInput(ThreadID1, ThreadID2, FALSE);
-                    vwLogVerbose((vwLogFile, "Attached to foreground Window: %x - %x\n",(int) cwHwnd,(int) GetForegroundWindow())) ;
+                    vwLogVerbose((_T("Attached to foreground Window: %x - %x\n"),(int) cwHwnd,(int) GetForegroundWindow())) ;
                 }
                 else
                 {
                     SetForegroundWindow(hWnd) ; 
-                    vwLogVerbose((vwLogFile, "VW owns foreground Window: %x - %x\n",(int) cwHwnd,(int) GetForegroundWindow())) ;
+                    vwLogVerbose((_T("VW owns foreground Window: %x - %x\n"),(int) cwHwnd,(int) GetForegroundWindow())) ;
                 }
             }
             else
             {
                 SetForegroundWindow(hWnd) ; 
-                vwLogVerbose((vwLogFile, "No foreground Window or hung: %x - %x\n",(int) cwHwnd,(int) GetForegroundWindow())) ;
+                vwLogVerbose((_T("No foreground Window or hung: %x - %x\n"),(int) cwHwnd,(int) GetForegroundWindow())) ;
             }
         }
         SetForegroundWindow(theWin) ;
@@ -1154,11 +1186,11 @@ static void setForegroundWin(HWND theWin, int makeTop)
          * is left as the foreground window but hidden (common when moving the app or desk) VW will confuse
          * it with a popup */
         cwHwnd = GetForegroundWindow() ;
-        vwLogBasic((vwLogFile,"Set foreground window: %d, %x -> %x\n",(theWin == cwHwnd),(int) theWin,(int) cwHwnd)) ;
+        vwLogBasic((_T("Set foreground window: %d, %x -> %x\n"),(theWin == cwHwnd),(int) theWin,(int) cwHwnd)) ;
         if((cwHwnd == theWin) || (--index < 0))
             break ;
         /* A short sleep allows the rest of the system to catch up */
-        vwLogVerbose((vwLogFile,"About to FG sleep\n")) ;
+        vwLogVerbose((_T("About to FG sleep\n"))) ;
         Sleep(1) ;
     }
     /* bring to the front if requested as swapping desks can muddle the order */
@@ -1175,9 +1207,9 @@ static void showSetup(void)
     {
         // reload load current config
         readConfig();
-        vwLogVerbose((vwLogFile,"About to call createPropertySheet\n")) ;
+        vwLogVerbose((_T("About to call createPropertySheet\n"))) ;
         createPropertySheet(hInst,hWnd);
-        vwLogVerbose((vwLogFile,"createPropertySheet returned\n")) ;
+        vwLogVerbose((_T("createPropertySheet returned\n"))) ;
     }
     else if((setupHWnd != NULL) && (GetForegroundWindow() != setupHWnd))
     {
@@ -1200,7 +1232,7 @@ static int windowSetDesk(HWND theWin, int theDesk, int move)
     int index, ret=0 ;
     
     activeHWnd = GetForegroundWindow() ;
-    vwLogBasic((vwLogFile,"Set window desk: %x %d %d (%x)\n",(int) theWin,theDesk,move,(int) activeHWnd)) ;
+    vwLogBasic((_T("Set window desk: %x %d %d (%x)\n"),(int) theWin,theDesk,move,(int) activeHWnd)) ;
     setActive = FALSE ;
     do {
         ownerWin = 0 ;
@@ -1267,7 +1299,7 @@ static int windowSetDesk(HWND theWin, int theDesk, int move)
                 activeZOrder = winList[index].ZOrder[currentDesk];
             }
         }
-        vwLogVerbose((vwLogFile,"Looking for replacement active: %x\n",(int) activeHWnd)) ;
+        vwLogVerbose((_T("Looking for replacement active: %x\n"),(int) activeHWnd)) ;
         setForegroundWin(activeHWnd,0) ;
     }
     return ret ;
@@ -1291,7 +1323,7 @@ static int windowSetSticky(HWND theWin, int state)
             {
                 if(state < 0) // toggle sticky state - set state so all owner windows are set correctly.
                     state = winList[index].Sticky ^ TRUE;
-                vwLogVerbose((vwLogFile,"Setting Sticky: %x %x - %d -> %d\n",(int) winList[index].Handle,
+                vwLogVerbose((_T("Setting Sticky: %x %x - %d -> %d\n"),(int) winList[index].Handle,
                             (int) theWin,(int) winList[index].Sticky,state)) ;
                 winList[index].Sticky = state ;
                 if(winList[index].Sticky)
@@ -1328,7 +1360,7 @@ static void findUserWindows(void)
     for(i = 0; i < curUser; ++i)
     {
         if(userList[i].type & 1)
-            tmpHnd = FindWindow(NULL, userList[i].match);
+            tmpHnd = FindWindow(NULL,userList[i].match);
         else
             tmpHnd = FindWindow(userList[i].match, NULL);
         
@@ -1390,7 +1422,7 @@ static BOOL CALLBACK enumWindowsProc(HWND hwnd, LPARAM lParam)
             if(!printedError)
             {
                 printedError = TRUE ;
-                MessageBox(hWnd, "Maximum number of managed windows has been reached,\nnew windows will not be managed.\n\nPlease report this to problem.",vwVIRTUAWIN_NAME " Error", MB_ICONERROR);
+                MessageBox(hWnd,_T("Maximum number of managed windows has been reached,\nnew windows will not be managed.\n\nPlease report this to problem."),vwVIRTUAWIN_NAME _T(" Error"), MB_ICONERROR);
             }
         }
         else
@@ -1426,7 +1458,7 @@ static BOOL CALLBACK enumWindowsProc(HWND hwnd, LPARAM lParam)
              * at least outside VirtuaWins domain) so make it belong to this
              * desktop, update the list entry, also check the location as the
              * app may have only made the window visible */
-            vwLogBasic((vwLogFile,"Got tricky window state change: %x %d (%d) %d -> %d %d\n",
+            vwLogBasic((_T("Got tricky window state change: %x %d (%d) %d -> %d %d\n"),
                             (int) winList[idx].Handle,winList[idx].Desk,currentDesk,
                             winList[idx].Visible,(int)pos.left,(int)pos.top)) ;
             winList[idx].State = 2 ;
@@ -1436,7 +1468,7 @@ static BOOL CALLBACK enumWindowsProc(HWND hwnd, LPARAM lParam)
     {
         /* Something has made this window visible so make it belong to this desktop, update the list entry,
          * also check the location as the app may have only made the window visible */
-        vwLogBasic((vwLogFile,"Got window state change: %x %d (%d) %d -> %d\n",
+        vwLogBasic((_T("Got window state change: %x %d (%d) %d -> %d\n"),
                     (int) winList[idx].Handle,winList[idx].Desk,currentDesk,
                     winList[idx].Visible,IsWindowVisible(winList[idx].Handle))) ;
         winList[idx].State = 2 ;
@@ -1450,10 +1482,10 @@ static int winListUpdate(void)
     DWORD iprocId, jprocId ;
     HWND activeHWnd ;
     RECT pos ;
-    char cname[vwCLASSNAME_MAX], wname[vwWINDOWNAME_MAX] ;
+    TCHAR cname[vwCLASSNAME_MAX], wname[vwWINDOWNAME_MAX] ;
     int inWin, newDesk=0, i, j, hungCount=0 ;
     
-    vwLogVerbose((vwLogFile,"Updating winList, nWin %d, fgw %x tpw %x\n",nWin,
+    vwLogVerbose((_T("Updating winList, nWin %d, fgw %x tpw %x\n"),nWin,
                 (int) GetForegroundWindow(),(int) GetTopWindow(NULL))) ;
     /* We now own the mutex. */
     i = inWin = nWin ;
@@ -1471,7 +1503,7 @@ static int winListUpdate(void)
         // Store the owner if there is one, but only if the owner is visible
         GetClassName(winList[i].Handle,cname,vwCLASSNAME_MAX);
         if(!GetWindowText(winList[i].Handle,wname,vwWINDOWNAME_MAX))
-            strcpy(wname,"<None>");
+            _tcscpy(wname,_T("<None>"));
         GetWindowRect(winList[i].Handle,&pos) ;
         winList[i].Tricky = checkIfTricky(cname,wname,&pos) ;
         winList[i].Desk = currentDesk;
@@ -1504,7 +1536,7 @@ static int winListUpdate(void)
                    (GetWindowThreadProcessId(winList[j].Handle,&jprocId) != 0) &&
                    (jprocId == iprocId))
                 {
-                    vwLogBasic((vwLogFile,"Making tricky window %x owned by %x\n",
+                    vwLogBasic((_T("Making tricky window %x owned by %x\n"),
                                 (int) winList[i].Handle,(int) winList[j].Handle)) ;
                     winList[i].Owner = winList[j].Handle ;
                     break ;
@@ -1528,7 +1560,7 @@ static int winListUpdate(void)
                         // if an owned window is flagged as tricky we must make the parent window
                         // tricky otherwise the call to ShowOwnedPopups is likely to break things
                         winList[j].Tricky |= vwTRICKY_WINDOW ;
-                        vwLogBasic((vwLogFile,"Making parent window %x tricky\n",(int) winList[j].Handle)) ;
+                        vwLogBasic((_T("Making parent window %x tricky\n"),(int) winList[j].Handle)) ;
                     }
                     break ;
                 }
@@ -1540,9 +1572,10 @@ static int winListUpdate(void)
         {
             GetClassName(winList[i].Handle,cname,vwCLASSNAME_MAX);
             if(!GetWindowText(winList[i].Handle,wname,vwWINDOWNAME_MAX))
-                strcpy(wname,"<None>");
-            vwLogBasic((vwLogFile,"Got new window %8x %08x %08x Desk %d Stk %d Trk %d Vis %d Own %x Pos %d %d\n  Class \"%s\" Title \"%s\"\n",
-                        (int) winList[i].Handle,(int)winList[i].Style,(int)winList[i].ExStyle,winList[i].Desk,winList[i].Sticky,winList[i].Tricky,
+                _tcscpy(wname,_T("<None>"));
+            vwLogBasic((_T("Got new window %8x %08x %08x Desk %d Stk %d Trk %d Vis %d Own %x Pos %d %d\n  Class \"%s\" Title \"%s\"\n"),
+                        (int) winList[i].Handle,(int)winList[i].Style,(int)winList[i].ExStyle,
+                        (int)winList[i].Desk,(int)winList[i].Sticky,(int)winList[i].Tricky,
                         winList[i].Visible,(int) winList[i].Owner,(int) pos.left,(int) pos.top,cname,wname)) ;
         }
     }
@@ -1571,7 +1604,7 @@ static int winListUpdate(void)
         }
         else
         {
-            vwLogBasic((vwLogFile,"Lost window %8x %d %d %d %d %x\n",(int) winList[i].Handle,
+            vwLogBasic((_T("Lost window %8x %d %d %d %d %x\n"),(int) winList[i].Handle,
                         winList[i].Desk,winList[i].Sticky,winList[i].Tricky,
                         winList[i].Visible,(int) winList[i].Owner)) ;
             if(winList[i].Handle == lastFGHWnd)
@@ -1590,7 +1623,7 @@ static int winListUpdate(void)
     nWin = j ;
     
     // Handle the re-assignment of any popped up window, set the zorder and count hung windows
-    vwLogVerbose((vwLogFile,"Active %8x Last %8x %x LBO %8x %x\n",(int) activeHWnd,
+    vwLogVerbose((_T("Active %8x Last %8x %x LBO %8x %x\n"),(int) activeHWnd,
                     (int) lastFGHWnd, lastFGStyle, (int) lastBOFGHWnd, lastBOFGStyle)) ;
     i = nWin ;
     while(--i >= 0)
@@ -1636,7 +1669,7 @@ static int winListUpdate(void)
                 {
                     if(!winList[i].Visible && hiddenWindowAct)
                     {
-                        vwLogBasic((vwLogFile,"Got Popup - Active %8x Last %8x %x LBO %8x %x\n",(int) activeHWnd,
+                        vwLogBasic((_T("Got Popup - Active %8x Last %8x %x LBO %8x %x\n"),(int) activeHWnd,
                                         (int) lastFGHWnd, lastFGStyle, (int) lastBOFGHWnd, lastBOFGStyle)) ;
                         if((hiddenWindowAct == 3) && (newDesk == 0))
                             newDesk = winList[i].Desk ;
@@ -1667,7 +1700,7 @@ static int winListUpdate(void)
         else if(lastFGHWnd != NULL)
             lastFGStyle = GetWindowLong(activeHWnd,GWL_STYLE) ;
     }
-    vwLogVerbose((vwLogFile,"Updated winList, %d windows - %d hung, newDesk %d\n",nWin,hungCount,newDesk)) ;
+    vwLogVerbose((_T("Updated winList, %d windows - %d hung, newDesk %d\n"),nWin,hungCount,newDesk)) ;
     return ((newDesk << 16) | hungCount) ;
 }
 
@@ -1745,7 +1778,7 @@ static VOID CALLBACK monitorTimerProc(HWND hwnd, UINT uMsg, UINT idEvent, DWORD 
             if(displayTaskbarIcon)
             {
                 /* flash the icon for half a second each time we try */
-                sprintf(nIconD.szTip,"%d window%s not responding",hungCount,(hungCount==1) ? "":"s") ;
+                _stprintf(nIconD.szTip,_T("%d window%s not responding"),hungCount,(hungCount==1) ? _T(""):_T("s")) ;
                 nIconD.hIcon = NULL; // No icon
                 Shell_NotifyIcon(NIM_MODIFY, &nIconD);
             }
@@ -1774,7 +1807,7 @@ static VOID CALLBACK monitorTimerProc(HWND hwnd, UINT uMsg, UINT idEvent, DWORD 
     {
         /* hung process problem has been resolved. */
         mtCount = 0 ;
-        strcpy(nIconD.szTip,vwVIRTUAWIN_NAME_VERSION);	// Restore Tooltip
+        _tcscpy(nIconD.szTip,vwVIRTUAWIN_NAME_VERSION);	// Restore Tooltip
         setIcon(currentDesk);
     }
 
@@ -1807,19 +1840,7 @@ static int changeDesk(int newDesk, WPARAM msgWParam)
     if((deskImageCount > 0) && (timerCounter >= 4))
         createDeskImage(currentDesk,0) ;
     
-    if(vwLogEnabled())
-    {
-#ifdef vwLOG_TIMING
-        SYSTEMTIME stime;
-    
-        GetLocalTime (&stime);
-        vwLogBasic((vwLogFile, "[%04d-%02d-%02d %02d:%02d:%02d] Step Desk Start: %d -> %d\n",
-                    stime.wYear, stime.wMonth, stime.wDay, stime.wHour,
-                    stime.wMinute, stime.wSecond, currentDesk, newDesk)) ;
-#else
-        vwLogBasic((vwLogFile,"Step Desk Start: %d -> %d\n",currentDesk,newDesk)) ;
-#endif
-    }
+    vwLogBasic((_T("Step Desk Start: %d -> %d\n"),currentDesk,newDesk)) ;
     
     timerCounter = 0 ;
     lockMutex();
@@ -1888,7 +1909,7 @@ static int changeDesk(int newDesk, WPARAM msgWParam)
                 notHung = showHideWindow(&winList[b],0,vwVISIBLE_YES) ;
             else
                 notHung = windowIsNotHung(winList[b].Handle,100) ;
-            vwLogVerbose((vwLogFile, "ZOrder: %d %d %x -> %d %d %x (%d)\n",y,zoy,zoh,b,zob,winList[b].Handle,notHung)) ;
+            vwLogVerbose((_T("ZOrder: %d %d %x -> %d %d %x (%d)\n"),y,zoy,zoh,b,zob,winList[b].Handle,notHung)) ;
             if(notHung)
             {
                 SetWindowPos(winList[b].Handle,zoh,0,0,0,0,SWP_DEFERERASE|SWP_NOSIZE|SWP_NOACTIVATE|SWP_NOSENDCHANGING|SWP_NOMOVE) ;
@@ -1950,7 +1971,7 @@ static int changeDesk(int newDesk, WPARAM msgWParam)
                     break ;
                 // Show these windows
                 notHung = windowIsNotHung(winList[b].Handle,100) ;
-                vwLogVerbose((vwLogFile, "TBZOrder: %d %d %x -> %d %d %x (%d)\n",y,zoy,zoh,b,zob,winList[b].Handle,notHung)) ;
+                vwLogVerbose((_T("TBZOrder: %d %d %x -> %d %d %x (%d)\n"),y,zoy,zoh,b,zob,winList[b].Handle,notHung)) ;
                 if(notHung)
                 {
                     SetWindowPos(winList[b].Handle,zoh,0,0,0,0,SWP_DEFERERASE|SWP_NOSIZE|SWP_NOACTIVATE|SWP_NOSENDCHANGING|SWP_NOMOVE) ;
@@ -1963,7 +1984,7 @@ static int changeDesk(int newDesk, WPARAM msgWParam)
     }
     if(releaseFocus)     // Release focus maybe?
         activeHWnd = NULL ;
-    vwLogBasic((vwLogFile, "Active found: %x (%d,%d,%d)\n",(int) activeHWnd,(int)activeZOrder,releaseFocus,isDragging)) ;
+    vwLogBasic((_T("Active found: %x (%d,%d,%d)\n"),(int) activeHWnd,(int)activeZOrder,releaseFocus,isDragging)) ;
     setForegroundWin(activeHWnd,TRUE) ;
     // reset the monitor timer to give the system a chance to catch up first
     SetTimer(hWnd, 0x29a, 250, monitorTimerProc);
@@ -1979,19 +2000,9 @@ static int changeDesk(int newDesk, WPARAM msgWParam)
         RedrawWindow( NULL, NULL, NULL, RDW_INVALIDATE | RDW_ERASE | RDW_ALLCHILDREN );
     
     postModuleMessage(MOD_CHANGEDESK,msgWParam,currentDesk);
-    if(vwLogEnabled())
-    {
-#ifdef vwLOG_TIMING
-        SYSTEMTIME stime;
     
-        GetLocalTime (&stime);
-        vwLogBasic((vwLogFile, "[%04d-%02d-%02d %02d:%02d:%02d] Step Desk End (%x)\n",
-                    stime.wYear, stime.wMonth, stime.wDay, stime.wHour,
-                    stime.wMinute, stime.wSecond,(int)GetForegroundWindow())) ;
-#else
-        vwLogBasic((vwLogFile,"Step Desk End (%x)\n",(int)GetForegroundWindow())) ;
-#endif
-    }
+    vwLogBasic((_T("Step Desk End (%x)\n"),(int)GetForegroundWindow())) ;
+    
     return currentDesk ;
 }
 
@@ -2127,9 +2138,9 @@ static int stepUp(void)
 static HMENU createSortedWinList_cos(MenuItem **items,int *numitems)
 {
     HMENU hMenu;         // menu bar handle
-    char title[48];
     MenuItem *item;
-    char buff[MAX_PATH];
+    TCHAR title[48];
+    TCHAR buff[MAX_PATH];
     int i,x,y,c,doAssignMenu=0;
     BOOL useTitle;    // Only use title if we have more than one menu
     
@@ -2157,12 +2168,12 @@ static HMENU createSortedWinList_cos(MenuItem **items,int *numitems)
             
             GetWindowText(winList[c].Handle, buff, 30);
 #ifdef NDEBUG
-            sprintf(title, "%d - %s", winList[c].Desk, buff);
+            _stprintf(title,_T("%d - %s"),winList[c].Desk,buff);
 #else
-            sprintf(title, "%d - %s (%x)", winList[c].Desk, buff,(int) winList[c].Handle);
+            _stprintf(title,_T("%d - %s (%x)"),winList[c].Desk,buff,(int) winList[c].Handle);
 #endif
             if(((item = malloc(sizeof(MenuItem))) == NULL) ||
-               ((item->name = strdup(title)) == NULL))
+               ((item->name = _tcsdup(title)) == NULL))
             {
                 while(--i >= 0)
                 {
@@ -2221,7 +2232,7 @@ static HMENU createSortedWinList_cos(MenuItem **items,int *numitems)
     {
         for(y = 0; y<i; y++)
         {
-            if(strcmp(items[x]->name, items[y]->name) < 0 )
+            if(_tcscmp(items[x]->name, items[y]->name) < 0 )
             {
                 item = items [x];
                 items[x] = items[y];
@@ -2234,7 +2245,7 @@ static HMENU createSortedWinList_cos(MenuItem **items,int *numitems)
     {
         if(useTitle)
         {
-            AppendMenu(hMenu, MF_STRING | MF_DISABLED, 0, "Sticky" );
+            AppendMenu(hMenu, MF_STRING | MF_DISABLED, 0,_T("Sticky"));
             AppendMenu(hMenu, MF_SEPARATOR, 0, NULL );
             AppendMenu(hMenu, MF_SEPARATOR, 0, NULL );
         }
@@ -2244,7 +2255,7 @@ static HMENU createSortedWinList_cos(MenuItem **items,int *numitems)
                 AppendMenu(hMenu, MF_SEPARATOR, 0, NULL );
             c = items[x]->desk;
             AppendMenu( hMenu, MF_OWNERDRAW | (items[x]->sticky ? MF_CHECKED: 0),
-                        vwPMENU_STICKY | (items[x]->id), (const char *) items[x] );
+                        vwPMENU_STICKY | (items[x]->id), (const TCHAR *) items[x] );
         }
     }
     
@@ -2252,7 +2263,7 @@ static HMENU createSortedWinList_cos(MenuItem **items,int *numitems)
     {
         if(useTitle)
         {
-            AppendMenu(hMenu, (stickyMenu) ? (MF_STRING | MF_DISABLED | MF_MENUBARBREAK):(MF_STRING | MF_DISABLED), 0, "Access" );
+            AppendMenu(hMenu, (stickyMenu) ? (MF_STRING | MF_DISABLED | MF_MENUBARBREAK):(MF_STRING | MF_DISABLED), 0,_T("Access"));
             AppendMenu(hMenu, MF_SEPARATOR, 0, NULL );
             AppendMenu(hMenu, MF_SEPARATOR, 0, NULL );
         }
@@ -2261,7 +2272,7 @@ static HMENU createSortedWinList_cos(MenuItem **items,int *numitems)
             if((c != 0) && (c != items[x]->desk))
                 AppendMenu(hMenu, MF_SEPARATOR, 0, NULL );
             c = items[x]->desk;
-            AppendMenu( hMenu, MF_OWNERDRAW, vwPMENU_ACCESS | (items[x]->id), (const char *) items[x] );
+            AppendMenu( hMenu, MF_OWNERDRAW, vwPMENU_ACCESS | (items[x]->id), (const TCHAR *) items[x] );
         }
     }
     
@@ -2269,7 +2280,7 @@ static HMENU createSortedWinList_cos(MenuItem **items,int *numitems)
     {
         if(useTitle)
         {
-            AppendMenu(hMenu, (stickyMenu || directMenu) ? (MF_STRING | MF_DISABLED | MF_MENUBARBREAK):(MF_STRING | MF_DISABLED), 0, "Assign" );
+            AppendMenu(hMenu, (stickyMenu || directMenu) ? (MF_STRING | MF_DISABLED | MF_MENUBARBREAK):(MF_STRING | MF_DISABLED), 0,_T("Assign"));
             AppendMenu(hMenu, MF_SEPARATOR, 0, NULL );
             AppendMenu(hMenu, MF_SEPARATOR, 0, NULL );
         }
@@ -2284,7 +2295,7 @@ static HMENU createSortedWinList_cos(MenuItem **items,int *numitems)
                     AppendMenu(hMenu, MF_SEPARATOR, 0, NULL );
                 c = items [x]->desk;
                 if(y)
-                    AppendMenu( hMenu, MF_OWNERDRAW, (vwPMENU_ASSIGN | (items[x]->id)), (const char *) items[x] );
+                    AppendMenu( hMenu, MF_OWNERDRAW, (vwPMENU_ASSIGN | (items[x]->id)), (const TCHAR *) items[x] );
                 else
                     AppendMenu( hMenu, MF_OWNERDRAW, 0, 0) ;
             }
@@ -2310,11 +2321,11 @@ static BOOL showHideWindow(windowType* aWindow, int shwFlags, unsigned char show
         UINT swpFlags ;
         if(!windowIsNotHung(aWindow->Handle,(shwFlags & vwSHWIN_TRYHARD) ? 10000:100))
         {
-            vwLogVerbose((vwLogFile,"showHideWindow %8x %d %d %x %x %d %d %d - HUNG\n",(int) aWindow->Handle,shwFlags,show,(int)aWindow->Style,(int)aWindow->ExStyle,aWindow->Visible,aWindow->Desk,currentDesk)) ;
+            vwLogVerbose((_T("showHideWindow %8x %d %d %x %x %d %d %d - HUNG\n"),(int) aWindow->Handle,shwFlags,show,(int)aWindow->Style,(int)aWindow->ExStyle,aWindow->Visible,aWindow->Desk,currentDesk)) ;
             return FALSE ;
         }
         GetWindowRect( aWindow->Handle, &pos );
-        vwLogVerbose((vwLogFile,"showHideWindow %8x %d %d %x %x %d %d %d - %d %d\n",(int) aWindow->Handle,shwFlags,show,(int)aWindow->Style,(int)aWindow->ExStyle,aWindow->Visible,aWindow->Desk,currentDesk,(int) pos.left,(int) pos.top)) ;
+        vwLogVerbose((_T("showHideWindow %8x %d %d %x %x %d %d %d - %d %d\n"),(int) aWindow->Handle,shwFlags,show,(int)aWindow->Style,(int)aWindow->ExStyle,aWindow->Visible,aWindow->Desk,currentDesk,(int) pos.left,(int) pos.top)) ;
         Tricky = aWindow->Tricky ;
         if(trickyWindows)
         {
@@ -2377,7 +2388,7 @@ static void disableAll(HWND aHWnd)
 {
     if(enabled)
     {   // disable VirtuaWin
-        strcpy(nIconD.szTip,vwVIRTUAWIN_NAME " - Disabled"); //Tooltip
+        _tcscpy(nIconD.szTip,vwVIRTUAWIN_NAME _T(" - Disabled")); //Tooltip
         setIcon(0);
         unRegisterAllKeys();
         KillTimer(hWnd, 0x29a);
@@ -2385,7 +2396,7 @@ static void disableAll(HWND aHWnd)
     }
     else
     {   // Enable VirtuaWin
-        strcpy(nIconD.szTip,vwVIRTUAWIN_NAME_VERSION);	// Tooltip
+        _tcscpy(nIconD.szTip,vwVIRTUAWIN_NAME_VERSION);	// Tooltip
         setIcon(currentDesk);
         registerAllKeys();
         SetTimer(hWnd, 0x29a, 250, monitorTimerProc);
@@ -2402,7 +2413,7 @@ int assignWindow(HWND theWin, int theDesk, BOOL force)
     int ret, change, idx ;
     unsigned char sticky=0 ;
     
-    vwLogBasic((vwLogFile,"Assign window: %x %d %d\n",(int) theWin,theDesk,force)) ;
+    vwLogBasic((_T("Assign window: %x %d %d\n"),(int) theWin,theDesk,force)) ;
     change = (theDesk < 0) ;
     if(change)
         theDesk = 0 - theDesk ;
@@ -2441,7 +2452,7 @@ static int accessWindow(HWND theWin, int method, BOOL force)
 {
     int ret, idx ;
     
-    vwLogBasic((vwLogFile,"Access window: %x %d\n",(int) theWin,method)) ;
+    vwLogBasic((_T("Access window: %x %d\n"),(int) theWin,method)) ;
     
     if((theWin == NULL) || (theWin == hWnd))
         return 0 ;
@@ -2474,7 +2485,7 @@ static int accessWindow(HWND theWin, int method, BOOL force)
 static int setSticky(HWND theWin, int state)
 {
     int ret ;
-    vwLogBasic((vwLogFile,"Set sticky window: %x %d\n",(int) theWin,state)) ;
+    vwLogBasic((_T("Set sticky window: %x %d\n"),(int) theWin,state)) ;
     if(theWin == NULL)
         return 0 ;
     
@@ -2495,7 +2506,7 @@ static int windowDismiss(HWND theWin)
     int ret, idx ;
     HWND hwnd ;
     
-    vwLogBasic((vwLogFile,"Dismissing window: %x\n",(int) theWin)) ;
+    vwLogBasic((_T("Dismissing window: %x\n"),(int) theWin)) ;
     if(theWin == NULL)
         return 0 ;
     
@@ -2566,17 +2577,17 @@ static void measureMenuItem(HWND hwnd,MEASUREITEMSTRUCT* mitem)
     HFONT menufont,oldfont;
     MenuItem* item;
     SIZE size;
-    char *measuretext;
+    TCHAR *measuretext;
 
     item = (MenuItem*) mitem->itemData;
 
-    measuretext = (item != NULL) ? item->name : "D" ;
+    measuretext = (item != NULL) ? item->name : _T("D") ;
 
     menufont=getMenuFont();
     testdc=GetDC(hwnd);
     oldfont=SelectObject(testdc,menufont);
 
-    GetTextExtentPoint32(testdc,measuretext,strlen(measuretext),&size);
+    GetTextExtentPoint32(testdc,measuretext,_tcslen(measuretext),&size);
 
     // width + end padding + icon + icon padding
     mitem->itemWidth = size.cx + ICON_SIZE + ICON_PADDING + (2*MENU_X_PADDING) ;
@@ -2634,11 +2645,11 @@ static void renderMenuItem(DRAWITEMSTRUCT* ditem)
     {
         icon=(ditem->itemState & ODS_CHECKED) ? checkIcon : item->icon;
         DrawIconEx(ditem->hDC,ditem->rcItem.left+MENU_X_PADDING,ditem->rcItem.top+MENU_Y_PADDING,icon,ICON_SIZE,ICON_SIZE,0,0,DI_NORMAL);
-        if((ll = strlen(item->name)) > 0)
+        if((ll = _tcslen(item->name)) > 0)
         {
             GetTextExtentPoint32(ditem->hDC,item->name,ll,&size);
             ExtTextOut(ditem->hDC,ditem->rcItem.left+MENU_X_PADDING+ICON_SIZE+ICON_PADDING,
-                       ditem->rcItem.bottom-((ditem->rcItem.bottom-ditem->rcItem.top-size.cy+1) >> 1),ETO_OPAQUE,0,item->name,strlen(item->name),0);
+                       ditem->rcItem.bottom-((ditem->rcItem.bottom-ditem->rcItem.top-size.cy+1) >> 1),ETO_OPAQUE,0,item->name,_tcslen(item->name),0);
         }
     }
     SetTextAlign(ditem->hDC,oldalign);
@@ -2672,7 +2683,7 @@ static void winListPopupMenu(HWND aHWnd)
     retItem = TrackPopupMenu(hpopup, TPM_RETURNCMD |  // Return menu code
                              TPM_LEFTBUTTON, (pt.x-2), (pt.y-2), // screen coordinates
                              0, aHWnd, NULL);
-    vwLogBasic((vwLogFile,"Window menu returned: %x\n",(int) retItem)) ;
+    vwLogBasic((_T("Window menu returned: %x\n"),(int) retItem)) ;
     
     if(retItem)
     {
@@ -2684,7 +2695,7 @@ static void winListPopupMenu(HWND aHWnd)
         if(ii >= 0)
         {
             hwnd = winList[ii].Handle ;
-            vwLogVerbose((vwLogFile,"Menu select %x %d %x\n",retItem,ii,(int) hwnd)) ;
+            vwLogVerbose((_T("Menu select %x %d %x\n"),retItem,ii,(int) hwnd)) ;
             if(retItem & vwPMENU_STICKY)
                 // Sticky toggle
                 setSticky(hwnd,-1) ;
@@ -2785,8 +2796,6 @@ wndProc(HWND aHWnd, UINT message, WPARAM wParam, LPARAM lParam)
             }
             isDragging = FALSE;
         }
-skipMouseWarp:  // goto label for skipping mouse stuff
-        
         return TRUE;
         
     case WM_HOTKEY:				// A hot key was pressed
@@ -2951,10 +2960,11 @@ skipMouseWarp:  // goto label for skipping mouse stuff
     case VW_USERAPPPATH:
         {
             // Send over the VirtuaWin install path with WM_COPYDATA
+            //  - always use a byte string so unicode/non-uncode modules can work together
             COPYDATASTRUCT cds;
-            char *ss = (message == VW_INSTALLPATH) ? VirtuaWinPath:UserAppPath ;
+            char *ss = (message == VW_INSTALLPATH) ? VirtuaWinPathStr:UserAppPathStr ;
             cds.dwData = 0 - message ;
-            cds.cbData = strlen(ss) + 1;
+            cds.cbData = strlen(ss) + 1 ;
             cds.lpData = (void*)ss;
             sendModuleMessage(WM_COPYDATA, (WPARAM) aHWnd, (LPARAM)&cds); 
             return TRUE;
@@ -3029,9 +3039,9 @@ skipMouseWarp:  // goto label for skipping mouse stuff
                 
                 nID = GetMenuItemID(hpopup, 3); // Get the Disable item
                 if(enabled) // Change the text depending on state
-                    ModifyMenu(hpopup, nID, MF_BYCOMMAND, nID, "Disable");
+                    ModifyMenu(hpopup, nID, MF_BYCOMMAND, nID,_T("Disable"));
                 else
-                    ModifyMenu(hpopup, nID, MF_BYCOMMAND, nID, "Enable");
+                    ModifyMenu(hpopup, nID, MF_BYCOMMAND, nID,_T("Enable"));
                 SetForegroundWindow(aHWnd);
                 
                 switch (TrackPopupMenu(hpopup, TPM_RETURNCMD |    // Return menu code
@@ -3101,7 +3111,7 @@ VirtuaWinInit(HINSTANCE hInstance)
     WNDCLASSEX wc;
     DWORD threadID;
     BOOL awStore;
-    char *classname = vwVIRTUAWIN_NAME "MainClass";
+    TCHAR *classname = vwVIRTUAWIN_NAME _T("MainClass") ;
     hInst = hInstance;
     
 #ifdef _WIN32_MEMORY_DEBUG
@@ -3111,7 +3121,7 @@ VirtuaWinInit(HINSTANCE hInstance)
 #endif
     
     /* Only one instance may be started */
-    hMutex = CreateMutex(NULL, FALSE, vwVIRTUAWIN_NAME "PreventSecond");
+    hMutex = CreateMutex(NULL, FALSE, vwVIRTUAWIN_NAME _T("PreventSecond"));
     if(GetLastError() == ERROR_ALREADY_EXISTS)
     {
         // Display configuration window...
@@ -3152,18 +3162,18 @@ VirtuaWinInit(HINSTANCE hInstance)
                                    GetSystemMetrics(SM_CYSMICON), 0);
     if(RegisterClassEx(&wc) == 0)
     {
-        MessageBox(hWnd, "Failed to register class!",vwVIRTUAWIN_NAME " Error", MB_ICONWARNING);
+        MessageBox(hWnd,_T("Failed to register class!"),vwVIRTUAWIN_NAME _T(" Error"), MB_ICONWARNING);
         return 0 ;
     }
     
     readConfig();	// Read the config file
     if(vwLogFlag)
     {
-        char logFname[MAX_PATH] ;
+        TCHAR logFname[MAX_PATH] ;
         GetFilename(vwCONFIG,1,logFname) ;
-        strcpy(logFname+strlen(logFname)-3,"log") ;
-        vwLogFile = fopen(logFname,"w+") ;
-        vwLogBasic((vwLogFile,vwVIRTUAWIN_NAME_VERSION "\n")) ;
+        _tcscpy(logFname+_tcslen(logFname)-3,_T("log")) ;
+        vwLogFile = _tfopen(logFname,_T("w+")) ;
+        vwLogBasic((vwVIRTUAWIN_NAME_VERSION _T("\n"))) ;
     }
     
     
@@ -3173,7 +3183,7 @@ VirtuaWinInit(HINSTANCE hInstance)
     getWorkArea(); // This is dependent on the config
     
     // Fix some things for the alternate hide method
-    RM_Shellhook = RegisterWindowMessage("SHELLHOOK");
+    RM_Shellhook = RegisterWindowMessage(_T("SHELLHOOK"));
     goGetTheTaskbarHandle();
     
     loadIcons();
@@ -3186,7 +3196,7 @@ VirtuaWinInit(HINSTANCE hInstance)
     if((hWnd = CreateWindowEx(0, classname, classname, WS_POPUP, CW_USEDEFAULT, 0,
                               CW_USEDEFAULT, 0, NULL, NULL, hInstance, NULL)) == NULL)
     {
-        MessageBox(hWnd, "Failed to create window!",vwVIRTUAWIN_NAME " Error", MB_ICONWARNING);
+        MessageBox(hWnd,_T("Failed to create window!"),vwVIRTUAWIN_NAME _T(" Error"), MB_ICONWARNING);
         return 0 ;
     }
     
@@ -3199,7 +3209,7 @@ VirtuaWinInit(HINSTANCE hInstance)
     nIconD.uCallbackMessage = UWM_SYSTRAY;  // message sent to nIconD.hWnd
     nIconD.hIcon = icons[1];
     
-    strcpy(nIconD.szTip,vwVIRTUAWIN_NAME_VERSION);		// Tooltip
+    _tcscpy(nIconD.szTip,vwVIRTUAWIN_NAME_VERSION);		// Tooltip
     if( displayTaskbarIcon )
     {
         // This adds the icon

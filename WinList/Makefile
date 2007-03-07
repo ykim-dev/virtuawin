@@ -23,7 +23,7 @@ OSTYPE   = $(shell uname -msr)
 
 ifeq ($(findstring CYGWIN,$(OSTYPE)),CYGWIN)
 CC      = gcc
-CFLAGS	= -mno-cygwin -Wall -O2
+CFLAGS	= -mno-cygwin -Wall -O2 -DNDEBUG
 CFLAGSD = -mno-cygwin -Wall -g
 LDFLAGS	= -mwindows -mno-cygwin -O2
 LDFLAGSD= -mwindows -mno-cygwin -g
@@ -33,7 +33,7 @@ endif
 
 ifeq ($(findstring MINGW32,$(OSTYPE)),MINGW32)
 CC      = gcc
-CFLAGS	= -Wall -O2
+CFLAGS	= -Wall -O2 -DNDEBUG
 CFLAGSD = -Wall -g
 LDFLAGS	= -mwindows -O2
 LDFLAGSD= -mwindows -g
@@ -43,12 +43,16 @@ endif
 
 ifeq ($(findstring Linux,$(OSTYPE)),Linux)
 CC      = i586-mingw32msvc-gcc
-CFLAGS  = -Wall -O2
+CFLAGS  = -Wall -O2 -DNDEBUG
 CFLAGSD = -Wall -g
 LDFLAGS = -mwindows -O2
 LDFLAGSD= -mwindows -g
 RC	= i586-mingw32msvc-windres
 STRIP	= strip
+endif
+
+ifeq ($(vwUNICODE),1)
+CUCDEFS = -DUNICODE -D_UNICODE
 endif
 
 SRC	= winlist.c
@@ -63,9 +67,9 @@ OBJSD   = $(SRC:.c=.od)
 
 .SUFFIXES: .rc .res .coff .c .o .od
 .c.o:
-	$(CC) $(CFLAGS) $(CVBDEFS) $(CVDDEFS) $(CVTDEFS) -c -o $@ $<
+	$(CC) $(CFLAGS) $(CUCDEFS) -c -o $@ $<
 .c.od:
-	$(CC) $(CFLAGSD) $(CVBDEFS) $(CVDDEFS) $(CVTDEFS) -c -o $@ $<
+	$(CC) $(CFLAGSD) $(CUCDEFS) -c -o $@ $<
 
 $(TARGET): $(OBJS) $(COFFS)
 	$(CC) $(LDFLAGS) -o $(TARGET) $(OBJS) $(COFFS) $(LIBS)
@@ -85,4 +89,4 @@ clean:
 	rm -f $(OBJS) $(OBJSD) $(COFFS)
 
 spotless: clean 
-	rm -f  $(TARGET) $(TARGETD) $(OBJRES) vc60.pch
+	rm -f $(TARGET) $(TARGETD) $(OBJRES) vc60.pch
