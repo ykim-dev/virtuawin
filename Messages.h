@@ -104,7 +104,11 @@
  *       1 if successfully updated, 0 otherwise.
  *   4 - Returns the desk image height if enabled, 0 otherwise 
  *   5 - Returns the desk image width if enabled, 0 otherwise */ 
-#define VW_DESKIMAGE   (WM_USER + 41)
+#define VW_DESKIMAGE    (WM_USER + 41)
+/* Message, set the main VirtuaWin enable/disable state. If wParam is 0
+   the current state is not changed, 1 for toggle, 2 for disable
+   and 3 for enable. Returns the previous state, 1 for enable & 0 for disabled. */
+#define VW_ENABLE_STATE (WM_USER + 42)
 
 
 /* Message, sent by VirtuaWin after a switch. lParam will contain current desktop number 

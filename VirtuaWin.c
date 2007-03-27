@@ -56,10 +56,6 @@ int curSticky = 0;        // how many stickywindows we have (saved)
 int curTricky = 0;        // how many tricky windows we have (saved)
 int curUser = 0;          // how many user applications we have
 
-int screenLeft;
-int screenRight;
-int screenTop;
-int screenBottom;
 int taskbarEdge;
 int desktopWorkArea[2][4] ;
 
@@ -287,75 +283,83 @@ DWORD WINAPI MouseProc(LPVOID lpParameter)
         pos[1] = pt.y - desktopWorkArea[mode][1] ;
         pos[2] = desktopWorkArea[mode][2] - pt.x ;
         pos[3] = desktopWorkArea[mode][3] - pt.y ;
+        ii = 3 ;
         if(mode != lastMode)
         {
-            if(mode && (pos[taskbarEdge] < 0))
-            {
-                lastMode = -2 ;
-                continue ;
-            }
-            state[0] = state[1] = state[2] = state[3] = 0 ;
+            /* the state of the left button has changed, rest the mode. Must also try
+             * to handle clicks on the taskbar and other non-workarea locations */
+            do {
+                if(mode && (pos[ii] < 0))
+                {
+                    mode = -2 ;
+                    break ;
+                }
+                state[ii] = (pos[ii] >= warpLength) ;
+            } while(--ii >= 0) ;
             lastMode = mode ;
         }
-        ii = 3 ;
-        do {
-            if((newState = state[ii]) == 4)
-            {
-                if(pos[ii] > 0)
-                    newState = 3 ;
-                else if(++delayTime[ii] >= mouseDelay)
+        else 
+        {
+            do {
+                if((newState = state[ii]) == 4)
                 {
-                    vwLogBasic((_T("Mouse desk change on edge %d (%d,%d)\n"),ii,(int) pt.x,(int) pt.y)) ;
-                    /* send the switch message and wait until done */
-                    SendMessage(hWnd, VW_MOUSEWARP, 0, MAKELPARAM(mode,ii)) ;
-                    newState = 1 ;
+                    if(pos[ii] > 0)
+                        newState = 3 ;
+                    else if(++delayTime[ii] >= mouseDelay)
+                    {
+                        vwLogBasic((_T("Mouse desk change on edge %d (%d,%d)\n"),ii,(int) pt.x,(int) pt.y)) ;
+                        /* send the switch message and wait until done */
+                        SendMessage(hWnd, VW_MOUSEWARP, 0, MAKELPARAM(mode,ii)) ;
+                        newState = 1 ;
+                    }
+                    else
+                        continue ;
                 }
-                else
-                    continue ;
-            }
-            else if(pos[ii] >= warpLength)
-            {
-                if(newState == 0)
-                    newState = 1 ;
-            }
-            else if(pos[ii] <= 0)
-            {
-                if((knockMode & 1) && ((newState == 0) || ((newState == 1) && (knockMode & 2))))
-                    newState = 2 ;
-                else if((newState == 3) || (newState <= 1))
-                    newState = 4 ;
-            }
-            else if((newState == 2) && (pos[ii] >= (warpLength >> 2)))
-                newState = 3 ;
-            if(newState != state[ii])
-            {
-                newPos = (ii & 0x01) ? pt.x:pt.y ;
-                if((state[ii] > 1) && (abs(statePos[ii]-newPos) > warpLength))
+                else if(pos[ii] >= warpLength)
                 {
-                    /* newState must be greater than state[ii], check the mouse movement is accurate enough */
-                    vwLogBasic((_T("State %d (%d %d): Changed %d -> 1 (position: %d,%d)\n"),ii,mode,pos[ii],state[ii],(int) pt.x,(int) pt.y)) ;
+                    if(newState == 0)
+                        newState = 1 ;
+                }
+                else if(pos[ii] <= 0)
+                {
+                    if((knockMode & 1) && ((newState == 0) || ((newState == 1) && (knockMode & 2))))
+                        newState = 2 ;
+                    else if((newState == 3) || (newState <= 1))
+                        newState = 4 ;
+                }
+                else if((newState == 2) && (pos[ii] >= (warpLength >> 2)))
+                    newState = 3 ;
+                if(newState != state[ii])
+                {
+                    newPos = (ii & 0x01) ? pt.x:pt.y ;
+                    if((state[ii] > 1) && (abs(statePos[ii]-newPos) > warpLength))
+                    {
+                        /* newState must also be greater than 2, check the mouse movement is accurate enough */
+                        vwLogBasic((_T("State %d (%d %d): Changed %d -> 1 (position: %d,%d)\n"),ii,mode,pos[ii],state[ii],(int) pt.x,(int) pt.y)) ;
+                        state[ii] = 1 ;
+                    }
+                    else
+                    {
+#ifdef vwLOG_VERBOSE
+                        if(vwLogEnabled())
+#else
+                        if(vwLogEnabled() && ((newState > 1) || (state[ii] > 1)))
+#endif
+                            vwLogPrint(_T("State %d (%d %d): Change %d -> %d (%d,%d)\n"),ii,mode,pos[ii],state[ii],newState,(int) pt.x,(int) pt.y) ;
+                        state[ii] = newState ;
+                        if(newState == 2)
+                            statePos[ii] = newPos ;
+                        delayTime[ii] = 0 ;
+                    }
+                }
+                else if((state[ii] > 1) && (++delayTime[ii] >= 20))
+                {
+                    /* burnt in 1sec timer, a knock must take no more than 1 sec second (2 * (20 * 25ms)) */
+                    vwLogBasic((_T("State %d (%d %d): Changed %d -> 1 (timer)\n"),ii,mode,pos[ii],newState)) ;
                     state[ii] = 1 ;
                 }
-                else
-                {
-#ifdef vwLOG_VERBOSE
-                    if(vwLogEnabled())
-#else
-                    if(vwLogEnabled() && ((newState > 1) || (state[ii] > 1)))
-#endif
-                        vwLogPrint(_T("State %d (%d %d): Change %d -> %d (%d,%d)\n"),ii,mode,pos[ii],state[ii],newState,(int) pt.x,(int) pt.y) ;
-                    state[ii] = newState ;
-                    statePos[ii] = newPos ;
-                    delayTime[ii] = 0 ;
-                }
-            }
-            else if((state[ii] > 1) && (++delayTime[ii] >= 20))
-            {
-                /* burnt in 1sec timer, a knock must take no more than 1 sec second (2 * (20 * 25ms)) */
-                vwLogBasic((_T("State %d (%d %d): Changed %d -> 1 (timer)\n"),ii,mode,pos[ii],newState)) ;
-                state[ii] = 1 ;
-            }
-        } while(--ii >= 0) ;
+            } while(--ii >= 0) ;
+        }
     }
     
     return TRUE;
@@ -715,39 +719,40 @@ void unRegisterAllKeys(void)
     unRegisterKeys();
 }
 
+/* The virtual screen size system matrix values were only added for WINVER >= 0x0500 (Win2k) */
+#ifndef SM_CMONITORS
+#define SM_XVIRTUALSCREEN       76
+#define SM_YVIRTUALSCREEN       77
+#define SM_CXVIRTUALSCREEN      78
+#define SM_CYVIRTUALSCREEN      79
+#define SM_CMONITORS            80
+#endif
 /************************************************
  * Get screen width and height and store values in
  * global variables
  */
 static void getScreenSize(void)
 {
-    /* The virtual screen size system matrix values were only added for WINVER >= 0x0500 (Win2k) */
-#ifndef SM_XVIRTUALSCREEN
-#define SM_XVIRTUALSCREEN       76
-#define SM_YVIRTUALSCREEN       77
-#define SM_CXVIRTUALSCREEN      78
-#define SM_CYVIRTUALSCREEN      79
-#endif
-
-    if((screenRight  = GetSystemMetrics(SM_CXVIRTUALSCREEN)) <= 0)
+    if((desktopWorkArea[0][2] = GetSystemMetrics(SM_CXVIRTUALSCREEN)) <= 0)
     {
         /* The virtual screen size system matrix values are not supported on
          * this OS (Win95 & NT), use the desktop window size */
         RECT r;
         GetClientRect(desktopHWnd, &r);
-        screenLeft   = r.left;
-        screenRight  = r.right;
-        screenTop    = r.top;
-        screenBottom = r.bottom;
+        desktopWorkArea[0][0] = r.left;
+        desktopWorkArea[0][1] = r.top;
+        desktopWorkArea[0][2] = r.right - 1 ;
+        desktopWorkArea[0][3] = r.bottom - 1 ;
     }
     else
     {
-        screenLeft   = GetSystemMetrics(SM_XVIRTUALSCREEN);
-        screenRight += screenLeft;
-        screenTop    = GetSystemMetrics(SM_YVIRTUALSCREEN);
-        screenBottom = GetSystemMetrics(SM_CYVIRTUALSCREEN)+screenTop;
+        desktopWorkArea[0][0]  = GetSystemMetrics(SM_XVIRTUALSCREEN);
+        desktopWorkArea[0][1]  = GetSystemMetrics(SM_YVIRTUALSCREEN);
+        desktopWorkArea[0][2] += desktopWorkArea[0][0] - 1 ;
+        desktopWorkArea[0][3]  = GetSystemMetrics(SM_CYVIRTUALSCREEN) + desktopWorkArea[0][1] - 1;
     }
-    vwLogBasic((_T("Got screen size: %d %d -> %d %d\n"),screenLeft,screenRight,screenTop,screenBottom)) ;
+    vwLogBasic((_T("Got screen size: %d %d -> %d %d\n"),
+                desktopWorkArea[0][0],desktopWorkArea[0][1],desktopWorkArea[0][2],desktopWorkArea[0][3])) ;
 }
 
 /************************************************
@@ -772,66 +777,25 @@ static void goGetTheTaskbarHandle(void)
 }
 
 /************************************************
- * Grabs and stores the taskbar coordinates
+ * Grabs and stores the workarea of the screen
  */
 void getWorkArea(void)
 {
-    /* the mouse has 2 modes, dragging a window and not dragging a window */
-    desktopWorkArea[0][0] = desktopWorkArea[1][0] = screenLeft ;
-    desktopWorkArea[0][1] = desktopWorkArea[1][1] = screenTop ;
-    desktopWorkArea[0][2] = desktopWorkArea[1][2] = screenRight - 1 ;
-    desktopWorkArea[0][3] = desktopWorkArea[1][3] = screenBottom - 1 ;
-    taskbarEdge = 3 ;
+    RECT r;
     
-    if(!noTaskbarCheck)
+    if((GetSystemMetrics(SM_CMONITORS) <= 1) && SystemParametersInfo(SPI_GETWORKAREA,0,&r,0))
     {
-        /* the task bar only affects the dragging work area */
-        APPBARDATA abd;
-        UINT uState ;
-        abd.cbSize=sizeof(abd) ;
-        uState = (UINT) SHAppBarMessage(ABM_GETSTATE, &abd);
-        
-        if((uState & ABS_ALWAYSONTOP) && SHAppBarMessage(ABM_GETTASKBARPOS,&abd))
-        {
-            taskbarEdge = abd.uEdge ;
-            if(uState & ABS_AUTOHIDE)
-            {
-                /* allow 1 pixel for the hidden taskbar */
-                switch(abd.uEdge)
-                {
-                case ABE_LEFT:
-                    desktopWorkArea[1][0] += 1 ;
-                    break ;
-                case ABE_TOP:
-                    desktopWorkArea[1][1] += 1 ;
-                    break ;
-                case ABE_RIGHT:
-                    desktopWorkArea[1][2] -= 1 ;
-                    break ;
-                case ABE_BOTTOM:
-                    desktopWorkArea[1][3] -= 1 ;
-                    break ;
-                }
-            }
-            else
-            {
-                switch(abd.uEdge)
-                {
-                case ABE_LEFT:
-                    desktopWorkArea[1][0] = abd.rc.right ;
-                    break ;
-                case ABE_TOP:
-                    desktopWorkArea[1][1] = abd.rc.bottom ;
-                    break ;
-                case ABE_RIGHT:
-                    desktopWorkArea[1][2] = abd.rc.left ;
-                    break ;
-                case ABE_BOTTOM:
-                    desktopWorkArea[1][3] = abd.rc.top ;
-                    break ;
-                }
-            }
-        }
+        desktopWorkArea[1][0] = r.left;
+        desktopWorkArea[1][1] = r.top;
+        desktopWorkArea[1][2] = r.right - 1 ; 
+        desktopWorkArea[1][3] = r.bottom - 1 ;
+    }
+    else
+    {
+        desktopWorkArea[1][0] = desktopWorkArea[0][0] ;
+        desktopWorkArea[1][1] = desktopWorkArea[0][1] ;
+        desktopWorkArea[1][2] = desktopWorkArea[0][2] ;
+        desktopWorkArea[1][3] = desktopWorkArea[0][3] ;
     }
     vwLogBasic((_T("Got work area (%d %d): %d %d -> %d %d  &  %d %d -> %d %d\n"),noTaskbarCheck,taskbarEdge,
                 desktopWorkArea[0][0],desktopWorkArea[0][1],desktopWorkArea[0][2],desktopWorkArea[0][3],
@@ -873,7 +837,8 @@ createDeskImage(int deskNo, int createDefault)
         /* can set to HALFTONE for better quality, but not supported on Win95/98/Me */
         SetStretchBltMode(bitmapDC,COLORONCOLOR);
         StretchBlt(bitmapDC,0,0,deskImageInfo.bmiHeader.biWidth,deskImageInfo.bmiHeader.biHeight,deskDC,
-                   screenLeft,screenTop,screenRight-screenLeft,screenBottom-screenTop,SRCCOPY);    
+                   desktopWorkArea[0][0],desktopWorkArea[0][1],desktopWorkArea[0][2]-desktopWorkArea[0][0]+1,
+                   desktopWorkArea[0][3]-desktopWorkArea[0][1]+1,SRCCOPY);    
     }
 
     /* Create the desk_#.bmp file */ 
@@ -943,7 +908,7 @@ enableDeskImage(int height)
         if(count > 0)
             disableDeskImage(count) ;
         
-        if((width = (height * (screenRight-screenLeft)) / (screenBottom-screenTop)) <= 0)
+        if((width = (height * (desktopWorkArea[0][2]-desktopWorkArea[0][0]+1)) / (desktopWorkArea[0][3]-desktopWorkArea[0][1]+1)) <= 0)
             width = 1 ;
         /* the GetDIBits function returns 24 bit RGB even if the bitmap is set to 32 bit rgba so fix
          * the BMP to 24 bit RGB, not sure what would happen on a palette based system. However VW
@@ -1570,6 +1535,7 @@ static int winListUpdate(void)
     {
         for(i=inWin ; i < nWin ; ++i)
         {
+            GetWindowRect(winList[i].Handle,&pos) ;
             GetClassName(winList[i].Handle,cname,vwCLASSNAME_MAX);
             if(!GetWindowText(winList[i].Handle,wname,vwWINDOWNAME_MAX))
                 _tcscpy(wname,_T("<None>"));
@@ -2749,18 +2715,7 @@ wndProc(HWND aHWnd, UINT message, WPARAM wParam, LPARAM lParam)
                     if(noMouseWrap)
                         SetCursorPos(pt.x + warpLength, pt.y);
                     else
-                        SetCursorPos(screenRight-warpLength, pt.y);
-                }
-                break;
-                
-            case 2:
-                /* right */
-                if(stepRight() != 0)
-                {
-                    if(noMouseWrap)
-                        SetCursorPos(pt.x - warpLength, pt.y);
-                    else
-                        SetCursorPos(screenLeft+warpLength, pt.y);
+                        SetCursorPos(desktopWorkArea[0][2] - warpLength, pt.y);
                 }
                 break;
                 
@@ -2775,7 +2730,18 @@ wndProc(HWND aHWnd, UINT message, WPARAM wParam, LPARAM lParam)
                     if(noMouseWrap)
                         SetCursorPos(pt.x, pt.y + warpLength);
                     else
-                        SetCursorPos(pt.x, screenBottom-warpLength);
+                        SetCursorPos(pt.x, desktopWorkArea[0][3] - warpLength);
+                }
+                break;
+                
+            case 2:
+                /* right */
+                if(stepRight() != 0)
+                {
+                    if(noMouseWrap)
+                        SetCursorPos(pt.x - warpLength, pt.y);
+                    else
+                        SetCursorPos(desktopWorkArea[0][0] + warpLength, pt.y);
                 }
                 break;
                 
@@ -2790,7 +2756,7 @@ wndProc(HWND aHWnd, UINT message, WPARAM wParam, LPARAM lParam)
                     if(noMouseWrap)
                         SetCursorPos(pt.x, pt.y - warpLength);
                     else
-                        SetCursorPos(pt.x, screenTop+warpLength);
+                        SetCursorPos(pt.x, desktopWorkArea[0][1] + warpLength);
                 }
                 break;
             }
@@ -2986,7 +2952,14 @@ wndProc(HWND aHWnd, UINT message, WPARAM wParam, LPARAM lParam)
             return deskImageInfo.bmiHeader.biWidth ;
         else
             return 0 ;
-              
+        
+    case VW_ENABLE_STATE:
+        lParam = enabled ;
+        if((wParam == 1) || ((wParam == 2) && enabled) ||
+           ((wParam == 3) && !enabled))
+            disableAll(aHWnd);
+        return lParam ;
+        
         // End plugin messages
         
     case WM_CREATE:		       // when main window is created
@@ -3081,6 +3054,12 @@ wndProc(HWND aHWnd, UINT message, WPARAM wParam, LPARAM lParam)
     case WM_DISPLAYCHANGE:
         /* screen size has changed, get the new size and set the mouse work area */
         getScreenSize();
+        if(deskImageCount > 0)
+        {
+            int hh = deskImageInfo.bmiHeader.biHeight ;
+            deskImageInfo.bmiHeader.biHeight -= 1 ;
+            enableDeskImage(hh) ;
+        }
         /* no break */
     case WM_SETTINGCHANGE:
         /* the position and size of the taskbar may have changed */ 
