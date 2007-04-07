@@ -71,7 +71,8 @@ ATOM vwRight;
 ATOM vwUp;
 ATOM vwDown;
 ATOM vwDesk[MAXDESK];
-ATOM vwMenu;
+ATOM vwWList;
+ATOM vwWMenu;
 ATOM cyclingKeyUp;
 ATOM cyclingKeyDown;
 ATOM stickyKey;
@@ -83,6 +84,7 @@ BOOL isDragging = FALSE;	// if we are currently dragging a window
 HINSTANCE hInst;		// current instance
 HWND taskHWnd;                  // handle to taskbar
 HWND desktopHWnd;		// handle to the desktop window
+HWND deskIconHWnd;		// handle to the desktop window holding the icons
 HWND lastFGHWnd;		// handle to the last foreground window
 int  lastFGStyle;               // style of the last foreground window
 HWND lastBOFGHWnd;		// handle to the last but one foreground window
@@ -110,13 +112,13 @@ int preserveZOrder = 0;
 int hiddenWindowAct = 1;
 int vwLogFlag = 0 ;
 FILE *vwLogFile ;
-BOOL mouseEnable = FALSE; 
 BOOL useMouseKey = FALSE;
 BOOL noMouseWrap = TRUE;
 BOOL keyEnable = TRUE;		
 BOOL hotKeyEnable = FALSE;      
 BOOL releaseFocus = FALSE;	
 BOOL minSwitch = TRUE;		
+UINT mouseEnable = 0; 
 UINT modAlt = 0;		
 UINT modShift = 0;		
 UINT modCtrl = 0;		
@@ -133,6 +135,7 @@ BOOL invertY = FALSE;
 short stickyMenu = 1;         
 short assignMenu = 1;
 short directMenu = 1;
+short compactMenu = 0;
 BOOL useDeskAssignment = FALSE;
 BOOL saveLayoutOnExit = FALSE;
 BOOL assignOnlyFirst = FALSE;
@@ -153,10 +156,14 @@ UINT hotCycleUpWin = 0;
 UINT hotCycleDown = 0;
 UINT hotCycleDownMod = 0;
 UINT hotCycleDownWin = 0;
-UINT hotkeyMenuEn = 0;
-UINT hotkeyMenu = 0;
-UINT hotkeyMenuMod = 0;
-UINT hotkeyMenuWin = 0;
+UINT hotkeyWListEn = 0;
+UINT hotkeyWList = 0;
+UINT hotkeyWListMod = 0;
+UINT hotkeyWListWin = 0;
+UINT hotkeyWMenuEn = 0;
+UINT hotkeyWMenu = 0;
+UINT hotkeyWMenuMod = 0;
+UINT hotkeyWMenuWin = 0;
 UINT hotkeyStickyEn = 0;
 UINT hotkeySticky = 0;
 UINT hotkeyStickyMod = 0;
@@ -233,22 +240,59 @@ void releaseMutex(void)
 }
 
 /*************************************************
- * Checks if mouse key modifier is pressed
+ * Checks if mouse button pressed on title bar (i.e. dragging window)
  */
-static BOOL checkMouseState(void)
+static unsigned char
+checkMouseState(BOOL force)
 {
-    // Check the state of mouse button(s)
-    if(!GetSystemMetrics(SM_SWAPBUTTON))
+    static unsigned char lastState=0, lastBState=0 ;
+    unsigned char thisBState ;
+    LPARAM lParam ;
+    HWND hwnd ;
+    POINT pt ;
+    DWORD rr ;
+    
+    // Check the state of mouse buttons
+    if(GetSystemMetrics(SM_SWAPBUTTON))
     {
+        thisBState = (HIWORD(GetAsyncKeyState(VK_RBUTTON)) != 0) ;
+        if(HIWORD(GetAsyncKeyState(VK_MBUTTON)))
+            thisBState |= 2 ;
         if(HIWORD(GetAsyncKeyState(VK_LBUTTON)))
-            return TRUE;
-        else
-            return FALSE;
+            thisBState |= 4 ;
     }
-    else if(HIWORD(GetAsyncKeyState(VK_RBUTTON)))
-        return TRUE;
     else
-        return FALSE;
+    {
+        thisBState = (HIWORD(GetAsyncKeyState(VK_LBUTTON)) != 0) ;
+        if(HIWORD(GetAsyncKeyState(VK_MBUTTON)))
+            thisBState |= 2 ;
+        if(HIWORD(GetAsyncKeyState(VK_RBUTTON)))
+            thisBState |= 4 ;
+    }
+    if(force || (thisBState != lastBState))
+    {
+        lastState = (thisBState) ? 4:0 ;
+        if((thisBState == 1) || (thisBState == 2))
+        {
+            GetCursorPos(&pt);
+            if(((hwnd=WindowFromPoint(pt)) == deskIconHWnd) || (hwnd == desktopHWnd))
+            {
+                if(thisBState == 2)
+                    lastState = 3 ;
+            }
+            else if((hwnd != NULL) && (hwnd != taskHWnd))
+            {
+                lParam = (((int)(short) pt.y) << 16) | ((int)(short) pt.x) ;
+                if((SendMessageTimeout(hwnd,WM_NCHITTEST,0,lParam,SMTO_ABORTIFHUNG|SMTO_BLOCK,50,&rr) ||
+                    (Sleep(1),SendMessageTimeout(hwnd,WM_NCHITTEST,0,lParam,SMTO_ABORTIFHUNG|SMTO_BLOCK,100,&rr))) &&
+                   (rr == HTCAPTION))
+                    lastState = thisBState ;
+            }
+        }
+        vwLogVerbose((_T("Got new state %d (%d %d %d %x %d) %x %x %x\n"),(int) lastState,(int) thisBState,pt.x,pt.y,hwnd,rr,desktopHWnd,deskIconHWnd,taskHWnd)) ;
+        lastBState = thisBState ;
+    }
+    return lastState ;
 }
 
 /*************************************************
@@ -258,108 +302,128 @@ static BOOL checkMouseState(void)
  */
 DWORD WINAPI MouseProc(LPVOID lpParameter)
 {
-    int ii, mode, lastMode=0, state[4], pos[4], statePos[4], delayTime[4], newState, newPos ;
+    unsigned char mode, lastMode, state[4], newState, wlistState, wmenuState ;
+    int ii, newPos, pos[4], statePos[4], delayTime[4] ;
     POINT pt;
     
-    state[0] = state[1] = state[2] = state[3] = 0 ;
+    lastMode = state[0] = state[1] = state[2] = state[3] = wlistState = wmenuState = 0 ;
     // infinite loop
     while(1)
     {
         Sleep(25); 
         
-        if((lastMode == -2) && checkMouseState())
-            continue ;
-        if(useMouseKey)
-        {   // Are we using a mouse key
-            if(!HIWORD(GetAsyncKeyState(MOUSEKEY)))
+        mode = checkMouseState(0) ;
+        if((mouseEnable & 4) && ((mode == 3) || wlistState))
+        {
+            if(mode == 3)
+                wlistState = 1 ;
+            else
             {
-                lastMode = -1 ;
-                continue ;
+                if((mode == 0) && (wlistState == 1))
+                {
+                    vwLogBasic((_T("Mouse wlist %d\n"),wlistState)) ;
+                    SendMessage(hWnd, VW_MOUSEWARP, 0, MAKELPARAM(0,4)) ;
+                }
+                wlistState = 0 ;
             }
         }
-        mode = checkMouseState() ;
-        GetCursorPos(&pt);
-        pos[0] = pt.x - desktopWorkArea[mode][0] ;
-        pos[1] = pt.y - desktopWorkArea[mode][1] ;
-        pos[2] = desktopWorkArea[mode][2] - pt.x ;
-        pos[3] = desktopWorkArea[mode][3] - pt.y ;
-        ii = 3 ;
-        if(mode != lastMode)
+        if((mouseEnable & 2) && ((mode == 2) || wmenuState))
         {
-            /* the state of the left button has changed, rest the mode. Must also try
-             * to handle clicks on the taskbar and other non-workarea locations */
-            do {
-                if(mode && (pos[ii] < 0))
+            if(mode == 2)
+                wmenuState = 1 ;
+            else
+            {
+                if((mode == 0) && (wmenuState == 1))
                 {
-                    mode = -2 ;
-                    break ;
+                    vwLogBasic((_T("Mouse wmenu %d\n"),wmenuState)) ;
+                    SendMessage(hWnd, VW_MOUSEWARP, 0, MAKELPARAM(0,5)) ;
                 }
-                state[ii] = (pos[ii] >= warpLength) ;
-            } while(--ii >= 0) ;
-            lastMode = mode ;
+                wmenuState = 0 ;
+            }
         }
-        else 
+        if((mouseEnable & 1) && ((mode == 0) || (mode == 1)) &&
+           (!useMouseKey || HIWORD(GetAsyncKeyState(MOUSEKEY))))
         {
-            do {
-                if((newState = state[ii]) == 4)
-                {
-                    if(pos[ii] > 0)
-                        newState = 3 ;
-                    else if(++delayTime[ii] >= mouseDelay)
+            GetCursorPos(&pt);
+            pos[0] = pt.x - desktopWorkArea[mode][0] ;
+            pos[1] = pt.y - desktopWorkArea[mode][1] ;
+            pos[2] = desktopWorkArea[mode][2] - pt.x ;
+            pos[3] = desktopWorkArea[mode][3] - pt.y ;
+            ii = 3 ;
+            if(mode != lastMode)
+            {
+                /* the state of the left button has changed, rest the mode. Must also try
+                 * to handle clicks on the taskbar and other non-workarea locations */
+                do
+                    state[ii] = (pos[ii] >= warpLength) ;
+                while(--ii >= 0) ;
+                lastMode = mode ;
+            }
+            else
+            {
+                do {
+                    if((newState = state[ii]) == 4)
                     {
-                        vwLogBasic((_T("Mouse desk change on edge %d (%d,%d)\n"),ii,(int) pt.x,(int) pt.y)) ;
-                        /* send the switch message and wait until done */
-                        SendMessage(hWnd, VW_MOUSEWARP, 0, MAKELPARAM(mode,ii)) ;
-                        newState = 1 ;
+                        if(pos[ii] > 0)
+                            newState = 3 ;
+                        else if(++delayTime[ii] >= mouseDelay)
+                        {
+                            vwLogBasic((_T("Mouse desk change on edge %d (%d,%d)\n"),ii,(int) pt.x,(int) pt.y)) ;
+                            /* send the switch message and wait until done */
+                            SendMessage(hWnd, VW_MOUSEWARP, 0, MAKELPARAM(mode,ii)) ;
+                            newState = 1 ;
+                        }
+                        else
+                            continue ;
                     }
-                    else
-                        continue ;
-                }
-                else if(pos[ii] >= warpLength)
-                {
-                    if(newState == 0)
-                        newState = 1 ;
-                }
-                else if(pos[ii] <= 0)
-                {
-                    if((knockMode & 1) && ((newState == 0) || ((newState == 1) && (knockMode & 2))))
-                        newState = 2 ;
-                    else if((newState == 3) || (newState <= 1))
-                        newState = 4 ;
-                }
-                else if((newState == 2) && (pos[ii] >= (warpLength >> 2)))
-                    newState = 3 ;
-                if(newState != state[ii])
-                {
-                    newPos = (ii & 0x01) ? pt.x:pt.y ;
-                    if((state[ii] > 1) && (abs(statePos[ii]-newPos) > warpLength))
+                    else if(pos[ii] >= warpLength)
                     {
-                        /* newState must also be greater than 2, check the mouse movement is accurate enough */
-                        vwLogBasic((_T("State %d (%d %d): Changed %d -> 1 (position: %d,%d)\n"),ii,mode,pos[ii],state[ii],(int) pt.x,(int) pt.y)) ;
+                        if(newState == 0)
+                            newState = 1 ;
+                    }
+                    else if(pos[ii] <= 0)
+                    {
+                        if((knockMode & 1) && ((newState == 0) || ((newState == 1) && (knockMode & 2))))
+                            newState = 2 ;
+                        else if((newState == 3) || (newState <= 1))
+                            newState = 4 ;
+                    }
+                    else if((newState == 2) && (pos[ii] >= (warpLength >> 2)))
+                        newState = 3 ;
+                    if(newState != state[ii])
+                    {
+                        newPos = (ii & 0x01) ? pt.x:pt.y ;
+                        if((state[ii] > 1) && (abs(statePos[ii]-newPos) > warpLength))
+                        {
+                            /* newState must also be greater than 2, check the mouse movement is accurate enough */
+                            vwLogBasic((_T("State %d (%d %d): Changed %d -> 1 (position: %d,%d)\n"),ii,mode,pos[ii],state[ii],(int) pt.x,(int) pt.y)) ;
+                            state[ii] = 1 ;
+                        }
+                        else
+                        {
+#ifdef vwLOG_VERBOSE
+                            if(vwLogEnabled())
+#else
+                            if(vwLogEnabled() && ((newState > 1) || (state[ii] > 1)))
+#endif
+                                vwLogPrint(_T("State %d (%d %d): Change %d -> %d (%d,%d)\n"),ii,mode,pos[ii],state[ii],newState,(int) pt.x,(int) pt.y) ;
+                            state[ii] = newState ;
+                            if(newState == 2)
+                                statePos[ii] = newPos ;
+                            delayTime[ii] = 0 ;
+                        }
+                    }
+                    else if((state[ii] > 1) && (++delayTime[ii] >= 20))
+                    {
+                        /* burnt in 1sec timer, a knock must take no more than 1 sec second (2 * (20 * 25ms)) */
+                        vwLogBasic((_T("State %d (%d %d): Changed %d -> 1 (timer)\n"),ii,mode,pos[ii],newState)) ;
                         state[ii] = 1 ;
                     }
-                    else
-                    {
-#ifdef vwLOG_VERBOSE
-                        if(vwLogEnabled())
-#else
-                        if(vwLogEnabled() && ((newState > 1) || (state[ii] > 1)))
-#endif
-                            vwLogPrint(_T("State %d (%d %d): Change %d -> %d (%d,%d)\n"),ii,mode,pos[ii],state[ii],newState,(int) pt.x,(int) pt.y) ;
-                        state[ii] = newState ;
-                        if(newState == 2)
-                            statePos[ii] = newPos ;
-                        delayTime[ii] = 0 ;
-                    }
-                }
-                else if((state[ii] > 1) && (++delayTime[ii] >= 20))
-                {
-                    /* burnt in 1sec timer, a knock must take no more than 1 sec second (2 * (20 * 25ms)) */
-                    vwLogBasic((_T("State %d (%d %d): Changed %d -> 1 (timer)\n"),ii,mode,pos[ii],newState)) ;
-                    state[ii] = 1 ;
-                }
-            } while(--ii >= 0) ;
+                } while(--ii >= 0) ;
+            }
         }
+        else
+            lastMode = -1 ;
     }
     
     return TRUE;
@@ -426,7 +490,7 @@ static void loadIcons(void)
         /* create icon for the private desktop - use the disabled icon */
         icons[vwDESK_PRIVATE1] = icons[0] ;
     // Load checkmark icon for sticky
-    checkIcon=LoadIcon(hInst,MAKEINTRESOURCE(128));
+    checkIcon=LoadIcon(hInst,MAKEINTRESOURCE(IDI_CHECK));
 }
 
 /*************************************************
@@ -571,20 +635,15 @@ static void unRegisterHotKeys(void)
  */
 static BOOL registerCyclingKeys(void)
 {
-    if(!cyclingKeysRegistered && cyclingKeysEnabled) {
+    if(!cyclingKeysRegistered && cyclingKeysEnabled)
+    {
         cyclingKeysRegistered = TRUE;
-        if(hotCycleUp)
-        {
-            cyclingKeyUp = GlobalAddAtom(_T("VWCyclingKeyUp"));
-            if((RegisterHotKey(hWnd, cyclingKeyUp, hotKey2ModKey(hotCycleUpMod) | hotCycleUpWin, hotCycleUp) == FALSE))
-                return FALSE;
-        }
-        if(hotCycleDown)
-        {
-            cyclingKeyDown = GlobalAddAtom(_T("VWCyclingKeyDown"));
-            if((RegisterHotKey(hWnd, cyclingKeyDown, hotKey2ModKey(hotCycleDownMod) | hotCycleDownWin, hotCycleDown) == FALSE))
-                return FALSE;
-        }
+        cyclingKeyUp = GlobalAddAtom(_T("VWCyclingKeyUp"));
+        cyclingKeyDown = GlobalAddAtom(_T("VWCyclingKeyDown"));
+        if(hotCycleUp && (RegisterHotKey(hWnd, cyclingKeyUp, hotKey2ModKey(hotCycleUpMod) | hotCycleUpWin, hotCycleUp) == FALSE))
+            return FALSE;
+        if(hotCycleDown && (RegisterHotKey(hWnd, cyclingKeyDown, hotKey2ModKey(hotCycleDownMod) | hotCycleDownWin, hotCycleDown) == FALSE))
+            return FALSE;
     }
     return TRUE;
 }
@@ -594,7 +653,8 @@ static BOOL registerCyclingKeys(void)
  */
 static void unRegisterCyclingKeys(void)
 {
-    if(cyclingKeysRegistered) {
+    if(cyclingKeysRegistered)
+    {
         cyclingKeysRegistered = FALSE;
         UnregisterHotKey(hWnd, cyclingKeyUp);
         UnregisterHotKey(hWnd, cyclingKeyDown);
@@ -606,10 +666,14 @@ static void unRegisterCyclingKeys(void)
  */
 static BOOL registerMenuHotKey(void)
 {
-    if(!menuHotKeyRegistered && hotkeyMenuEn && hotkeyMenu) {
+    if(!menuHotKeyRegistered)
+    {
         menuHotKeyRegistered = TRUE;
-        vwMenu = GlobalAddAtom(_T("atomKeyMenu"));
-        if(RegisterHotKey(hWnd, vwMenu, hotKey2ModKey(hotkeyMenuMod) | hotkeyMenuWin, hotkeyMenu) == FALSE)
+        vwWList = GlobalAddAtom(_T("atomKeyWList"));
+        vwWMenu = GlobalAddAtom(_T("atomKeyWMenu"));
+        if(hotkeyWListEn && hotkeyWList && (RegisterHotKey(hWnd, vwWList, hotKey2ModKey(hotkeyWListMod) | hotkeyWListWin, hotkeyWList) == FALSE))
+            return FALSE;
+        if(hotkeyWMenuEn && hotkeyWMenu && (RegisterHotKey(hWnd, vwWMenu, hotKey2ModKey(hotkeyWMenuMod) | hotkeyWMenuWin, hotkeyWMenu) == FALSE))
             return FALSE;
     }
     return TRUE;
@@ -620,9 +684,11 @@ static BOOL registerMenuHotKey(void)
  */
 static void unRegisterMenuHotKey(void)
 {
-    if(menuHotKeyRegistered) {
-        menuHotKeyRegistered = FALSE;
-        UnregisterHotKey(hWnd, vwMenu);
+    if(menuHotKeyRegistered)
+    {
+        menuHotKeyRegistered = FALSE ;
+        UnregisterHotKey(hWnd,vwWList) ;
+        UnregisterHotKey(hWnd,vwWMenu) ;
     }
 }
 
@@ -766,12 +832,12 @@ static void goGetTheTaskbarHandle(void)
         HWND hwndBar = FindWindowEx(hwndTray, NULL,_T("ReBarWindow32"), NULL );
         
         // Maybe "RebarWindow32" is not a child to "Shell_TrayWnd", then try this
-        if( hwndBar == NULL )
+        if(hwndBar == NULL)
             hwndBar = hwndTray;
         
         taskHWnd = FindWindowEx(hwndBar, NULL,_T("MSTaskSwWClass"), NULL);
         
-        if( taskHWnd == NULL )
+        if(taskHWnd == NULL)
             MessageBox(hWnd,_T("Could not locate handle to the taskbar.\n This will disable the ability to hide troublesome windows correctly."),vwVIRTUAWIN_NAME _T(" Error"), 0); 
     }
 }
@@ -1103,9 +1169,11 @@ static void setForegroundWin(HWND theWin, int makeTop)
     }
     else if(((index = winListFind(theWin)) < 0) || !winList[index].Visible ||
             !windowIsNotHung(theWin,100))
+    {
         /* don't make the foreground a hidden or non-managed or hung window */
+        vwLogBasic((_T("SetForground: %8x - %d %d or HUNG\n"),(int) theWin,index,winList[index].Visible)) ;
         return ;
-    
+    }    
     index = 2 ;
     for(;;)
     {
@@ -1812,7 +1880,7 @@ static int changeDesk(int newDesk, WPARAM msgWParam)
     lockMutex();
     winListUpdate() ;
     
-    if(isDragging)
+    if(isDragging || (checkMouseState(1) == 1))
     {
         /* move the app we are dragging to the new desktop, must handle owner windows */
         HWND ownerWnd;
@@ -1881,6 +1949,8 @@ static int changeDesk(int newDesk, WPARAM msgWParam)
                 SetWindowPos(winList[b].Handle,zoh,0,0,0,0,SWP_DEFERERASE|SWP_NOSIZE|SWP_NOACTIVATE|SWP_NOSENDCHANGING|SWP_NOMOVE) ;
                 zoh = winList[b].Handle ;
             }
+            else
+                vwLogBasic((_T("ZOrder: %8x - HUNG\n"),(int) winList[b].Handle)) ;
             if((activeHWnd == NULL) && ((winList[b].Style & (WS_MINIMIZE|WS_VISIBLE)) == WS_VISIBLE))
             {
                 activeHWnd = winList[b].Handle;
@@ -1943,6 +2013,8 @@ static int changeDesk(int newDesk, WPARAM msgWParam)
                     SetWindowPos(winList[b].Handle,zoh,0,0,0,0,SWP_DEFERERASE|SWP_NOSIZE|SWP_NOACTIVATE|SWP_NOSENDCHANGING|SWP_NOMOVE) ;
                     zoh = winList[b].Handle ;
                 }
+                else
+                    vwLogBasic((_T("TBZOrder: %8x - HUNG\n"),(int) winList[b].Handle)) ;
                 y = b ;
                 zoy = zob ;
             }
@@ -2096,19 +2168,21 @@ static int stepUp(void)
  * 
  * Author: Christian Storm aka cosmic (Christian.Storm@Informatik.Uni-Oldenburg.de)
  */
-#define vwPMENU_STICKY 0x100
-#define vwPMENU_ACCESS 0x200
-#define vwPMENU_ASSIGN 0x400
-#define vwPMENU_MASK   0xf00
+#define vwPMENU_TITLES   0x001
+#define vwPMENU_COMPACT  0x002
+#define vwPMENU_STICKY   0x100
+#define vwPMENU_ACCESS   0x200
+#define vwPMENU_ASSIGN   0x400
+#define vwPMENU_ID_MASK  0x0ff
+#define vwPMENU_COL_MASK 0x700
 
-static HMENU createSortedWinList_cos(MenuItem **items,int *numitems)
+static int
+winListCreateItemList(MenuItem **items,int *numitems)
 {
-    HMENU hMenu;         // menu bar handle
     MenuItem *item;
     TCHAR title[48];
     TCHAR buff[MAX_PATH];
-    int i,x,y,c,doAssignMenu=0;
-    BOOL useTitle;    // Only use title if we have more than one menu
+    int i,x,y,c,doAssignMenu=0 ;
     
     // create the window list
     lockMutex();
@@ -2146,7 +2220,7 @@ static HMENU createSortedWinList_cos(MenuItem **items,int *numitems)
                     free(items[i]->name) ;
                     free(items[i]) ;
                 }
-                return NULL ;
+                return 0 ;
             }
             items[i++] = item;
             
@@ -2182,16 +2256,8 @@ static HMENU createSortedWinList_cos(MenuItem **items,int *numitems)
             free(items[x]->name) ;
             free(items[x]) ;
         }
-        return NULL ;
+        return 0 ;
     }
-    
-    if((stickyMenu + directMenu + assignMenu) == 1)
-        // Don't show titles if only one menu is enabled
-        useTitle = FALSE;
-    else
-        useTitle = TRUE;
-    
-    hMenu = CreatePopupMenu();
     
     // sorting using bubble sort
     for(x = 0; x < i; x++ )
@@ -2206,16 +2272,39 @@ static HMENU createSortedWinList_cos(MenuItem **items,int *numitems)
             }
         }
     }
+    *numitems = i ;
     
+    i = ((stickyMenu + directMenu + assignMenu) == 1) ? 0:vwPMENU_TITLES ;
+    if(compactMenu)
+        i |= vwPMENU_COMPACT ;
     if(stickyMenu)
+        i |= vwPMENU_STICKY ;
+    if(directMenu)
+        i |= vwPMENU_ACCESS ;
+    if(doAssignMenu)
+        i |= vwPMENU_ASSIGN ;
+    return i ;
+}
+
+static HMENU
+winListCreateMenu(int flags, int itemCount, MenuItem **items)
+{
+    HMENU hMenu;
+    int c, x ;
+    
+    if((hMenu = CreatePopupMenu()) == NULL)
+        return NULL ;
+    
+    if(flags & vwPMENU_STICKY)
     {
-        if(useTitle)
+        if(flags & vwPMENU_TITLES)
         {
-            AppendMenu(hMenu, MF_STRING | MF_DISABLED, 0,_T("Sticky"));
+            AppendMenu(hMenu, (flags & vwPMENU_COMPACT) ? MF_STRING:(MF_STRING | MF_DISABLED),
+                       (flags & vwPMENU_COMPACT) ? vwPMENU_STICKY:0,_T("Sticky"));
             AppendMenu(hMenu, MF_SEPARATOR, 0, NULL );
             AppendMenu(hMenu, MF_SEPARATOR, 0, NULL );
         }
-        for(x=0,c=0 ; x < i ; x++)
+        for(x=0,c=0 ; x < itemCount ; x++)
         {
             if((c != 0) && (c != items[x]->desk))
                 AppendMenu(hMenu, MF_SEPARATOR, 0, NULL );
@@ -2225,15 +2314,16 @@ static HMENU createSortedWinList_cos(MenuItem **items,int *numitems)
         }
     }
     
-    if(directMenu)
+    if(flags & vwPMENU_ACCESS)
     {
-        if(useTitle)
+        if(flags & vwPMENU_TITLES)
         {
-            AppendMenu(hMenu, (stickyMenu) ? (MF_STRING | MF_DISABLED | MF_MENUBARBREAK):(MF_STRING | MF_DISABLED), 0,_T("Access"));
+            AppendMenu(hMenu, (flags & vwPMENU_COMPACT) ? MF_STRING:(flags & vwPMENU_STICKY) ? (MF_STRING | MF_MENUBARBREAK | MF_DISABLED):(MF_STRING | MF_DISABLED),
+                       (flags & vwPMENU_COMPACT) ? vwPMENU_ACCESS:0,_T("Access"));
             AppendMenu(hMenu, MF_SEPARATOR, 0, NULL );
             AppendMenu(hMenu, MF_SEPARATOR, 0, NULL );
         }
-        for(x=0,c=0 ; x < i ; x++)
+        for(x=0,c=0 ; x < itemCount ; x++)
         {
             if((c != 0) && (c != items[x]->desk))
                 AppendMenu(hMenu, MF_SEPARATOR, 0, NULL );
@@ -2242,35 +2332,35 @@ static HMENU createSortedWinList_cos(MenuItem **items,int *numitems)
         }
     }
     
-    if(doAssignMenu)
+    if(flags & vwPMENU_ASSIGN)
     {
-        if(useTitle)
+        if(flags & vwPMENU_TITLES)
         {
-            AppendMenu(hMenu, (stickyMenu || directMenu) ? (MF_STRING | MF_DISABLED | MF_MENUBARBREAK):(MF_STRING | MF_DISABLED), 0,_T("Assign"));
+            AppendMenu(hMenu, (flags & vwPMENU_COMPACT) ? MF_STRING:(MF_STRING | MF_MENUBARBREAK | MF_DISABLED),
+                       (flags & vwPMENU_COMPACT) ? vwPMENU_ASSIGN:0,_T("Assign"));
             AppendMenu(hMenu, MF_SEPARATOR, 0, NULL );
             AppendMenu(hMenu, MF_SEPARATOR, 0, NULL );
         }
-        for(x=0,c=0 ; x < i ; x++)
+        for(x=0,c=0 ; x < itemCount ; x++)
         {
-            //sticky windows can't be assigned cause they're sticky :-) so leave them.out..
-            //cannot assign to current Desktop
-            y = (!items[x]->sticky) && (items[x]->desk != currentDesk) ;
-            if(y || useTitle)
+            //cannot assign windows already on the current Desktop
+            if((items[x]->desk != currentDesk) || (flags & vwPMENU_TITLES))
             {
                 if((c != 0) && (c != items[x]->desk))
                     AppendMenu(hMenu, MF_SEPARATOR, 0, NULL );
-                c = items [x]->desk;
-                if(y)
+                c = items[x]->desk;
+                if(items[x]->desk != currentDesk)
                     AppendMenu( hMenu, MF_OWNERDRAW, (vwPMENU_ASSIGN | (items[x]->id)), (const TCHAR *) items[x] );
                 else
-                    AppendMenu( hMenu, MF_OWNERDRAW, 0, 0) ;
+                    /* Make it a separator so cursor movement skips this line */
+                    AppendMenu( hMenu, (MF_OWNERDRAW | MF_SEPARATOR), 0, 0) ;
             }
         }
     }
     
-    *numitems=i;
-    return hMenu;
+    return hMenu ;
 }
+
 
 
 /************************************************
@@ -2285,9 +2375,10 @@ static BOOL showHideWindow(windowType* aWindow, int shwFlags, unsigned char show
         unsigned char Tricky;
         RECT pos;
         UINT swpFlags ;
-        if(!windowIsNotHung(aWindow->Handle,(shwFlags & vwSHWIN_TRYHARD) ? 10000:100))
+        if(!windowIsNotHung(aWindow->Handle,50) &&
+           (Sleep(1),!windowIsNotHung(aWindow->Handle,(shwFlags & vwSHWIN_TRYHARD) ? 5000:100)))
         {
-            vwLogVerbose((_T("showHideWindow %8x %d %d %x %x %d %d %d - HUNG\n"),(int) aWindow->Handle,shwFlags,show,(int)aWindow->Style,(int)aWindow->ExStyle,aWindow->Visible,aWindow->Desk,currentDesk)) ;
+            vwLogBasic((_T("showHideWindow %8x %d %d %x %x %d %d %d - HUNG\n"),(int) aWindow->Handle,shwFlags,show,(int)aWindow->Style,(int)aWindow->ExStyle,aWindow->Visible,aWindow->Desk,currentDesk)) ;
             return FALSE ;
         }
         GetWindowRect( aWindow->Handle, &pos );
@@ -2356,16 +2447,18 @@ static void disableAll(HWND aHWnd)
     {   // disable VirtuaWin
         _tcscpy(nIconD.szTip,vwVIRTUAWIN_NAME _T(" - Disabled")); //Tooltip
         setIcon(0);
-        unRegisterAllKeys();
         KillTimer(hWnd, 0x29a);
+        enableMouse(FALSE);
+        unRegisterAllKeys();
         enabled = FALSE;
     }
     else
     {   // Enable VirtuaWin
+        registerAllKeys();
+        enableMouse(mouseEnable);
+        SetTimer(hWnd, 0x29a, 250, monitorTimerProc);
         _tcscpy(nIconD.szTip,vwVIRTUAWIN_NAME_VERSION);	// Tooltip
         setIcon(currentDesk);
-        registerAllKeys();
-        SetTimer(hWnd, 0x29a, 250, monitorTimerProc);
         enabled = TRUE;
     }
 }
@@ -2509,6 +2602,122 @@ static int windowDismiss(HWND theWin)
     return ret ;
 }
 
+/************************************************
+ * Dismisses the current window by either moving it
+ * back to its assigned desk or minimizing.
+ */
+static void windowMenu(HWND theWin)
+{
+    unsigned char Sticky=0;
+    unsigned char Tricky=0;
+    HMENU hmenu ;
+    TCHAR buff[20] ;
+    POINT pt ;
+    HWND pWin ;
+    int ii, jj, idx ;
+    
+    vwLogBasic((_T("Window Menu: %x\n"),(int) theWin)) ;
+    
+    if((theWin == NULL) || (theWin == hWnd) || (theWin == desktopHWnd) || (theWin == taskHWnd))
+        return ;
+    while(((ii=GetWindowLong(theWin,GWL_STYLE)) & WS_CHILD) && 
+          ((pWin = GetParent(theWin)) != NULL) && (pWin != desktopHWnd))
+        theWin = pWin ;
+    // Must be a visible non-child window
+    if((ii & WS_CHILD) || ((ii & WS_VISIBLE) == 0))
+        return ;
+    
+    lockMutex();
+    winListUpdate() ;
+    if((idx = winListFind(theWin)) >= 0)
+    {
+        Sticky = winList[idx].Sticky ;
+        Tricky = winList[idx].Tricky ;
+    }
+    releaseMutex();
+
+    if((hmenu = CreatePopupMenu()) == NULL)
+        return ;
+    
+    AppendMenu(hmenu,MF_STRING,ID_WM_DISMISS,_T("&Dismiss Window"));
+    if(idx >= 0)
+    {
+        /* currently managed window */
+        if(Sticky)
+            AppendMenu(hmenu,MF_STRING,ID_WM_STICKY,_T("Remove &Sticky"));
+        else
+        {
+            ii = nDesksX * nDesksY ;
+            for(jj = 1 ; jj <= ii ; jj++)
+                if(jj != currentDesk)
+                {
+                    _stprintf(buff,_T("Move to Desk &%d"),jj) ;
+                    AppendMenu(hmenu,MF_STRING,ID_WM_DESK+jj,buff) ;
+                }
+            AppendMenu(hmenu,MF_STRING,ID_WM_STICKY,_T("Make &Sticky"));
+        }
+        if(Tricky)
+            AppendMenu(hmenu,MF_STRING,ID_WM_STICKY,_T("Remove Tricky"));
+        else
+            AppendMenu(hmenu,MF_STRING,ID_WM_STICKY,_T("Make Tricky"));
+    }
+    else
+        AppendMenu(hmenu,MF_STRING,ID_WM_MANAGE,_T("&Manage Window"));
+    
+    GetCursorPos(&pt);
+    SetForegroundWindow(hWnd);
+    idx = TrackPopupMenu(hmenu,TPM_RETURNCMD | TPM_RIGHTBUTTON | TPM_NONOTIFY,pt.x-2,pt.y-2,0,hWnd,NULL) ;
+    PostMessage(hWnd, 0, 0, 0);	
+    DestroyMenu(hmenu);		
+    SetForegroundWindow(theWin);
+    vwLogBasic((_T("Window Menu returned %d\n"),(int) idx)) ;
+    switch(idx)
+    {
+    case ID_WM_DISMISS:
+        windowDismiss(theWin) ;
+        break;
+    case ID_WM_STICKY:
+        setSticky(theWin,-1) ;
+        break;
+    case ID_WM_TRICKY:
+        lockMutex();
+        winListUpdate() ;
+        if((idx = winListFind(theWin)) >= 0)
+        {
+            if(winList[idx].Tricky)
+                winList[idx].Tricky = vwTRICKY_WINDOW ;
+            else
+                winList[idx].Tricky = 0 ;
+        }
+        releaseMutex();
+        break;
+    case ID_WM_MANAGE:
+        lockMutex();
+        winListUpdate() ;
+        if((winListFind(theWin) < 0) && (nWin < MAXWIN))
+        {
+            idx = nWin++;
+            winList[idx].Handle = theWin ;
+            winList[idx].Owner = NULL ;
+            winList[idx].Style = GetWindowLong(theWin, GWL_STYLE) ;
+            winList[idx].ExStyle = GetWindowLong(theWin, GWL_EXSTYLE) ;
+            winList[idx].ZOrder[currentDesk] = 1 ;
+            winList[idx].Desk = currentDesk ;
+            winList[idx].menuId = 0 ;
+            winList[idx].Sticky = 0 ;
+            winList[idx].Tricky = 0 ;
+            winList[idx].Visible = TRUE ;
+            winList[idx].State = 1 ;
+            vwLogBasic((_T("Got new managed window %d\n"),(int) idx)) ;
+        }
+        releaseMutex();
+        break;
+    default:
+        if((idx > ID_WM_DESK) && (idx <= (ID_WM_DESK + (nDesksX * nDesksY))))
+            assignWindow(theWin,idx - ID_WM_DESK,FALSE) ;
+    }
+}
+
 /*************************************************
  * Retrieves the system menu font
  */
@@ -2631,29 +2840,52 @@ static void renderMenuItem(DRAWITEMSTRUCT* ditem)
  */
 static void winListPopupMenu(HWND aHWnd)
 {
+    static int singleColumn=0;
     HMENU hpopup;
     POINT pt;
     HWND hwnd ;
-    int retItem, id, ii;
+    int flags, retItem, id, ii ;
     
     // storage for list of MenuItem structs
-    MenuItem* items[MAXWIN];
-    int numitems=0;
-    int index;
+    MenuItem *items[MAXWIN];
+    int itemCount;
     
-    if((hpopup = createSortedWinList_cos(items,&numitems)) == NULL)
+    if((flags = winListCreateItemList(items,&itemCount)) == 0)
         return ;
     GetCursorPos(&pt);
+    pt.x -= 2 ;
+    pt.y -= 2 ;
     SetForegroundWindow(aHWnd);
-    
-    retItem = TrackPopupMenu(hpopup, TPM_RETURNCMD |  // Return menu code
-                             TPM_LEFTBUTTON, (pt.x-2), (pt.y-2), // screen coordinates
-                             0, aHWnd, NULL);
-    vwLogBasic((_T("Window menu returned: %x\n"),(int) retItem)) ;
-    
-    if(retItem)
+    for(;;)
     {
-        id = retItem & ~vwPMENU_MASK ;
+        retItem = 0 ;
+        if(flags & vwPMENU_COMPACT)
+        {
+            while((singleColumn & flags) == 0)
+            {
+                singleColumn = singleColumn << 1 ;
+                if((singleColumn & vwPMENU_COL_MASK) == 0)
+                    singleColumn = vwPMENU_STICKY ;
+            }
+            ii = vwPMENU_TITLES | vwPMENU_COMPACT | singleColumn ;
+        }
+        else
+            ii = flags ;
+        if((hpopup = winListCreateMenu(ii,itemCount,items)) == NULL)
+            break ;
+        retItem = TrackPopupMenu(hpopup, TPM_RETURNCMD | TPM_LEFTBUTTON, // Return menu code
+                                 pt.x, pt.y, 0, aHWnd, NULL);
+        vwLogBasic((_T("Window menu returned: %x\n"),(int) retItem)) ;
+        PostMessage(aHWnd, 0, 0, 0) ;
+        DestroyMenu(hpopup) ;
+        if(((retItem & vwPMENU_COL_MASK) == 0) || ((retItem & vwPMENU_ID_MASK) != 0))
+            break ;
+        singleColumn = singleColumn << 1 ;
+    }
+            
+    if(retItem & vwPMENU_ID_MASK)
+    {
+        id = retItem & vwPMENU_ID_MASK ;
         ii = nWin ;
         while(--ii >= 0)
             if(winList[ii].menuId == id)
@@ -2666,25 +2898,27 @@ static void winListPopupMenu(HWND aHWnd)
                 // Sticky toggle
                 setSticky(hwnd,-1) ;
             else if(retItem & vwPMENU_ACCESS)
-            {   // window access
+            {   // window access - restore if minimized
                 gotoDesk(winList[ii].Desk,FALSE);
+                if(winList[ii].Style & WS_MINIMIZE)
+                    ShowWindow(hwnd,SW_SHOWNORMAL) ;
                 setForegroundWin(hwnd,0);
             } 
             else
             {   // Assign to this desktop
                 assignWindow(hwnd,currentDesk,TRUE) ;
+                if(winList[ii].Style & WS_MINIMIZE)
+                    ShowWindow(hwnd,SW_SHOWNORMAL) ;
                 setForegroundWin(hwnd,0) ;
             }
         }
     }
     
-    PostMessage(aHWnd, 0, 0, 0);  // see above
-    DestroyMenu(hpopup);       // Delete loaded menu and reclaim its resources
     // delete MenuItem list
-    for (index=0;index<numitems;index++)
+    for (ii=0 ; ii<itemCount ; ii++)
     {
-        free(items[index]->name);
-        free(items[index]);
+        free(items[ii]->name);
+        free(items[ii]) ;
     }
 }
 
@@ -2759,6 +2993,16 @@ wndProc(HWND aHWnd, UINT message, WPARAM wParam, LPARAM lParam)
                         SetCursorPos(pt.x, desktopWorkArea[0][1] + warpLength);
                 }
                 break;
+            
+            case 4:
+                /* window list */
+                winListPopupMenu(aHWnd) ;
+                break;
+            
+            case 5:
+                /* window menu */
+                windowMenu(GetForegroundWindow());
+                break;
             }
             isDragging = FALSE;
         }
@@ -2792,8 +3036,15 @@ wndProc(HWND aHWnd, UINT message, WPARAM wParam, LPARAM lParam)
         else if(wParam == stickyKey)
             setSticky(GetForegroundWindow(),-1);
         else if(wParam == dismissKey)
+        {
             windowDismiss(GetForegroundWindow());
-        else if(wParam == vwMenu)
+        }
+        else if(wParam == vwWMenu)
+        {
+            if(enabled)
+                windowMenu(GetForegroundWindow());
+        }
+        else if(wParam == vwWList)
         {
             if(enabled)
                 winListPopupMenu(aHWnd) ;
@@ -3158,6 +3409,9 @@ VirtuaWinInit(HINSTANCE hInstance)
     
     /* set the window to give focus to when releasing focus on switch also used to refresh */
     desktopHWnd = GetDesktopWindow();
+    deskIconHWnd = FindWindow(_T("Progman"), _T("Program Manager")) ;
+    deskIconHWnd = FindWindowEx(deskIconHWnd, NULL, _T("SHELLDLL_DefView"),NULL) ;
+    deskIconHWnd = FindWindowEx(deskIconHWnd, NULL, _T("SysListView32"), _T("FolderView")) ;
     getScreenSize();
     getWorkArea(); // This is dependent on the config
     
@@ -3227,9 +3481,9 @@ VirtuaWinInit(HINSTANCE hInstance)
     
     /* Create the thread responsible for mouse monitoring */   
     mouseThread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)MouseProc, NULL, 0, &threadID); 	
-    if(!mouseEnable) // Suspend the thread if no mouse support
+    if(!mouseEnable)
+        // Suspend the thread if mouse support not required
         enableMouse(FALSE);
-    //SuspendThread(mouseThread);
     
     // if on win9x the tricky windows need to be continually hidden
     taskbarFixRequired = (osVersion <= OSVERSION_9X) ;

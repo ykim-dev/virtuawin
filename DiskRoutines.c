@@ -454,10 +454,10 @@ void writeConfig(void)
         fprintf(fp, "CycleUpMod# %i\n", hotCycleUpMod);
         fprintf(fp, "CycleDown# %i\n", hotCycleDown);
         fprintf(fp, "CycleDownMod# %i\n", hotCycleDownMod);
-        fprintf(fp, "Hot_key_Menu_Support# %i\n", hotkeyMenuEn);
-        fprintf(fp, "Hot_key_Menu# %i\n", hotkeyMenu);
-        fprintf(fp, "Hot_key_ModMenu# %i\n", hotkeyMenuMod);
-        fprintf(fp, "Hot_key_WinMenu# %i\n", hotkeyMenuWin);
+        fprintf(fp, "Hot_key_Menu_Support# %i\n", hotkeyWListEn);
+        fprintf(fp, "Hot_key_Menu# %i\n", hotkeyWList);
+        fprintf(fp, "Hot_key_ModMenu# %i\n", hotkeyWListMod);
+        fprintf(fp, "Hot_key_WinMenu# %i\n", hotkeyWListWin);
         fprintf(fp, "Display_systray_icon# %i\n", displayTaskbarIcon);
         fprintf(fp, "Sticky_Win# %i\n", hotkeyStickyWin);
         fprintf(fp, "Taskbar_detection# %i\n", noTaskbarCheck);
@@ -479,6 +479,11 @@ void writeConfig(void)
         fprintf(fp, "DismissHotkeyWin# %i\n", hotkeyDismissWin);
         fprintf(fp, "LogFlag# %i\n", vwLogFlag);
         fprintf(fp, "KnockMode# %i\n", knockMode);
+        fprintf(fp, "CompactWinMenu# %i\n", compactMenu);
+        fprintf(fp, "HotWMenuEn# %i\n", hotkeyWMenuEn);
+        fprintf(fp, "HotWMenu# %i\n", hotkeyWMenu);
+        fprintf(fp, "HotWMenuMod# %i\n", hotkeyWMenuMod);
+        fprintf(fp, "HotWMenuWin# %i\n", hotkeyWMenuWin);
         fclose(fp);
     }
 }
@@ -620,10 +625,10 @@ void readConfig(void)
         fscanf(fp, "%s%i", (char *) buff, &hotCycleUpMod);
         fscanf(fp, "%s%i", (char *) buff, &hotCycleDown);
         fscanf(fp, "%s%i", (char *) buff, &hotCycleDownMod);
-        fscanf(fp, "%s%i", (char *) buff, &hotkeyMenuEn);
-        fscanf(fp, "%s%i", (char *) buff, &hotkeyMenu);
-        fscanf(fp, "%s%i", (char *) buff, &hotkeyMenuMod);
-        fscanf(fp, "%s%i", (char *) buff, &hotkeyMenuWin);
+        fscanf(fp, "%s%i", (char *) buff, &hotkeyWListEn);
+        fscanf(fp, "%s%i", (char *) buff, &hotkeyWList);
+        fscanf(fp, "%s%i", (char *) buff, &hotkeyWListMod);
+        fscanf(fp, "%s%i", (char *) buff, &hotkeyWListWin);
         fscanf(fp, "%s%i", (char *) buff, &displayTaskbarIcon);
         fscanf(fp, "%s%i", (char *) buff, &hotkeyStickyWin);
         fscanf(fp, "%s%i", (char *) buff, &noTaskbarCheck);
@@ -645,6 +650,11 @@ void readConfig(void)
         fscanf(fp, "%s%i", (char *) buff, &hotkeyDismissWin);
         fscanf(fp, "%s%i", (char *) buff, &vwLogFlag);
         fscanf(fp, "%s%i", (char *) buff, &knockMode);
+        fscanf(fp, "%s%hi", (char *) buff, &compactMenu);
+        fscanf(fp, "%s%i", (char *) buff, &hotkeyWMenuEn);
+        fscanf(fp, "%s%i", (char *) buff, &hotkeyWMenu);
+        fscanf(fp, "%s%i", (char *) buff, &hotkeyWMenuMod);
+        fscanf(fp, "%s%i", (char *) buff, &hotkeyWMenuWin);
         fclose(fp);
     }
 }

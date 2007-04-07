@@ -40,12 +40,12 @@ extern int mouseDelay;          // Mouse change delay 50ms*mouseDelay
 extern int preserveZOrder;      // Should we preserve the window Z order
 extern int hiddenWindowAct;     // Hidden window activation action
 extern BOOL noMouseWrap;        // if we don't want to move the mouse pointer after switch
-extern BOOL mouseEnable;        // mouse support
 extern BOOL useMouseKey;        // if user must use a modify key to warp with mouse
 extern BOOL keyEnable;		// key support
 extern BOOL hotKeyEnable;       // hot key support
 extern BOOL releaseFocus;	// release focus on switch
 extern BOOL minSwitch;		// if we should switch minimized windows
+extern UINT mouseEnable;        // mouse support
 extern UINT modAlt;		// switch key
 extern UINT modShift;		// switch key
 extern UINT modCtrl;		// switch key
@@ -64,6 +64,7 @@ extern BOOL invertY;            // if up/down should be inverted
 extern short stickyMenu;        // if sticky window menu should be shown
 extern short assignMenu;        // if assign window menu should be shown
 extern short directMenu;        // if direct access window menu should be shown
+extern short compactMenu;       // if window menu should be compact
 extern BOOL useDeskAssignment;  // if we have desktop assignment 
 extern BOOL saveLayoutOnExit;   // save the desktop layout upon exit
 extern BOOL assignOnlyFirst;    // only assign the first window to a saved desktop 
@@ -85,10 +86,14 @@ extern UINT deskHotkey[MAXDESK];
 extern UINT deskHotkeyMod[MAXDESK];
 extern UINT deskHotkeyWin[MAXDESK];
 
-extern UINT hotkeyMenuEn;
-extern UINT hotkeyMenu;
-extern UINT hotkeyMenuMod;
-extern UINT hotkeyMenuWin;
+extern UINT hotkeyWListEn;
+extern UINT hotkeyWList;
+extern UINT hotkeyWListMod;
+extern UINT hotkeyWListWin;
+extern UINT hotkeyWMenuEn;
+extern UINT hotkeyWMenu;
+extern UINT hotkeyWMenuMod;
+extern UINT hotkeyWMenuWin;
 extern UINT hotkeyStickyEn;
 extern UINT hotkeySticky;
 extern UINT hotkeyStickyMod;

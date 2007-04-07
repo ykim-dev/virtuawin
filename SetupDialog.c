@@ -316,7 +316,7 @@ BOOL APIENTRY setupMouse(HWND hDlg, UINT message, UINT wParam, LONG lParam)
         SendDlgItemMessage(hDlg, IDC_SLIDER, TBM_SETPOS, TRUE, mouseDelay >> 1);
         SetDlgItemInt(hDlg, IDC_JUMP, warpLength, TRUE);
         
-        if(mouseEnable) 
+        if(mouseEnable & 1)
             SendDlgItemMessage(hDlg, IDC_ENABLEMOUSE, BM_SETCHECK, 1,0);
         if(useMouseKey)
             SendDlgItemMessage(hDlg, IDC_KEYCONTROL, BM_SETCHECK, 1,0);
@@ -332,6 +332,10 @@ BOOL APIENTRY setupMouse(HWND hDlg, UINT message, UINT wParam, LONG lParam)
             SendDlgItemMessage(hDlg, IDC_KNOCKMODE2, BM_SETCHECK, 1,0);
         if(!noMouseWrap)
             SendDlgItemMessage(hDlg, IDC_MOUSEWRAP, BM_SETCHECK, 1,0);
+        if(mouseEnable & 4)
+            SendDlgItemMessage(hDlg, IDC_MOUSEWLIST, BM_SETCHECK, 1,0);
+        if(mouseEnable & 2)
+            SendDlgItemMessage(hDlg, IDC_MOUSEWMENU, BM_SETCHECK, 1,0);
         return TRUE;
         
     case WM_NOTIFY:
@@ -342,10 +346,14 @@ BOOL APIENTRY setupMouse(HWND hDlg, UINT message, UINT wParam, LONG lParam)
             break;
             
         case PSN_APPLY:
+            mouseEnable = (SendDlgItemMessage(hDlg, IDC_ENABLEMOUSE, BM_GETCHECK, 0, 0) == BST_CHECKED) ;
+            if(SendDlgItemMessage(hDlg, IDC_MOUSEWMENU, BM_GETCHECK, 0, 0) == BST_CHECKED)
+                mouseEnable |= 2 ;
+            if(SendDlgItemMessage(hDlg, IDC_MOUSEWLIST, BM_GETCHECK, 0, 0) == BST_CHECKED)
+                mouseEnable |= 4 ;
             GetDlgItemText(hDlg, IDC_JUMP, buff, 4);
             warpLength = _ttoi(buff);
             mouseDelay = (SendDlgItemMessage(hDlg, IDC_SLIDER, TBM_GETPOS, 0, 0)) << 1 ;
-            mouseEnable = (SendDlgItemMessage(hDlg, IDC_ENABLEMOUSE, BM_GETCHECK, 0, 0) == BST_CHECKED) ;
             noMouseWrap = (SendDlgItemMessage(hDlg, IDC_MOUSEWRAP, BM_GETCHECK, 0, 0) != BST_CHECKED) ;
             knockMode = (SendDlgItemMessage(hDlg, IDC_KNOCKMODE1, BM_GETCHECK, 0, 0) == BST_CHECKED) ;
             if(knockMode && (warpLength < 24))
@@ -390,11 +398,12 @@ BOOL APIENTRY setupMouse(HWND hDlg, UINT message, UINT wParam, LONG lParam)
         break;
         
     case WM_COMMAND:
-        if(LOWORD(wParam) == IDC_JUMP     || LOWORD(wParam) == IDC_MOUSEWRAP ||
-           LOWORD(wParam) == IDC_MALT     || LOWORD(wParam) == IDC_KEYCONTROL || 
-           LOWORD(wParam) == IDC_MCTRL    || LOWORD(wParam) == IDC_ENABLEMOUSE || 
-           LOWORD(wParam) == IDC_MSHIFT   || LOWORD(wParam) == IDC_KNOCKMODE1 || 
-           LOWORD(wParam) == IDC_KNOCKMODE2)
+        if(LOWORD(wParam) == IDC_JUMP      || LOWORD(wParam) == IDC_ENABLEMOUSE ||
+           LOWORD(wParam) == IDC_MALT      || LOWORD(wParam) == IDC_KEYCONTROL ||
+           LOWORD(wParam) == IDC_MCTRL     || LOWORD(wParam) == IDC_KNOCKMODE1 ||
+           LOWORD(wParam) == IDC_MSHIFT    || LOWORD(wParam) == IDC_KNOCKMODE2 ||
+           LOWORD(wParam) == IDC_MOUSEWRAP || LOWORD(wParam) == IDC_MOUSEWLIST ||
+           LOWORD(wParam) == IDC_MOUSEWMENU)
         {
             pageChangeMask |= 0x02 ;
             SendMessage(GetParent(hDlg), PSM_CHANGED, (WPARAM)hDlg, 0L); // Enable apply
@@ -526,6 +535,8 @@ BOOL APIENTRY setupMisc(HWND hDlg, UINT message, UINT wParam, LONG lParam)
             SendDlgItemMessage(hDlg, IDC_MENUASSIGN, BM_SETCHECK, 1,0);
         if(directMenu)
             SendDlgItemMessage(hDlg, IDC_MENUACCESS, BM_SETCHECK, 1,0);
+        if(compactMenu)
+            SendDlgItemMessage(hDlg, IDC_COMPACTMENU, BM_SETCHECK, 1,0);
         if(useDeskAssignment)
             SendDlgItemMessage(hDlg, IDC_USEASSIGN, BM_SETCHECK, 1,0);
         if(saveLayoutOnExit)
@@ -534,11 +545,16 @@ BOOL APIENTRY setupMisc(HWND hDlg, UINT message, UINT wParam, LONG lParam)
             SendDlgItemMessage(hDlg, IDC_FIRSTONLY, BM_SETCHECK, 1,0);
         if(assignImmediately)
             SendDlgItemMessage(hDlg, IDC_ASSIGNWINNOW, BM_SETCHECK, 1,0);
-        if(hotkeyMenuEn)
-            SendDlgItemMessage(hDlg, IDC_HOTMENUEN, BM_SETCHECK, 1, 0);
-        SendDlgItemMessage(hDlg, IDC_HOTMENU, HKM_SETHOTKEY, MAKEWORD(hotkeyMenu, hotkeyMenuMod), 0);
-        if(hotkeyMenuWin)
-            SendDlgItemMessage(hDlg, IDC_HOTMENUW, BM_SETCHECK, 1, 0);
+        if(hotkeyWListEn)
+            SendDlgItemMessage(hDlg, IDC_HOTWLISTEN, BM_SETCHECK, 1, 0);
+        SendDlgItemMessage(hDlg, IDC_HOTWLIST, HKM_SETHOTKEY, MAKEWORD(hotkeyWList, hotkeyWListMod), 0);
+        if(hotkeyWListWin)
+            SendDlgItemMessage(hDlg, IDC_HOTWLISTW, BM_SETCHECK, 1, 0);
+        if(hotkeyWMenuEn)
+            SendDlgItemMessage(hDlg, IDC_HOTWMENUEN, BM_SETCHECK, 1, 0);
+        SendDlgItemMessage(hDlg, IDC_HOTWMENU, HKM_SETHOTKEY, MAKEWORD(hotkeyWMenu, hotkeyWMenuMod), 0);
+        if(hotkeyWMenuWin)
+            SendDlgItemMessage(hDlg, IDC_HOTWMENUW, BM_SETCHECK, 1, 0);
         if(hotkeyStickyEn)
             SendDlgItemMessage(hDlg, IDC_HOTSTICKYEN, BM_SETCHECK, 1, 0);
         SendDlgItemMessage(hDlg, IDC_HOTSTICKY, HKM_SETHOTKEY, MAKEWORD(hotkeySticky, hotkeyStickyMod), 0);
@@ -557,48 +573,41 @@ BOOL APIENTRY setupMisc(HWND hDlg, UINT message, UINT wParam, LONG lParam)
             // Initialize the controls.
             break;
         case PSN_APPLY:
-            if(SendDlgItemMessage(hDlg, IDC_STICKYSAVE, BM_GETCHECK, 0, 0) == BST_CHECKED)
-                saveSticky = TRUE;
-            else
-                saveSticky = FALSE;
-            if(SendDlgItemMessage(hDlg, IDC_MENUSTICKY, BM_GETCHECK, 0, 0) == BST_CHECKED)
-                stickyMenu = 1;
-            else 
-                stickyMenu = 0;
-            if(SendDlgItemMessage(hDlg, IDC_MENUACCESS, BM_GETCHECK, 0, 0) == BST_CHECKED)
-                directMenu = 1;
-            else
-                directMenu = 0;
-            if(SendDlgItemMessage(hDlg, IDC_MENUASSIGN, BM_GETCHECK, 0, 0) == BST_CHECKED)
-                assignMenu = 1;
-            else
-                assignMenu = 0;
-            if(SendDlgItemMessage(hDlg, IDC_USEASSIGN, BM_GETCHECK, 0, 0) == BST_CHECKED)
-                useDeskAssignment = TRUE;
-            else
-                useDeskAssignment = FALSE;
-            if(SendDlgItemMessage(hDlg, IDC_FIRSTONLY, BM_GETCHECK, 0, 0) == BST_CHECKED)
-                assignOnlyFirst = TRUE;
-            else
-                assignOnlyFirst = FALSE;
+            saveSticky = (SendDlgItemMessage(hDlg, IDC_STICKYSAVE, BM_GETCHECK, 0, 0) == BST_CHECKED) ;
+            stickyMenu = (SendDlgItemMessage(hDlg, IDC_MENUSTICKY, BM_GETCHECK, 0, 0) == BST_CHECKED) ;
+            directMenu = (SendDlgItemMessage(hDlg, IDC_MENUACCESS, BM_GETCHECK, 0, 0) == BST_CHECKED) ;
+            assignMenu = (SendDlgItemMessage(hDlg, IDC_MENUASSIGN, BM_GETCHECK, 0, 0) == BST_CHECKED) ;
+            compactMenu = (SendDlgItemMessage(hDlg, IDC_COMPACTMENU, BM_GETCHECK, 0, 0) == BST_CHECKED) ;
+            useDeskAssignment = (SendDlgItemMessage(hDlg, IDC_USEASSIGN, BM_GETCHECK, 0, 0) == BST_CHECKED) ;
+            assignOnlyFirst = (SendDlgItemMessage(hDlg, IDC_FIRSTONLY, BM_GETCHECK, 0, 0) == BST_CHECKED) ;
             assignImmediately = (SendDlgItemMessage(hDlg, IDC_ASSIGNWINNOW, BM_GETCHECK, 0, 0) == BST_CHECKED) ;
-            if(SendDlgItemMessage(hDlg, IDC_SAVEEXITSTATE, BM_GETCHECK, 0, 0) == BST_CHECKED)
-                saveLayoutOnExit = TRUE;
-            else
-                saveLayoutOnExit= FALSE;
-            if(SendDlgItemMessage(hDlg, IDC_HOTMENUEN, BM_GETCHECK, 0, 0) == BST_CHECKED)
+            saveLayoutOnExit = (SendDlgItemMessage(hDlg, IDC_SAVEEXITSTATE, BM_GETCHECK, 0, 0) == BST_CHECKED) ;
+            if(SendDlgItemMessage(hDlg, IDC_HOTWLISTEN, BM_GETCHECK, 0, 0) == BST_CHECKED)
             {
-                hotkeyMenuEn = TRUE;
-                wRawHotKey = (WORD)SendDlgItemMessage(hDlg, IDC_HOTMENU, HKM_GETHOTKEY, 0, 0);
-                hotkeyMenu = LOBYTE(wRawHotKey);
-                hotkeyMenuMod = HIBYTE(wRawHotKey);
-                if(SendDlgItemMessage(hDlg, IDC_HOTMENUW, BM_GETCHECK, 0, 0) == BST_CHECKED)
-                    hotkeyMenuWin = MOD_WIN;
+                hotkeyWListEn = TRUE;
+                wRawHotKey = (WORD)SendDlgItemMessage(hDlg, IDC_HOTWLIST, HKM_GETHOTKEY, 0, 0);
+                hotkeyWList = LOBYTE(wRawHotKey);
+                hotkeyWListMod = HIBYTE(wRawHotKey);
+                if(SendDlgItemMessage(hDlg, IDC_HOTWLISTW, BM_GETCHECK, 0, 0) == BST_CHECKED)
+                    hotkeyWListWin = MOD_WIN;
                 else
-                    hotkeyMenuWin = FALSE;
+                    hotkeyWListWin = FALSE;
             }
             else
-                hotkeyMenuEn = FALSE;
+                hotkeyWListEn = FALSE;
+            if(SendDlgItemMessage(hDlg, IDC_HOTWMENUEN, BM_GETCHECK, 0, 0) == BST_CHECKED)
+            {
+                hotkeyWMenuEn = TRUE;
+                wRawHotKey = (WORD)SendDlgItemMessage(hDlg, IDC_HOTWMENU, HKM_GETHOTKEY, 0, 0);
+                hotkeyWMenu = LOBYTE(wRawHotKey);
+                hotkeyWMenuMod = HIBYTE(wRawHotKey);
+                if(SendDlgItemMessage(hDlg, IDC_HOTWMENUW, BM_GETCHECK, 0, 0) == BST_CHECKED)
+                    hotkeyWMenuWin = MOD_WIN;
+                else
+                    hotkeyWMenuWin = FALSE;
+            }
+            else
+                hotkeyWMenuEn = FALSE;
             if(SendDlgItemMessage(hDlg, IDC_HOTSTICKYEN, BM_GETCHECK, 0, 0) == BST_CHECKED)
             {
                 hotkeyStickyEn = TRUE;
@@ -647,13 +656,14 @@ BOOL APIENTRY setupMisc(HWND hDlg, UINT message, UINT wParam, LONG lParam)
         if( LOWORD(wParam) == IDC_STICKYSAVE    || LOWORD(wParam) == IDC_DISPLAYICON ||
             LOWORD(wParam) == IDC_MENUSTICKY    || LOWORD(wParam) == IDC_MENUACCESS ||
             LOWORD(wParam) == IDC_MENUASSIGN    || LOWORD(wParam) == IDC_USEASSIGN ||
-            LOWORD(wParam) == IDC_FIRSTONLY     || LOWORD(wParam) == IDC_ASSIGNWINNOW ||
-            LOWORD(wParam) == IDC_SAVEEXITSTATE ||
-            LOWORD(wParam) == IDC_HOTMENUEN     || LOWORD(wParam) == IDC_HOTMENUW || 
-            LOWORD(wParam) == IDC_HOTMENU       || LOWORD(wParam) == IDC_HOTSTICKYEN  ||
+            LOWORD(wParam) == IDC_COMPACTMENU   || LOWORD(wParam) == IDC_ASSIGNWINNOW ||
+            LOWORD(wParam) == IDC_FIRSTONLY     || LOWORD(wParam) == IDC_SAVEEXITSTATE ||
+            LOWORD(wParam) == IDC_HOTWLISTEN    || LOWORD(wParam) == IDC_HOTWLISTW || 
+            LOWORD(wParam) == IDC_HOTWLIST      || LOWORD(wParam) == IDC_HOTSTICKYEN  ||
             LOWORD(wParam) == IDC_HOTSTICKY     || LOWORD(wParam) == IDC_HOTSTICKYW ||
             LOWORD(wParam) == IDC_HOTDISMISSEN  || LOWORD(wParam) == IDC_HOTDISMISS ||
-            LOWORD(wParam) == IDC_HOTDISMISSW )
+            LOWORD(wParam) == IDC_HOTDISMISSW   || LOWORD(wParam) == IDC_HOTWMENUEN ||
+            LOWORD(wParam) == IDC_HOTWMENUW     || LOWORD(wParam) == IDC_HOTWMENU)
         {
             pageChangeMask |= 0x04 ;
             SendMessage(GetParent(hDlg), PSM_CHANGED, (WPARAM)hDlg, 0L);
