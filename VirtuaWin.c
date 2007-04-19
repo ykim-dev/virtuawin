@@ -2602,6 +2602,70 @@ static int windowDismiss(HWND theWin)
     return ret ;
 }
 
+static BOOL CALLBACK WindowInfoDialogFunc(HWND hwndDlg, UINT msg, WPARAM wParam, LPARAM lParam)
+{
+    switch (msg)
+    {
+    case WM_INITDIALOG:
+        {
+            TCHAR buff[vwCLASSNAME_MAX + vwWINDOWNAME_MAX + 256], *ss ;
+            HWND theWin ;
+            RECT pos ;
+            int idx, tabstops[2] ;
+            
+            theWin = GetParent(hwndDlg) ;
+            if(theWin == NULL)
+            {
+                SetDlgItemText(hwndDlg,IDC_WID_INFO,_T("Error: failed to get window handle")) ;
+                return TRUE;
+            }
+            tabstops[0] = 10 ;
+            tabstops[1] = 52 ;
+            SendDlgItemMessage(hwndDlg,IDC_WID_INFO,EM_SETTABSTOPS,(WPARAM)2,(LPARAM)tabstops);
+            lockMutex();
+            winListUpdate() ;
+            idx = winListFind(theWin) ;
+            ss = buff ;
+            
+            _tcscpy(ss,"Class Name:\t") ;
+            ss += _tcslen(ss) ;
+            GetClassName(theWin,ss,vwCLASSNAME_MAX);
+            ss += _tcslen(ss) ;
+            _tcscpy(ss,"\r\nWindow Name:\t") ;
+            ss += _tcslen(ss) ;
+            if(!GetWindowText(theWin,ss,vwWINDOWNAME_MAX))
+                _tcscpy(ss,_T("<None>"));
+            ss += _tcslen(ss) ;
+            GetWindowRect(theWin,&pos) ;
+            ss += _stprintf(ss,"\r\n\tHandle:\t%x\r\n\tParent:\t%x\r\n\tOwner:\t%x\r\n\tStyles:\t%08x %08x\r\n\tPosition:\t%d %d %d %d\r\n\r\nThis window is ",
+                            (int)theWin,(int)GetParent(theWin),(int)GetWindow(theWin,GW_OWNER),
+                            (int)GetWindowLong(theWin,GWL_STYLE),(int)GetWindowLong(theWin,GWL_EXSTYLE),
+                            (int)pos.top,(int)pos.bottom,(int)pos.left,(int)pos.right) ;
+            
+            if(idx >= 0)
+                _stprintf(ss,"being managed\r\n\tOwner:\t%x\r\n\tStyles:\t%08x %08x\r\n\tDesk:\t%d\r\n\tSticky:\t%d\r\n\tTricky:\t%d\r\n\tVisible:\t%d\r\n",
+                          (int)winList[idx].Owner,(int)winList[idx].Style,(int)winList[idx].ExStyle,
+                          (int)winList[idx].Desk,(int)winList[idx].Sticky,(int)winList[idx].Tricky,
+                          (int)winList[idx].Visible) ;
+            else
+                _tcscpy(ss,"not managed\r\n") ;
+            releaseMutex();
+            SetDlgItemText(hwndDlg,IDC_WID_INFO,buff) ;
+            return TRUE;
+        }
+        
+    case WM_COMMAND:
+        if(LOWORD(wParam) != IDCANCEL)
+            break;
+        /* no break */
+    case WM_CLOSE:
+        EndDialog(hwndDlg,0);
+        return TRUE;
+	
+    }
+    return FALSE;
+}
+
 /************************************************
  * Dismisses the current window by either moving it
  * back to its assigned desk or minimizing.
@@ -2610,8 +2674,8 @@ static void windowMenu(HWND theWin)
 {
     unsigned char Sticky=0;
     unsigned char Tricky=0;
-    HMENU hmenu ;
-    TCHAR buff[20] ;
+    HMENU hpopup ;
+    TCHAR buff[20];
     POINT pt ;
     HWND pWin ;
     int ii, jj, idx ;
@@ -2636,15 +2700,15 @@ static void windowMenu(HWND theWin)
     }
     releaseMutex();
 
-    if((hmenu = CreatePopupMenu()) == NULL)
+    if((hpopup = CreatePopupMenu()) == NULL)
         return ;
     
-    AppendMenu(hmenu,MF_STRING,ID_WM_DISMISS,_T("&Dismiss Window"));
+    AppendMenu(hpopup,MF_STRING,ID_WM_DISMISS,_T("&Dismiss Window"));
     if(idx >= 0)
     {
         /* currently managed window */
         if(Sticky)
-            AppendMenu(hmenu,MF_STRING,ID_WM_STICKY,_T("Remove &Sticky"));
+            AppendMenu(hpopup,MF_STRING,ID_WM_STICKY,_T("Remove &Sticky"));
         else
         {
             ii = nDesksX * nDesksY ;
@@ -2652,23 +2716,21 @@ static void windowMenu(HWND theWin)
                 if(jj != currentDesk)
                 {
                     _stprintf(buff,_T("Move to Desk &%d"),jj) ;
-                    AppendMenu(hmenu,MF_STRING,ID_WM_DESK+jj,buff) ;
+                    AppendMenu(hpopup,MF_STRING,ID_WM_DESK+jj,buff) ;
                 }
-            AppendMenu(hmenu,MF_STRING,ID_WM_STICKY,_T("Make &Sticky"));
+            AppendMenu(hpopup,MF_STRING,ID_WM_STICKY,_T("Make &Sticky"));
         }
-        if(Tricky)
-            AppendMenu(hmenu,MF_STRING,ID_WM_STICKY,_T("Remove Tricky"));
-        else
-            AppendMenu(hmenu,MF_STRING,ID_WM_STICKY,_T("Make Tricky"));
     }
     else
-        AppendMenu(hmenu,MF_STRING,ID_WM_MANAGE,_T("&Manage Window"));
+        AppendMenu(hpopup,MF_STRING,ID_WM_MANAGE,_T("&Manage Window"));
+    AppendMenu(hpopup,MF_STRING,ID_WM_INFO,_T("&Info"));
     
     GetCursorPos(&pt);
+    setForegroundWin(NULL,0);
     SetForegroundWindow(hWnd);
-    idx = TrackPopupMenu(hmenu,TPM_RETURNCMD | TPM_RIGHTBUTTON | TPM_NONOTIFY,pt.x-2,pt.y-2,0,hWnd,NULL) ;
+    idx = TrackPopupMenu(hpopup,TPM_RETURNCMD | TPM_RIGHTBUTTON | TPM_NONOTIFY,pt.x-2,pt.y-2,0,hWnd,NULL) ;
     PostMessage(hWnd, 0, 0, 0);	
-    DestroyMenu(hmenu);		
+    DestroyMenu(hpopup);		
     SetForegroundWindow(theWin);
     vwLogBasic((_T("Window Menu returned %d\n"),(int) idx)) ;
     switch(idx)
@@ -2679,17 +2741,8 @@ static void windowMenu(HWND theWin)
     case ID_WM_STICKY:
         setSticky(theWin,-1) ;
         break;
-    case ID_WM_TRICKY:
-        lockMutex();
-        winListUpdate() ;
-        if((idx = winListFind(theWin)) >= 0)
-        {
-            if(winList[idx].Tricky)
-                winList[idx].Tricky = vwTRICKY_WINDOW ;
-            else
-                winList[idx].Tricky = 0 ;
-        }
-        releaseMutex();
+    case ID_WM_INFO:
+        DialogBox(hInst,MAKEINTRESOURCE(IDD_WINDOWINFODIALOG),theWin,(DLGPROC) WindowInfoDialogFunc);
         break;
     case ID_WM_MANAGE:
         lockMutex();
@@ -2855,6 +2908,7 @@ static void winListPopupMenu(HWND aHWnd)
     GetCursorPos(&pt);
     pt.x -= 2 ;
     pt.y -= 2 ;
+    setForegroundWin(NULL,0);
     SetForegroundWindow(aHWnd);
     for(;;)
     {
