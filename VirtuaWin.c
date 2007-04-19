@@ -2627,28 +2627,28 @@ static BOOL CALLBACK WindowInfoDialogFunc(HWND hwndDlg, UINT msg, WPARAM wParam,
             idx = winListFind(theWin) ;
             ss = buff ;
             
-            _tcscpy(ss,"Class Name:\t") ;
+            _tcscpy(ss,_T("Class Name:\t")) ;
             ss += _tcslen(ss) ;
             GetClassName(theWin,ss,vwCLASSNAME_MAX);
             ss += _tcslen(ss) ;
-            _tcscpy(ss,"\r\nWindow Name:\t") ;
+            _tcscpy(ss,_T("\r\nWindow Name:\t")) ;
             ss += _tcslen(ss) ;
             if(!GetWindowText(theWin,ss,vwWINDOWNAME_MAX))
                 _tcscpy(ss,_T("<None>"));
             ss += _tcslen(ss) ;
             GetWindowRect(theWin,&pos) ;
-            ss += _stprintf(ss,"\r\n\tHandle:\t%x\r\n\tParent:\t%x\r\n\tOwner:\t%x\r\n\tStyles:\t%08x %08x\r\n\tPosition:\t%d %d %d %d\r\n\r\nThis window is ",
+            ss += _stprintf(ss,_T("\r\n\tHandle:\t%x\r\n\tParent:\t%x\r\n\tOwner:\t%x\r\n\tStyles:\t%08x %08x\r\n\tPosition:\t%d %d %d %d\r\n\r\nThis window is "),
                             (int)theWin,(int)GetParent(theWin),(int)GetWindow(theWin,GW_OWNER),
                             (int)GetWindowLong(theWin,GWL_STYLE),(int)GetWindowLong(theWin,GWL_EXSTYLE),
                             (int)pos.top,(int)pos.bottom,(int)pos.left,(int)pos.right) ;
             
             if(idx >= 0)
-                _stprintf(ss,"being managed\r\n\tOwner:\t%x\r\n\tStyles:\t%08x %08x\r\n\tDesk:\t%d\r\n\tSticky:\t%d\r\n\tTricky:\t%d\r\n\tVisible:\t%d\r\n",
+                _stprintf(ss,_T("being managed\r\n\tOwner:\t%x\r\n\tStyles:\t%08x %08x\r\n\tDesk:\t%d\r\n\tSticky:\t%d\r\n\tTricky:\t%d\r\n\tVisible:\t%d\r\n"),
                           (int)winList[idx].Owner,(int)winList[idx].Style,(int)winList[idx].ExStyle,
                           (int)winList[idx].Desk,(int)winList[idx].Sticky,(int)winList[idx].Tricky,
                           (int)winList[idx].Visible) ;
             else
-                _tcscpy(ss,"not managed\r\n") ;
+                _tcscpy(ss,_T("not managed\r\n")) ;
             releaseMutex();
             SetDlgItemText(hwndDlg,IDC_WID_INFO,buff) ;
             return TRUE;
@@ -2726,6 +2726,8 @@ static void windowMenu(HWND theWin)
     AppendMenu(hpopup,MF_STRING,ID_WM_INFO,_T("&Info"));
     
     GetCursorPos(&pt);
+    /* Call setForegroundWin to remove the window focus otherwise the menu does
+     * not automatically close if the user changes focus */
     setForegroundWin(NULL,0);
     SetForegroundWindow(hWnd);
     idx = TrackPopupMenu(hpopup,TPM_RETURNCMD | TPM_RIGHTBUTTON | TPM_NONOTIFY,pt.x-2,pt.y-2,0,hWnd,NULL) ;
@@ -2891,7 +2893,7 @@ static void renderMenuItem(DRAWITEMSTRUCT* ditem)
 /*************************************************
  * Pops up and handles the window list menu
  */
-static void winListPopupMenu(HWND aHWnd)
+static void winListPopupMenu(HWND aHWnd, int changeFocus)
 {
     static int singleColumn=0;
     HMENU hpopup;
@@ -2908,8 +2910,15 @@ static void winListPopupMenu(HWND aHWnd)
     GetCursorPos(&pt);
     pt.x -= 2 ;
     pt.y -= 2 ;
-    setForegroundWin(NULL,0);
-    SetForegroundWindow(aHWnd);
+    
+    /* Call setForegroundWin to remove the window focus otherwise the menu does
+     * not automatically close if the user changes focus, unfortunately this breaks
+     * double clicking on the systray icon so not done in this case */
+    if(changeFocus)
+    {
+        setForegroundWin(NULL,0) ;
+        SetForegroundWindow(aHWnd);
+    }
     for(;;)
     {
         retItem = 0 ;
@@ -3050,7 +3059,7 @@ wndProc(HWND aHWnd, UINT message, WPARAM wParam, LPARAM lParam)
             
             case 4:
                 /* window list */
-                winListPopupMenu(aHWnd) ;
+                winListPopupMenu(aHWnd,1) ;
                 break;
             
             case 5:
@@ -3101,7 +3110,7 @@ wndProc(HWND aHWnd, UINT message, WPARAM wParam, LPARAM lParam)
         else if(wParam == vwWList)
         {
             if(enabled)
-                winListPopupMenu(aHWnd) ;
+                winListPopupMenu(aHWnd,1) ;
         }
         else
         {
@@ -3287,7 +3296,7 @@ wndProc(HWND aHWnd, UINT message, WPARAM wParam, LPARAM lParam)
         {
         case WM_LBUTTONDOWN:               // Show the window list
             if(enabled)
-                winListPopupMenu(aHWnd) ;
+                winListPopupMenu(aHWnd,0) ;
             break;
         
         case WM_LBUTTONDBLCLK:             // double click on icon
