@@ -332,6 +332,8 @@ BOOL APIENTRY setupMouse(HWND hDlg, UINT message, UINT wParam, LONG lParam)
             SendDlgItemMessage(hDlg, IDC_KNOCKMODE2, BM_SETCHECK, 1,0);
         if(!noMouseWrap)
             SendDlgItemMessage(hDlg, IDC_MOUSEWRAP, BM_SETCHECK, 1,0);
+        if(mouseEnable & 8)
+            SendDlgItemMessage(hDlg, IDC_MOUSEMDCHNG, BM_SETCHECK, 1,0);
         if(mouseEnable & 4)
             SendDlgItemMessage(hDlg, IDC_MOUSEWLIST, BM_SETCHECK, 1,0);
         if(mouseEnable & 2)
@@ -351,6 +353,8 @@ BOOL APIENTRY setupMouse(HWND hDlg, UINT message, UINT wParam, LONG lParam)
                 mouseEnable |= 2 ;
             if(SendDlgItemMessage(hDlg, IDC_MOUSEWLIST, BM_GETCHECK, 0, 0) == BST_CHECKED)
                 mouseEnable |= 4 ;
+            if(SendDlgItemMessage(hDlg, IDC_MOUSEMDCHNG, BM_GETCHECK, 0, 0) == BST_CHECKED)
+                mouseEnable |= 8 ;
             GetDlgItemText(hDlg, IDC_JUMP, buff, 4);
             warpLength = _ttoi(buff);
             mouseDelay = (SendDlgItemMessage(hDlg, IDC_SLIDER, TBM_GETPOS, 0, 0)) << 1 ;

@@ -41,6 +41,8 @@
 
 /* Message, switch to a specified desktop, sent with following lParam or 1..9 */
 #define VW_CHANGEDESK  (WM_USER + 10) 
+#define VW_STEPPREV    (WM_USER +  1)
+#define VW_STEPNEXT    (WM_USER +  2)
 #define VW_STEPLEFT    (WM_USER + 11)
 #define VW_STEPRIGHT   (WM_USER + 12)
 #define VW_STEPUP      (WM_USER + 13)
@@ -65,14 +67,15 @@
 #define VW_WINLIST     (WM_USER + 23)
 /* Message, returns the current desktop number */
 #define VW_CURDESK     (WM_USER + 24)
-/* Message, assign a window to the specified desktop 
-   wParam is the window handle (HWND) and lParam is the desktop number.
-   If desk is -ve window is assigned to desk (-lParam) and Vw change to the desk. 
-   Returns 0 if window was not found (i.e. not managed by VW), non-zero otherwise */
+/* Message, assign a window to the specified desktop wParam is the window
+ * handle (HWND, 0 for foreground window) and lParam is either VW_STEP* (see
+ * 6 defines above) or the desktop number. If desk is -ve window is assigned
+ * to desk (-lParam) and Vw change to the desk. Returns 0 if window was not
+ * found (i.e. not managed by VW), non-zero otherwise */
 #define VW_ASSIGNWIN   (WM_USER + 25)
-/* Message, set the sticky state of a window. wParam is the 
-   window handle (HWND) and lParam should be -1 for toggle, 0 for unset
-   and 1 for set sticky state. */
+/* Message, set the sticky state of a window. wParam is the window handle
+ * (HWND, 0 for foreground window) and lParam should be -1 for toggle, 0 for
+ * unset and 1 for set sticky state. */
 #define VW_SETSTICKY   (WM_USER + 26)
 /* Message, make a window the foreground, only if visible 
    wParam is the window handle (HWND) */

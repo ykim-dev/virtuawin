@@ -75,7 +75,7 @@ IDD_PROPPAGE_MOUSE DIALOGEX 0, 0, 210, 250
 STYLE DS_3DLOOK | WS_CHILD | WS_DISABLED | WS_BORDER
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX        "Mouse Support", IDC_STATIC, 4, 5, 202, 150
+    GROUPBOX        "Mouse Support", IDC_STATIC, 4, 5, 202, 161
     AUTOCHECKBOX    "Enable mouse desktop changing", IDC_ENABLEMOUSE, 10, 16, 120, 10
     LTEXT           "Delay before changing desktop:", IDC_STATIC, 22, 27, 120, 8
     CONTROL         "Slider1", IDC_SLIDER, "msctls_trackbar32", 0x19 |
@@ -94,8 +94,9 @@ BEGIN
     LTEXT           "Mouse jump length", IDC_STATIC, 22, 105, 60, 8, 0
     EDITTEXT        IDC_JUMP, 87, 103, 20, 12, ES_AUTOHSCROLL
     AUTOCHECKBOX    "Enable mouse warping", IDC_MOUSEWRAP, 22, 119, 90, 10
-    AUTOCHECKBOX    "Enable middle button window list activation", IDC_MOUSEWLIST, 10, 130, 160, 10
-    AUTOCHECKBOX    "Enable middle button window menu activation", IDC_MOUSEWMENU, 10, 141, 160, 10
+    AUTOCHECKBOX    "Enable middle button desktop changing", IDC_MOUSEMDCHNG, 10, 130, 160, 10
+    AUTOCHECKBOX    "Enable middle button window list activation", IDC_MOUSEWLIST, 10, 141, 160, 10
+    AUTOCHECKBOX    "Enable middle button window menu activation", IDC_MOUSEWMENU, 10, 152, 160, 10
 END
 
 IDD_PROPPAGE_MISC DIALOG 0, 0, 210, 250

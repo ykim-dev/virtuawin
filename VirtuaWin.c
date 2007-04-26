@@ -269,7 +269,7 @@ checkMouseState(BOOL force)
         if(HIWORD(GetAsyncKeyState(VK_RBUTTON)))
             thisBState |= 4 ;
     }
-    if(force || (thisBState != lastBState))
+    if((thisBState != lastBState) || (force && (thisBState == 1)))
     {
         lastState = (thisBState) ? 4:0 ;
         if((thisBState == 1) || (thisBState == 2))
@@ -303,7 +303,7 @@ checkMouseState(BOOL force)
 DWORD WINAPI MouseProc(LPVOID lpParameter)
 {
     unsigned char mode, lastMode, state[4], newState, wlistState, wmenuState ;
-    int ii, newPos, pos[4], statePos[4], delayTime[4] ;
+    int ii, newPos, pos[4], statePos[4], delayTime[4], wlistX, wlistY ;
     POINT pt;
     
     lastMode = state[0] = state[1] = state[2] = state[3] = wlistState = wmenuState = 0 ;
@@ -313,13 +313,51 @@ DWORD WINAPI MouseProc(LPVOID lpParameter)
         Sleep(25); 
         
         mode = checkMouseState(0) ;
-        if((mouseEnable & 4) && ((mode == 3) || wlistState))
+        if(mouseEnable & 0x0c)
         {
             if(mode == 3)
-                wlistState = 1 ;
-            else
             {
-                if((mode == 0) && (wlistState == 1))
+                GetCursorPos(&pt);
+                if(wlistState == 0)
+                {
+                    wlistState = 1 ;
+                    wlistX = pt.x ;
+                    wlistY = pt.y ;
+                }
+                else if(mouseEnable & 8)
+                {
+                    if((ii=(warpLength >> 2)) < 10)
+                        ii = 10 ;
+                    newPos = -1 ;
+                    if(abs(pt.x - wlistX) < abs(pt.y - wlistY))
+                    {
+                        if((pt.y - wlistY) >= ii)
+                            newPos = 3 ;
+                        else if((wlistY - pt.y) >= ii)
+                            newPos = 1 ;
+                    }
+                    else
+                    {
+                        if((pt.x - wlistX) >= ii)
+                            newPos = 2 ;
+                        else if((wlistX - pt.x) >= ii)
+                            newPos = 0 ;
+                    }
+                    if(newPos >= 0)
+                    {
+                        vwLogBasic((_T("Mouse mddle button desk change %d (%d,%d)\n"),newPos,pt.x - wlistX,pt.y - wlistY)) ;
+                        /* send the switch message and wait until done */
+                        SendMessage(hWnd, VW_MOUSEWARP, 0, MAKELPARAM(0,newPos)) ;
+                        GetCursorPos(&pt);
+                        wlistX = pt.x ;
+                        wlistY = pt.y ;
+                        wlistState = 2 ;
+                    }
+                }
+            }
+            else if(wlistState)
+            {
+                if((mode == 0) && (wlistState == 1) && (mouseEnable & 4))
                 {
                     vwLogBasic((_T("Mouse wlist %d\n"),wlistState)) ;
                     SendMessage(hWnd, VW_MOUSEWARP, 0, MAKELPARAM(0,4)) ;
@@ -370,7 +408,7 @@ DWORD WINAPI MouseProc(LPVOID lpParameter)
                         {
                             vwLogBasic((_T("Mouse desk change on edge %d (%d,%d)\n"),ii,(int) pt.x,(int) pt.y)) ;
                             /* send the switch message and wait until done */
-                            SendMessage(hWnd, VW_MOUSEWARP, 0, MAKELPARAM(mode,ii)) ;
+                            SendMessage(hWnd, VW_MOUSEWARP, 0, MAKELPARAM(mode|2,ii)) ;
                             newState = 1 ;
                         }
                         else
@@ -1551,7 +1589,11 @@ static int winListUpdate(void)
             windowSetSticky(winList[i].Handle,TRUE) ;
         else if(useDeskAssignment &&
                 ((j = checkIfAssigned(cname,wname)) != currentDesk))
+        {
             windowSetDesk(winList[i].Handle,j,assignImmediately) ;
+            if(assignImmediately && (hiddenWindowAct == 3) && (newDesk == 0))
+                newDesk = j ;
+        }
     }
     // now finish of initialization of owned windows
     for(i=inWin ; i < nWin ; ++i)
@@ -2469,17 +2511,65 @@ static void disableAll(HWND aHWnd)
  */
 int assignWindow(HWND theWin, int theDesk, BOOL force)
 {
-    int ret, change, idx ;
+    int ret, change, idx, nDesks ;
     unsigned char sticky=0 ;
     
     vwLogBasic((_T("Assign window: %x %d %d\n"),(int) theWin,theDesk,force)) ;
+    
+    if(((theWin == NULL) && ((theWin = GetForegroundWindow()) == NULL)) || (theWin == hWnd))
+        return 0 ;
+    
     change = (theDesk < 0) ;
     if(change)
         theDesk = 0 - theDesk ;
-        
-    if((theWin == NULL) || (theWin == hWnd) ||
-       (((theDesk > (nDesksY * nDesksX)) || (theDesk < 1)) && !force))
-        return 0 ; // Invalid window or desk
+    nDesks = nDesksY * nDesksX ;
+    switch(theDesk)
+    {
+    case VW_STEPPREV:
+        if((currentDesk > nDesks) ||
+           ((theDesk = currentDesk-1) <= 0))
+            theDesk = nDesks ;
+        break;
+    case VW_STEPNEXT:
+        if((currentDesk > nDesks) ||
+           ((theDesk = currentDesk+1) > nDesks))
+            theDesk = 1 ;
+        break;
+    case VW_STEPLEFT:
+        if(currentDesk > nDesks)
+            theDesk = nDesks ;
+        else if(currentDeskX <= 1)
+            theDesk = calculateDesk(nDesksX,currentDeskY) ;
+        else
+            theDesk = calculateDesk(currentDeskX-1,currentDeskY) ;
+        break;
+    case VW_STEPRIGHT:
+        if(currentDesk > nDesks)
+            theDesk = 1 ;
+        else if(currentDeskX >= nDesksX)
+            theDesk = calculateDesk(1,currentDeskY) ;
+        else
+            theDesk = calculateDesk(currentDeskX+1,currentDeskY) ;
+        break;
+    case VW_STEPUP:
+        if(currentDesk > nDesks)
+            theDesk = nDesks ;
+        else if(currentDeskY <= 1)
+            theDesk = calculateDesk(currentDeskX,nDesksY) ;
+        else
+            theDesk = calculateDesk(currentDeskX,currentDeskY-1) ;
+        break;
+    case VW_STEPDOWN:
+        if(currentDesk > nDesks)
+            theDesk = 1 ;
+        else if(currentDeskY >= nDesksY)
+            theDesk = calculateDesk(currentDeskX,1) ;
+        else
+            theDesk = calculateDesk(currentDeskX,currentDeskY+1) ;
+        break;
+    }
+    if(((theDesk > nDesks) || (theDesk < 1)) && !force)
+        return 0 ; // Invalid desk
     
     lockMutex();
     winListUpdate() ;
@@ -2545,7 +2635,8 @@ static int setSticky(HWND theWin, int state)
 {
     int ret ;
     vwLogBasic((_T("Set sticky window: %x %d\n"),(int) theWin,state)) ;
-    if(theWin == NULL)
+    
+    if((theWin == NULL) && ((theWin = GetForegroundWindow()) == NULL))
         return 0 ;
     
     lockMutex();
@@ -3002,12 +3093,12 @@ wndProc(HWND aHWnd, UINT message, WPARAM wParam, LPARAM lParam)
         {
             GetCursorPos(&pt);
             
-            isDragging = LOWORD(lParam);
-            switch HIWORD(lParam)
+            isDragging = (LOWORD(lParam) & 0x1) ;
+            switch(HIWORD(lParam))
             {
             case 0:
                 /* left */
-                if(stepLeft() != 0)
+                if((stepLeft() != 0) && (LOWORD(lParam) & 0x2))
                 {
                     if(noMouseWrap)
                         SetCursorPos(pt.x + warpLength, pt.y);
@@ -3022,7 +3113,7 @@ wndProc(HWND aHWnd, UINT message, WPARAM wParam, LPARAM lParam)
                     wParam = stepDown();
                 else
                     wParam = stepUp();
-                if(wParam != 0)
+                if((wParam != 0) && (LOWORD(lParam) & 0x2))
                 {
                     if(noMouseWrap)
                         SetCursorPos(pt.x, pt.y + warpLength);
@@ -3033,7 +3124,7 @@ wndProc(HWND aHWnd, UINT message, WPARAM wParam, LPARAM lParam)
                 
             case 2:
                 /* right */
-                if(stepRight() != 0)
+                if((stepRight() != 0) && (LOWORD(lParam) & 0x2))
                 {
                     if(noMouseWrap)
                         SetCursorPos(pt.x - warpLength, pt.y);
@@ -3048,7 +3139,7 @@ wndProc(HWND aHWnd, UINT message, WPARAM wParam, LPARAM lParam)
                     wParam = stepUp();
                 else
                     wParam = stepDown();
-                if(wParam != 0)
+                if((wParam != 0) && (LOWORD(lParam) & 0x2))
                 {
                     if(noMouseWrap)
                         SetCursorPos(pt.x, pt.y - warpLength);
@@ -3097,7 +3188,7 @@ wndProc(HWND aHWnd, UINT message, WPARAM wParam, LPARAM lParam)
                 stepDown();
         }
         else if(wParam == stickyKey)
-            setSticky(GetForegroundWindow(),-1);
+            setSticky(0,-1);
         else if(wParam == dismissKey)
         {
             windowDismiss(GetForegroundWindow());
@@ -3128,7 +3219,14 @@ wndProc(HWND aHWnd, UINT message, WPARAM wParam, LPARAM lParam)
         
         // Plugin messages
     case VW_CHANGEDESK: 
-        switch (wParam) {
+        switch (wParam)
+        {
+        case VW_STEPPREV:
+            stepDelta(-1) ;
+            break;
+        case VW_STEPNEXT:
+            stepDelta(1) ;
+            break;
         case VW_STEPLEFT:
             stepLeft();
             break;
@@ -3181,7 +3279,7 @@ wndProc(HWND aHWnd, UINT message, WPARAM wParam, LPARAM lParam)
         return currentDesk;
         
     case VW_ASSIGNWIN:
-        return assignWindow((HWND)wParam,(int)lParam,FALSE);
+        return assignWindow((HWND) wParam,(int)lParam,FALSE);
         
     case VW_ACCESSWIN:
         return accessWindow((HWND)wParam,(int)lParam,FALSE);

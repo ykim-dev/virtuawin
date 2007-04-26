@@ -66,6 +66,7 @@
 #define IDC_MOUSEWRAP     1055
 #define IDC_MOUSEWLIST    1056
 #define IDC_MOUSEWMENU    1057
+#define IDC_MOUSEMDCHNG   1058
 #define IDC_HOTSTICKY     1060
 #define IDC_HTTP          1061
 #define IDC_MAILTO        1062
