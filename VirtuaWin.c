@@ -1905,7 +1905,7 @@ static int changeDesk(int newDesk, WPARAM msgWParam)
 {
     HWND activeHWnd, zoh ;
     unsigned long activeZOrder=0, zox, zoy, zob ;
-    int notHung, x, y, b ;
+    int notHung, activeRefocus, x, y, b ;
     
     if(newDesk == currentDesk)
         // Nothing to do
@@ -1997,6 +1997,7 @@ static int changeDesk(int newDesk, WPARAM msgWParam)
             {
                 activeHWnd = winList[b].Handle;
                 activeZOrder = winList[b].ZOrder[currentDesk];
+                activeRefocus = 0 ;
             }
             y = b ;
             zoy = zob ;
@@ -2004,6 +2005,7 @@ static int changeDesk(int newDesk, WPARAM msgWParam)
     }
     else
     {
+        y = 0 ;
         for (x = 0; x < nWin ; ++x)
         {
             if(winList[x].Sticky || (!minSwitch && (winList[x].Style & WS_MINIMIZE)))
@@ -2011,13 +2013,26 @@ static int changeDesk(int newDesk, WPARAM msgWParam)
             if(winList[x].Desk == currentDesk)
             {
                 // Show these windows
-                if(!winList[x].Visible)
-                    showHideWindow(&winList[x],0,vwVISIBLE_YES) ;
                 if(((winList[x].Style & (WS_MINIMIZE|WS_VISIBLE)) == WS_VISIBLE) && 
                    (winList[x].ZOrder[currentDesk] > activeZOrder))
                 {
                     activeHWnd = winList[x].Handle;
                     activeZOrder = winList[x].ZOrder[currentDesk];
+                    activeRefocus = 0 ;
+                }
+                if(!winList[x].Visible)
+                {
+                    showHideWindow(&winList[x],0,vwVISIBLE_YES) ;
+                    y = 1 ;
+                }
+                else if(y && windowIsNotHung(winList[x].Handle,50))
+                {
+                    /* It is visible but its position in the taskbar is wrong - fix by removing from the taskbar and then adding again */
+                    PostMessage(taskHWnd, RM_Shellhook, HSHELL_WINDOWDESTROYED, (LPARAM) winList[x].Handle);
+                    Sleep(1);
+                    PostMessage(taskHWnd, RM_Shellhook, HSHELL_WINDOWCREATED, (LPARAM) winList[x].Handle );
+                    if(activeHWnd == winList[x].Handle)
+                        activeRefocus = 1 ;
                 }
             }
             else if(winList[x].Visible)
@@ -2064,7 +2079,11 @@ static int changeDesk(int newDesk, WPARAM msgWParam)
     }
     if(releaseFocus)     // Release focus maybe?
         activeHWnd = NULL ;
-    vwLogBasic((_T("Active found: %x (%d,%d,%d)\n"),(int) activeHWnd,(int)activeZOrder,releaseFocus,isDragging)) ;
+    vwLogBasic((_T("Active found: %x (%d,%d,%d,%d)\n"),(int) activeHWnd,(int)activeZOrder,releaseFocus,isDragging,activeRefocus)) ;
+    if(activeRefocus && (GetForegroundWindow() == activeHWnd))
+        /* we have had to fix the taskbar order by destrying and recreating,
+         * this loses the current focus so we must refocus the taskbar */
+        setForegroundWin(NULL,TRUE) ;
     setForegroundWin(activeHWnd,TRUE) ;
     // reset the monitor timer to give the system a chance to catch up first
     SetTimer(hWnd, 0x29a, 250, monitorTimerProc);
