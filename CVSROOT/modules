@@ -24,3 +24,4 @@
 # character to interpose another module into the current module.  This
 # can be useful for creating a module that consists of many directories
 # spread out over the entire source repository.
+all -a WinList scripts Modules Module Icons Help VirtuaWin.c VirtuaWin.rc SetupDialog.c Resource.h Messages.h Defines.h DiskRoutines.c ConfigParameters.h win32v6.mak VirtuaWin.h build.bat build ModuleRoutines.c Makefile ListStructures.h DiskRoutines.h regex.h regex.c READMEII.TXT README.TXT SetupDialog.h tricky.cfg ModuleRoutines.h HISTORY.TXT COPYING.TXT .cvsignore userlist.cfg
