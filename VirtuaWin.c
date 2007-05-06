@@ -302,11 +302,11 @@ checkMouseState(BOOL force)
  */
 DWORD WINAPI MouseProc(LPVOID lpParameter)
 {
-    unsigned char mode, lastMode, state[4], newState, wlistState, wmenuState ;
-    int ii, newPos, pos[4], statePos[4], delayTime[4], wlistX, wlistY ;
+    unsigned char mode, lastMode=0, state[4], newState, wlistState=0, wmenuState=0 ;
+    int ii, newPos, pos[4], statePos[4], delayTime[4], wlistX=0, wlistY=0 ;
     POINT pt;
     
-    lastMode = state[0] = state[1] = state[2] = state[3] = wlistState = wmenuState = 0 ;
+    state[0] = state[1] = state[2] = state[3] = 0 ;
     // infinite loop
     while(1)
     {
@@ -1905,7 +1905,7 @@ static int changeDesk(int newDesk, WPARAM msgWParam)
 {
     HWND activeHWnd, zoh ;
     unsigned long activeZOrder=0, zox, zoy, zob ;
-    int notHung, activeRefocus, x, y, b ;
+    int notHung, activeRefocus=0, x, y, b ;
     
     if(newDesk == currentDesk)
         // Nothing to do
@@ -1997,7 +1997,6 @@ static int changeDesk(int newDesk, WPARAM msgWParam)
             {
                 activeHWnd = winList[b].Handle;
                 activeZOrder = winList[b].ZOrder[currentDesk];
-                activeRefocus = 0 ;
             }
             y = b ;
             zoy = zob ;
