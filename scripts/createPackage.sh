@@ -10,6 +10,11 @@
 # - ncftp (if uploading to SF)
 #
 # Variables
+# MSYS need windows style /? arguments to be double slashes, i.e. //? use a varable to handle this.
+SLASH="/"
+if [ `uname | sed -e "s/^MINGW.*/MINGW/"` == 'MINGW' ] ; then
+    SLASH="//"
+fi
 if [ -z "$EDITOR" ] ; then
     EDITOR=emacs
 fi
@@ -23,7 +28,7 @@ if [ -z "$WINZIP" ] ; then
     WINZIP="/cygdrive/c/Program\ Files/WinZip/wzzip"
 fi
 
-if [ $1 == "" ] ; then 
+if [ -z "$1" ] ; then
     echo "Usage: createPackage <version> (e.g 3.X.x)"
     exit -1
 fi
@@ -33,27 +38,24 @@ echo Creating VirtuaWin package $1
 mkdir ./$1
 cd ./$1
 
-cvs checkout .
-
-read -p "Label repository? [y/n] " -n 1
-echo
-if [ $REPLY == 'y' ] ; then
-    export LABEL=`echo V$1 | sed s/'\.'/_/g`
-    echo Labelling with: $LABEL
-    cvs tag -R -F $LABEL
-fi
+cvs checkout README.TXT
+cvs update -d
 
 mkdir tmp
 mkdir tmp/standard
 mkdir tmp/unicode
 
+cat Defines.h | sed -e "s/vwVIRTUAWIN_NAME_VERSION _T(\"VirtuaWin v.*\")/vwVIRTUAWIN_NAME_VERSION _T(\"VirtuaWin v$1\")/" > Defines.h.tmp
+mv Defines.h.tmp Defines.h
+cat scripts/virtuawin.iss | sed -e "s/^AppVerName=VirtuaWin .*/AppVerName=VirtuaWin $1/" > scripts/virtuawin.iss.tmp
+mv scripts/virtuawin.iss.tmp scripts/virtuawin.iss
 $EDITOR Defines.h
 read -p "Compile source? [y/n] " -n 1
 echo
 if [ $REPLY == 'y' ] ; then
     echo compiling helpfile
     cd Help
-    $HELPCOMPILER /C /E virtuawin.hpj
+    $HELPCOMPILER -C -E virtuawin.hpj
     cd ..
     echo building standard
     ./build -S
@@ -97,6 +99,8 @@ if [ $REPLY == 'y' ] ; then
     cp ./Help/VirtuaWin.hlp ./tmp/unicode/VirtuaWin.hlp
     cp ./scripts/virtuawin.iss ./tmp/unicode/
     cp ./scripts/VirtuaWin5.0.ISL ./tmp/unicode/
+    cat tmp/unicode/virtuawin.iss | sed -e "s/^AppVerName=VirtuaWin/AppVerName=VirtuaWin Unicode/" > tmp/unicode/virtuawin.iss.tmp
+    mv tmp/unicode/virtuawin.iss.tmp tmp/unicode/virtuawin.iss
     echo done unicode
 fi
 
@@ -107,7 +111,7 @@ $EDITOR virtuawin.iss
 read -p "Compile standard setup package? [y/n] " -n 1
 echo
 if [ $REPLY == 'y' ] ; then
-    "$SETUPCOMPILER" /cc virtuawin.iss
+    "$SETUPCOMPILER" ${SLASH}cc virtuawin.iss
     echo done!
 fi
 
@@ -118,7 +122,7 @@ $EDITOR virtuawin.iss
 read -p "Compile unicode setup package? [y/n] " -n 1
 echo
 if [ $REPLY == 'y' ] ; then
-    "$SETUPCOMPILER" /cc virtuawin.iss
+    "$SETUPCOMPILER" ${SLASH}cc virtuawin.iss
     echo done!
 fi
 
@@ -145,6 +149,21 @@ if [ $REPLY == 'y' ] ; then
     mv ./tmp/standard/output/setup.exe ../Distribution/VirtuaWin_setup_$1.exe
     mv ./tmp/unicode/output/setup.exe ../Distribution/VirtuaWin_unicode_setup_$1.exe
     mv ./VirtuaWin_source_$1.zip ../Distribution/
+fi
+
+read -p "Commit changes? [y/n] " -n 1
+echo
+if [ $REPLY == 'y' ] ; then
+    echo Committing changes with comment: Changed to V$1
+    cvs commit -m "Changed to V$1"
+fi
+
+read -p "Label repository? [y/n] " -n 1
+echo
+if [ $REPLY == 'y' ] ; then
+    export LABEL=`echo V$1 | sed s/'\.'/_/g`
+    echo Labelling with: $LABEL
+    cvs tag -R -F $LABEL
 fi
 
 read -p "Upload to SourceForge? [y/n] " -n 1
