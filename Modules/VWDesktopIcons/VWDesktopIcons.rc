@@ -1,0 +1,18 @@
+#include <windows.h>
+#include "Resource.h"
+
+
+IDD_MAINDIALOG DIALOG 79, 25, 264, 226
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "VirtuaWin Desktop Icons v1.0"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "", ID_LABEL, 6, 6, 200, 11
+    LISTBOX         ID_HIDE_LIST, 6, 20, 100, 186, WS_VSCROLL | WS_HSCROLL | WS_TABSTOP
+    LISTBOX         ID_SHOW_LIST, 158, 20, 100, 186, WS_VSCROLL | WS_HSCROLL | WS_TABSTOP
+    PUSHBUTTON      "< Hide",  ID_HIDE_ICON, 112, 100, 40, 14
+    PUSHBUTTON      "Show >",  ID_SHOW_ICON, 112, 120, 40, 14
+    PUSHBUTTON      "OK",      ID_OK,     126, 206, 40, 14
+    DEFPUSHBUTTON   "Cancel",  IDCANCEL,  172, 206, 40, 14
+    PUSHBUTTON      "Apply",   ID_APPLY,  218, 206, 40, 14
+END
