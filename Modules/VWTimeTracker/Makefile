@@ -1,7 +1,7 @@
 # VirtuaWin (virtuawin.sourceforge.net)
 # Makefile - VWTimeTracker make file for MinGW & Cygwin GNU GCC.
 #
-# Copyright (c) 2006 VirtuaWin (VirtuaWin@home.se)
+# Copyright (c) 2006-2007 VirtuaWin (VirtuaWin@home.se)
 #
 # This program is free software; you can redistribute it and/or modify it
 # under the terms of the GNU General Public License as published by the Free
@@ -55,7 +55,9 @@ ifeq ($(vwUNICODE),1)
 CUCDEFS = -DUNICODE -D_UNICODE
 endif
 
-SRC=VWTimeTracker.c
+SRC     = VWTimeTracker.c
+COFFS   = VWTimeTracker.coff
+OBJRES  = VWTimeTracker.res
 
 TARGET	= VWTimeTracker.exe
 OBJS    = $(SRC:.c=.o)
@@ -70,19 +72,22 @@ OBJSD   = $(SRC:.c=.od)
 .c.od:
 	$(CC) $(CFLAGSD) $(CUCDEFS) -c -o $@ $<
 
-$(TARGET): $(OBJS)
-	$(CC) $(LDFLAGS) -o $(TARGET) $(OBJS) $(LIBS)
+$(TARGET): $(OBJS) $(COFFS)
+	$(CC) $(LDFLAGS) -o $(TARGET) $(OBJS) $(COFFS) $(LIBS)
 	$(STRIP) $(TARGET)
 
-$(TARGETD): $(OBJSD)
-	$(CC) $(LDFLAGSD) -o $(TARGETD) $(OBJSD) $(LIBS)
+$(TARGETD): $(OBJSD) $(COFFS)
+	$(CC) $(LDFLAGSD) -o $(TARGETD) $(OBJSD) $(COFFS) $(LIBS)
+
+VWTimeTracker.coff: VWTimeTracker.rc
+	$(RC) --input-format rc --output-format coff -o $@ -i $<
 
 all:    clean $(TARGET)
 
 alld:   clean $(TARGETD)
 
 clean: 
-	rm -f $(OBJS) $(OBJSD)
+	rm -f $(OBJS) $(OBJSD) $(COFFS)
 
 spotless: clean 
-	rm -f $(TARGET) $(TARGETD) vc60.pch
+	rm -f $(TARGET) $(TARGETD) $(OBJRES) vc60.pch

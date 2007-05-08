@@ -1,9 +1,8 @@
 /*
  *  VirtuaWin - Virtual Desktop Manager (virtuawin.sourceforge.net)
- *  Module.c - Example user module for VirtuaWin.
+ *  VWTimeTracker.c - Module to display the time spent on each desk.
  * 
- *  Copyright (c) 1999-2005 Johan Piculell
- *  Copyright (c) 2006 VirtuaWin (VirtuaWin@home.se)
+ *  Copyright (c) 2006-2007 VirtuaWin (VirtuaWin@home.se)
  * 
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -82,7 +81,8 @@ static int GenerateTimerList(HWND hDlg)
         if((tt=timeTotal[ii] + timeCrrnt[ii]) > 0)
         {
             _stprintf(buff,_T("Desk %d\t%d:%02d:%02d\t%d:%02d:%02d"),ii,
-                      timeCrrnt[ii]/3600,(timeCrrnt[ii]/60)%60,timeCrrnt[ii]%60,tt/3600,(tt/60)%60,tt%60) ;
+                      (int) (timeCrrnt[ii]/3600),(int) ((timeCrrnt[ii]/60)%60),(int) (timeCrrnt[ii]%60),
+                      (int) (tt/3600),(int) ((tt/60)%60),(int) (tt%60)) ;
             SendDlgItemMessage(hDlg,ID_TIMELIST,LB_ADDSTRING,0,(LONG) buff);
         }
     }
@@ -208,8 +208,12 @@ MainWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
         PostQuitMessage(0);
         break;
     case MOD_SETUP:
-        SetForegroundWindow(wHnd) ;
-        DialogBox(hInst, MAKEINTRESOURCE(IDD_MAINDIALOG), wHnd, (DLGPROC) DialogFunc);
+        if(wParam != 0)
+            hwnd = (HWND) wParam ;
+        else
+            hwnd = (HWND) wHnd ;
+        SetForegroundWindow(hwnd) ;
+        DialogBox(hInst, MAKEINTRESOURCE(IDD_MAINDIALOG), hwnd, (DLGPROC) DialogFunc);
         break;
     case WM_DESTROY:
         PostQuitMessage(0);
