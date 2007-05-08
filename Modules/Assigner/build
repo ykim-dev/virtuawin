@@ -1,0 +1,112 @@
+#!/bin/sh -f
+# VirtuaWin (virtuawin.sourceforge.net)
+# build - VirtuaWin build shell script for MINGW MSYS & Cygwin bash.
+#
+# Copyright (c) 2006-2007 VirtuaWin (VirtuaWin@home.se)
+#
+# See the file VirtuaWin.c for copying and conditions.
+#
+TARGET=
+DTARGET=
+LOGFILE=
+LOGFILEA=
+OPTIONS=
+MAKEFILE=
+while [ ".$1" != "." ]
+do
+    if [ $1 = "-h" ] ; then
+        echo "usage: build [options]"
+        echo ""
+        echo "Where options can be:-"
+        echo "   -C   : Build clean."
+        echo "   -d   : For debug build (output is VWAssignerD.exe)."
+        echo "   -h   : For this help page."
+        echo "   -l <logfile>"
+        echo "        : Set the compile log file."
+        echo "   -la <logfile>"
+        echo "        : Append the compile log to the given file."
+        echo "   -m <makefile>"
+        echo "        : Sets the makefile to use where <makefile> can be:-"
+        echo "             Makefile     Build using Cygwin, MinGW or Linux GNU GCC"
+        echo "             win32v6.mak  Build using MS VC version 6 onwards"
+        echo "   -S   : Build clean spotless."
+        echo "   -u   : Build with UNICODE support."
+        echo ""
+        echo "If you change the build options used do a clean build (build -C) first."
+        echo ""
+        exit 1
+    elif [ $1 = "-C" ] ; then
+        TARGET=clean
+    elif [ $1 = "-d" ] ; then
+        DTARGET=VWAssignerD.exe
+    elif [ $1 = "-l" ] ; then
+        shift
+        LOGFILE="$1"
+    elif [ $1 = "-la" ] ; then
+        shift
+        LOGFILEA="$1"
+    elif [ $1 = "-m" ] ; then
+        shift
+        MAKEFILE=$1
+    elif [ $1 = "-S" ] ; then
+        TARGET=spotless
+    elif [ $1 = "-u" ] ; then
+        OPTIONS="$OPTIONS vwUNICODE=1"
+    else
+        echo "Error: Unkown option $1, run build -h for help"
+        echo ""
+        exit 1
+    fi
+    shift
+done
+
+MAKE=make
+if [ ".$MAKEFILE" = "." ] ; then
+    
+    # try to detect gcc, if found use it in preference
+    if [ "`type gcc | cut -b 1-6`" = "gcc is" ] ; then
+        MAKEFILE=Makefile
+    fi
+    if [ ".$MAKEFILE" = "." ] ; then
+        # failed to find gcc, try cl
+        if [ "`type cc | cut -b 1-5`" = "cl is" ] ; then
+            MAKEFILE=win32v6.mak
+            MAKE=nmake
+        fi
+    fi
+    if [ ".$MAKEFILE" = "." ] ; then
+        # failed to find MS cl, try Linux MinGW gcc
+        if [ "`type i586-mingw32msvc-gcc | cut -b 1-23`" = "i586-mingw32msvc-gcc is" ] ; then
+            MAKEFILE=Makefile
+        fi
+    fi
+
+    if [ ".$MAKEFILE" = "." ] ; then
+        echo "Error: Failed to find a compiler (gcc or cl) fix PATH or use -m option"
+        exit 1
+    fi
+else
+    if [ "$MAKEFILE" = "win32v6" ] ; then
+        MAKE=nmake
+    fi
+fi
+
+if [ -r $MAKEFILE ] ; then
+    if [ ".$TARGET" = "." ] ; then
+        TARGET="$DTARGET"
+    fi
+    if [ ".$LOGFILE" != "." ] ; then
+        echo "$MAKE -f $MAKEFILE $OPTIONS $TARGET" > $LOGFILE 2>&1
+        $MAKE -f $MAKEFILE $OPTIONS $TARGET > $LOGFILE 2>&1
+    else
+        if [ ".$LOGFILEA" != "." ] ; then
+            echo "$MAKE -f $MAKEFILE $OPTIONS $TARGET" >> $LOGFILEA 2>&1
+            $MAKE -f $MAKEFILE $OPTIONS $TARGET >> $LOGFILEA 2>&1
+        else
+            echo "$MAKE -f $MAKEFILE $OPTIONS $TARGET"
+            $MAKE -f $MAKEFILE $OPTIONS $TARGET
+        fi
+    fi
+else
+    echo "Error: Failed to find the makefile $MAKEFILE"
+fi

@@ -5,7 +5,8 @@
 //  for moving the current active window to next or previous desktop
 //  
 // 
-//  Copyright (c) 1999, 2000, 2001, 2002, 2003, 2004, 2005 Johan Piculell
+//  Copyright (c) 1999-2005 Johan Piculell
+//  Copyright (c) 2006-2007 VirtuaWin (VirtuaWin@home.se)
 // 
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -52,7 +53,7 @@ UINT numberOfDesktops;
 /*************************************************
  * Translates virtual key codes to "hotkey codes"
  */
-WORD hotKey2ModKey(BYTE vModifiers)
+UINT hotKey2ModKey(UINT vModifiers)
 {
     WORD mod = 0;
     if (vModifiers & HOTKEYF_ALT)
@@ -320,9 +321,9 @@ LRESULT CALLBACK MainWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, INT nCmdShow)
 {
     MSG msg;
-    hInst = hInstance;
     WNDCLASS wc;
     
+    hInst = hInstance;
     memset(&wc, 0, sizeof(WNDCLASS));
     wc.style = 0;
     wc.lpfnWndProc = (WNDPROC)MainWndProc;
