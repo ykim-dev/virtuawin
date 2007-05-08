@@ -3,7 +3,7 @@
 //  winlist.c - VirtuaWin module for restoring lost windows.
 // 
 //  Copyright (c) 1999-2005 Johan Piculell
-//  Copyright (c) 2006 VirtuaWin (VirtuaWin@home.se)
+//  Copyright (c) 2006-2007 VirtuaWin (VirtuaWin@home.se)
 // 
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -164,7 +164,12 @@ LRESULT CALLBACK MainWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
         PostQuitMessage(0);
         break;
     case MOD_SETUP: // Optional
-        DialogBox(hInst, MAKEINTRESOURCE(IDD_MAINDIALOG), vwHandle, (DLGPROC) DialogFunc);
+        if(wParam != 0)
+            hwnd = (HWND) wParam ;
+        else
+            hwnd = (HWND) hwndMain ;
+        SetForegroundWindow(hwnd) ;
+        DialogBox(hInst, MAKEINTRESOURCE(IDD_MAINDIALOG), hwnd, (DLGPROC) DialogFunc);
         break;
     case WM_DESTROY:
         PostQuitMessage(0);
