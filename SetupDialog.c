@@ -3,7 +3,7 @@
 //  SetupDialog.c - Setup Dialog routines.
 // 
 //  Copyright (c) 1999-2005 Johan Piculell
-//  Copyright (c) 2006 VirtuaWin (VirtuaWin@home.se)
+//  Copyright (c) 2006-2007 VirtuaWin (VirtuaWin@home.se)
 // 
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -478,7 +478,7 @@ BOOL APIENTRY setupModules(HWND hDlg, UINT message, UINT wParam, LONG lParam)
         {   // Show config
             int curSel = SendDlgItemMessage(hDlg, IDC_MODLIST, LB_GETCURSEL, 0, 0);
             if(curSel != LB_ERR)
-                PostMessage(moduleList[curSel].Handle, MOD_SETUP, 0, 0);
+                PostMessage(moduleList[curSel].Handle, MOD_SETUP, (UINT) hDlg, 0);
         }
         else if(LOWORD((wParam) == IDC_MODRELOAD))
         {   // Reload
