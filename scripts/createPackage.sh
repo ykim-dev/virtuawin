@@ -45,13 +45,13 @@ mkdir tmp
 mkdir tmp/standard
 mkdir tmp/unicode
 
-cat Defines.h | sed -e "s/vwVIRTUAWIN_NAME_VERSION _T(\"VirtuaWin v.*\")/vwVIRTUAWIN_NAME_VERSION _T(\"VirtuaWin v$1\")/" > Defines.h.tmp
+cat Defines.h | sed -c -e "s/vwVIRTUAWIN_NAME_VERSION _T(\"VirtuaWin v.*\")/vwVIRTUAWIN_NAME_VERSION _T(\"VirtuaWin v$1\")/" > Defines.h.tmp
 mv Defines.h.tmp Defines.h
-cat WinList/winlist.rc | sed -e "s/^CAPTION \"WinList v.*\"/CAPTION \"WinList v$1\"/" > WinList/winlist.rc.tmp
+cat WinList/winlist.rc | sed -c -e "s/^CAPTION \"WinList v.*\"/CAPTION \"WinList v$1\"/" > WinList/winlist.rc.tmp
 mv WinList/winlist.rc.tmp WinList/winlist.rc
-cat Modules/Assigner/assigner.rc | sed -e "s/^CAPTION \"Assigner v.*\"/CAPTION \"Assigner v$1\"/" > Modules/Assigner/assigner.rc.tmp
+cat Modules/Assigner/assigner.rc | sed -c -e "s/^CAPTION \"Assigner v.*\"/CAPTION \"Assigner v$1\"/" > Modules/Assigner/assigner.rc.tmp
 mv Modules/Assigner/assigner.rc.tmp Modules/Assigner/assigner.rc
-cat scripts/virtuawin.iss | sed -e "s/^AppVerName=VirtuaWin .*/AppVerName=VirtuaWin $1/" > scripts/virtuawin.iss.tmp
+cat scripts/virtuawin.iss | sed -c -e "s/^AppVerName=VirtuaWin v.*/AppVerName=VirtuaWin v$1/" > scripts/virtuawin.iss.tmp
 mv scripts/virtuawin.iss.tmp scripts/virtuawin.iss
 $EDITOR Defines.h
 read -p "Compile source? [y/n] " -n 1
@@ -140,7 +140,7 @@ if [ $REPLY == 'y' ] ; then
     if [ -z "$ZIP" ] ; then
         $WINZIP VirtuaWin_source_$1.zip -P @./scripts/filelist
     else        
-        $ZIP -@ < ./scripts/filelist
+        $ZIP -9 -@ < ./scripts/filelist
         mv zip.zip VirtuaWin_source_$1.zip
     fi
     echo Done!
