@@ -6,7 +6,7 @@
  *  ConfigParameters.h - Dfinition of all module messages
  * 
  *  Copyright (c) 1999-2005 Johan Piculell
- *  Copyright (c) 2006 VirtuaWin (VirtuaWin@home.se)
+ *  Copyright (c) 2006-2007 VirtuaWin (VirtuaWin@home.se)
  * 
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -130,7 +130,8 @@
 #define MOD_INIT       (WM_USER + 35)
 /* Message, sent when VirtuaWin quits or reloads its modules */
 #define MOD_QUIT       (WM_USER + 36)
-/* Message, sent by VirtuaWin when setup button is pressed in "module tab" */
+/* Message, sent by VirtuaWin when setup button is pressed in "module tab",
+ * wParam set to the HWND of the 'parent' window or 0 */
 #define MOD_SETUP      (WM_USER + 37)
 /* Message, sent by VirtuaWin when the configuration has been updated */
 #define MOD_CFGCHANGE  (WM_USER + 38)

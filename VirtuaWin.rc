@@ -172,7 +172,7 @@ BEGIN
     GROUPBOX        vwVIRTUAWIN_NAME_VERSION, IDC_STATIC, 4, 5, 202, 91, 0x0300
     ICON            IDI_VIRTUAWIN, IDC_STATIC, 95, 16, 20, 20
     LTEXT           "Copyright (c) 1999-2005 Johan Piculell", IDC_STATIC, 35, 40, 150, 8
-    LTEXT           "Copyright (c) 2006 VirtuaWin", IDC_STATIC, 35, 50, 150, 8
+    LTEXT           "Copyright (c) 2006-2007 VirtuaWin", IDC_STATIC, 35, 50, 150, 8
     LTEXT           vwVIRTUAWIN_EMAIL, IDC_MAILTO, 50, 60, 190, 8, 0x0100
     LTEXT           "Latest version, info, source, etc. visit:", IDC_STATIC, 35, 72, 150, 8
     LTEXT           "http://virtuawin.sourceforge.net/", IDC_HTTP, 50, 82, 190, 10, 0x0100
