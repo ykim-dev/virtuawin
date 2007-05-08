@@ -4,11 +4,11 @@
 
 IDD_MAINDIALOG DIALOG 79, 25, 212, 226
 STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "VirtuaWin Time Tracker - 1.0"
+CAPTION "VirtuaWin Time Tracker v1.1"
 FONT 8, "Helv"
 BEGIN
     LTEXT           "The Current time is the time spent on each desk since the last Reset (or since the module was started).", 
-                    102, 6, 6, 200, 21
+                    ID_LABEL, 6, 6, 200, 21
     LISTBOX         ID_TIMELIST, 6, 31, 200, 179, WS_VSCROLL | WS_HSCROLL | LBS_USETABSTOPS
     DEFPUSHBUTTON   "Close",   IDCANCEL,  160, 206, 40, 14
     PUSHBUTTON      "Reset",   ID_RESET,  115, 206, 40, 14
