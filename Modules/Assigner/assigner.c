@@ -27,6 +27,7 @@
 #include <windows.h>
 #include <string.h>
 #include <stdio.h>
+#include <tchar.h>
 #include <commctrl.h>
 
 #include "assignerres.h"
@@ -45,8 +46,7 @@ UINT HOT_PREV;
 UINT HOT_PREV_MOD;
 UINT HOT_PREV_WIN;
 WORD CHANGE_DESKTOP=BST_UNCHECKED;
-LPSTR vwPath;
-LPSTR configFile;
+TCHAR *configFile;
 UINT numberOfDesktops;
 
 
@@ -72,17 +72,17 @@ static void registerAssignment(void)
 {
     if(HOT_NEXT)
     {
-        hotKeyNext = GlobalAddAtom("AssignmentNext");
+        hotKeyNext = GlobalAddAtom(_T("AssignmentNext"));
         if(RegisterHotKey(hwndMain, hotKeyNext, hotKey2ModKey(HOT_NEXT_MOD) | HOT_NEXT_WIN, HOT_NEXT) == 0)
-            MessageBox(hwndMain, "Invalid key modifier combination, check hot keys!",
-                       "VWAssigner Error", MB_ICONWARNING);
+            MessageBox(hwndMain,_T("Invalid key modifier combination, check hot keys!"),
+                       _T("VWAssigner Error"), MB_ICONWARNING);
     }
     if(HOT_PREV)
     {
-        hotKeyPrev = GlobalAddAtom("AssignmentPrev");
+        hotKeyPrev = GlobalAddAtom(_T("AssignmentPrev"));
         if(RegisterHotKey(hwndMain, hotKeyPrev, hotKey2ModKey(HOT_PREV_MOD) | HOT_PREV_WIN, HOT_PREV) == 0)
-            MessageBox(hwndMain, "Invalid key modifier combination, check hot keys!", 
-                       "VWAssigner Error", MB_ICONWARNING);
+            MessageBox(hwndMain,_T("Invalid key modifier combination, check hot keys!"), 
+                       _T("VWAssigner Error"), MB_ICONWARNING);
     }
 }
 
@@ -102,7 +102,7 @@ static void loadSettings(void)
     char dummy[80] ;
     FILE* fp;
     
-    if((fp = fopen(configFile, "r")))
+    if((fp = _tfopen(configFile,_T("r"))))
     {
         fscanf(fp, "%s%i", dummy, &HOT_NEXT_MOD);
         fscanf(fp, "%s%i", dummy, &HOT_NEXT);
@@ -122,9 +122,9 @@ static void loadSettings(void)
 static void saveSettings(void)
 {
     FILE* fp;
-    if(!(fp = fopen(configFile, "w"))) 
+    if(!(fp = _tfopen(configFile,_T("w")))) 
     {
-        MessageBox(hwndMain, "Error writing config file", "VWAssigner Error", MB_ICONWARNING);
+        MessageBox(hwndMain,_T("Error writing config file"),_T("VWAssigner Error"), MB_ICONWARNING);
     } 
     else 
     {
@@ -202,14 +202,18 @@ static BOOL CALLBACK DialogFunc(HWND hwndDlg, UINT msg, WPARAM wParam, LPARAM lP
 /* Initializes the app */ 
 static BOOL InitApplication(HWND hwnd, char *userAppPath)
 {
-    char buff[MAX_PATH];
+    TCHAR buff[MAX_PATH];
     
     InitCommonControls();
+#ifdef _UNICODE
+    MultiByteToWideChar(CP_ACP,0,(char *) userAppPath,-1,buff,MAX_PATH) ;
+#else
     strcpy(buff,userAppPath) ;
-    strcat(buff,"vwassigner.cfg") ;
-    if((configFile = strdup(buff)) == NULL)
+#endif
+    _tcscat(buff,_T("vwassigner.cfg")) ;
+    if((configFile = _tcsdup(buff)) == NULL)
     {
-        MessageBox(hwnd, "Malloc failure", "VWAssigner Error", MB_ICONWARNING);
+        MessageBox(hwnd,_T("Malloc failure"),_T("VWAssigner Error"), MB_ICONWARNING);
         exit(1) ;
     }
     loadSettings();
@@ -222,7 +226,7 @@ static VOID CALLBACK startupFailureTimerProc(HWND hwnd, UINT uMsg, UINT idEvent,
 {
     if(!initialised)
     {
-        MessageBox(hwnd, "VirtuaWin failed to send the UserApp path.", "VWAssigner Error", MB_ICONWARNING);
+        MessageBox(hwnd,_T("VirtuaWin failed to send the UserApp path."),_T("VWAssigner Error"), MB_ICONWARNING);
         exit(1) ;
     }
 }
@@ -266,9 +270,10 @@ LRESULT CALLBACK MainWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
         if((cds->dwData == (0-VW_USERAPPPATH)) && !initialised)
         {
             initialised = 1 ;
+            KillTimer(hwnd,0x29a) ;
             if((cds->cbData < 2) || (cds->lpData == NULL))
             {
-                MessageBox(hwnd, "VirtuaWin returned a bad UserApp path.", "VWAssigner Error", MB_ICONWARNING);
+                MessageBox(hwnd,_T("VirtuaWin returned a bad UserApp path."),_T("VWAssigner Error"), MB_ICONWARNING);
                 exit(1) ;
             }
             InitApplication(hwnd,(char *) cds->lpData) ;
@@ -330,14 +335,14 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     wc.hInstance = hInst;
     /* IMPORTANT! The classname must be the same as the filename since VirtuaWin uses 
        this for locating the window */
-    wc.lpszClassName = "VWAssigner.exe";
+    wc.lpszClassName = _T("VWAssigner.exe") ;
     
     if (!RegisterClass(&wc))
         return 0;
     
     // the window is never shown
-    if ((hwndMain = CreateWindow("VWAssigner.exe", 
-                                 "VWAssigner", 
+    if ((hwndMain = CreateWindow(_T("VWAssigner.exe"), 
+                                 _T("VWAssigner"), 
                                  WS_POPUP,
                                  CW_USEDEFAULT, 
                                  0, 
