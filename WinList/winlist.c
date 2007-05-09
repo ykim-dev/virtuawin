@@ -135,8 +135,8 @@ LRESULT CALLBACK MainWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
         if(!initialised)
         {
             // Get the VW user's path - give VirtuaWin 10 seconds to do this
-            SendMessage(vwHandle, VW_USERAPPPATH, 0, 0);
             SetTimer(hwnd, 0x29a, 10000, startupFailureTimerProc);
+            SendMessage(vwHandle, VW_USERAPPPATH, 0, 0);
         }
         break;
     case WM_COPYDATA:
@@ -146,6 +146,8 @@ LRESULT CALLBACK MainWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
             cds = (COPYDATASTRUCT *) lParam ;         
             if(cds->dwData == (0-VW_USERAPPPATH))
             {
+                initialised = 1 ;
+                KillTimer(hwnd,0x29a) ;
                 if((cds->cbData < 2) || (cds->lpData == NULL))
                 {
                     MessageBox(hwnd, _T("VirtuaWin returned a bad UserApp path."), _T("VirtuaWinList Error"), MB_ICONWARNING);
@@ -156,7 +158,6 @@ LRESULT CALLBACK MainWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 #else
                 strcpy(userAppPath,(char *) cds->lpData) ;
 #endif
-                initialised = 1 ;
             }
         }
         return TRUE ;
