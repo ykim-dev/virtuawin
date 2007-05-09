@@ -1624,18 +1624,26 @@ static int winListUpdate(void)
             while(--j >= 0)
                 if(winList[j].State && (winList[j].Handle == winList[i].Owner))
                 {
-                    // an existing app has either unhidden an old window or popped up a new one 
-                    // use the existing window's settings for this one
-                    if(!winList[i].Sticky)
-                        winList[i].Sticky = winList[j].Sticky ;
-                    if((winList[i].Desk=winList[j].Desk) != currentDesk)
-                        winList[i].State = 2 ;
-                    if((winList[i].Tricky & vwTRICKY_WINDOW) && winList[j].Visible)
+                    if(winList[i].Handle == winList[j].Owner)
+                        /* circular owner loop, make i the parent */
+                        winList[i].Owner = NULL ;
+                    else
                     {
-                        // if an owned window is flagged as tricky we must make the parent window
-                        // tricky otherwise the call to ShowOwnedPopups is likely to break things
-                        winList[j].Tricky |= vwTRICKY_WINDOW ;
-                        vwLogBasic((_T("Making parent window %x tricky\n"),(int) winList[j].Handle)) ;
+                        // an existing app has either unhidden an old window or popped up a new one 
+                        // use the existing window's settings for this one
+                        if(winList[j].Owner != NULL)
+                            winList[i].Owner = winList[j].Owner ;
+                        if(!winList[i].Sticky)
+                            winList[i].Sticky = winList[j].Sticky ;
+                        if((winList[i].Desk=winList[j].Desk) != currentDesk)
+                            winList[i].State = 2 ;
+                        if((winList[i].Tricky & vwTRICKY_WINDOW) && winList[j].Visible)
+                        {
+                            // if an owned window is flagged as tricky we must make the parent window
+                            // tricky otherwise the call to ShowOwnedPopups is likely to break things
+                            winList[j].Tricky |= vwTRICKY_WINDOW ;
+                            vwLogBasic((_T("Making parent window %x tricky\n"),(int) winList[j].Handle)) ;
+                        }
                     }
                     break ;
                 }
@@ -2456,7 +2464,9 @@ static BOOL showHideWindow(windowType* aWindow, int shwFlags, unsigned char show
         }
         if(!Tricky)
         {
-            ShowWindow(aWindow->Handle,(show) ? SW_SHOWNA:SW_HIDE) ;
+            SetWindowPos(aWindow->Handle,0,0,0,0,0,(show) ? 
+                         (SWP_SHOWWINDOW | SWP_NOZORDER | SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE) : 
+                         (SWP_HIDEWINDOW | SWP_NOZORDER | SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE) ) ;
             /* if minimized dont show popups */
             if(!(aWindow->Style & WS_MINIMIZE))
                 ShowOwnedPopups(aWindow->Handle,(show) ? TRUE:FALSE) ;
