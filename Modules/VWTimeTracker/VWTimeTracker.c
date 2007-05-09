@@ -45,15 +45,16 @@ TCHAR userAppPath[MAX_PATH] ;  /* User's config path */
 int deskCrrnt ;
 time_t timeTotal[MAX_DESK+1] ;
 time_t timeCrrnt[MAX_DESK+1] ;
-time_t timeLast=1 ;
+time_t timePause=0 ;
+time_t timeLast=0 ;
 
 static void
 UpdateTime(void)
 {
-    if(timeLast)
+    if(!timePause)
     {
         time_t timec = time(NULL) ;
-        if(timeLast > 1)
+        if(timeLast > 0)
             timeCrrnt[deskCrrnt] += timec - timeLast ;
         timeLast = timec ;
     }
@@ -89,6 +90,33 @@ static int GenerateTimerList(HWND hDlg)
     return 1;
 }
 
+
+static VOID CALLBACK
+monitorScreensaverTimerProc(HWND hwnd, UINT uMsg, UINT idEvent, DWORD dwTime)
+{
+#ifndef SPI_GETSCREENSAVERRUNNING
+#define SPI_GETSCREENSAVERRUNNING 114
+#endif
+    BOOL active;  
+    
+    SystemParametersInfo(SPI_GETSCREENSAVERRUNNING,0,(LPVOID) &active,0) ; 
+    if(active)
+    {
+        if(!timePause)
+        {
+            UpdateTime() ;
+            timePause = 2 ;
+            timeLast = 0 ;
+        }
+    }
+    else if(timePause == 2)
+    {
+        timePause = 0 ;
+        timeLast = 0 ;
+        UpdateTime() ;
+    }
+}
+
 /*
    This is the main function for the dialog. 
  */
@@ -100,7 +128,7 @@ DialogFunc(HWND hwndDlg, UINT msg, WPARAM wParam, LPARAM lParam)
     case WM_INITDIALOG:
         UpdateTime() ;
         GenerateTimerList(hwndDlg);
-        SetDlgItemText(hwndDlg, ID_STOP, (timeLast) ? _T("Stop"):_T("Start")) ;
+        SetDlgItemText(hwndDlg, ID_STOP, (timePause) ? _T("Start"):_T("Stop")) ;
         return TRUE;
         
     case WM_COMMAND:
@@ -119,14 +147,20 @@ DialogFunc(HWND hwndDlg, UINT msg, WPARAM wParam, LPARAM lParam)
             return 1;
         
         case ID_STOP:
-            if(timeLast)
-                timeLast = 0 ;
-            else
+            if(timePause)
             {
-                timeLast = 1 ;
+                timePause = 0 ;
+                timeLast = 0 ;
                 UpdateTime() ;
             }
-            SetDlgItemText(hwndDlg, ID_STOP, (timeLast) ? _T("Stop"):_T("Start")) ;
+            else
+            {
+                UpdateTime() ;
+                timePause = 1 ;
+                timeLast = 0 ;
+                GenerateTimerList(hwndDlg);
+            }
+            SetDlgItemText(hwndDlg, ID_STOP, (timePause) ? _T("Start"):_T("Stop")) ;
             return 1;
             
         case ID_UPDATE:
@@ -169,8 +203,8 @@ MainWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
         if(!initialised)
         {
             /* Get the VW Install path and then the user's path - give VirtuaWin 10 seconds to do this */
-            SendMessage(vwHandle, VW_USERAPPPATH, 0, 0);
             SetTimer(hwnd, 0x29a, 10000, startupFailureTimerProc);
+            SendMessage(vwHandle, VW_USERAPPPATH, 0, 0);
         }
         break;
     
@@ -181,6 +215,8 @@ MainWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
             cds = (COPYDATASTRUCT *) lParam ;         
             if(cds->dwData == (0-VW_USERAPPPATH))
             {
+                initialised = 1 ;
+                KillTimer(hwnd,0x29a) ;
                 if((cds->cbData < 2) || (cds->lpData == NULL))
                 {
                     MessageBox(hwnd,_T("VirtuaWin returned a bad UserApp path."),_T("VWTimeTracker Error"), MB_ICONWARNING);
@@ -191,7 +227,7 @@ MainWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 #else
                 strcpy(userAppPath,(char *) cds->lpData) ;
 #endif
-                initialised = 1 ;
+                SetTimer(hwnd, 0x29a, 1000, monitorScreensaverTimerProc);
             }
         }
         return TRUE ;
