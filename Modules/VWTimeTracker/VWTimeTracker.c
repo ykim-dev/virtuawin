@@ -64,7 +64,7 @@ static int GenerateTimerList(HWND hDlg)
 {
     TCHAR buff[30];
     int ii, tabstops[2] ;
-    time_t tt ;
+    time_t tt, totals[2] ;
     
     
     SendDlgItemMessage(hDlg,ID_TIMELIST,LB_RESETCONTENT,0,0);
@@ -74,9 +74,9 @@ static int GenerateTimerList(HWND hDlg)
     SendDlgItemMessage(hDlg,ID_TIMELIST,LB_SETTABSTOPS,(WPARAM)2,(LPARAM)tabstops);
     
     SendDlgItemMessage(hDlg,ID_TIMELIST,LB_ADDSTRING,0,(LONG) _T("Desk\tCurrent\tTotal")) ;
-    SendDlgItemMessage(hDlg,ID_TIMELIST,LB_ADDSTRING,0,(LONG) _T("_______\t__________\t__________")) ;
-    SendDlgItemMessage(hDlg,ID_TIMELIST,LB_ADDSTRING,0,(LONG) _T("")) ;
+    SendDlgItemMessage(hDlg,ID_TIMELIST,LB_ADDSTRING,0,(LONG) _T("-------------\t--------------\t--------------")) ;
     
+    totals[0] = totals[1] = 0 ;
     for(ii = 0 ; ii <= MAX_DESK ; ii++)
     {
         if((tt=timeTotal[ii] + timeCrrnt[ii]) > 0)
@@ -85,8 +85,16 @@ static int GenerateTimerList(HWND hDlg)
                       (int) (timeCrrnt[ii]/3600),(int) ((timeCrrnt[ii]/60)%60),(int) (timeCrrnt[ii]%60),
                       (int) (tt/3600),(int) ((tt/60)%60),(int) (tt%60)) ;
             SendDlgItemMessage(hDlg,ID_TIMELIST,LB_ADDSTRING,0,(LONG) buff);
+            totals[0] += timeCrrnt[ii] ;
+            totals[1] += timeTotal[ii] ;
         }
     }
+    SendDlgItemMessage(hDlg,ID_TIMELIST,LB_ADDSTRING,0,(LONG) _T("-------------\t--------------\t--------------")) ;
+    tt = totals[0] + totals[1] ;
+    _stprintf(buff,_T("Total\t%d:%02d:%02d\t%d:%02d:%02d"),
+              (int) (totals[0]/3600),(int) ((totals[0]/60)%60),(int) (totals[0]%60),
+              (int) (tt/3600),(int) ((tt/60)%60),(int) (tt%60)) ;
+    SendDlgItemMessage(hDlg,ID_TIMELIST,LB_ADDSTRING,0,(LONG) buff);
     return 1;
 }
 
