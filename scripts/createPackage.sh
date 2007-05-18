@@ -146,6 +146,22 @@ if [ $REPLY == 'y' ] ; then
     echo Done!
 fi
 
+read -p "Assemble SDK package? [y/n] " -n 1
+echo
+if [ $REPLY == 'y' ] ; then
+    echo Creating SDK package
+    rm -f VirtuaWin_SDK_$1.zip
+    cd Module
+    if [ -z "$ZIP" ] ; then
+        $WINZIP ../VirtuaWin_SDK_$1.zip -P @../scripts/SDK_filelist
+    else        
+        $ZIP -9 -@ < ../scripts/SDK_filelist
+        mv zip.zip ../VirtuaWin_SDK_$1.zip
+    fi
+    cd ..
+    echo Done!
+fi
+
 read -p "Move packages? [y/n] " -n 1
 echo
 if [ $REPLY == 'y' ] ; then
@@ -153,6 +169,7 @@ if [ $REPLY == 'y' ] ; then
     mv ./tmp/standard/output/setup.exe ../Distribution/VirtuaWin_setup_$1.exe
     mv ./tmp/unicode/output/setup.exe ../Distribution/VirtuaWin_unicode_setup_$1.exe
     mv ./VirtuaWin_source_$1.zip ../Distribution/
+    mv ./VirtuaWin_SDK_$1.zip ../Distribution/
 fi
 
 read -p "Commit changes? [y/n] " -n 1
@@ -176,6 +193,7 @@ if [ $REPLY == 'y' ] ; then
     ncftpput -d ./ftpsession.log -u anonymous -p virtuawin@home.se upload.sourceforge.net /incoming ../Distribution/VirtuaWin_setup_$1.exe
     ncftpput -d ./ftpsession.log -u anonymous -p virtuawin@home.se upload.sourceforge.net /incoming ../Distribution/VirtuaWin_unicode_setup_$1.exe
     ncftpput -d ./ftpsession.log -u anonymous -p virtuawin@home.se upload.sourceforge.net /incoming ../Distribution/VirtuaWin_source_$1.zip
+    ncftpput -d ./ftpsession.log -u anonymous -p virtuawin@home.se upload.sourceforge.net /incoming ../Distribution/VirtuaWin_SDK_$1.zip
     echo Done! Go to SourceForge and click Admin-Edit/Release Files-Add Release and then type $1 and follow the instructions.
 fi
 
