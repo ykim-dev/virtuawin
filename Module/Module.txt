@@ -34,7 +34,7 @@ windowType, the list is upto MAXWIN Long. The C definition for this is as
 follows:
 
 ----------------------------
-#define MAXWIN 100                // max number of windows to handle
+#define MAXWIN 128                // max number of windows to handle
 #define MAXDESK 11                // max number of desktops (0 - not used, 1 - 9 - normal, 10 private) 
 typedef struct { // Holds the windows in the list
     HWND           Handle;
@@ -75,8 +75,6 @@ The following is an example of processing the WM_COPYDATA message:
 ----------------------------
 
 Check example files for additional info on how to use and handle the different
-messages and mail any requests or questions to me.
-
-/jopi, 1999
-VirtuaWin@home.se
+messages and mail any requests or questions to the SourceForge Questions forum
+or to VirtuaWin@home.se
 
