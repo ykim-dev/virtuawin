@@ -326,7 +326,7 @@ DWORD WINAPI MouseProc(LPVOID lpParameter)
                 }
                 else if(mouseEnable & 8)
                 {
-                    if((ii=(warpLength >> 2)) < 10)
+                    if((ii=(warpLength >> 1)) < 10)
                         ii = 10 ;
                     newPos = -1 ;
                     if(abs(pt.x - wlistX) < abs(pt.y - wlistY))
@@ -348,6 +348,7 @@ DWORD WINAPI MouseProc(LPVOID lpParameter)
                         vwLogBasic((_T("Mouse mddle button desk change %d (%d,%d)\n"),newPos,pt.x - wlistX,pt.y - wlistY)) ;
                         /* send the switch message and wait until done */
                         SendMessage(hWnd, VW_MOUSEWARP, 0, MAKELPARAM(0,newPos)) ;
+                        Sleep(100) ;
                         GetCursorPos(&pt);
                         wlistX = pt.x ;
                         wlistY = pt.y ;
@@ -1979,8 +1980,8 @@ static int changeDesk(int newDesk, WPARAM msgWParam)
             zob = 0 ;
             for(x = 0; x < nWin ; ++x)
             {
-                if((winList[x].Desk == currentDesk) && ((zox=winList[x].ZOrder[currentDesk]) >= zob) &&
-                   ((zox < zoy) || ((zox == zoy) && (x < y))))
+                if((winList[x].Desk == currentDesk) && ((winList[x].ExStyle & WS_EX_TOPMOST) == 0) &&
+                   ((zox=winList[x].ZOrder[currentDesk]) >= zob) && ((zox < zoy) || ((zox == zoy) && (x < y))))
                 {
                     zob = zox ;
                     b = x ;
@@ -2060,8 +2061,8 @@ static int changeDesk(int newDesk, WPARAM msgWParam)
                 zob = 0 ;
                 for(x = 0; x < nWin ; ++x)
                 {
-                    if((winList[x].Desk == currentDesk) && ((zox=winList[x].ZOrder[currentDesk]) >= zob) &&
-                       ((zox < zoy) || ((zox == zoy) && (x < y))))
+                    if((winList[x].Desk == currentDesk) && ((winList[x].ExStyle & WS_EX_TOPMOST) == 0) &&
+                       ((zox=winList[x].ZOrder[currentDesk]) >= zob) && ((zox < zoy) || ((zox == zoy) && (x < y))))
                     {
                         zob = zox ;
                         b = x ;
