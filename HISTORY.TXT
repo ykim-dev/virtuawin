@@ -1,7 +1,66 @@
 ***   VirtuaWin Revision History   ***
 --------------------------------------
 
-Ver 3.0 2006
+Ver 3.1 2007/05/18
+
+* 805556 - Added screen capture functionality, enabled via module interface.
+* 891589 - Added regex  support to most cfg files, now support cn:, cr:, wn: &
+  wr: lines.
+* 909401 - Changed the font used by setup dialog to avoid the problem.
+* 1090375 - Implemented new VW_ENABLE_STATE message.
+* 1221023 Implemented  VW_ASSESSWIN message to access a given window, required
+  by WinList.
+* 1314574 - Fixed taskbar order issue caused by sticky  windows and dragging a
+  window between desks.
+* 1329448 - Added new current  window menu opened via a hotkey or middle mouse
+  button on the title bar
+* 1358979,  1017407 -  Combined  'ignore  popups'  and  'move  popups'  into a
+  combined 'On hidden window activation' option with a new move to desk option
+  and made ignore really ignore.
+* 1412624 - Added code to  properly  identify  the  position  of the taskbar -
+  removed redundant 'taskbar warp' & 'XP themed bar' options.
+* 1439471 - Integrated unicode support patch, added new build -u option.
+* 1482377 - Added  option to open the window  list menu by middle  clicking on
+  the desktop and add a compact menu option.
+* 1589763 - Fixed a tricky window .Net & sub-dialog hide problem
+* 1595110,  1468842, 1338957, 942081, 798159 - Implemented  mouse desktop edge
+  knocking support and improved window dragging detection.
+* 1644675 - added support for UNC network user paths (i.e. \\<machine>\path\)
+* 1659736 - Changed display of disabled modules, now have a ' (disabled)'.
+* 1693125 - Removed  crash  recovery  as the moving of hidden  windows  caused
+  problems with maximised windows on multiple monitor systems.
+* 1716321 - Fixed  Always on top z-order  problem and  generally  improved the
+  z-ordering preservation.
+* Added an Explore  Config  button to setup to help people  locate their setup
+  files.
+* Added new dragging on desktop with middle mouse button to change desktop
+* Changed the default  location of the setup dialog to be near the top left of
+  the  primary  display  (i.e.  windows  default  location)  as a  centralized
+  position is a really bad place to choose for systems with 2 monitors.
+* Fixed a few double lockMutex issues.
+* Fixed a hide  problem  with Word's Find dialog  caused by its parent being a
+  hidden window
+* Fixed long standing winamp issue by changing the window handling criteria
+* Fixed potential crash and memory leak in window list menu generator
+* Identified  tricky windows  created by excel and adobe reader when more than
+  one  file is  opened  and made  them  owned by the main  window  to keep the
+  taskbar icons together
+* Implemented  VW_GETWINDESK message to return a given window's desk, required
+  by WinList.
+* Improve the look of the window list menu.
+* Improved VW_CHANGEDESK,  VW_ASSIGNWIN & VW_SETSTICKY module messages so they
+  can be directly used by a hotkey program.
+* Increased  MAXWIN to 128 and  changed  the way VW handles too many  windows,
+  ignores extra windows rather than disabling.
+* Made event  logging  part of the normal  build,  enabled via an Expert setup
+  option.
+* Several  improvements  to  WinList,  including  getting  a  windows  desk #,
+  multiple undo, and new Refresh & Save button 
+
+
+----------------------------
+
+Ver 3.0 2006/09/16
 * Implemented support of owned windows (fixes winamp and bug SF939132 etc)
 * Fixed issues caused by minimized windows with sub windows, fixes SF1457569.
 * Fixed VirtuaWin lock-up issues caused by hung Tricky windows.
