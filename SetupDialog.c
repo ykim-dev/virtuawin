@@ -50,7 +50,7 @@ static HWND setupKeysHWnd=NULL;
 static void vwSetupApply(HWND hDlg, int curPageMask)
 {
     pageApplyMask |= curPageMask ;
-    if(pageApplyMask == pageApplyMask)
+    if((pageApplyMask & pageChangeMask) == pageChangeMask)
     {
         // All pages have now got any changes from the GUI, save them and apply
         writeConfig();
@@ -482,7 +482,6 @@ BOOL APIENTRY setupModules(HWND hDlg, UINT message, UINT wParam, LONG lParam)
         }
         else if(LOWORD((wParam) == IDC_MODRELOAD))
         {   // Reload
-            saveDisabledList(nOfModules, moduleList);
             unloadModules();
             for(index = 0; index < MAXMODULES; index++)
             {
@@ -505,15 +504,15 @@ BOOL APIENTRY setupModules(HWND hDlg, UINT message, UINT wParam, LONG lParam)
                 {   // let's disable
                     moduleList[curSel].Disabled = TRUE;
                     PostMessage(moduleList[curSel].Handle, MOD_QUIT, 0, 0);
-                    setupModulesList(hDlg) ;
                 }
                 else
                 {   // let's enable
                     MessageBox(hDlg,_T("Press reload or restart VirtuaWin to enable the module"),
                                vwVIRTUAWIN_NAME _T(" Note"), MB_ICONINFORMATION);
                     moduleList[curSel].Disabled = FALSE;
-                    setupModulesList(hDlg) ;
                 }
+                saveDisabledList(nOfModules, moduleList);
+                setupModulesList(hDlg) ;
             }
         }
         break;

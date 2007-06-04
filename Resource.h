@@ -9,7 +9,6 @@
 #define IDD_PROPPAGE_EXPERT     104
 #define IDD_PROPPAGE_ABOUT      105
 #define IDD_WINDOWINFODIALOG    106
-#define IDR_MENU1               107
 #define IDI_VIRTUAWIN      109
 #define IDI_ST_DIS_1       110
 #define IDI_ST_NW_1        111

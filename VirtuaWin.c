@@ -1825,7 +1825,6 @@ static void shutDown(void)
             saveStickyWindows(nWin,winList);
         releaseMutex();
     }
-    saveDisabledList(nOfModules,moduleList);
     unloadModules();
     unRegisterAllKeys();
     showAll(0);                            // gather all windows quickly
@@ -2843,6 +2842,7 @@ static void windowMenu(HWND theWin)
     }
     else
         AppendMenu(hpopup,MF_STRING,ID_WM_MANAGE,_T("&Manage Window"));
+    AppendMenu(hpopup,MF_SEPARATOR,0,NULL) ;
     AppendMenu(hpopup,MF_STRING,ID_WM_INFO,_T("&Info"));
     
     GetCursorPos(&pt);
@@ -2853,19 +2853,18 @@ static void windowMenu(HWND theWin)
     idx = TrackPopupMenu(hpopup,TPM_RETURNCMD | TPM_RIGHTBUTTON | TPM_NONOTIFY,pt.x-2,pt.y-2,0,hWnd,NULL) ;
     PostMessage(hWnd, 0, 0, 0);	
     DestroyMenu(hpopup);		
-    SetForegroundWindow(theWin);
     vwLogBasic((_T("Window Menu returned %d\n"),(int) idx)) ;
     switch(idx)
     {
     case ID_WM_DISMISS:
         windowDismiss(theWin) ;
-        break;
+        return ;
     case ID_WM_STICKY:
         setSticky(theWin,-1) ;
         break;
     case ID_WM_INFO:
         DialogBox(hInst,MAKEINTRESOURCE(IDD_WINDOWINFODIALOG),theWin,(DLGPROC) WindowInfoDialogFunc);
-        break;
+        return ;
     case ID_WM_MANAGE:
         lockMutex();
         winListUpdate() ;
@@ -2889,8 +2888,12 @@ static void windowMenu(HWND theWin)
         break;
     default:
         if((idx > ID_WM_DESK) && (idx <= (ID_WM_DESK + (nDesksX * nDesksY))))
+        {
             assignWindow(theWin,idx - ID_WM_DESK,FALSE) ;
+            return ;
+        }
     }
+    SetForegroundWindow(theWin);
 }
 
 /*************************************************
@@ -3013,7 +3016,7 @@ static void renderMenuItem(DRAWITEMSTRUCT* ditem)
 /*************************************************
  * Pops up and handles the window list menu
  */
-static void winListPopupMenu(HWND aHWnd, int changeFocus)
+static void winListPopupMenu(HWND aHWnd, int forceFocusChange)
 {
     static int singleColumn=0;
     HMENU hpopup;
@@ -3034,11 +3037,10 @@ static void winListPopupMenu(HWND aHWnd, int changeFocus)
     /* Call setForegroundWin to remove the window focus otherwise the menu does
      * not automatically close if the user changes focus, unfortunately this breaks
      * double clicking on the systray icon so not done in this case */
-    if(changeFocus)
-    {
+    if(forceFocusChange)
         setForegroundWin(NULL,0) ;
-        SetForegroundWindow(aHWnd);
-    }
+    SetForegroundWindow(aHWnd);
+    
     for(;;)
     {
         retItem = 0 ;
@@ -3192,6 +3194,8 @@ wndProc(HWND aHWnd, UINT message, WPARAM wParam, LPARAM lParam)
         return TRUE;
         
     case WM_HOTKEY:				// A hot key was pressed
+        if(!enabled)
+            return FALSE ;
         // Cycling hot keys
         if(wParam == cyclingKeyUp)
             stepDelta(1) ;
@@ -3248,6 +3252,8 @@ wndProc(HWND aHWnd, UINT message, WPARAM wParam, LPARAM lParam)
         
         // Plugin messages
     case VW_CHANGEDESK: 
+        if(!enabled)
+            return FALSE ;
         switch (wParam)
         {
         case VW_STEPPREV:
@@ -3279,6 +3285,8 @@ wndProc(HWND aHWnd, UINT message, WPARAM wParam, LPARAM lParam)
         return TRUE;
         
     case VW_SETUP:
+        if(!enabled)
+            return FALSE ;
         showSetup();
         return TRUE;
         
@@ -3308,12 +3316,18 @@ wndProc(HWND aHWnd, UINT message, WPARAM wParam, LPARAM lParam)
         return currentDesk;
         
     case VW_ASSIGNWIN:
+        if(!enabled)
+            return FALSE ;
         return assignWindow((HWND) wParam,(int)lParam,FALSE);
         
     case VW_ACCESSWIN:
+        if(!enabled)
+            return FALSE ;
         return accessWindow((HWND)wParam,(int)lParam,FALSE);
         
     case VW_SETSTICKY:
+        if(!enabled)
+            return FALSE ;
         return setSticky((HWND)wParam, (int)lParam);
         
     case VW_GETWINDESK:
@@ -3427,11 +3441,13 @@ wndProc(HWND aHWnd, UINT message, WPARAM wParam, LPARAM lParam)
             break;
         
         case WM_LBUTTONDBLCLK:             // double click on icon
-            showSetup();
+            if(enabled)
+                showSetup();
             break;
             
         case WM_MBUTTONUP:		   // Move to the next desktop
-            stepDelta((HIWORD(GetKeyState(VK_SHIFT))) ? -1:1) ;
+            if(enabled)
+                stepDelta((HIWORD(GetKeyState(VK_SHIFT))) ? -1:1) ;
             break;
             
         case WM_RBUTTONUP:		   // Let's track a popup menu
@@ -3444,20 +3460,26 @@ wndProc(HWND aHWnd, UINT message, WPARAM wParam, LPARAM lParam)
             }
             else
             {
-                HMENU hmenu, hpopup;
-                UINT nID ;
+                HMENU hpopup;
+                
+                if((hpopup = CreatePopupMenu()) == NULL)
+                    return FALSE ;
+    
+                if(enabled)
+                    AppendMenu(hpopup,MF_STRING,ID_SETUP,_T("&Setup"));
+                AppendMenu(hpopup,MF_STRING,ID_GATHER,_T("&Gather"));
+                AppendMenu(hpopup,MF_STRING,ID_HELP,_T("&Help"));
+                AppendMenu(hpopup,MF_STRING,ID_DISABLE,(enabled) ? _T("&Disable") : _T("&Enable"));
+                AppendMenu(hpopup,MF_SEPARATOR,0,NULL) ;
+                AppendMenu(hpopup,MF_STRING,ID_EXIT,_T("E&xit"));
+                if(enabled)
+                {
+                    AppendMenu(hpopup,MF_SEPARATOR,0,NULL) ;
+                    AppendMenu(hpopup,MF_STRING,ID_FORWARD,_T("&Next"));
+                    AppendMenu(hpopup,MF_STRING,ID_BACKWARD,_T("&Back"));
+                }
                 GetCursorPos(&pt);
-                hmenu = LoadMenu(hInst, MAKEINTRESOURCE(IDR_MENU1));
-                
-                hpopup = GetSubMenu(hmenu, 0);
-                
-                nID = GetMenuItemID(hpopup, 3); // Get the Disable item
-                if(enabled) // Change the text depending on state
-                    ModifyMenu(hpopup, nID, MF_BYCOMMAND, nID,_T("Disable"));
-                else
-                    ModifyMenu(hpopup, nID, MF_BYCOMMAND, nID,_T("Enable"));
                 SetForegroundWindow(aHWnd);
-                
                 switch (TrackPopupMenu(hpopup, TPM_RETURNCMD |    // Return menu code
                                        TPM_RIGHTBUTTON, (pt.x-2), (pt.y-2), // screen coordinates
                                        0, aHWnd, NULL))
@@ -3485,8 +3507,7 @@ wndProc(HWND aHWnd, UINT message, WPARAM wParam, LPARAM lParam)
                     break;
                 }
                 PostMessage(aHWnd, 0, 0, 0);	
-                DestroyMenu(hpopup);  // Delete loaded menu and reclaim its resources
-                DestroyMenu(hmenu);		
+                DestroyMenu(hpopup);
             }
             break;
         }
