@@ -2850,7 +2850,7 @@ static void windowMenu(HWND theWin)
      * not automatically close if the user changes focus */
     setForegroundWin(NULL,0);
     SetForegroundWindow(hWnd);
-    idx = TrackPopupMenu(hpopup,TPM_RETURNCMD | TPM_RIGHTBUTTON | TPM_NONOTIFY,pt.x-2,pt.y-2,0,hWnd,NULL) ;
+    idx = TrackPopupMenu(hpopup,TPM_RETURNCMD | TPM_RIGHTBUTTON | TPM_NONOTIFY,pt.x,pt.y,0,hWnd,NULL) ;
     PostMessage(hWnd, 0, 0, 0);	
     DestroyMenu(hpopup);		
     vwLogBasic((_T("Window Menu returned %d\n"),(int) idx)) ;
@@ -3031,8 +3031,6 @@ static void winListPopupMenu(HWND aHWnd, int forceFocusChange)
     if((flags = winListCreateItemList(items,&itemCount)) == 0)
         return ;
     GetCursorPos(&pt);
-    pt.x -= 2 ;
-    pt.y -= 2 ;
     
     /* Call setForegroundWin to remove the window focus otherwise the menu does
      * not automatically close if the user changes focus, unfortunately this breaks
@@ -3480,9 +3478,8 @@ wndProc(HWND aHWnd, UINT message, WPARAM wParam, LPARAM lParam)
                 }
                 GetCursorPos(&pt);
                 SetForegroundWindow(aHWnd);
-                switch (TrackPopupMenu(hpopup, TPM_RETURNCMD |    // Return menu code
-                                       TPM_RIGHTBUTTON, (pt.x-2), (pt.y-2), // screen coordinates
-                                       0, aHWnd, NULL))
+                switch(TrackPopupMenu(hpopup, TPM_RETURNCMD | TPM_RIGHTBUTTON,
+                                      pt.x, pt.y, 0, aHWnd, NULL))
                 {
                 case ID_SETUP:		// show setup box
                     showSetup();
