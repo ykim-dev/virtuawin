@@ -62,7 +62,7 @@ void reLoadIcons(void);
 void registerAllKeys(void);
 void unRegisterAllKeys(void);
 void getWorkArea(void);
-int  assignWindow(HWND theWin, int theDesk, BOOL force);
+int  assignWindow(HWND theWin, int theDesk, BOOL force, BOOL setActive);
 int  gotoDesk(int theDesk, BOOL force);
 void showHelp(HWND aHWnd, UINT context);
 

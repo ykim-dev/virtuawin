@@ -1296,16 +1296,15 @@ static void showSetup(void)
 /************************************************
  * Moves a window to a given desk
  */
-static int windowSetDesk(HWND theWin, int theDesk, int move)
+static int
+windowSetDesk(HWND theWin, int theDesk, int move, BOOL setActive)
 {
     HWND ownerWin, activeHWnd ;
     unsigned char show ;
-    BOOL setActive ;
     int index, ret=0 ;
     
     activeHWnd = GetForegroundWindow() ;
     vwLogBasic((_T("Set window desk: %x %d %d (%x)\n"),(int) theWin,theDesk,move,(int) activeHWnd)) ;
-    setActive = FALSE ;
     do {
         ownerWin = 0 ;
         index = nWin ;
@@ -1678,7 +1677,7 @@ static int winListUpdate(void)
         {
             j = winList[i].Desk ;
             winList[i].Desk = currentDesk ;
-            windowSetDesk(winList[i].Handle,j,assignImmediately) ;
+            windowSetDesk(winList[i].Handle,j,assignImmediately,FALSE) ;
             if(assignImmediately && (hiddenWindowAct == 3) && (newDesk == 0))
                 newDesk = j ;
         }
@@ -1751,8 +1750,8 @@ static int winListUpdate(void)
             if((winList[i].Desk != currentDesk) && ((hiddenWindowAct == 0) || (winList[i].Desk >= vwDESK_PRIVATE1)))
             {
                 j = winList[i].Desk ;
-                windowSetDesk(winList[i].Handle,currentDesk,2) ;
-                windowSetDesk(winList[i].Handle,j,1) ;
+                windowSetDesk(winList[i].Handle,currentDesk,2,FALSE) ;
+                windowSetDesk(winList[i].Handle,j,1,FALSE) ;
                 if(winList[i].Handle == activeHWnd)
                     activeHWnd = NULL ;
             }
@@ -1760,7 +1759,7 @@ static int winListUpdate(void)
             {
                 if((hiddenWindowAct == 3) && (newDesk == 0))
                     newDesk = winList[i].Desk ;
-                windowSetDesk(winList[i].Handle,currentDesk,hiddenWindowAct) ;
+                windowSetDesk(winList[i].Handle,currentDesk,hiddenWindowAct,FALSE) ;
             }
         }
         if(winList[i].Handle == activeHWnd)
@@ -1791,7 +1790,7 @@ static int winListUpdate(void)
                                         (int) lastFGHWnd, lastFGStyle, (int) lastBOFGHWnd, lastBOFGStyle)) ;
                         if((hiddenWindowAct == 3) && (newDesk == 0))
                             newDesk = winList[i].Desk ;
-                        windowSetDesk(winList[i].Handle,currentDesk,hiddenWindowAct) ;
+                        windowSetDesk(winList[i].Handle,currentDesk,hiddenWindowAct,FALSE) ;
                     }
                     winList[i].ZOrder[currentDesk] = ++vwZOrder ;
                     // if this is only a temporary display increase its zorder in its main desk
@@ -2571,7 +2570,8 @@ static void disableAll(HWND aHWnd)
  * Assigns a window to the specified desktop
  * Used by the module message VW_ASSIGNWIN
  */
-int assignWindow(HWND theWin, int theDesk, BOOL force)
+int
+assignWindow(HWND theWin, int theDesk, BOOL force, BOOL setActive)
 {
     int ret, change, idx, nDesks ;
     unsigned char sticky=0 ;
@@ -2656,7 +2656,7 @@ int assignWindow(HWND theWin, int theDesk, BOOL force)
             windowSetSticky(theWin,sticky) ;
         }
         else
-            ret = windowSetDesk(theWin,theDesk,1) ;
+            ret = windowSetDesk(theWin,theDesk,1,setActive) ;
     }
     return ret ;
 }
@@ -2688,7 +2688,7 @@ static int accessWindow(HWND theWin, int method, BOOL force)
         if((winList[idx].Desk >= vwDESK_PRIVATE1) && !force)
             ret = 0 ;
         else if(method != 3)
-            ret = windowSetDesk(winList[idx].Handle,currentDesk,method) ;
+            ret = windowSetDesk(winList[idx].Handle,currentDesk,method,FALSE) ;
         else if((ret = (changeDesk(winList[idx].Desk,MOD_CHANGEDESK) > 0)) &&
                 ((idx = winListFind(theWin)) > 0) && winList[idx].Visible)
             setForegroundWin(theWin,0);
@@ -2738,7 +2738,7 @@ static int windowDismiss(HWND theWin)
     if((idx = winListFind(theWin)) < 0)
         ret = 0 ;
     else if(winList[idx].Visible == vwVISIBLE_YESTEMP)
-        ret = windowSetDesk(theWin,winList[idx].Desk,1) ;
+        ret = windowSetDesk(theWin,winList[idx].Desk,1,FALSE) ;
     else
     {
         ret = CloseWindow(theWin) ;
@@ -2930,7 +2930,7 @@ static void windowMenu(HWND theWin)
     default:
         if((idx > ID_WM_DESK) && (idx <= (ID_WM_DESK + (nDesksX * nDesksY))))
         {
-            assignWindow(theWin,idx - ID_WM_DESK,FALSE) ;
+            assignWindow(theWin,idx - ID_WM_DESK,FALSE,TRUE) ;
             return ;
         }
     }
@@ -3130,7 +3130,7 @@ static void winListPopupMenu(HWND aHWnd, int forceFocusChange)
             } 
             else
             {   // Assign to this desktop
-                assignWindow(hwnd,currentDesk,TRUE) ;
+                assignWindow(hwnd,currentDesk,TRUE,FALSE) ;
                 if(winList[ii].Style & WS_MINIMIZE)
                     ShowWindow(hwnd,SW_SHOWNORMAL) ;
                 setForegroundWin(hwnd,0) ;
@@ -3357,7 +3357,7 @@ wndProc(HWND aHWnd, UINT message, WPARAM wParam, LPARAM lParam)
     case VW_ASSIGNWIN:
         if(!enabled)
             return FALSE ;
-        return assignWindow((HWND) wParam,(int)lParam,FALSE);
+        return assignWindow((HWND) wParam,(int)lParam,FALSE,FALSE);
         
     case VW_ACCESSWIN:
         if(!enabled)

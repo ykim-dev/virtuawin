@@ -182,7 +182,7 @@ BOOL APIENTRY setupGeneral(HWND hDlg, UINT message, UINT wParam, LONG lParam)
                     if((winList[index].Desk > maxDesk) && (winList[index].Desk < vwDESK_PRIVATE1) && !winList[index].Sticky)
                     {
                         // This window is on an invalid desk, move
-                        assignWindow(winList[index].Handle,1,TRUE);
+                        assignWindow(winList[index].Handle,1,TRUE,FALSE);
                         count++ ;
                         // must start again as the list will have been updated
                         index = nWin ; 
