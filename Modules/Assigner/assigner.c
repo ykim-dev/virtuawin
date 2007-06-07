@@ -47,7 +47,6 @@ UINT HOT_PREV_MOD;
 UINT HOT_PREV_WIN;
 WORD CHANGE_DESKTOP=BST_UNCHECKED;
 TCHAR *configFile;
-UINT numberOfDesktops;
 
 
 /*************************************************
@@ -237,32 +236,20 @@ LRESULT CALLBACK MainWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     HWND theActive = NULL;
     COPYDATASTRUCT *cds;         
-    int theCurDesk, theNewDesk;
-    int deskX, deskY;
+    int vwLParam ;
     
     switch (msg)
     {
     case WM_HOTKEY:
-        // Get the current desktop
-        theCurDesk = SendMessage(vwHandle, VW_CURDESK, 0, 0);
-        // Get the active window
-        theActive = GetForegroundWindow();
-        if(theActive)
-        {
-            if(wParam == hotKeyNext)
-                theNewDesk = theCurDesk+1 ;
-            else if(wParam == hotKeyPrev)
-                theNewDesk = theCurDesk-1 ;
-            else
-                break ;
-            if(theNewDesk <= 0)
-                theNewDesk = numberOfDesktops ;
-            else if(theNewDesk > numberOfDesktops)
-                theNewDesk = 1 ;
-            if(CHANGE_DESKTOP == BST_CHECKED)
-                theNewDesk = 0 - theNewDesk ;
-            SendMessage(vwHandle, VW_ASSIGNWIN, (WPARAM)theActive, theNewDesk) ;
-        }
+        if(wParam == hotKeyNext)
+            vwLParam = VW_STEPNEXT ;
+        else if(wParam == hotKeyPrev)
+            vwLParam = VW_STEPPREV ;
+        else
+            break ;
+        if(CHANGE_DESKTOP == BST_CHECKED)
+            vwLParam = 0 - vwLParam ;
+        SendMessage(vwHandle, VW_ASSIGNWIN, 0, vwLParam) ;
         break;  
     
     case WM_COPYDATA:
@@ -283,9 +270,6 @@ LRESULT CALLBACK MainWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
     case MOD_INIT: // This must be taken care of in order to get the handle to VirtuaWin. 
         // The handle to VirtuaWin comes in the wParam 
         vwHandle = (HWND) wParam; // Should be some error handling here if NULL 
-        deskY = SendMessage(vwHandle, VW_DESKY, 0, 0);
-        deskX = SendMessage(vwHandle, VW_DESKX, 0, 0);
-        numberOfDesktops = deskX * deskY;
         if(!initialised)
         {
             // Get the user path - give VirtuaWin 10 seconds to do this
@@ -295,9 +279,6 @@ LRESULT CALLBACK MainWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
         break;
     
     case MOD_CFGCHANGE:
-        deskY = SendMessage(vwHandle, VW_DESKY, 0, 0);
-        deskX = SendMessage(vwHandle, VW_DESKX, 0, 0);
-        numberOfDesktops = deskX * deskY;
         break;
     
     case MOD_QUIT: // This must be handeled, otherwise VirtuaWin can't shut down the module 

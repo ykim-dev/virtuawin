@@ -1586,20 +1586,13 @@ static int winListUpdate(void)
         if(((winList[i].Owner = GetWindow(winList[i].Handle,GW_OWNER)) != NULL) && !IsWindowVisible(winList[i].Owner))
             winList[i].Owner = NULL ;
         // isn't part of an existing app thats opened a new window
-        if((winList[i].Sticky=checkIfSticky(cname,wname)))
-            windowSetSticky(winList[i].Handle,TRUE) ;
-        else if(useDeskAssignment &&
-                ((j = checkIfAssigned(cname,wname)) != currentDesk))
-        {
-            windowSetDesk(winList[i].Handle,j,assignImmediately) ;
-            if(assignImmediately && (hiddenWindowAct == 3) && (newDesk == 0))
-                newDesk = j ;
-        }
+        if(((winList[i].Sticky = checkIfSticky(cname,wname)) == 0) && useDeskAssignment)
+            winList[i].Desk = checkIfAssigned(cname,wname) ;
     }
     // now finish of initialization of owned windows
     for(i=inWin ; i < nWin ; ++i)
     {
-        if((winList[i].Tricky & vwTRICKY_POSITION) &&
+        if((winList[i].Tricky & vwTRICKY_POSITION) && (winList[i].Owner == NULL) &&
            (GetWindowThreadProcessId(winList[i].Handle,&iprocId) != 0))
         {
             /* some apps like Excel and Adobe Reader create one main window
@@ -1623,22 +1616,43 @@ static int winListUpdate(void)
         {
             j = nWin ;
             while(--j >= 0)
-                if(winList[j].State && (winList[j].Handle == winList[i].Owner))
+            {
+                if(winList[j].Handle == winList[i].Owner)
                 {
-                    if(winList[i].Handle == winList[j].Owner)
-                        /* circular owner loop, make i the parent */
+                    if(winList[j].State == 0)
+                        /* owner has gone */
                         winList[i].Owner = NULL ;
-                    else
+                    else if(winList[i].Handle == winList[j].Owner)
+                        /* circular owner loop, break the loop */
+                        winList[j].Owner = NULL ;
+                    if(winList[i].Owner != NULL)
                     {
                         // an existing app has either unhidden an old window or popped up a new one 
                         // use the existing window's settings for this one
                         if(winList[j].Owner != NULL)
                             winList[i].Owner = winList[j].Owner ;
-                        if(!winList[i].Sticky)
-                            winList[i].Sticky = winList[j].Sticky ;
-                        if((winList[i].Desk=winList[j].Desk) != currentDesk)
-                            winList[i].State = 2 ;
-                        if((winList[i].Tricky & vwTRICKY_WINDOW) && winList[j].Visible)
+                        
+                        if(j >= inWin)
+                        {
+                            /* two linked windows have started together, treat them as one, but put
+                             * the info onto the parent window to avoid dupication and order issues */
+                            winList[j].Sticky |= winList[i].Sticky ;
+                            winList[i].Sticky = FALSE ;
+                            if(winList[i].Desk != currentDesk)
+                            {
+                                winList[j].Desk = winList[j].Desk ;
+                                winList[i].Desk = currentDesk ;
+                            }
+                        }
+                        else
+                        {
+                            if(winList[j].Sticky)
+                                winList[i].Sticky = TRUE ;
+                            if((winList[i].Desk=winList[j].Desk) != currentDesk)
+                                winList[i].State = 2 ;
+                        }
+                        if((winList[i].Tricky & vwTRICKY_WINDOW) && 
+                           !(winList[j].Tricky & vwTRICKY_WINDOW) && winList[j].Visible)
                         {
                             // if an owned window is flagged as tricky we must make the parent window
                             // tricky otherwise the call to ShowOwnedPopups is likely to break things
@@ -1648,6 +1662,25 @@ static int winListUpdate(void)
                     }
                     break ;
                 }
+            }
+        }
+    }
+    // finally we can apply any auto stick or assignments
+    for(i=inWin ; i < nWin ; ++i)
+    {
+        if(winList[i].Sticky)
+        {
+            /* flagged as sticky in cfg or owner is sticky */ 
+            winList[i].Desk = currentDesk ;
+            windowSetSticky(winList[i].Handle,TRUE) ;
+        }
+        else if(winList[i].Desk != currentDesk)
+        {
+            j = winList[i].Desk ;
+            winList[i].Desk = currentDesk ;
+            windowSetDesk(winList[i].Handle,j,assignImmediately) ;
+            if(assignImmediately && (hiddenWindowAct == 3) && (newDesk == 0))
+                newDesk = j ;
         }
     }
     if(vwLogEnabled())
@@ -2180,7 +2213,8 @@ static int stepLeft(void)
         deskX = nDesksX;
         deskY = nDesksY;
     }
-    else if((deskX=currentDeskX - 1) < 1) {
+    else if((deskX=currentDeskX - 1) < 1)
+    {
         if(!deskWrap)
             return 0;
         deskX = nDesksX;
@@ -2556,45 +2590,52 @@ int assignWindow(HWND theWin, int theDesk, BOOL force)
     case VW_STEPPREV:
         if((currentDesk > nDesks) ||
            ((theDesk = currentDesk-1) <= 0))
-            theDesk = nDesks ;
+            theDesk = 0 - nDesks ;
         break;
     case VW_STEPNEXT:
         if((currentDesk > nDesks) ||
            ((theDesk = currentDesk+1) > nDesks))
-            theDesk = 1 ;
+            theDesk = 0 - 1 ;
         break;
     case VW_STEPLEFT:
         if(currentDesk > nDesks)
-            theDesk = nDesks ;
+            theDesk = 0 - nDesks ;
         else if(currentDeskX <= 1)
-            theDesk = calculateDesk(nDesksX,currentDeskY) ;
+            theDesk = 0 - calculateDesk(nDesksX,currentDeskY) ;
         else
             theDesk = calculateDesk(currentDeskX-1,currentDeskY) ;
         break;
     case VW_STEPRIGHT:
         if(currentDesk > nDesks)
-            theDesk = 1 ;
+            theDesk = 0 - 1 ;
         else if(currentDeskX >= nDesksX)
-            theDesk = calculateDesk(1,currentDeskY) ;
+            theDesk = 0 - calculateDesk(1,currentDeskY) ;
         else
             theDesk = calculateDesk(currentDeskX+1,currentDeskY) ;
         break;
     case VW_STEPUP:
         if(currentDesk > nDesks)
-            theDesk = nDesks ;
+            theDesk = 0 - nDesks ;
         else if(currentDeskY <= 1)
-            theDesk = calculateDesk(currentDeskX,nDesksY) ;
+            theDesk = 0 - calculateDesk(currentDeskX,nDesksY) ;
         else
             theDesk = calculateDesk(currentDeskX,currentDeskY-1) ;
         break;
     case VW_STEPDOWN:
         if(currentDesk > nDesks)
-            theDesk = 1 ;
+            theDesk = 0 - 1 ;
         else if(currentDeskY >= nDesksY)
-            theDesk = calculateDesk(currentDeskX,1) ;
+            theDesk = 0 - calculateDesk(currentDeskX,1) ;
         else
             theDesk = calculateDesk(currentDeskX,currentDeskY+1) ;
         break;
+    }
+    if(theDesk < 0)
+    {
+        if(!deskWrap)
+            // wrapping disabled don't allow this
+            return 0 ;
+        theDesk = 0 - theDesk ;
     }
     if(((theDesk > nDesks) || (theDesk < 1)) && !force)
         return 0 ; // Invalid desk
