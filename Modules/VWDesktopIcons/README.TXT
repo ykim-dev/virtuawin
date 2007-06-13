@@ -8,6 +8,9 @@ visible on each VirtuaWin desktop. Requires version 3.0 or above.
 
 Installation:
 
+In the 'Arrange Icons By' desktop  sub-menu, disable 'Auto Arrange' and 'Align
+to Grid'.
+
 Copy  VWDesktopIcons.exe  or  VWDesktopIcons_unicode.exe  into  the  VirtuaWin
 modules directory.
 
