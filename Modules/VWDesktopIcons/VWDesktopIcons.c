@@ -390,17 +390,16 @@ MainWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
     case MOD_INIT: 
         /* This must be taken care of in order to get the handle to VirtuaWin. */
         /* The handle to VirtuaWin comes in the wParam */
-        vwHandle = (HWND) wParam; /* Should be some error handling here if NULL */
+        vwHandle = (HWND) wParam;
         if((deskCrrnt = SendMessage(vwHandle,VW_CURDESK,0,0)) > MAX_DESK)
             deskCrrnt = 0 ;
-        if(!initialised)
+        // If not yet initialized get the user path and initialize.
+        if(!initialised && !SendMessage(vwHandle, VW_USERAPPPATH, (WPARAM) hwnd, 0))
         {
-            /* Get the VW Install path and then the user's path - give VirtuaWin 10 seconds to do this */
-            SetTimer(hwnd, 0x29a, 10000, startupFailureTimerProc);
-            SendMessage(vwHandle, VW_USERAPPPATH, 0, 0);
+            MessageBox(hwnd,_T("VirtuaWin failed to send the UserApp path."),_T("VWDesktopIcons Error"), MB_ICONWARNING);
+            exit(1) ;
         }
-        else
-            UpdateDesktopIcons() ;
+        UpdateDesktopIcons() ;
         break;
     
     case WM_COPYDATA:
@@ -410,13 +409,9 @@ MainWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
             cds = (COPYDATASTRUCT *) lParam ;         
             if(cds->dwData == (0-VW_USERAPPPATH))
             {
-                initialised = 1 ;
-                KillTimer(hwnd,0x29a) ;
                 if((cds->cbData < 2) || (cds->lpData == NULL))
-                {
-                    MessageBox(hwnd,_T("VirtuaWin returned a bad UserApp path."),_T("VWDesktopIcons Error"), MB_ICONWARNING);
-                    exit(1) ;
-                }
+                    return FALSE ;
+                initialised = 1 ;
 #ifdef _UNICODE
                 MultiByteToWideChar(CP_ACP,0,(char *) cds->lpData,-1,userAppPath,MAX_PATH) ;
 #else

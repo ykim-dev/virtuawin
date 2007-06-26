@@ -3406,14 +3406,22 @@ wndProc(HWND aHWnd, UINT message, WPARAM wParam, LPARAM lParam)
         {
             // Send over the window list with WM_COPYDATA
             COPYDATASTRUCT cds;         
+            DWORD ret ;
             lockMutex();
             winListUpdate() ;
             cds.dwData = nWin;
             cds.cbData = sizeof(winList);
             cds.lpData = (void*)winList;
+            if(wParam == 0)
+            {
+                sendModuleMessage(WM_COPYDATA, (WPARAM) aHWnd, (LPARAM)&cds); 
+                ret = TRUE ;
+            }
+            else if(!SendMessageTimeout((HWND)wParam,WM_COPYDATA,(WPARAM) aHWnd,(LPARAM) &cds,SMTO_ABORTIFHUNG|SMTO_BLOCK,10000,&ret))
+                ret = 0 ;
             releaseMutex();
-            sendModuleMessage(WM_COPYDATA, (WPARAM) aHWnd, (LPARAM)&cds); 
-            return TRUE;
+            vwLogVerbose((_T("Sent winlist to %d, returning %d\n"),(int) wParam, ret)) ;
+            return ret ;
         }
         
     case VW_INSTALLPATH:
@@ -3422,12 +3430,20 @@ wndProc(HWND aHWnd, UINT message, WPARAM wParam, LPARAM lParam)
             // Send over the VirtuaWin install path with WM_COPYDATA
             //  - always use a byte string so unicode/non-uncode modules can work together
             COPYDATASTRUCT cds;
+            DWORD ret ;
             char *ss = (message == VW_INSTALLPATH) ? VirtuaWinPathStr:UserAppPathStr ;
             cds.dwData = 0 - message ;
             cds.cbData = strlen(ss) + 1 ;
             cds.lpData = (void*)ss;
-            sendModuleMessage(WM_COPYDATA, (WPARAM) aHWnd, (LPARAM)&cds); 
-            return TRUE;
+            if(wParam == 0)
+            {
+                sendModuleMessage(WM_COPYDATA, (WPARAM) aHWnd, (LPARAM)&cds); 
+                ret = TRUE ;
+            }
+            else if(!SendMessageTimeout((HWND)wParam,WM_COPYDATA,(WPARAM) aHWnd,(LPARAM) &cds,SMTO_ABORTIFHUNG|SMTO_BLOCK,10000,&ret))
+                ret = 0 ;
+            vwLogBasic((_T("Sent path %d to %d, returning %d\n"),message,(int) wParam, ret)) ;
+            return ret ;
         }
     case VW_DESKIMAGE:
         if(wParam == 0)

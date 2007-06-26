@@ -40,16 +40,6 @@ TCHAR installPath[MAX_PATH] ;  /* VW install path */
 TCHAR userAppPath[MAX_PATH] ;  /* User's config path */
 
 
-static VOID CALLBACK
-startupFailureTimerProc(HWND hwnd, UINT uMsg, UINT idEvent, DWORD dwTime)
-{
-    if(!initialised)
-    {
-        MessageBox(hwnd,_T("VirtuaWin failed to send the UserApp path."),_T("Module Error"), MB_ICONWARNING);
-        exit(1) ;
-    }
-}
-
 LRESULT CALLBACK
 MainWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
@@ -61,24 +51,32 @@ MainWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
         vwHandle = (HWND) wParam; /* Should be some error handling here if NULL */
         if(!initialised)
         {
+            TCHAR buff[MAX_PATH+MAX_PATH];
             /* Get the VW Install path and then the user's path - give VirtuaWin 10 seconds to do this */
-            SendMessage(vwHandle, VW_INSTALLPATH, 0, 0);
-            SetTimer(hwnd, 0x29a, 10000, startupFailureTimerProc);
+            if(!SendMessage(vwHandle, VW_INSTALLPATH, (WPARAM) hwnd, 0) || (initialised != 1))
+            {
+                MessageBox(hwnd,_T("VirtuaWin failed to send install path."),_T("Module Error"), MB_ICONWARNING);
+                exit(1) ;
+            }
+            if(!SendMessage(vwHandle, VW_USERAPPPATH, (WPARAM) hwnd, 0) || (initialised != 3))
+            {
+                MessageBox(hwnd,_T("VirtuaWin failed to send the UserApp path."),_T("Module Error"), MB_ICONWARNING);
+                exit(1) ;
+            }
+            _stprintf(buff,_T("VirtuaWin Module initialized, install path:\n\t%s\nUser path:\n\t%s"),installPath,userAppPath) ;
+            MessageBox(hwnd,buff,_T("Module Plugin"),0);
         }
         break;
     
     case WM_COPYDATA:
-        if(!initialised)
         {
             COPYDATASTRUCT *cds;         
             cds = (COPYDATASTRUCT *) lParam ;         
-            if(cds->dwData == (0-VW_INSTALLPATH))
+            if((cds->dwData == (0-VW_INSTALLPATH)) && ((initialised & 1) == 0))
             {
                 if((cds->cbData < 2) || (cds->lpData == NULL))
-                {
-                    MessageBox(hwnd,_T("VirtuaWin returned a bad Install path."),_T("Module Error"), MB_ICONWARNING);
-                    exit(1) ;
-                }
+                    return FALSE ;
+                initialised |= 1 ;
                 /* the paths are always returned in a multibyte string so we do not need to know
                  * whether we are talking to a unicode VW */
 #ifdef _UNICODE
@@ -86,25 +84,17 @@ MainWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 #else
                 strcpy(installPath,(char *) cds->lpData) ;
 #endif
-                /* Now get the VW user's path */
-                SendMessage(vwHandle, VW_USERAPPPATH, 0, 0);
             }
-            else if(cds->dwData == (0-VW_USERAPPPATH))
+            else if((cds->dwData == (0-VW_USERAPPPATH)) && ((initialised & 2) == 0))
             {
-                TCHAR buff[MAX_PATH+MAX_PATH];
                 if((cds->cbData < 2) || (cds->lpData == NULL))
-                {
-                    MessageBox(hwnd,_T("VirtuaWin returned a bad UserApp path."),_T("Module Error"), MB_ICONWARNING);
-                    exit(1) ;
-                }
+                    return FALSE ;
+                initialised |= 2 ;
 #ifdef _UNICODE
                 MultiByteToWideChar(CP_ACP,0,(char *) cds->lpData,-1,userAppPath,MAX_PATH) ;
 #else
                 strcpy(userAppPath,(char *) cds->lpData) ;
 #endif
-                initialised = 1 ;
-                _stprintf(buff,_T("VirtuaWin Module initialized, install path:\n\t%s\nUser path:\n\t%s"),installPath,userAppPath) ;
-                MessageBox(hwnd,buff,_T("Module Plugin"),0);
             }
         }
         return TRUE ;

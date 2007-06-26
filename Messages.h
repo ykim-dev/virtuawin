@@ -63,7 +63,8 @@
 #define VW_DESKX       (WM_USER + 21)
 /* Message, retuns desktop height */
 #define VW_DESKY       (WM_USER + 22)
-/* Message, require the window list from VirtuaWin. List will be returned with WM_COPYDATA */
+/* Message, require the window list from VirtuaWin. List will be returned via a WM_COPYDATA
+ * message, set wParam to the HWND which is to receive the WM_COPYDATA message */
 #define VW_WINLIST     (WM_USER + 23)
 /* Message, returns the current desktop number */
 #define VW_CURDESK     (WM_USER + 24)
@@ -80,9 +81,11 @@
 /* Message, make a window the foreground, only if visible 
    wParam is the window handle (HWND) */
 #define VW_FOREGDWIN   (WM_USER + 27)
-/* Message, return VirtuaWin's installation path. List will be returned with WM_COPYDATA */
+/* Message, return VirtuaWin's installation path. The path will be returned via a WM_COPYDATA
+ * message, set wParam to the HWND which is to receive the WM_COPYDATA message */
 #define VW_INSTALLPATH (WM_USER + 28)
-/* Message, return VirtuaWin's user path. List will be returned with WM_COPYDATA */
+/* Message, return VirtuaWin's user application data path. The path will be returned via a 
+ * WM_COPYDATA message, set wParam to the HWND which is to receive the WM_COPYDATA message */
 #define VW_USERAPPPATH (WM_USER + 29)
 /* Message, access a window, wParam is the window handle (HWND) and lParam is the method:
             0 - Use user's 'On hidden window activation' preference (ignore -> move)

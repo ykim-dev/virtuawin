@@ -115,28 +115,23 @@ static BOOL WinListInit(void)
     return 1;
 }
 
-static VOID CALLBACK startupFailureTimerProc(HWND hwnd, UINT uMsg, UINT idEvent, DWORD dwTime)
-{
-    if(!initialised)
-    {
-        MessageBox(hwnd, _T("VirtuaWin failed to send the UserApp path."), _T("VirtuaWinList Error"), MB_ICONWARNING);
-        exit(1) ;
-    }
-}
-
 LRESULT CALLBACK MainWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     switch (msg)
     {
         
-    case MOD_INIT: // This must be taken care of in order to get the handle to VirtuaWin. 
+    case MOD_INIT:
         // The handle to VirtuaWin comes in the wParam 
-        vwHandle = (HWND) wParam; // Should be some error handling here if NULL 
+        vwHandle = (HWND) wParam;
+        // If not yet initialized get the user path and initialize.
         if(!initialised)
         {
-            // Get the VW user's path - give VirtuaWin 10 seconds to do this
-            SetTimer(hwnd, 0x29a, 10000, startupFailureTimerProc);
-            SendMessage(vwHandle, VW_USERAPPPATH, 0, 0);
+            SendMessage(vwHandle, VW_USERAPPPATH, (WPARAM) hwnd, 0) ;
+            if(!initialised)
+            {
+                MessageBox(hwnd, _T("VirtuaWin failed to send the UserApp path."), _T("VirtuaWinList Error"), MB_ICONWARNING);
+                exit(1) ;
+            }
         }
         break;
     case WM_COPYDATA:
@@ -146,13 +141,9 @@ LRESULT CALLBACK MainWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
             cds = (COPYDATASTRUCT *) lParam ;         
             if(cds->dwData == (0-VW_USERAPPPATH))
             {
-                initialised = 1 ;
-                KillTimer(hwnd,0x29a) ;
                 if((cds->cbData < 2) || (cds->lpData == NULL))
-                {
-                    MessageBox(hwnd, _T("VirtuaWin returned a bad UserApp path."), _T("VirtuaWinList Error"), MB_ICONWARNING);
-                    exit(1) ;
-                }
+                    return FALSE ;
+                initialised = 1 ;
 #ifdef _UNICODE
                 MultiByteToWideChar(CP_ACP,0,(char *) cds->lpData,-1,userAppPath,MAX_PATH) ;
 #else
