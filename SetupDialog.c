@@ -406,12 +406,12 @@ BOOL APIENTRY setupMouse(HWND hDlg, UINT message, UINT wParam, LONG lParam)
         break;
         
     case WM_COMMAND:
-        if(LOWORD(wParam) == IDC_JUMP      || LOWORD(wParam) == IDC_ENABLEMOUSE ||
-           LOWORD(wParam) == IDC_MALT      || LOWORD(wParam) == IDC_KEYCONTROL ||
-           LOWORD(wParam) == IDC_MCTRL     || LOWORD(wParam) == IDC_KNOCKMODE1 ||
-           LOWORD(wParam) == IDC_MSHIFT    || LOWORD(wParam) == IDC_KNOCKMODE2 ||
-           LOWORD(wParam) == IDC_MOUSEWRAP || LOWORD(wParam) == IDC_MOUSEWLIST ||
-           LOWORD(wParam) == IDC_MOUSEWMENU)
+        if(LOWORD(wParam) == IDC_JUMP       || LOWORD(wParam) == IDC_ENABLEMOUSE ||
+           LOWORD(wParam) == IDC_MALT       || LOWORD(wParam) == IDC_KEYCONTROL  ||
+           LOWORD(wParam) == IDC_MCTRL      || LOWORD(wParam) == IDC_KNOCKMODE1  ||
+           LOWORD(wParam) == IDC_MSHIFT     || LOWORD(wParam) == IDC_KNOCKMODE2  ||
+           LOWORD(wParam) == IDC_MOUSEWRAP  || LOWORD(wParam) == IDC_MOUSEWLIST  ||
+           LOWORD(wParam) == IDC_MOUSEWMENU || LOWORD(wParam) == IDC_MOUSEMDCHNG )
         {
             pageChangeMask |= 0x02 ;
             SendMessage(GetParent(hDlg), PSM_CHANGED, (WPARAM)hDlg, 0L); // Enable apply
