@@ -165,10 +165,9 @@ void loadModules(void)
 void sendModuleMessage(UINT Msg, WPARAM wParam,	LPARAM lParam)
 {
     int index;
-    for(index = 0; index < nOfModules; ++index) {
+    for(index = 0; index < nOfModules; ++index)
         if(moduleList[index].Handle != NULL) 
-            SendMessage(moduleList[index].Handle, Msg, wParam, lParam);
-    }
+            SendMessageTimeout(moduleList[index].Handle,Msg,wParam,lParam,SMTO_ABORTIFHUNG|SMTO_BLOCK,10000,NULL);
 }
 
 /*************************************************
