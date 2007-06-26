@@ -39,7 +39,6 @@ int initialised=0 ;
 HINSTANCE hInst;               /* Instance handle */
 HWND wHnd;                     /* Time tracker Handle */
 HWND vwHandle;                 /* Handle to VirtuaWin */
-TCHAR userAppPath[MAX_PATH] ;  /* User's config path */
 
 #define MAX_DESK 32
 int deskCrrnt ;
@@ -186,16 +185,6 @@ DialogFunc(HWND hwndDlg, UINT msg, WPARAM wParam, LPARAM lParam)
     return FALSE;
 }
 
-static VOID CALLBACK
-startupFailureTimerProc(HWND hwnd, UINT uMsg, UINT idEvent, DWORD dwTime)
-{
-    if(!initialised)
-    {
-        MessageBox(hwnd,_T("VirtuaWin failed to send the UserApp path."),_T("VWTimeTracker Error"), MB_ICONWARNING);
-        exit(1) ;
-    }
-}
-
 LRESULT CALLBACK
 MainWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
@@ -208,38 +197,8 @@ MainWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
         UpdateTime() ;
         if((deskCrrnt = SendMessage(vwHandle,VW_CURDESK,0,0)) > MAX_DESK)
             deskCrrnt = 0 ;
-        if(!initialised)
-        {
-            /* Get the VW Install path and then the user's path - give VirtuaWin 10 seconds to do this */
-            SetTimer(hwnd, 0x29a, 10000, startupFailureTimerProc);
-            SendMessage(vwHandle, VW_USERAPPPATH, 0, 0);
-        }
         break;
     
-    case WM_COPYDATA:
-        if(!initialised)
-        {
-            COPYDATASTRUCT *cds;         
-            cds = (COPYDATASTRUCT *) lParam ;         
-            if(cds->dwData == (0-VW_USERAPPPATH))
-            {
-                initialised = 1 ;
-                KillTimer(hwnd,0x29a) ;
-                if((cds->cbData < 2) || (cds->lpData == NULL))
-                {
-                    MessageBox(hwnd,_T("VirtuaWin returned a bad UserApp path."),_T("VWTimeTracker Error"), MB_ICONWARNING);
-                    exit(1) ;
-                }
-#ifdef _UNICODE
-                MultiByteToWideChar(CP_ACP,0,(char *) cds->lpData,-1,userAppPath,MAX_PATH) ;
-#else
-                strcpy(userAppPath,(char *) cds->lpData) ;
-#endif
-                SetTimer(hwnd, 0x29a, 1000, monitorScreensaverTimerProc);
-            }
-        }
-        return TRUE ;
-        
      case MOD_CHANGEDESK:
         UpdateTime() ;
         if(lParam > MAX_DESK)
