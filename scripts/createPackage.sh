@@ -33,10 +33,13 @@ if [ -z "$1" ] ; then
     exit -1
 fi
 
-echo Creating VirtuaWin package $1
+version=$1
+file_ver=`echo $1 | sed s/' '/_/g`
 
-mkdir ./$1
-cd ./$1
+echo Creating VirtuaWin package $version - $file_ver
+
+mkdir ./$file_ver
+cd ./$file_ver
 
 cvs checkout README.TXT
 cvs update -d
@@ -45,15 +48,15 @@ mkdir tmp
 mkdir tmp/standard
 mkdir tmp/unicode
 
-cat Defines.h | sed -c -e "s/vwVIRTUAWIN_NAME_VERSION _T(\"VirtuaWin v.*\")/vwVIRTUAWIN_NAME_VERSION _T(\"VirtuaWin v$1\")/" > Defines.h.tmp
+cat Defines.h | sed -c -e "s/vwVIRTUAWIN_NAME_VERSION _T(\"VirtuaWin v.*\")/vwVIRTUAWIN_NAME_VERSION _T(\"VirtuaWin v$version\")/" > Defines.h.tmp
 mv Defines.h.tmp Defines.h
-cat WinList/winlist.rc | sed -c -e "s/^CAPTION \"WinList v.*\"/CAPTION \"WinList v$1\"/" > WinList/winlist.rc.tmp
+cat WinList/winlist.rc | sed -c -e "s/^CAPTION \"WinList v.*\"/CAPTION \"WinList v$version\"/" > WinList/winlist.rc.tmp
 mv WinList/winlist.rc.tmp WinList/winlist.rc
-cat Modules/Assigner/assigner.rc | sed -c -e "s/^CAPTION \"Assigner v.*\"/CAPTION \"Assigner v$1\"/" > Modules/Assigner/assigner.rc.tmp
+cat Modules/Assigner/assigner.rc | sed -c -e "s/^CAPTION \"Assigner v.*\"/CAPTION \"Assigner v$version\"/" > Modules/Assigner/assigner.rc.tmp
 mv Modules/Assigner/assigner.rc.tmp Modules/Assigner/assigner.rc
-cat scripts/virtuawin.iss | sed -c -e "s/^AppVerName=VirtuaWin v.*/AppVerName=VirtuaWin v$1/" > scripts/virtuawin.iss.tmp
+cat scripts/virtuawin.iss | sed -c -e "s/^AppVerName=VirtuaWin v.*/AppVerName=VirtuaWin v$version/" > scripts/virtuawin.iss.tmp
 mv scripts/virtuawin.iss.tmp scripts/virtuawin.iss
-$EDITOR Defines.h
+$EDITOR HISTORY.TXT
 read -p "Compile source? [y/n] " -n 1
 echo
 if [ $REPLY == 'y' ] ; then
@@ -110,8 +113,6 @@ fi
 
 cd ./tmp/standard
 
-$EDITOR virtuawin.iss
-
 read -p "Compile standard setup package? [y/n] " -n 1
 echo
 if [ $REPLY == 'y' ] ; then
@@ -120,8 +121,6 @@ if [ $REPLY == 'y' ] ; then
 fi
 
 cd ../unicode
-
-$EDITOR virtuawin.iss
 
 read -p "Compile unicode setup package? [y/n] " -n 1
 echo
@@ -136,12 +135,12 @@ read -p "Assemble source package? [y/n] " -n 1
 echo
 if [ $REPLY == 'y' ] ; then
     echo Creating source package
-    rm -f VirtuaWin_source_$1.zip
+    rm -f VirtuaWin_source_$file_ver.zip
     if [ -z "$ZIP" ] ; then
-        $WINZIP VirtuaWin_source_$1.zip -P @./scripts/filelist
+        $WINZIP VirtuaWin_source_$file_ver.zip -P @./scripts/filelist
     else        
         $ZIP -9 -@ < ./scripts/filelist
-        mv zip.zip VirtuaWin_source_$1.zip
+        mv zip.zip VirtuaWin_source_$file_ver.zip
     fi
     echo Done!
 fi
@@ -150,13 +149,13 @@ read -p "Assemble SDK package? [y/n] " -n 1
 echo
 if [ $REPLY == 'y' ] ; then
     echo Creating SDK package
-    rm -f VirtuaWin_SDK_$1.zip
+    rm -f VirtuaWin_SDK_$file_ver.zip
     cd Module
     if [ -z "$ZIP" ] ; then
-        $WINZIP ../VirtuaWin_SDK_$1.zip -P @../scripts/SDK_filelist
+        $WINZIP ../VirtuaWin_SDK_$file_ver.zip -P @../scripts/SDK_filelist
     else        
         $ZIP -9 -@ < ../scripts/SDK_filelist
-        mv zip.zip ../VirtuaWin_SDK_$1.zip
+        mv zip.zip ../VirtuaWin_SDK_$file_ver.zip
     fi
     cd ..
     echo Done!
@@ -166,23 +165,23 @@ read -p "Move packages? [y/n] " -n 1
 echo
 if [ $REPLY == 'y' ] ; then
     mkdir ../Distribution >& /dev/null
-    mv ./tmp/standard/output/setup.exe ../Distribution/VirtuaWin_setup_$1.exe
-    mv ./tmp/unicode/output/setup.exe ../Distribution/VirtuaWin_unicode_setup_$1.exe
-    mv ./VirtuaWin_source_$1.zip ../Distribution/
-    mv ./VirtuaWin_SDK_$1.zip ../Distribution/
+    mv ./tmp/standard/output/setup.exe ../Distribution/VirtuaWin_setup_$file_ver.exe
+    mv ./tmp/unicode/output/setup.exe ../Distribution/VirtuaWin_unicode_setup_$file_ver.exe
+    mv ./VirtuaWin_source_$file_ver.zip ../Distribution/
+    mv ./VirtuaWin_SDK_$file_ver.zip ../Distribution/
 fi
 
 read -p "Commit changes? [y/n] " -n 1
 echo
 if [ $REPLY == 'y' ] ; then
-    echo Committing changes with comment: Changed to V$1
-    cvs commit -m "Changed to V$1"
+    echo Committing changes with comment: Changed to V$version
+    cvs commit -m "Changed to V$version"
 fi
 
 read -p "Label repository? [y/n] " -n 1
 echo
 if [ $REPLY == 'y' ] ; then
-    export LABEL=`echo V$1 | sed s/'\.'/_/g`
+    export LABEL=`echo V$file_ver | sed s/'\.'/_/g`
     echo Labelling with: $LABEL
     cvs tag -R -F $LABEL
 fi
@@ -190,11 +189,11 @@ fi
 read -p "Upload to SourceForge? [y/n] " -n 1
 echo
 if [ $REPLY == 'y' ] ; then
-    ncftpput -d ./ftpsession.log -u anonymous -p virtuawin@home.se upload.sourceforge.net /incoming ../Distribution/VirtuaWin_setup_$1.exe
-    ncftpput -d ./ftpsession.log -u anonymous -p virtuawin@home.se upload.sourceforge.net /incoming ../Distribution/VirtuaWin_unicode_setup_$1.exe
-    ncftpput -d ./ftpsession.log -u anonymous -p virtuawin@home.se upload.sourceforge.net /incoming ../Distribution/VirtuaWin_source_$1.zip
-    ncftpput -d ./ftpsession.log -u anonymous -p virtuawin@home.se upload.sourceforge.net /incoming ../Distribution/VirtuaWin_SDK_$1.zip
-    echo Done! Go to SourceForge and click Admin-Edit/Release Files-Add Release and then type $1 and follow the instructions.
+    ncftpput -d ./ftpsession.log -u anonymous -p virtuawin@home.se upload.sourceforge.net /incoming ../Distribution/VirtuaWin_setup_$file_ver.exe
+    ncftpput -d ./ftpsession.log -u anonymous -p virtuawin@home.se upload.sourceforge.net /incoming ../Distribution/VirtuaWin_unicode_setup_$file_ver.exe
+    ncftpput -d ./ftpsession.log -u anonymous -p virtuawin@home.se upload.sourceforge.net /incoming ../Distribution/VirtuaWin_source_$file_ver.zip
+    ncftpput -d ./ftpsession.log -u anonymous -p virtuawin@home.se upload.sourceforge.net /incoming ../Distribution/VirtuaWin_SDK_$file_ver.zip
+    echo Done! Go to SourceForge and click Admin-Edit/Release Files-Add Release and then type $version and follow the instructions.
 fi
 
 read -p "Cleanup temporary files? [y/n] " -n 1
@@ -206,10 +205,10 @@ if [ $REPLY == 'y' ] ; then
 
     cd ..
 
-    read -p "Delete $1 directory? [y/n] " -n 1
+    read -p "Delete $file_ver directory? [y/n] " -n 1
     echo
     if [ $REPLY == 'y' ] ; then
-        rm -r ./$1
+        rm -r ./$file_ver
     fi
 fi
 
