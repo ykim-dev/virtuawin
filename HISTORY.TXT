@@ -1,6 +1,26 @@
 ***   VirtuaWin Revision History   ***
 --------------------------------------
 
+Ver 3.1 test 1 2007/06/12
+
+* 1731298 Improved the  handling of newly opened owned windows  sanitizing any
+  initial desktop assignment
+* 1731312 Simplified VWAssigner to use simple module messages and improved the
+  handling of VW window assignment to respect the 'enable wrapping' setting.
+* 1723458 fixed window list menu not closing.
+* Fixed Setup changes being applied multiple times.
+* Changed module  enable/disable  list saving to be  consistently in the Setup
+  process.
+* Fixed quite a few violations of VW being  'disabled',  including the Removal
+  items that should not be available in the systray icon rb menu.
+* Fixed menu position  problem when mouse is at the top of the screen,  caused
+  by subtracting 2 off the position.
+* Forced the assignment of a new foreground  window when using the new current
+  window menu to assign the window to another desktop.
+
+
+----------------------------
+
 Ver 3.1 2007/05/18
 
 * 805556 - Added screen capture functionality, enabled via module interface.
