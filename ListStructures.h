@@ -40,7 +40,7 @@ typedef struct { // Holds the windows in the list
     HWND           Owner;
     long           Style;
     long           ExStyle;
-    unsigned long  ZOrder[MAXDESK] ;
+    unsigned long  ZOrder[vwDESKTOP_SIZE] ;
     unsigned short Desk;
     unsigned short menuId ;
     unsigned char  Sticky;
@@ -74,13 +74,13 @@ typedef struct { // Holds desktop assigned windows
     unsigned char  type;
 } vwWindowMatch ;
 
-windowType winList[MAXWIN];               // list for holding windows
-moduleType moduleList[MAXMODULES];        // list that holds modules
-disModules disabledModules[MAXMODULES*2]; // list with disabled modules
+windowType winList[vwWINDOW_MAX];            // list for holding windows
+moduleType moduleList[MAXMODULES];           // list that holds modules
+disModules disabledModules[MAXMODULES*2];    // list with disabled modules
 
-vwWindowMatch userList[MAXUSER];          // list for holding user added applications
-vwWindowMatch stickyList[MAXWIN];         // list with saved sticky windows
-vwWindowMatch trickyList[MAXWIN];         // list with saved tricky windows
-vwWindowMatch assignedList[MAXWIN];       // list with all windows that have a predefined desktop
+vwWindowMatch userList[MAXUSER];             // list for holding user added applications
+vwWindowMatch stickyList[vwWINDOW_MAX];      // list with saved sticky windows
+vwWindowMatch trickyList[vwWINDOW_MAX];      // list with saved tricky windows
+vwWindowMatch assignedList[vwWINDOW_MAX];    // list with all windows that have a predefined desktop
 
 #endif

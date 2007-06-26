@@ -113,9 +113,10 @@ BEGIN
     PUSHBUTTON      "Save Sticky", IDC_SAVESTICKY,   140, 51, 60, 14
 
     GROUPBOX        "Window List Contents", IDC_STATIC, 4, 77, 202, 36
-    AUTOCHECKBOX    "Sticky toggle", IDC_MENUSTICKY, 10, 88, 55, 10
-    AUTOCHECKBOX    "Direct access", IDC_MENUACCESS, 75, 88, 55, 10
-    AUTOCHECKBOX    "Assign",        IDC_MENUASSIGN, 140, 88, 45, 10
+    AUTOCHECKBOX    "Access", IDC_MENUACCESS,  10, 88, 40, 10
+    AUTOCHECKBOX    "Assign", IDC_MENUASSIGN,  55, 88, 40, 10
+    AUTOCHECKBOX    "Show",   IDC_MENUSHOW,   100, 88, 40, 10
+    AUTOCHECKBOX    "Sticky", IDC_MENUSTICKY, 145, 88, 40, 10
     AUTOCHECKBOX    "Enable compact list", IDC_COMPACTMENU, 10, 99, 90, 10
 
     GROUPBOX        "Hotkeys", IDC_STATIC, 4, 116, 202, 115

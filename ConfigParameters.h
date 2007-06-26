@@ -33,7 +33,8 @@ extern int nWin;         // Number of windows in the system
 extern int currentDeskX; // Current desktop x wise
 extern int currentDeskY; // Current desktop y wise
 extern int currentDesk;  // Current desktop
-extern int nDesksX;      // indicates the number of desks wide the virtual area is
+extern int nDesks;              // indicates the total number of desks (nDesksX * nDesksY)
+extern int nDesksX;             // indicates the number of desks wide the virtual area is
 extern int nDesksY;             // indicates the number of desks tall the virtual area is
 extern int warpLength;          // How far to jump into new desktop
 extern int mouseDelay;          // Mouse change delay 50ms*mouseDelay 
@@ -61,10 +62,11 @@ extern BOOL stickyKeyRegistered; // if the sticky hot key is registered
 extern BOOL crashRecovery;      // Should we use recovery functionality
 extern BOOL deskWrap;           // If we want to have desktop cycling
 extern BOOL invertY;            // if up/down should be inverted
-extern short stickyMenu;        // if sticky window menu should be shown
-extern short assignMenu;        // if assign window menu should be shown
-extern short directMenu;        // if direct access window menu should be shown
-extern short compactMenu;       // if window menu should be compact
+extern short assignMenu;        // if assign window list menu should be shown
+extern short accessMenu;        // if access window list menu should be shown
+extern short showMenu;          // if show window list menu should be shown
+extern short stickyMenu;        // if sticky window list menu should be shown
+extern short compactMenu;       // if window list menu should be compact
 extern BOOL useDeskAssignment;  // if we have desktop assignment 
 extern BOOL saveLayoutOnExit;   // save the desktop layout upon exit
 extern BOOL assignOnlyFirst;    // only assign the first window to a saved desktop 
@@ -82,9 +84,9 @@ extern UINT hotCycleDown;
 extern UINT hotCycleDownMod;
 extern UINT hotCycleDownWin;
 
-extern UINT deskHotkey[MAXDESK];
-extern UINT deskHotkeyMod[MAXDESK];
-extern UINT deskHotkeyWin[MAXDESK];
+extern UINT deskHotkey[vwDESKTOP_SIZE];
+extern UINT deskHotkeyMod[vwDESKTOP_SIZE];
+extern UINT deskHotkeyWin[vwDESKTOP_SIZE];
 
 extern UINT hotkeyWListEn;
 extern UINT hotkeyWList;

@@ -101,7 +101,8 @@ BOOL APIENTRY setupGeneral(HWND hDlg, UINT message, UINT wParam, LONG lParam)
     WORD wPar;
     int maxDesk ;
     
-    switch (message) {
+    switch (message)
+    {
     case WM_INITDIALOG:
         {
             setupHWnd = GetParent(hDlg) ;
@@ -120,11 +121,11 @@ BOOL APIENTRY setupGeneral(HWND hDlg, UINT message, UINT wParam, LONG lParam)
             SendMessage(GetDlgItem(hDlg, IDC_SLIDERX), UDM_SETBUDDY, (LONG) GetDlgItem(hDlg, IDC_DESKX), 0L );
             SendMessage(GetDlgItem(hDlg, IDC_SLIDERY), UDM_SETBUDDY, (LONG) GetDlgItem(hDlg, IDC_DESKY), 0L );
             // Set spin ranges
-            SendMessage(GetDlgItem(hDlg, IDC_SLIDERX), UDM_SETRANGE, 0L, MAKELONG(9, 1));
-            SendMessage(GetDlgItem(hDlg, IDC_SLIDERY), UDM_SETRANGE, 0L, MAKELONG(9, 1));
+            SendMessage(GetDlgItem(hDlg, IDC_SLIDERX), UDM_SETRANGE, 0L, MAKELONG(vwDESKTOP_MAX, 1));
+            SendMessage(GetDlgItem(hDlg, IDC_SLIDERY), UDM_SETRANGE, 0L, MAKELONG(vwDESKTOP_MAX, 1));
             // Set init values
-            SendMessage(GetDlgItem(hDlg, IDC_SLIDERX), UDM_SETPOS, 0L, MAKELONG( nDesksX, 0));
-            SendMessage(GetDlgItem(hDlg, IDC_SLIDERY), UDM_SETPOS, 0L, MAKELONG( nDesksY, 0));
+            SendMessage(GetDlgItem(hDlg, IDC_SLIDERX), UDM_SETPOS, 0L, MAKELONG(nDesksX, 0));
+            SendMessage(GetDlgItem(hDlg, IDC_SLIDERY), UDM_SETPOS, 0L, MAKELONG(nDesksY, 0));
         
             /* Control keys */
             if(keyEnable)
@@ -169,17 +170,17 @@ BOOL APIENTRY setupGeneral(HWND hDlg, UINT message, UINT wParam, LONG lParam)
             tmpDesksY = GetDlgItemInt(hDlg, IDC_DESKY, NULL, FALSE);
             tmpDesksX = GetDlgItemInt(hDlg, IDC_DESKX, NULL, FALSE);
             maxDesk = tmpDesksX * tmpDesksY ;
-            if(maxDesk < (nDesksX * nDesksY))
+            if(maxDesk < nDesks)
             {
                 int index, count=0 ;
                 
-                if((currentDesk > maxDesk) && (currentDesk < vwDESK_PRIVATE1))
+                if(currentDesk > maxDesk)
                     // user is on an invalid desk, move
                     gotoDesk(1,TRUE);
                 index = nWin ;
                 while(--index >= 0)
                 {
-                    if((winList[index].Desk > maxDesk) && (winList[index].Desk < vwDESK_PRIVATE1) && !winList[index].Sticky)
+                    if((winList[index].Desk > maxDesk) && (winList[index].Desk <= nDesks))
                     {
                         // This window is on an invalid desk, move
                         assignWindow(winList[index].Handle,1,TRUE,FALSE);
@@ -191,6 +192,7 @@ BOOL APIENTRY setupGeneral(HWND hDlg, UINT message, UINT wParam, LONG lParam)
             }
             nDesksY = tmpDesksY;
             nDesksX = tmpDesksX;
+            nDesks = maxDesk ;
             reLoadIcons();              
             
             // Control keys
@@ -266,7 +268,8 @@ BOOL APIENTRY setupGeneral(HWND hDlg, UINT message, UINT wParam, LONG lParam)
             pageChangeMask |= 0x01 ;
             SendMessage(GetParent(hDlg), PSM_CHANGED, (WPARAM)hDlg, 0L);
             tmpDesksX = SendMessage(GetDlgItem(hDlg, IDC_SLIDERX), UDM_GETPOS, 0, 0);
-            while ((tmpDesksX * tmpDesksY) > 9) {
+            while((tmpDesksX * tmpDesksY) > vwDESKTOP_MAX)
+            {
                 tmpDesksY--;
                 SendMessage(GetDlgItem(hDlg, IDC_SLIDERY), UDM_SETPOS, 0L, MAKELONG( tmpDesksY, 0));
             }
@@ -276,7 +279,8 @@ BOOL APIENTRY setupGeneral(HWND hDlg, UINT message, UINT wParam, LONG lParam)
             pageChangeMask |= 0x01 ;
             SendMessage(GetParent(hDlg), PSM_CHANGED, (WPARAM)hDlg, 0L);
             tmpDesksY = SendMessage(GetDlgItem(hDlg, IDC_SLIDERY), UDM_GETPOS, 0, 0);
-            while ((tmpDesksY * tmpDesksX) > 9) {
+            while ((tmpDesksY * tmpDesksX) > vwDESKTOP_MAX)
+            {
                 tmpDesksX--;
                 SendMessage(GetDlgItem(hDlg, IDC_SLIDERX), UDM_SETPOS, 0L, MAKELONG( tmpDesksX, 0));
             }
@@ -532,12 +536,14 @@ BOOL APIENTRY setupMisc(HWND hDlg, UINT message, UINT wParam, LONG lParam)
     case WM_INITDIALOG:
         if(saveSticky)
             SendDlgItemMessage(hDlg, IDC_STICKYSAVE, BM_SETCHECK, 1,0);
-        if(stickyMenu) 
-            SendDlgItemMessage(hDlg, IDC_MENUSTICKY, BM_SETCHECK, 1,0);
+        if(accessMenu) 
+            SendDlgItemMessage(hDlg, IDC_MENUACCESS, BM_SETCHECK, 1,0);
         if(assignMenu)
             SendDlgItemMessage(hDlg, IDC_MENUASSIGN, BM_SETCHECK, 1,0);
-        if(directMenu)
-            SendDlgItemMessage(hDlg, IDC_MENUACCESS, BM_SETCHECK, 1,0);
+        if(showMenu)
+            SendDlgItemMessage(hDlg, IDC_MENUSHOW, BM_SETCHECK, 1,0);
+        if(stickyMenu) 
+            SendDlgItemMessage(hDlg, IDC_MENUSTICKY, BM_SETCHECK, 1,0);
         if(compactMenu)
             SendDlgItemMessage(hDlg, IDC_COMPACTMENU, BM_SETCHECK, 1,0);
         if(useDeskAssignment)
@@ -577,9 +583,10 @@ BOOL APIENTRY setupMisc(HWND hDlg, UINT message, UINT wParam, LONG lParam)
             break;
         case PSN_APPLY:
             saveSticky = (SendDlgItemMessage(hDlg, IDC_STICKYSAVE, BM_GETCHECK, 0, 0) == BST_CHECKED) ;
-            stickyMenu = (SendDlgItemMessage(hDlg, IDC_MENUSTICKY, BM_GETCHECK, 0, 0) == BST_CHECKED) ;
-            directMenu = (SendDlgItemMessage(hDlg, IDC_MENUACCESS, BM_GETCHECK, 0, 0) == BST_CHECKED) ;
+            accessMenu = (SendDlgItemMessage(hDlg, IDC_MENUACCESS, BM_GETCHECK, 0, 0) == BST_CHECKED) ;
             assignMenu = (SendDlgItemMessage(hDlg, IDC_MENUASSIGN, BM_GETCHECK, 0, 0) == BST_CHECKED) ;
+            showMenu   = (SendDlgItemMessage(hDlg, IDC_MENUSHOW,   BM_GETCHECK, 0, 0) == BST_CHECKED) ;
+            stickyMenu = (SendDlgItemMessage(hDlg, IDC_MENUSTICKY, BM_GETCHECK, 0, 0) == BST_CHECKED) ;
             compactMenu = (SendDlgItemMessage(hDlg, IDC_COMPACTMENU, BM_GETCHECK, 0, 0) == BST_CHECKED) ;
             useDeskAssignment = (SendDlgItemMessage(hDlg, IDC_USEASSIGN, BM_GETCHECK, 0, 0) == BST_CHECKED) ;
             assignOnlyFirst = (SendDlgItemMessage(hDlg, IDC_FIRSTONLY, BM_GETCHECK, 0, 0) == BST_CHECKED) ;
@@ -696,7 +703,7 @@ BOOL APIENTRY setupExpert(HWND hDlg, UINT message, UINT wParam, LONG lParam)
         SendDlgItemMessage(hDlg, IDC_PRESORDER, CB_SETCURSEL, preserveZOrder, 0) ;
         SendDlgItemMessage(hDlg, IDC_HIDWINACT, CB_ADDSTRING, 0, (LONG) _T("Ignore the event"));
         SendDlgItemMessage(hDlg, IDC_HIDWINACT, CB_ADDSTRING, 0, (LONG) _T("Move window to current desktop"));
-        SendDlgItemMessage(hDlg, IDC_HIDWINACT, CB_ADDSTRING, 0, (LONG) _T("Copy window to current desktop"));
+        SendDlgItemMessage(hDlg, IDC_HIDWINACT, CB_ADDSTRING, 0, (LONG) _T("Show window to current desktop"));
         SendDlgItemMessage(hDlg, IDC_HIDWINACT, CB_ADDSTRING, 0, (LONG) _T("Change to window's desktop"));
         SendDlgItemMessage(hDlg, IDC_HIDWINACT, CB_SETCURSEL, hiddenWindowAct, 0) ;
         if(minSwitch)

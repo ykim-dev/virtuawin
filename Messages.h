@@ -39,7 +39,7 @@
  * 
  *************************************************************************/
 
-/* Message, switch to a specified desktop, sent with following lParam or 1..9 */
+/* Message, switch to a specified desktop, sent with following lParam or 1..vwDESKTOP_MAX */
 #define VW_CHANGEDESK  (WM_USER + 10) 
 #define VW_STEPPREV    (WM_USER +  1)
 #define VW_STEPNEXT    (WM_USER +  2)
@@ -90,7 +90,7 @@
 /* Message, access a window, wParam is the window handle (HWND) and lParam is the method:
             0 - Use user's 'On hidden window activation' preference (ignore -> move)
             1 - Move window to this desk
-            2 - Copy window to this disk
+            2 - Show window to this disk
             3 - Change to window's desk
    Returns 0 if window was not found (i.e. not managed by VW), non-zero otherwise */
 #define VW_ACCESSWIN   (WM_USER + 39)

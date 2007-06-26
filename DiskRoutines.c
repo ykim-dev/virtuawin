@@ -445,7 +445,7 @@ void writeConfig(void)
         fprintf(fp, "Invert_Y# %i\n", invertY);
         fprintf(fp, "WinMenu_sticky# %i\n", stickyMenu);
         fprintf(fp, "WinMenu_assign# %i\n", assignMenu);
-        fprintf(fp, "WinMenu_direct# %i\n", directMenu);
+        fprintf(fp, "WinMenu_direct# %i\n", accessMenu);
         fprintf(fp, "Desktop_assignment# %i\n", useDeskAssignment);
         fprintf(fp, "Save_layout# %i\n", saveLayoutOnExit);
         fprintf(fp, "Assign_first# %i\n", assignOnlyFirst);
@@ -484,6 +484,7 @@ void writeConfig(void)
         fprintf(fp, "HotWMenu# %i\n", hotkeyWMenu);
         fprintf(fp, "HotWMenuMod# %i\n", hotkeyWMenuMod);
         fprintf(fp, "HotWMenuWin# %i\n", hotkeyWMenuWin);
+        fprintf(fp, "WinMenu_show# %i\n", showMenu);
         fclose(fp);
     }
 }
@@ -595,6 +596,7 @@ void readConfig(void)
         fscanf(fp, "%s%i", (char *) buff, &ii);
         fscanf(fp, "%s%i", (char *) buff, &nDesksY);
         fscanf(fp, "%s%i", (char *) buff, &nDesksX);
+        nDesks = nDesksX * nDesksY ;
         fscanf(fp, "%s%i", (char *) buff, &hotKeyEnable);
         for(ii=1 ; ii<10 ; ii++)
         {
@@ -616,7 +618,7 @@ void readConfig(void)
         fscanf(fp, "%s%i", (char *) buff, &invertY);
         fscanf(fp, "%s%hi", (char *) buff, &stickyMenu);
         fscanf(fp, "%s%hi", (char *) buff, &assignMenu);
-        fscanf(fp, "%s%hi", (char *) buff, &directMenu);
+        fscanf(fp, "%s%hi", (char *) buff, &accessMenu);
         fscanf(fp, "%s%i", (char *) buff, &useDeskAssignment);
         fscanf(fp, "%s%i", (char *) buff, &saveLayoutOnExit);
         fscanf(fp, "%s%i", (char *) buff, &assignOnlyFirst);
@@ -655,6 +657,7 @@ void readConfig(void)
         fscanf(fp, "%s%i", (char *) buff, &hotkeyWMenu);
         fscanf(fp, "%s%i", (char *) buff, &hotkeyWMenuMod);
         fscanf(fp, "%s%i", (char *) buff, &hotkeyWMenuWin);
+        fscanf(fp, "%s%hi", (char *) buff, &showMenu);
         fclose(fp);
     }
 }

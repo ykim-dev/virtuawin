@@ -66,13 +66,14 @@
 #define IDC_MOUSEWLIST    1056
 #define IDC_MOUSEWMENU    1057
 #define IDC_MOUSEMDCHNG   1058
-#define IDC_HOTSTICKY     1060
-#define IDC_HTTP          1061
-#define IDC_MAILTO        1062
-#define IDC_INVERTY       1063
-#define IDC_MENUSTICKY    1064
-#define IDC_MENUACCESS    1065
-#define IDC_MENUASSIGN    1066
+#define IDC_HOTSTICKY     1059
+#define IDC_HTTP          1060
+#define IDC_MAILTO        1061
+#define IDC_INVERTY       1062
+#define IDC_MENUACCESS    1063
+#define IDC_MENUASSIGN    1064
+#define IDC_MENUSHOW      1065
+#define IDC_MENUSTICKY    1066
 #define IDC_COMPACTMENU   1067
 #define IDC_MODDISABLE    1068
 #define IDC_LICENSE       1069
@@ -117,9 +118,13 @@
 #define ID_HELP          32777
 
 #define ID_WM_DISMISS    32780
-#define ID_WM_DESK       32780
-#define ID_WM_STICKY     32800
-#define ID_WM_MANAGE     32801
-#define ID_WM_INFO       32802
+#define ID_WM_ONTOP      32781
+#define ID_WM_BOTTOM     32782
+#define ID_WM_STICKY     32783
+#define ID_WM_MANAGE     32784
+#define ID_WM_INFO       32785
+#define ID_WM_PREV       32786
+#define ID_WM_NEXT       32787
+#define ID_WM_DESK       32790
 
 #endif

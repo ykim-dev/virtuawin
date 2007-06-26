@@ -30,17 +30,18 @@
 #define vwVIRTUAWIN_NAME_VERSION _T("VirtuaWin v3.1 test 1")
 
 // Various defines used on several places 
-#define MAXWIN           128       // max number of windows to handle
-#define MAXDESK           11       // max number of desktops (0 - not used, 1 - 9 - normal, 10 private) 
-#define MAXUSER           10       // max number of user windows to search for
-#define MAXMODULES        10       // max number of modules to handle
+#define vwWINDOW_MAX     128       // max number of windows to handle
+#define vwDESKTOP_MAX      9       // max number of desktops
+#define vwDESKTOP_SIZE    (vwDESKTOP_MAX + 2)
 #define vwCLASSNAME_MAX   64       // class name buffer size
 #define vwWINDOWNAME_MAX 128       // window name buffer size
 #define vwMODULENAME_MAX  79       // Maximum length of a module name (buffer needs to be n+1 long)
-#define vwDESK_PRIVATE1   10       // Deesk number of the first private desk
-#define UWM_SYSTRAY (WM_USER + 1)  // Sent to us by the systray
 
-// Internal messages for mouse controlling
-#define VW_MOUSEWARP   WM_USER + 90
+#define MAXUSER           10       // max number of user windows to search for
+#define MAXMODULES        10       // max number of modules to handle
+
+// Internal windows messages
+#define VW_SYSTRAY        (WM_USER + 1)  // Sent to us by the systray
+#define VW_MOUSEWARP      (WM_USER + 9)  // Mouse thread message
 
 #endif
