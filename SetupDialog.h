@@ -25,7 +25,7 @@
 #define _SETUPDIALOG_H_
 
 void createPropertySheet(HINSTANCE theHinst, HWND theHwndOwner);
-void initDeskHotkey(void) ;
-void storeDeskHotkey(void) ;
+void initDesktopProperties(void) ;
+void storeDesktopProperties(void) ;
 
 #endif

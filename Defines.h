@@ -27,17 +27,16 @@
 // application name and version defines
 #define vwVIRTUAWIN_NAME         _T("VirtuaWin")
 #define vwVIRTUAWIN_EMAIL        _T("VirtuaWin@home.se")
-#define vwVIRTUAWIN_NAME_VERSION _T("VirtuaWin v3.1 test 1")
+#define vwVIRTUAWIN_NAME_VERSION _T("VirtuaWin v3.1 test2")
 
 // Various defines used on several places 
-#define vwWINDOW_MAX     128       // max number of windows to handle
-#define vwDESKTOP_MAX      9       // max number of desktops
+#define vwWINDOW_MAX     160       // max number of windows to handle
+#define vwDESKTOP_MAX     20       // max number of desktops
 #define vwDESKTOP_SIZE    (vwDESKTOP_MAX + 2)
 #define vwCLASSNAME_MAX   64       // class name buffer size
 #define vwWINDOWNAME_MAX 128       // window name buffer size
 #define vwMODULENAME_MAX  79       // Maximum length of a module name (buffer needs to be n+1 long)
 
-#define MAXUSER           10       // max number of user windows to search for
 #define MAXMODULES        10       // max number of modules to handle
 
 // Internal windows messages

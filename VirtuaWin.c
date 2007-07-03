@@ -51,10 +51,6 @@ HANDLE hMutex;
 BOOL taskbarFixRequired;  // TRUE if tricky window tasks need to be continually hidden
 BOOL mouseEnabled=TRUE;   // Status of the mouse thread, always running at startup 
 HANDLE mouseThread;       // Handle to the mouse thread
-int curAssigned = 0;      // how many predefined desktop belongings we have (saved)
-int curSticky = 0;        // how many stickywindows we have (saved)
-int curTricky = 0;        // how many tricky windows we have (saved)
-int curUser = 0;          // how many user applications we have
 
 int taskbarEdge;
 int desktopWorkArea[2][4] ;
@@ -94,8 +90,15 @@ HWND setupHWnd;       		// handle to the setup dialog, NULL if not open
 BOOL setupOpen;         
 
 // vector holding icon handles for the systray
-HICON icons[vwDESKTOP_SIZE];    // 0=disabled, 1,2..=normal desks
 NOTIFYICONDATA nIconD;
+HICON icons[vwDESKTOP_SIZE];    // 0=disabled, 1,2..=normal desks
+char *desktopName[vwDESKTOP_SIZE];
+
+#define MENU_X_PADDING 1
+#define MENU_Y_PADDING 1
+#define ICON_PADDING 2
+#define ICON_SIZE 16
+HICON checkIcon;
 
 // Config parameters, see ConfigParameters.h for descriptions
 int nOfModules = 0;  
@@ -116,7 +119,6 @@ FILE *vwLogFile ;
 BOOL useMouseKey = FALSE;
 BOOL noMouseWrap = TRUE;
 BOOL keyEnable = TRUE;		
-BOOL hotKeyEnable = FALSE;      
 BOOL releaseFocus = FALSE;	
 BOOL minSwitch = TRUE;		
 UINT mouseEnable = 0; 
@@ -135,7 +137,7 @@ BOOL deskWrap = FALSE;
 BOOL invertY = FALSE;           
 short accessMenu = 1;
 short assignMenu = 1;
-short showMenu = 0;         
+short showMenu = 1;         
 short stickyMenu = 1;         
 short compactMenu = 0;
 BOOL useDeskAssignment = FALSE;
@@ -184,9 +186,6 @@ int         deskImageCount=-1 ;
 HBITMAP     deskImageBitmap=NULL ;
 BITMAPINFO  deskImageInfo ;
 void       *deskImageData=NULL ;
-
-// icon for sticky checkmarks
-HICON   checkIcon;
 
 enum {
     OSVERSION_UNKNOWN=0,
@@ -493,11 +492,41 @@ void enableMouse(BOOL turnOn)
 /*************************************************
  * Sets the icon in the systray and updates the currentDesk variable
  */
-static void setIcon(int theNumber)
+static void
+setIcon(int deskNumber, int hungCount)
 {
-    nIconD.hIcon = icons[theNumber];
     if(displayTaskbarIcon)
-        Shell_NotifyIcon(NIM_MODIFY, &nIconD);
+    {
+        int ll, add ;
+        if((add = (deskNumber < 0)))
+            deskNumber = 0 - deskNumber ;
+        if(hungCount < 0)
+        {
+            nIconD.hIcon = NULL ;
+            hungCount = 0 - hungCount ;
+        }
+        else
+            nIconD.hIcon = icons[deskNumber];
+        ll = 0 ;
+        if(hungCount)
+            ll = _stprintf(nIconD.szTip,_T("%d window%s not responding\n"),hungCount,(hungCount==1) ? _T(""):_T("s")) ;
+        if(desktopName[deskNumber] != NULL)
+        {
+            _tcsncpy(nIconD.szTip+ll,desktopName[deskNumber],64-ll) ;
+            nIconD.szTip[63] = '\0' ;
+        }
+        else
+            _stprintf(nIconD.szTip+ll,_T("Desktop %d"),deskNumber) ;
+        if(add)
+        {
+            // This adds the icon, try up to 3 times as systray process may not have started
+            ll = 3 ;
+            while((Shell_NotifyIcon(NIM_ADD, &nIconD) == 0) && (--ll > 0))
+                Sleep(2000);
+        }
+        else
+            Shell_NotifyIcon(NIM_MODIFY, &nIconD);
+    }
 }
 
 /************************ *************************
@@ -508,7 +537,7 @@ static void loadIcons(void)
     int xIcon = GetSystemMetrics(SM_CXSMICON);
     int yIcon = GetSystemMetrics(SM_CYSMICON);
     int ii, iconId, iconCount ;
-    TCHAR buff[16] ;
+    TCHAR buff[16], *ss ;
     
     if(nDesksY != 2 || nDesksX != 2) // if 2 by 2 mode
     {
@@ -523,16 +552,25 @@ static void loadIcons(void)
             iconId = IDI_ST_DIS_1 ;
         iconCount = 4 ;
     }
-    _tcscpy(buff,_T("icons/X.ico")) ;
+    _tcscpy(buff,_T("icons/")) ;
     for(ii = 0 ; ii<vwDESKTOP_SIZE ; ii++)
     {
         if((ii <= nDesks) || (deskHotkey[ii] != 0))
         {
             /* Try to load user defined icons, otherwise use built in icon or disable icon */
-            buff[6] = ii + ((ii > 9) ? 'A':'0') ;
+            ss = buff+6 ;
+            if(ii > 9)
+            {
+                *ss++ = (ii/10)+'0' ;
+                *ss++ = (ii%10)+'0' ;
+            }
+            else
+                *ss++ = ii+'0' ;
+            _tcscpy(ss,_T(".ico")) ;
             if(((icons[ii] = (HICON) LoadImage(hInst, buff, IMAGE_ICON, xIcon, yIcon, LR_LOADFROMFILE)) == NULL) &&
                ((ii > iconCount) ||
-                ((icons[ii] = (HICON) LoadImage(hInst, MAKEINTRESOURCE(iconId+ii), IMAGE_ICON, xIcon, yIcon, 0)) == NULL)))
+                ((icons[ii] = (HICON) LoadImage(hInst, MAKEINTRESOURCE(iconId+ii), IMAGE_ICON, xIcon, yIcon, 0)) == NULL)) &&
+               ((icons[ii] = (HICON) LoadImage(hInst, MAKEINTRESOURCE(IDI_VIRTUAWIN), IMAGE_ICON, xIcon, yIcon, 0)) == NULL))
                 icons[ii] = icons[0] ;
         }
     }
@@ -550,7 +588,7 @@ void reLoadIcons(void)
         icons[ii] = NULL;
     while(--ii >= 0) ;
     loadIcons();
-    setIcon(currentDesk);
+    setIcon(currentDesk,0);
 }
 
 /*************************************************
@@ -631,21 +669,18 @@ static BOOL registerHotKeys(void)
     if(!hotKeysRegistred)
     {
         hotKeysRegistred = TRUE;
-        if(hotKeyEnable)
-        {
-            _tcscpy(buff,_T("atomKey#")) ;
-            ii = vwDESKTOP_SIZE-1 ;
-            do {
-                if(deskHotkey[ii])
-                {
-                    buff[7] = '0'+ii ;
-                    vwDesk[ii] = GlobalAddAtom(buff);
-                    if((RegisterHotKey(hWnd, vwDesk[ii], hotKey2ModKey(deskHotkeyMod[ii]) | deskHotkeyWin[ii],
-                                       deskHotkey[ii]) == FALSE))
-                        return FALSE;
-                }
-            } while(--ii > 0) ;
-        }
+        _tcscpy(buff,_T("atomKey#")) ;
+        ii = vwDESKTOP_SIZE-1 ;
+        do {
+            if(deskHotkey[ii])
+            {
+                buff[7] = '0'+ii ;
+                vwDesk[ii] = GlobalAddAtom(buff);
+                if((RegisterHotKey(hWnd, vwDesk[ii], hotKey2ModKey(deskHotkeyMod[ii]) | deskHotkeyWin[ii],
+                                   deskHotkey[ii]) == FALSE))
+                    return FALSE;
+            }
+        } while(--ii > 0) ;
     }
     return TRUE;
 }
@@ -1117,18 +1152,19 @@ static BOOL checkIfWindowMatch(vwWindowMatch *wm, TCHAR *className, TCHAR *windo
  */
 static BOOL checkIfTricky(TCHAR *className, TCHAR *windowName, RECT *pos)
 {
-    int ii, ret=0 ; 
+    int ret=0 ; 
     vwLogVerbose((_T("checkIfTricky [%s] [%s] %d %d\n"),className,windowName,(int)pos->left,(int)pos->top)) ;
     if(trickyWindows)
     {
-        ii = curTricky ;
-        while(--ii >= 0)
+        vwWindowMatch *wm=trickyList ;
+        while(wm != NULL)
         {
-            if(checkIfWindowMatch(&(trickyList[ii]),className,windowName)) 
+            if(checkIfWindowMatch(wm,className,windowName)) 
             {
                 ret = vwTRICKY_WINDOW ;
                 break ;
             }
+            wm = wm->next ;
         }
         if((pos->left == -32000) && (pos->top == -32000))
             // some apps hide the window by pushing it to -32000, the windows
@@ -1144,16 +1180,17 @@ static BOOL checkIfTricky(TCHAR *className, TCHAR *windowName, RECT *pos)
  */
 static BOOL checkIfSticky(TCHAR *className, TCHAR *windowName)
 {
-    int i=curSticky ;
+    vwWindowMatch *wm=stickyList ;
     
     vwLogVerbose((_T("checkIfSticky [%s] [%s]\n"),className,windowName)) ;
-    while(--i >= 0)
+    while(wm != NULL)
     {
-        if(checkIfWindowMatch(&(stickyList[i]),className,windowName)) 
+        if(checkIfWindowMatch(wm,className,windowName)) 
             // Typically user windows will loose their stickiness if
             // minimized, therefore we do not remove their name from 
             // the list as done above.
             return TRUE;
+        wm = wm->next ;
     }
     return FALSE;
 }
@@ -1163,24 +1200,26 @@ static BOOL checkIfSticky(TCHAR *className, TCHAR *windowName)
  */
 static int checkIfAssigned(TCHAR *className, TCHAR *windowName)
 {
-    int i;
+    vwWindowMatch *wm=assignedList ;
+    
     vwLogVerbose((_T("checkIfAssigned [%s] [%s]\n"),className,windowName)) ;
-    for(i = 0; i < curAssigned; ++i) 
+    while(wm != NULL)
     {
-        if((assignedList[i].type & 0x04) == 0)
+        if((wm->type & 0x04) == 0)
         {
-            vwLogVerbose((_T("Assign comparing [%s] [%s] with %d [%s]\n"),className,windowName,(int) assignedList[i].type,assignedList[i].match)) ;
+            vwLogVerbose((_T("Assign comparing [%s] [%s] with %d [%s]\n"),className,windowName,(int) wm->type,wm->match)) ;
             
-            if(checkIfWindowMatch(&(assignedList[i]),className,windowName)) 
+            if(checkIfWindowMatch(wm,className,windowName)) 
             {
                 if(assignOnlyFirst)
-                    assignedList[i].type |= 0x04 ;
-                if((assignedList[i].desk > nDesks) && ((assignedList[i].desk > vwDESKTOP_SIZE-1) || !deskHotkey[i]))
+                    wm->type |= 0x04 ;
+                if((wm->desk > nDesks) && ((wm->desk > vwDESKTOP_SIZE-1) || !deskHotkey[wm->desk]))
                     MessageBox(hWnd,_T("Tried to assign an application to an unavaliable desktop.\nIt will not be assigned.\nCheck desktop assignmet configuration."),vwVIRTUAWIN_NAME _T(" Error"), MB_ICONERROR); 
                 else
-                    return assignedList[i].desk ; // Yes, assign
+                    return wm->desk ; // Yes, assign
             }
         }
+        wm = wm->next ;
     }
     return currentDesk; // No assignment, return current
 }
@@ -1425,15 +1464,15 @@ static int windowSetSticky(HWND theWin, int state)
  */
 static void findUserWindows(void) 
 {
+    vwWindowMatch *wm=userList ;
     HWND tmpHnd;
-    int i;
     
-    for(i = 0; i < curUser; ++i)
+    while(wm != NULL)
     {
-        if(userList[i].type & 1)
-            tmpHnd = FindWindow(NULL,userList[i].match);
+        if(wm->type & 1)
+            tmpHnd = FindWindow(NULL,wm->match);
         else
-            tmpHnd = FindWindow(userList[i].match, NULL);
+            tmpHnd = FindWindow(wm->match, NULL);
         
         if((tmpHnd != NULL) && (winListFind(tmpHnd) < 0))
         {
@@ -1442,6 +1481,7 @@ static void findUserWindows(void)
             winList[nWin].ExStyle = GetWindowLong(tmpHnd, GWL_EXSTYLE);
             nWin++;
         }
+        wm = wm->next ;
     }
 }
 
@@ -1565,7 +1605,7 @@ static int winListUpdate(void)
 
     // Get all windows
     EnumWindows(enumWindowsProc,0);
-    if(curUser)
+    if(userList != NULL)
         findUserWindows();
     
     // finish the initialisation of new windows
@@ -1899,13 +1939,8 @@ static VOID CALLBACK monitorTimerProc(HWND hwnd, UINT uMsg, UINT idEvent, DWORD 
         index = (mtCount & ~0x7f) ? 31:3;
         if((mtCount & index) == 0)
         {
-            if(displayTaskbarIcon)
-            {
-                /* flash the icon for half a second each time we try */
-                _stprintf(nIconD.szTip,_T("%d window%s not responding"),hungCount,(hungCount==1) ? _T(""):_T("s")) ;
-                nIconD.hIcon = NULL; // No icon
-                Shell_NotifyIcon(NIM_MODIFY, &nIconD);
-            }
+            /* flash the icon for half a second each time we try */
+            setIcon(currentDesk,0-hungCount) ;
             index = nWin ;
             while(--index >= 0)
             {
@@ -1921,18 +1956,17 @@ static VOID CALLBACK monitorTimerProc(HWND hwnd, UINT uMsg, UINT idEvent, DWORD 
                 }
             }
         }
-        else if((((mtCount-1) & index) == 0) && displayTaskbarIcon)
+        else if(((mtCount-1) & index) == 0)
         {
-            /* restore the icon */
-            setIcon(currentDesk);
+            /* restore the flashing icon */
+            setIcon(currentDesk,hungCount) ;
         }
     }
     else if(mtCount)
     {
         /* hung process problem has been resolved. */
         mtCount = 0 ;
-        _tcscpy(nIconD.szTip,vwVIRTUAWIN_NAME_VERSION);	// Restore Tooltip
-        setIcon(currentDesk);
+        setIcon(currentDesk,0);
     }
 
     if(taskbarFixRequired)
@@ -1992,7 +2026,7 @@ static int changeDesk(int newDesk, WPARAM msgWParam)
         } while((activeHWnd = ownerWnd) != 0) ;
     }
     if(setupOpen)
-        storeDeskHotkey() ;
+        storeDesktopProperties() ;
     
     currentDesk = newDesk;
     /* Calculations for getting the x and y positions */
@@ -2138,10 +2172,10 @@ static int changeDesk(int newDesk, WPARAM msgWParam)
     
     if(setupOpen)
     {
-        initDeskHotkey() ;
+        initDesktopProperties() ;
         showSetup() ;
     }
-    setIcon(currentDesk) ;
+    setIcon(currentDesk,0) ;
     if(refreshOnWarp) // Refresh the desktop 
         RedrawWindow( NULL, NULL, NULL, RDW_INVALIDATE | RDW_ERASE | RDW_ALLCHILDREN );
     
@@ -2278,8 +2312,9 @@ static int stepUp(void)
  * 
  * Author: Christian Storm aka cosmic (Christian.Storm@Informatik.Uni-Oldenburg.de)
  */
-#define vwPMENU_TITLES   0x001
+#define vwPMENU_ALLWIN   0x001
 #define vwPMENU_COMPACT  0x002
+#define vwPMENU_MULTICOL 0x004
 #define vwPMENU_TITLEID  0x100
 #define vwPMENU_ACCESS   0x100
 #define vwPMENU_ASSIGN   0x200
@@ -2292,10 +2327,20 @@ static int
 winListCreateItemList(MenuItem **items,int *numitems)
 {
     MenuItem *item;
+    TCHAR fmt[16], *ss ;
     TCHAR title[48];
     TCHAR buff[MAX_PATH];
     int i,x,y,c,doAssignMenu=0 ;
     
+    ss = fmt ;
+    *ss++ = '%' ;
+    if(nDesks > 9)
+        *ss++ = '2' ;
+#ifdef NDEBUG
+    _tcscpy(ss,_T("d - %s")) ;
+#else
+    _tcscpy(ss,_T("d - %s (%x)")) ;
+#endif
     // create the window list
     lockMutex();
     winListUpdate() ;
@@ -2320,9 +2365,9 @@ winListCreateItemList(MenuItem **items,int *numitems)
             
             GetWindowText(winList[c].Handle, buff, 30);
 #ifdef NDEBUG
-            _stprintf(title,_T("%d - %s"),winList[c].Desk,buff);
+            _stprintf(title,fmt,winList[c].Desk,buff);
 #else
-            _stprintf(title,_T("%d - %s (%x)"),winList[c].Desk,buff,(int) winList[c].Handle);
+            _stprintf(title,fmt,winList[c].Desk,buff,(int) winList[c].Handle);
 #endif
             if(((item = malloc(sizeof(MenuItem))) == NULL) ||
                ((item->name = _tcsdup(title)) == NULL))
@@ -2386,7 +2431,7 @@ winListCreateItemList(MenuItem **items,int *numitems)
     }
     *numitems = i ;
     
-    i = ((accessMenu + assignMenu + showMenu + stickyMenu) == 1) ? 0:vwPMENU_TITLES ;
+    i = ((accessMenu + assignMenu + showMenu + stickyMenu) == 1) ? 0:vwPMENU_ALLWIN ;
     if(compactMenu)
         i |= vwPMENU_COMPACT ;
     if(accessMenu)
@@ -2405,7 +2450,7 @@ winListCreateMenu(int flags, int itemCount, MenuItem **items)
 {
     MENUITEMINFO minfo ;
     HMENU hMenu;
-    int c, x, divFlags ;
+    int c, x, divFlags, itemsPerCol, itemsAllowed ;
     
     if((hMenu = CreatePopupMenu()) == NULL)
         return NULL ;
@@ -2414,81 +2459,80 @@ winListCreateMenu(int flags, int itemCount, MenuItem **items)
     minfo.fMask = MIIM_STATE ;
     minfo.fState = MFS_DEFAULT ;
     divFlags = (flags & vwPMENU_COMPACT) ? MF_STRING:(MF_STRING | MF_DISABLED) ;
+    if(flags & vwPMENU_MULTICOL)
+        itemsPerCol = (desktopWorkArea[1][3]-desktopWorkArea[1][1]) / (ICON_SIZE + (2*MENU_Y_PADDING)) ;
+    else
+        itemsPerCol = -1 ;
     
     if(flags & vwPMENU_ACCESS)
     {
-        if(flags & vwPMENU_TITLES)
-        {
-            AppendMenu(hMenu,divFlags,vwPMENU_ACCESS,(flags & vwPMENU_COMPACT) ? _T("Access    (&Next ->)"):_T("Access"));
-            SetMenuItemInfo(hMenu,vwPMENU_ACCESS,FALSE,&minfo) ;
-            AppendMenu(hMenu,MF_SEPARATOR,0,NULL);
-            divFlags |= MF_MENUBARBREAK ;
-        }
+        AppendMenu(hMenu,divFlags,vwPMENU_ACCESS,(flags & vwPMENU_COMPACT) ? _T("Access    (&Next ->)"):_T("Access"));
+        SetMenuItemInfo(hMenu,vwPMENU_ACCESS,FALSE,&minfo) ;
+        AppendMenu(hMenu,MF_SEPARATOR,0,NULL);
+        divFlags |= MF_MENUBARBREAK ;
+        itemsAllowed = itemsPerCol - 1 ; 
         for(x=0,c=0 ; x < itemCount ; x++)
         {
             if((c != 0) && (c != items[x]->desk))
                 AppendMenu(hMenu, MF_SEPARATOR, 0, NULL );
             c = items[x]->desk;
-            AppendMenu(hMenu, MF_OWNERDRAW, vwPMENU_ACCESS | (items[x]->id), (const TCHAR *) items[x] );
+            AppendMenu(hMenu,((--itemsAllowed == 0) ? ((itemsAllowed = itemsPerCol),(MF_OWNERDRAW|MF_MENUBARBREAK)):MF_OWNERDRAW),
+                       vwPMENU_ACCESS | (items[x]->id), (const TCHAR *) items[x] );
         }
     }
     if(flags & vwPMENU_ASSIGN)
     {
-        if(flags & vwPMENU_TITLES)
-        {
-            AppendMenu(hMenu,divFlags,vwPMENU_ASSIGN,(flags & vwPMENU_COMPACT) ? _T("Assign    (&Next ->)"):_T("Assign"));
-            SetMenuItemInfo(hMenu,vwPMENU_ASSIGN,FALSE,&minfo) ;
-            AppendMenu(hMenu,MF_SEPARATOR,0,NULL);
-            divFlags |= MF_MENUBARBREAK ;
-        }
+        AppendMenu(hMenu,divFlags,vwPMENU_ASSIGN,(flags & vwPMENU_COMPACT) ? _T("Assign    (&Next ->)"):_T("Assign"));
+        SetMenuItemInfo(hMenu,vwPMENU_ASSIGN,FALSE,&minfo) ;
+        AppendMenu(hMenu,MF_SEPARATOR,0,NULL);
+        divFlags |= MF_MENUBARBREAK ;
+        itemsAllowed = itemsPerCol - 1 ; 
         for(x=0,c=0 ; x < itemCount ; x++)
         {
             //cannot assign windows already on the current Desktop
-            if((items[x]->desk != currentDesk) || (flags & vwPMENU_TITLES))
+            if((items[x]->desk != currentDesk) || (flags & vwPMENU_ALLWIN))
             {
                 if((c != 0) && (c != items[x]->desk))
                     AppendMenu(hMenu, MF_SEPARATOR, 0, NULL );
                 c = items[x]->desk;
                 if(items[x]->desk != currentDesk)
-                    AppendMenu(hMenu, MF_OWNERDRAW, (vwPMENU_ASSIGN | (items[x]->id)), (const TCHAR *) items[x] );
+                    AppendMenu(hMenu, ((--itemsAllowed == 0) ? ((itemsAllowed = itemsPerCol),(MF_OWNERDRAW|MF_MENUBARBREAK)):MF_OWNERDRAW),
+                               (vwPMENU_ASSIGN | (items[x]->id)), (const TCHAR *) items[x] );
                 else
                     /* Make it a separator so cursor movement skips this line */
-                    AppendMenu(hMenu, (MF_OWNERDRAW | MF_SEPARATOR), 0, 0) ;
+                    AppendMenu(hMenu,((--itemsAllowed == 0) ? ((itemsAllowed = itemsPerCol),(MF_OWNERDRAW|MF_MENUBARBREAK|MF_SEPARATOR)):(MF_OWNERDRAW|MF_SEPARATOR)), 0, 0) ;
             }
         }
     }
     if(flags & vwPMENU_SHOW)
     {
-        if(flags & vwPMENU_TITLES)
-        {
-            AppendMenu(hMenu,divFlags,vwPMENU_SHOW,(flags & vwPMENU_COMPACT) ? _T("Show      (&Next ->)"):_T("Show"));
-            SetMenuItemInfo(hMenu,vwPMENU_SHOW,FALSE,&minfo) ;
-            AppendMenu(hMenu,MF_SEPARATOR,0,NULL);
-            divFlags |= MF_MENUBARBREAK ;
-        }
+        AppendMenu(hMenu,divFlags,vwPMENU_SHOW,(flags & vwPMENU_COMPACT) ? _T("Show      (&Next ->)"):_T("Show"));
+        SetMenuItemInfo(hMenu,vwPMENU_SHOW,FALSE,&minfo) ;
+        AppendMenu(hMenu,MF_SEPARATOR,0,NULL);
+        divFlags |= MF_MENUBARBREAK ;
+        itemsAllowed = itemsPerCol - 1 ; 
         for(x=0,c=0 ; x < itemCount ; x++)
         {
             if((c != 0) && (c != items[x]->desk))
                 AppendMenu(hMenu, MF_SEPARATOR, 0, NULL );
             c = items[x]->desk;
-            AppendMenu(hMenu, MF_OWNERDRAW, vwPMENU_SHOW | (items[x]->id), (const TCHAR *) items[x] );
+            AppendMenu(hMenu,((--itemsAllowed == 0) ? ((itemsAllowed = itemsPerCol),(MF_OWNERDRAW|MF_MENUBARBREAK)):MF_OWNERDRAW),
+                       vwPMENU_SHOW | (items[x]->id), (const TCHAR *) items[x] );
         }
     }
     if(flags & vwPMENU_STICKY)
     {
-        if(flags & vwPMENU_TITLES)
-        {
-            AppendMenu(hMenu,divFlags,vwPMENU_STICKY,(flags & vwPMENU_COMPACT) ? _T("Sticky    (&Next ->)"):_T("Sticky"));
-            SetMenuItemInfo(hMenu,vwPMENU_STICKY,FALSE,&minfo) ;
-            AppendMenu(hMenu,MF_SEPARATOR,0,NULL);
-            divFlags |= MF_MENUBARBREAK ;
-        }
+        AppendMenu(hMenu,divFlags,vwPMENU_STICKY,(flags & vwPMENU_COMPACT) ? _T("Sticky    (&Next ->)"):_T("Sticky"));
+        SetMenuItemInfo(hMenu,vwPMENU_STICKY,FALSE,&minfo) ;
+        AppendMenu(hMenu,MF_SEPARATOR,0,NULL);
+        divFlags |= MF_MENUBARBREAK ;
+        itemsAllowed = itemsPerCol - 1 ; 
         for(x=0,c=0 ; x < itemCount ; x++)
         {
             if((c != 0) && (c != items[x]->desk))
                 AppendMenu(hMenu, MF_SEPARATOR, 0, NULL );
             c = items[x]->desk;
-            AppendMenu(hMenu, MF_OWNERDRAW | (items[x]->sticky ? MF_CHECKED: 0),
+            AppendMenu(hMenu, MF_OWNERDRAW | (items[x]->sticky ? MF_CHECKED: 0) | ((--itemsAllowed == 0) ? ((itemsAllowed = itemsPerCol),MF_MENUBARBREAK):0),
                        vwPMENU_STICKY | (items[x]->id), (const TCHAR *) items[x] );
         }
     }
@@ -2583,7 +2627,7 @@ static void disableAll(HWND aHWnd)
     if(enabled)
     {   // disable VirtuaWin
         _tcscpy(nIconD.szTip,vwVIRTUAWIN_NAME _T(" - Disabled")); //Tooltip
-        setIcon(0);
+        setIcon(0,0);
         KillTimer(hWnd, 0x29a);
         enableMouse(FALSE);
         unRegisterAllKeys();
@@ -2594,8 +2638,7 @@ static void disableAll(HWND aHWnd)
         registerAllKeys();
         enableMouse(mouseEnable);
         SetTimer(hWnd, 0x29a, 250, monitorTimerProc);
-        _tcscpy(nIconD.szTip,vwVIRTUAWIN_NAME_VERSION);	// Tooltip
-        setIcon(currentDesk);
+        setIcon(currentDesk,0);
         enabled = TRUE;
     }
 }
@@ -2908,9 +2951,12 @@ static void windowMenu(HWND theWin)
         AppendMenu(hpopup,(deskWrap || (currentDesk < nDesks)) ? MF_STRING:(MF_STRING|MF_GRAYED),ID_WM_NEXT,_T("Move to &Next"));
         AppendMenu(hpopup,(deskWrap || (currentDesk > 1)) ? MF_STRING:(MF_STRING|MF_GRAYED),ID_WM_PREV,_T("Move to &Previous"));
         AppendMenu(hpopup,MF_SEPARATOR,0,NULL) ;
+        _tcscpy(buff,_T("Move to Desk & ")) ;
         for(ii = 1 ; ii <= nDesks ; ii++)
         {
-            _stprintf(buff,_T("Move to Desk &%d"),ii) ;
+            if(ii >= 10)
+                buff[13] = (ii/10)+'0' ;
+            buff[14] = (ii%10)+'0' ;
             AppendMenu(hpopup,(ii == currentDesk) ? (MF_STRING|MF_GRAYED):MF_STRING,ID_WM_DESK+ii,buff) ;
         }
     }
@@ -3036,12 +3082,6 @@ static HFONT getMenuFont()
  * Returns the bounding rect for each menu item
  * response to WM_MEASUREITEM
  */
-
-#define MENU_X_PADDING 1
-#define MENU_Y_PADDING 1
-#define ICON_PADDING 2
-#define ICON_SIZE 16
-
 static void measureMenuItem(HWND hwnd,MEASUREITEMSTRUCT* mitem)
 {
     HDC testdc;
@@ -3140,7 +3180,7 @@ static void winListPopupMenu(HWND aHWnd, int forceFocusChange)
     HMENU hpopup;
     POINT pt;
     HWND hwnd ;
-    int flags, retItem, id, ii ;
+    int scDir=1, flags, retItem, id, ii ;
     
     // storage for list of MenuItem structs
     MenuItem *items[vwWINDOW_MAX] ;
@@ -3156,19 +3196,18 @@ static void winListPopupMenu(HWND aHWnd, int forceFocusChange)
     if(forceFocusChange)
         setForegroundWin(NULL,0) ;
     SetForegroundWindow(aHWnd);
-    
+    singleColumn >>= 1 ;
     for(;;)
     {
         retItem = 0 ;
         if(flags & vwPMENU_COMPACT)
         {
-            while((singleColumn & flags) == 0)
-            {
-                singleColumn = singleColumn << 1 ;
+            do {
+                singleColumn = (scDir < 0) ? (singleColumn >> 1) : (singleColumn << 1) ;
                 if((singleColumn & vwPMENU_COL_MASK) == 0)
-                    singleColumn = vwPMENU_ACCESS ;
-            }
-            ii = vwPMENU_TITLES | vwPMENU_COMPACT | singleColumn ;
+                    singleColumn = (scDir < 0) ? vwPMENU_STICKY:vwPMENU_ACCESS ;
+            } while((singleColumn & flags) == 0) ;
+            ii = vwPMENU_ALLWIN | vwPMENU_COMPACT | vwPMENU_MULTICOL | singleColumn ;
         }
         else
             ii = flags ;
@@ -3181,7 +3220,10 @@ static void winListPopupMenu(HWND aHWnd, int forceFocusChange)
         DestroyMenu(hpopup) ;
         if(((retItem & vwPMENU_COL_MASK) == 0) || ((retItem & vwPMENU_ID_MASK) != 0))
             break ;
-        singleColumn = singleColumn << 1 ;
+        if(flags & vwPMENU_COMPACT)
+            scDir = (HIWORD(GetKeyState(VK_SHIFT))) ? -1:1 ;
+        else
+            flags |= vwPMENU_ALLWIN|vwPMENU_ACCESS|vwPMENU_ASSIGN|vwPMENU_SHOW|vwPMENU_STICKY ;
     }
             
     if(retItem & vwPMENU_ID_MASK)
@@ -3410,7 +3452,7 @@ wndProc(HWND aHWnd, UINT message, WPARAM wParam, LPARAM lParam)
         return TRUE;
         
     case VW_SHOWICON:
-        Shell_NotifyIcon(NIM_ADD, &nIconD);    // This re-adds the icon
+        setIcon(0-currentDesk,0);              // This re-adds the icon
         return TRUE;
         
     case VW_HELP:
@@ -3674,10 +3716,10 @@ wndProc(HWND aHWnd, UINT message, WPARAM wParam, LPARAM lParam)
         break;
     default:
         // If taskbar restarted
-        if((message == taskbarRestart) && displayTaskbarIcon )
+        if(message == taskbarRestart)
         {
-            Shell_NotifyIcon(NIM_ADD, &nIconD);	// This re-adds the icon
             goGetTheTaskbarHandle();
+            setIcon(0-currentDesk,0);	// This re-adds the icon
         }
         break;
     }
@@ -3756,7 +3798,6 @@ VirtuaWinInit(HINSTANCE hInstance)
         vwLogBasic((vwVIRTUAWIN_NAME_VERSION _T("\n"))) ;
     }
     
-    
     /* set the window to give focus to when releasing focus on switch also used to refresh */
     desktopHWnd = GetDesktopWindow();
     deskIconHWnd = FindWindow(_T("Progman"), _T("Program Manager")) ;
@@ -3773,7 +3814,7 @@ VirtuaWinInit(HINSTANCE hInstance)
     
     // Load tricky windows, must be done before the crashRecovery checks
     if(trickyWindows)
-        curTricky = loadTrickyList(trickyList) ;
+        loadTrickyList();
     
     /* Create window. Note that WS_VISIBLE is not used, and window is never shown. */
     if((hWnd = CreateWindowEx(0, classname, classname, WS_POPUP, CW_USEDEFAULT, 0,
@@ -3790,32 +3831,16 @@ VirtuaWinInit(HINSTANCE hInstance)
           NIF_ICON |		    // nIconD.hIcon is valid, use it
           NIF_TIP;		    // nIconD.szTip is valid, use it
     nIconD.uCallbackMessage = VW_SYSTRAY;  // message sent to nIconD.hWnd
-    nIconD.hIcon = icons[1];
+    setIcon(-1,0) ;
     
-    _tcscpy(nIconD.szTip,vwVIRTUAWIN_NAME_VERSION);		// Tooltip
-    if( displayTaskbarIcon )
-    {
-        // This adds the icon
-        if(Shell_NotifyIcon(NIM_ADD, &nIconD) == 0)
-        {
-            BOOL retry = 1;
-            do
-            {
-                Sleep(2000);
-                // Maybe Systray process hasn't started yet, try again
-                retry = Shell_NotifyIcon(NIM_ADD, &nIconD);  // This adds the icon
-            }
-            while(retry != 0);
-        }
-    }
     /* Register the keys */
     registerAllKeys();
     setMouseKey();
     
-    /* Load some stuff */
-    curSticky   = loadStickyList(stickyList);
-    curAssigned = loadAssignedList(assignedList);
-    curUser     = loadUserList(userList);  // load any user defined windows
+    /* Load the sticky, auto-assign and user defined window list */
+    loadStickyList();
+    loadAssignedList();
+    loadUserList();
     
     /* always move windows immediately on startup */
     awStore = assignImmediately ;

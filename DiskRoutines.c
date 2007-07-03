@@ -241,15 +241,26 @@ int loadDisabledModules(disModules *theDisList)
 /*************************************************
  * Loads window match list from a file
  */
-static int
-loadWindowMatchList(TCHAR *fname, BOOL hasDesk, vwWindowMatch *matchList)
+static void
+loadWindowMatchList(TCHAR *fname, BOOL hasDesk, vwWindowMatch **matchList)
 {
+    vwWindowMatch *wm, *pwm ;
     unsigned short desk=0 ;
     unsigned char type ;
     TCHAR buff[1024], *ss ;
     int len, matchCount=0 ;
     FILE *fp ;
     
+    if((wm = *matchList) != NULL)
+    {
+        do {
+            pwm = wm->next ;
+            free(wm->match) ;
+            free(wm) ;
+        } while((wm = pwm) != NULL) ; 
+        *matchList = NULL ;
+    }
+    pwm = NULL ;
     if((fp = _tfopen(fname,_T("r"))) != NULL)
     {
         while(_fgetts(buff,1024,fp) != NULL)
@@ -279,28 +290,34 @@ loadWindowMatchList(TCHAR *fname, BOOL hasDesk, vwWindowMatch *matchList)
                     type = 0 ;
                 if(((type & 2) == 0) && (len > vwCLASSNAME_MAX))
                     ss[vwCLASSNAME_MAX] = '\0' ;
-                if((matchList[matchCount].match = _tcsdup(ss)) != NULL)
+                if(((wm = malloc(sizeof(vwWindowMatch))) != NULL) &&
+                   ((wm->match = _tcsdup(ss)) != NULL))
                 {
-                    matchList[matchCount].type = type ;
-                    matchList[matchCount].desk = desk ;
-                    matchCount++ ;
+                    wm->next = NULL ;
+                    wm->type = type ;
+                    wm->desk = desk ;
+                    if(pwm == NULL)
+                        *matchList = wm ;
+                    else
+                        pwm->next = wm ;
+                    pwm = wm ;
                 }
             }
         }
         fclose(fp) ;
     }
-    return matchCount;
 }
 
 /*************************************************
  * Loads window classnames from sticky file
  */
-int loadStickyList(vwWindowMatch *theStickyList) 
+void
+loadStickyList(void) 
 {
     TCHAR fname[MAX_PATH];
     
     GetFilename(vwSTICKY,1,fname);
-    return loadWindowMatchList(fname,0,theStickyList) ;
+    loadWindowMatchList(fname,0,&stickyList) ;
 }
 
 /*************************************************
@@ -336,12 +353,13 @@ void saveStickyWindows(int theNOfWin, windowType *theWinList)
 /*************************************************
  * Loads window classnames from tricky file
  */
-int loadTrickyList(vwWindowMatch *theTrickyList) 
+void
+loadTrickyList(void) 
 {
     TCHAR fname[MAX_PATH];
     
     GetFilename(vwTRICKY,1,fname);
-    return loadWindowMatchList(fname,0,theTrickyList) ;
+    loadWindowMatchList(fname,0,&trickyList) ;
 }
 
 
@@ -375,23 +393,25 @@ void saveAssignedList(int theNOfWin, windowType *theWinList)
 /*************************************************
  * Loads the list with classnames that has an desktop assigned
  */
-int loadAssignedList(vwWindowMatch *theAssignList) 
+void
+loadAssignedList(void) 
 {
     TCHAR fname[MAX_PATH];
     
     GetFilename(vwWINDOWS_STATE,1,fname);
-    return loadWindowMatchList(fname,1,theAssignList) ;
+    loadWindowMatchList(fname,1,&assignedList) ;
 }
 
 /*************************************************
  * Loads window titles/classnames from user file 
  */
-int loadUserList(vwWindowMatch *theUserList) 
+void
+loadUserList(void) 
 {
     TCHAR fname[MAX_PATH];
     
     GetFilename(vwLIST,1,fname);
-    return loadWindowMatchList(fname,0,theUserList) ;
+    loadWindowMatchList(fname,0,&userList) ;
 }
 
 /************************************************
@@ -401,7 +421,7 @@ void writeConfig(void)
 {
     TCHAR VWConfigFile[MAX_PATH];
     FILE* fp;
-    int ii ;
+    int ii, jj ;
     
     GetFilename(vwCONFIG,1,VWConfigFile);
     
@@ -425,11 +445,17 @@ void writeConfig(void)
         fprintf(fp, "Not_used# 0\n");
         fprintf(fp, "Desk_Ysize# %i\n", nDesksY);
         fprintf(fp, "Desk_Xsize# %i\n", nDesksX);
-        fprintf(fp, "Hot_key_support# %i\n", hotKeyEnable);
-        for(ii=1 ; ii<10 ; ii++) {
+        fprintf(fp, "Not_used# 0\n");
+        jj = vwDESKTOP_MAX ;
+        while((deskHotkey[jj] == 0) && (desktopName[jj] == NULL))
+            jj-- ;
+        fprintf(fp, "Desk_count# %i\n",jj);
+        for(ii=1 ; ii<=jj ; ii++) 
+        {
             fprintf(fp, "Hot_key_%d# %i\n", ii,deskHotkey[ii]);
             fprintf(fp, "Hot_key_Mod%d# %i\n", ii,deskHotkeyMod[ii]);
             fprintf(fp, "Hot_key_Win%d# %i\n", ii,deskHotkeyWin[ii]);
+            fprintf(fp, "desktop_name_%d# %s\n",ii,(desktopName[ii] == NULL) ? "":desktopName[ii]);
         }
         fprintf(fp, "Mouse_control_key_support# %i\n", useMouseKey);
         fprintf(fp, "Mouse_key_alt# %i\n", mouseModAlt);
@@ -467,12 +493,12 @@ void writeConfig(void)
         fprintf(fp, "CycleUpWin# %i\n", hotCycleUpWin);
         fprintf(fp, "CycleDownWin# %i\n", hotCycleDownWin);
         fprintf(fp, "Sticky_Win_En# %i\n", hotkeyStickyEn);
-        fprintf(fp, "Hot_key_10# %i\n",deskHotkey[10]);
-        fprintf(fp, "Hot_key_Mod10# %i\n",deskHotkeyMod[10]);
-        fprintf(fp, "Hot_key_Win10# %i\n",deskHotkeyWin[10]);
+        fprintf(fp, "Not_used# %i\n",deskHotkey[vwDESKTOP_SIZE-1]);
+        fprintf(fp, "Not_used# %i\n",deskHotkeyMod[vwDESKTOP_SIZE-1]);
+        fprintf(fp, "Not_used# %i\n",deskHotkeyWin[vwDESKTOP_SIZE-1]);
         fprintf(fp, "AssignImmediately# %i\n", assignImmediately);
         fprintf(fp, "HiddenWindowAct# %i\n", hiddenWindowAct);
-        fprintf(fp, "Not_used# 0\n");
+        fprintf(fp, "Not_used# 0%s\n",(desktopName[vwDESKTOP_SIZE-1] == NULL) ? "":desktopName[vwDESKTOP_SIZE-1]);
         fprintf(fp, "DismissHotkeyEn# %i\n", hotkeyDismissEn);
         fprintf(fp, "DismissHotkey# %i\n", hotkeyDismiss);
         fprintf(fp, "DismissHotkeyMod# %i\n", hotkeyDismissMod);
@@ -496,7 +522,7 @@ void readConfig(void)
 {
     TCHAR buff[MAX_PATH], buff2[2048], *ss ;
     FILE *fp, *wfp;
-    int ii, jj ;
+    int ii, jj, kk, ll ;
     
     GetFilename(vwCONFIG,1,buff);
     if(GetFileAttributes(buff) == INVALID_FILE_ATTRIBUTES)
@@ -596,13 +622,30 @@ void readConfig(void)
         fscanf(fp, "%s%i", (char *) buff, &ii);
         fscanf(fp, "%s%i", (char *) buff, &nDesksY);
         fscanf(fp, "%s%i", (char *) buff, &nDesksX);
+        fscanf(fp, "%s%i", (char *) buff, &ii);
         nDesks = nDesksX * nDesksY ;
-        fscanf(fp, "%s%i", (char *) buff, &hotKeyEnable);
-        for(ii=1 ; ii<10 ; ii++)
+        for(ii=1,jj=9,kk=0 ; ii<=jj ; ii++)
         {
             fscanf(fp, "%s%i", (char *) buff, deskHotkey + ii);
-            fscanf(fp, "%s%i", (char *) buff, deskHotkeyMod + ii);
-            fscanf(fp, "%s%i", (char *) buff, deskHotkeyWin + ii);
+            if((ii==1) && !strcmp((char *) buff,"Desk_count#"))
+            {
+                jj = deskHotkey[1] ;
+                deskHotkey[1] = 0 ;
+                ii = 0 ;
+                kk = 1 ;
+            }
+            else
+            {
+                fscanf(fp, "%s%i", (char *) buff, deskHotkeyMod + ii);
+                fscanf(fp, "%s%i\n", (char *) buff, deskHotkeyWin + ii);
+                if(kk && (_fgetts(buff2,2048,fp) != NULL) && ((ss=_tcschr(buff2,' ')) != NULL) &&
+                   ((ll=_tcslen(++ss)) > 1))
+                {
+                    if(ss[ll-1] == '\n')
+                        ss[ll-1] = '\0' ;
+                    desktopName[ii] = _tcsdup(ss) ;
+                }
+            }
         }
         fscanf(fp, "%s%i", (char *) buff, &useMouseKey);
         fscanf(fp, "%s%i", (char *) buff, &mouseModAlt);
@@ -640,12 +683,17 @@ void readConfig(void)
         fscanf(fp, "%s%i", (char *) buff, &hotCycleUpWin);
         fscanf(fp, "%s%i", (char *) buff, &hotCycleDownWin);
         fscanf(fp, "%s%i", (char *) buff, &hotkeyStickyEn);
-        fscanf(fp, "%s%i", (char *) buff, deskHotkey + 10);
-        fscanf(fp, "%s%i", (char *) buff, deskHotkeyMod + 10);
-        fscanf(fp, "%s%i", (char *) buff, deskHotkeyWin + 10);
+        fscanf(fp, "%s%i", (char *) buff, deskHotkey + vwDESKTOP_SIZE - 1);
+        fscanf(fp, "%s%i", (char *) buff, deskHotkeyMod + vwDESKTOP_SIZE - 1);
+        fscanf(fp, "%s%i", (char *) buff, deskHotkeyWin + vwDESKTOP_SIZE - 1);
         fscanf(fp, "%s%i", (char *) buff, &assignImmediately);
-        fscanf(fp, "%s%i", (char *) buff, &hiddenWindowAct);
-        fscanf(fp, "%s%i", (char *) buff, &ii);
+        fscanf(fp, "%s%i\n", (char *) buff, &hiddenWindowAct);
+        if((_fgetts(buff2,2048,fp) != NULL) && ((ss=_tcschr(buff2,' ')) != NULL) && ((ll=_tcslen(++ss)) > 2))
+        {
+            if(ss[ll-1] == '\n')
+                ss[ll-1] = '\0' ;
+            desktopName[vwDESKTOP_SIZE - 1] = _tcsdup(ss+1) ;
+        }
         fscanf(fp, "%s%i", (char *) buff, &hotkeyDismissEn);
         fscanf(fp, "%s%i", (char *) buff, &hotkeyDismiss);
         fscanf(fp, "%s%i", (char *) buff, &hotkeyDismissMod);

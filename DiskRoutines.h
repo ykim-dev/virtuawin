@@ -42,12 +42,12 @@ extern char *UserAppPathStr ;
 void GetFilename(eFileNames filetype, int location, TCHAR *outStr);
 int  loadDisabledModules(disModules *theDisList);
 void saveDisabledList(int theNOfModules, moduleType* theModList);
-int  loadTrickyList(vwWindowMatch *theTrickyList);
-int  loadStickyList(vwWindowMatch *theStickyList);
+void loadTrickyList(void);
+void loadStickyList(void);
 void saveStickyWindows(int theNOfWin, windowType *theWinList);
-int  loadAssignedList(vwWindowMatch *theAssignList);
+void loadAssignedList(void);
 void saveAssignedList(int theNOfWin, windowType *theWinList);
-int  loadUserList(vwWindowMatch *theUserList);
+void loadUserList(void);
 void writeConfig(void);
 void readConfig(void);
 

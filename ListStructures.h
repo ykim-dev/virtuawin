@@ -49,38 +49,40 @@ typedef struct { // Holds the windows in the list
     unsigned char  State;
 } windowType;
 
-typedef struct { // Holds data for modules
+// Holds data for modules
+typedef struct {
     HWND   Handle;
     BOOL   Disabled;
-    TCHAR description[vwMODULENAME_MAX+1];
+    TCHAR  description[vwMODULENAME_MAX+1];
 } moduleType;
 
-typedef struct { // Holds disabled modules
-    TCHAR moduleName[vwMODULENAME_MAX+1];
+// Holds disabled modules
+typedef struct {
+    TCHAR  moduleName[vwMODULENAME_MAX+1];
 } disModules;
 
-typedef struct _MenuItems
-{
-    TCHAR        *name;
+typedef struct {
+    TCHAR         *name;
     HICON          icon; 
     unsigned short id;
     unsigned short desk;
     unsigned char  sticky;
 } MenuItem;
 
-typedef struct { // Holds desktop assigned windows
-    TCHAR        *match;
-    unsigned short desk;
-    unsigned char  type;
+typedef struct vwWindowMatch {
+    struct vwWindowMatch *next;
+    TCHAR                *match;
+    unsigned short       desk;
+    unsigned char        type;
 } vwWindowMatch ;
 
 windowType winList[vwWINDOW_MAX];            // list for holding windows
 moduleType moduleList[MAXMODULES];           // list that holds modules
 disModules disabledModules[MAXMODULES*2];    // list with disabled modules
 
-vwWindowMatch userList[MAXUSER];             // list for holding user added applications
-vwWindowMatch stickyList[vwWINDOW_MAX];      // list with saved sticky windows
-vwWindowMatch trickyList[vwWINDOW_MAX];      // list with saved tricky windows
-vwWindowMatch assignedList[vwWINDOW_MAX];    // list with all windows that have a predefined desktop
+vwWindowMatch *userList;                     // list for holding user added applications
+vwWindowMatch *stickyList;                   // list with saved sticky windows
+vwWindowMatch *trickyList;                   // list with saved tricky windows
+vwWindowMatch *assignedList;                 // list with all windows that have a predefined desktop
 
 #endif

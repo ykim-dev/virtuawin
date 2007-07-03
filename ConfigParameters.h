@@ -43,7 +43,6 @@ extern int hiddenWindowAct;     // Hidden window activation action
 extern BOOL noMouseWrap;        // if we don't want to move the mouse pointer after switch
 extern BOOL useMouseKey;        // if user must use a modify key to warp with mouse
 extern BOOL keyEnable;		// key support
-extern BOOL hotKeyEnable;       // hot key support
 extern BOOL releaseFocus;	// release focus on switch
 extern BOOL minSwitch;		// if we should switch minimized windows
 extern UINT mouseEnable;        // mouse support
@@ -84,6 +83,7 @@ extern UINT hotCycleDown;
 extern UINT hotCycleDownMod;
 extern UINT hotCycleDownWin;
 
+extern char *desktopName[vwDESKTOP_SIZE];
 extern UINT deskHotkey[vwDESKTOP_SIZE];
 extern UINT deskHotkeyMod[vwDESKTOP_SIZE];
 extern UINT deskHotkeyWin[vwDESKTOP_SIZE];
