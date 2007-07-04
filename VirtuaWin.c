@@ -92,7 +92,7 @@ BOOL setupOpen;
 // vector holding icon handles for the systray
 NOTIFYICONDATA nIconD;
 HICON icons[vwDESKTOP_SIZE];    // 0=disabled, 1,2..=normal desks
-char *desktopName[vwDESKTOP_SIZE];
+TCHAR *desktopName[vwDESKTOP_SIZE];
 
 #define MENU_X_PADDING 1
 #define MENU_Y_PADDING 1
@@ -3491,10 +3491,13 @@ wndProc(HWND aHWnd, UINT message, WPARAM wParam, LPARAM lParam)
         {
             int ii ;
             lockMutex();
-            if((ii = winListFind((HWND)wParam)) >= 0)
-                ii = (int) winList[ii].Desk ;
-            else
+            if((ii = winListFind((HWND)wParam)) < 0)
                 ii = 0;
+            else if((!winList[ii].Visible && (winList[ii].Sticky || (winList[ii].Desk == currentDesk))) ||
+                    ((winList[ii].Visible == vwVISIBLE_YES) && !winList[ii].Sticky && (winList[ii].Desk != currentDesk)))
+                ii = 0 - (int) winList[ii].Desk ;
+            else
+                ii = (int) winList[ii].Desk ;
             releaseMutex();
             return ii ;
         }
