@@ -248,7 +248,7 @@ loadWindowMatchList(TCHAR *fname, BOOL hasDesk, vwWindowMatch **matchList)
     unsigned short desk=0 ;
     unsigned char type ;
     TCHAR buff[1024], *ss ;
-    int len, matchCount=0 ;
+    int len ;
     FILE *fp ;
     
     if((wm = *matchList) != NULL)
@@ -455,7 +455,7 @@ void writeConfig(void)
             fprintf(fp, "Hot_key_%d# %i\n", ii,deskHotkey[ii]);
             fprintf(fp, "Hot_key_Mod%d# %i\n", ii,deskHotkeyMod[ii]);
             fprintf(fp, "Hot_key_Win%d# %i\n", ii,deskHotkeyWin[ii]);
-            fprintf(fp, "desktop_name_%d# %s\n",ii,(desktopName[ii] == NULL) ? "":desktopName[ii]);
+            _ftprintf(fp, _T("desktop_name_%d# %s\n"),ii,(desktopName[ii] == NULL) ? _T(""):desktopName[ii]);
         }
         fprintf(fp, "Mouse_control_key_support# %i\n", useMouseKey);
         fprintf(fp, "Mouse_key_alt# %i\n", mouseModAlt);
@@ -498,7 +498,7 @@ void writeConfig(void)
         fprintf(fp, "Not_used# %i\n",deskHotkeyWin[vwDESKTOP_SIZE-1]);
         fprintf(fp, "AssignImmediately# %i\n", assignImmediately);
         fprintf(fp, "HiddenWindowAct# %i\n", hiddenWindowAct);
-        fprintf(fp, "Not_used# 0%s\n",(desktopName[vwDESKTOP_SIZE-1] == NULL) ? "":desktopName[vwDESKTOP_SIZE-1]);
+        _ftprintf(fp, _T("Not_used# 0%s\n"),(desktopName[vwDESKTOP_SIZE-1] == NULL) ? _T(""):desktopName[vwDESKTOP_SIZE-1]);
         fprintf(fp, "DismissHotkeyEn# %i\n", hotkeyDismissEn);
         fprintf(fp, "DismissHotkey# %i\n", hotkeyDismiss);
         fprintf(fp, "DismissHotkeyMod# %i\n", hotkeyDismissMod);

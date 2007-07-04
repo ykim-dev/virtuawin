@@ -71,7 +71,7 @@ void initDesktopProperties(void)
     TCHAR buff[32] ;
     _stprintf(buff,_T("Properties of desktop %d:"),currentDesk) ;
     SetDlgItemText(setupKeysHWnd, IDC_DESKTOPLBL, buff) ;
-    SetDlgItemText(setupKeysHWnd, IDC_DESKTOPNAME, (desktopName[currentDesk] != NULL) ? desktopName[currentDesk]:"") ;
+    SetDlgItemText(setupKeysHWnd, IDC_DESKTOPNAME, (desktopName[currentDesk] != NULL) ? desktopName[currentDesk]:_T("")) ;
     SendDlgItemMessage(setupKeysHWnd, IDC_HOTDESK, HKM_SETHOTKEY, MAKEWORD(deskHotkey[currentDesk], deskHotkeyMod[currentDesk]), 0);
     SendDlgItemMessage(setupKeysHWnd, IDC_HOTDESKW, BM_SETCHECK, (deskHotkeyWin[currentDesk] != 0),0);
 }
