@@ -94,7 +94,8 @@
             3 - Change to window's desk
    Returns 0 if window was not found (i.e. not managed by VW), non-zero otherwise */
 #define VW_ACCESSWIN   (WM_USER + 39)
-/* Message, return the desk number of a window, 0 if not found (i.e. not managed) */
+/* Message, return the desk number of a window, 0 if not found (i.e. not managed),
+ * (0 - desktop_number) is returned if the window is flagged as hung (i.e. -3 instead of 3). */
 #define VW_GETWINDESK  (WM_USER + 40)
 /* Message, Desk image generation message, the action of the message depends on the
  * value of wParam:
