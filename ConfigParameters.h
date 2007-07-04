@@ -83,7 +83,7 @@ extern UINT hotCycleDown;
 extern UINT hotCycleDownMod;
 extern UINT hotCycleDownWin;
 
-extern char *desktopName[vwDESKTOP_SIZE];
+extern TCHAR *desktopName[vwDESKTOP_SIZE];
 extern UINT deskHotkey[vwDESKTOP_SIZE];
 extern UINT deskHotkeyMod[vwDESKTOP_SIZE];
 extern UINT deskHotkeyWin[vwDESKTOP_SIZE];
