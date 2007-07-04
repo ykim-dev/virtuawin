@@ -85,11 +85,13 @@ static void addModule(TCHAR *moduleName, TCHAR *path)
         else
         {
             // Startup the module
-            _tcscpy(tmpPath,path) ;
+            tmpPath[0] = '"' ;
+            _tcscpy(tmpPath+1,path) ;
             _tcscat(tmpPath,moduleName) ;
+            _tcscat(tmpPath,_T("\" -module")) ;
             memset(&si, 0, sizeof(si)); 
             si.cb = sizeof(si); 
-            if(!CreateProcess(tmpPath, NULL, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi))
+            if(!CreateProcess(NULL, tmpPath, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi))
             {
                 TCHAR *lpszLastErrorMsg; 
                 FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM, NULL, 
