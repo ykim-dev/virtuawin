@@ -14,16 +14,6 @@
 LanguageName=English
 LanguageID=$0409
 LanguageCodePage=0
-; If the language you are translating to requires special font faces or
-; sizes, uncomment any of the following entries and change them accordingly.
-;DialogFontName=
-;DialogFontSize=8
-;WelcomeFontName=Verdana
-;WelcomeFontSize=12
-;TitleFontName=Arial
-;TitleFontSize=29
-;CopyrightFontName=Arial
-;CopyrightFontSize=8
 
 [Messages]
 
@@ -50,6 +40,8 @@ SetupFileCorrupt=The setup files are corrupted. Please obtain a new copy of the 
 SetupFileCorruptOrWrongVer=The setup files are corrupted, or are incompatible with this version of Setup. Please correct the problem or obtain a new copy of the program.
 NotOnThisPlatform=This program will not run on %1.
 OnlyOnThisPlatform=This program must be run on %1.
+OnlyOnTheseArchitectures=This program can only be installed on versions of Windows designed for the following processor architectures:%n%n%1
+MissingWOW64APIs=The version of Windows you are running does not include functionality required by Setup to perform a 64-bit installation. To correct this problem, please install Service Pack %1.
 WinVersionTooLowError=This program requires %1 version %2 or later.
 WinVersionTooHighError=This program cannot be installed on %1 version %2 or later.
 AdminPrivilegesRequired=You must be logged in as an administrator when installing this program.
@@ -68,6 +60,7 @@ AboutSetupMenuItem=&About Setup...
 AboutSetupTitle=About Setup
 AboutSetupMessage=%1 version %2%n%3%n%n%1 home page:%n%4
 AboutSetupNote=
+TranslatorNote=
 
 ; *** Buttons
 ButtonBack=< &Back
@@ -172,7 +165,6 @@ WizardSelectProgramGroup=Select Start Menu Folder
 SelectStartMenuFolderDesc=Where should Setup place the program's shortcuts?
 SelectStartMenuFolderLabel3=Setup will create the program's shortcuts in the following Start Menu folder.
 SelectStartMenuFolderBrowseLabel=To continue, click Next. If you would like to select a different folder, click Browse.
-NoIconsCheck=&Don't create any icons
 MustEnterGroupName=You must enter a folder name.
 GroupNameTooLong=The folder name or path is too long.
 InvalidGroupName=The folder name is not valid.
@@ -270,7 +262,7 @@ ErrorReplacingExistingFile=An error occurred while trying to replace the existin
 ErrorRestartReplace=RestartReplace failed:
 ErrorRenamingTemp=An error occurred while trying to rename a file in the destination directory:
 ErrorRegisterServer=Unable to register the DLL/OCX: %1
-ErrorRegisterServerMissingExport=DllRegisterServer export not found
+ErrorRegSvr32Failed=RegSvr32 failed with exit code %1
 ErrorRegisterTypeLib=Unable to register the type library: %1
 
 ; *** Post-installation errors
@@ -283,6 +275,7 @@ UninstallOpenError=File "%1" could not be opened. Cannot uninstall
 UninstallUnsupportedVer=The uninstall log file "%1" is in a format not recognized by this version of the uninstaller. Cannot uninstall
 UninstallUnknownEntry=An unknown entry (%1) was encountered in the uninstall log
 ConfirmUninstall=Are you sure you want to completely remove %1 and all of its components?
+UninstallOnlyOnWin64=This installation can only be uninstalled on 64-bit Windows.
 OnlyAdminCanUninstall=This installation can only be uninstalled by a user with administrative privileges.
 UninstallStatusLabel=Please wait while %1 is removed from your computer.
 UninstalledAll=%1 was successfully removed from your computer.
@@ -312,4 +305,3 @@ UninstallProgram=Uninstall %1
 LaunchProgram=Launch %1
 AssocFileExtension=&Associate %1 with the %2 file extension
 AssocingFileExtension=Associating %1 with the %2 file extension...
-
