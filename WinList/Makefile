@@ -58,6 +58,7 @@ endif
 SRC	= winlist.c
 COFFS   = winlist.coff
 OBJRES  = winlist.res
+LIBS    = -lcomctl32
 
 TARGET	= WinList.exe
 OBJS    = $(SRC:.c=.o)
@@ -67,9 +68,9 @@ OBJSD   = $(SRC:.c=.od)
 
 .SUFFIXES: .rc .res .coff .c .o .od
 .c.o:
-	$(CC) $(CFLAGS) $(CUCDEFS) -c -o $@ $<
+	$(CC) $(CFLAGS) $(CUCDEFS) -D_WIN32_IE=0x0400 -c -o $@ $<
 .c.od:
-	$(CC) $(CFLAGSD) $(CUCDEFS) -c -o $@ $<
+	$(CC) $(CFLAGSD) $(CUCDEFS) -D_WIN32_IE=0x0400 -c -o $@ $<
 
 $(TARGET): $(OBJS) $(COFFS)
 	$(CC) $(LDFLAGS) -o $(TARGET) $(OBJS) $(COFFS) $(LIBS)
