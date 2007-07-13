@@ -57,6 +57,7 @@ mv Modules/Assigner/assigner.rc.tmp Modules/Assigner/assigner.rc
 cat scripts/virtuawin.iss | sed -c -e "s/^AppVerName=VirtuaWin v.*/AppVerName=VirtuaWin v$version/" > scripts/virtuawin.iss.tmp
 mv scripts/virtuawin.iss.tmp scripts/virtuawin.iss
 $EDITOR HISTORY.TXT
+cp Defines.h Messages.h Module/
 read -p "Compile source? [y/n] " -n 1
 echo
 if [ $REPLY == 'y' ] ; then
