@@ -42,6 +42,7 @@ HWND listHWnd;     // Handle to the window list
 HWND hwndTask ;
 UINT RM_Shellhook ;
 TCHAR userAppPath[MAX_PATH] ;
+int  deskCount ;
 
 typedef struct vwlWindow {
     struct vwlWindow *next ;
@@ -138,6 +139,9 @@ enumWindowsProc(HWND hwnd, LPARAM lParam)
             state = 1 ;
             sbuff[0] = 'O' ;
         }
+        if(flag > deskCount)
+            // on a hidden desktop
+            return TRUE ;
         fbuff[0] = (flag >= 10) ? ('0' + (flag / 10)) : ' ' ;
         fbuff[1] = '0' + (flag % 10) ;
     }
@@ -248,6 +252,8 @@ GenerateWinList(HWND hDlg, int update)
         col.pszText = _T("Title") ;
         ListView_InsertColumn(listHWnd,3,&col);
     }
+    if(vwHandle != 0)
+        deskCount = SendMessage(vwHandle, VW_DESKX, 0, 0) * SendMessage(vwHandle, VW_DESKY, 0, 0) ;
     
     EnumWindows(enumWindowsProc, (LPARAM) hDlg);   // get all windows
     
@@ -269,7 +275,7 @@ enumWindowsSaveListProc(HWND hwnd, LPARAM lParam)
 {
     FILE *wdFp=(FILE *) lParam ;
     DWORD procId, threadId ;
-    int style, exstyle ;
+    int style, exstyle, desk ;
     RECT pos ;
 #ifdef _UNICODE
     WCHAR nameW[vwWINDOWNAME_MAX] ;
@@ -294,9 +300,13 @@ enumWindowsSaveListProc(HWND hwnd, LPARAM lParam)
 #endif
         strcpy(text,"<None>");
     
-    fprintf(wdFp,"%8x %08x %08x %8x %8x %8x %s\n%8d %8x %8d %8d %8d %8d %s\n",
+    if(vwHandle != 0)
+        desk = SendMessage(vwHandle,VW_GETWINDESK,(WPARAM) hwnd,0) ;
+    else
+        desk = 0 ;
+    fprintf(wdFp,"%8x %08x %08x %8x %8x %8x %4d %s\n%8d %8x %8d %8d %8d %8d      %s\n",
             (int)hwnd,style,exstyle,(int)GetParent(hwnd),
-            (int)GetWindow(hwnd,GW_OWNER),(int)GetClassLong(hwnd,GCL_HICON),text,
+            (int)GetWindow(hwnd,GW_OWNER),(int)GetClassLong(hwnd,GCL_HICON),desk,text,
             (int)procId,(int)threadId,(int)pos.top,(int)pos.bottom,(int)pos.left,(int)pos.right,class) ;
     
     return TRUE;
