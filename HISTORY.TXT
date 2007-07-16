@@ -1,6 +1,29 @@
 ***   VirtuaWin Revision History   ***
 --------------------------------------
 
+Ver 3.1 test 2 2007/07/16
+
+* 1741445 Changed the module messages which use a WM_COPYDATA message to reply
+  directly to the requesting module if the wParam is not 0 (assumed HWND).
+* 1618004 Allowed direct hotkey access to desktops  greater then the X*Y size,
+  creating 'hidden' desktops. Windows on these desktops are not listed etc.
+* Changed the term 'Copy' to 'Show' as this gives a more temporary feel.
+* 1479537 Added an optional 'Show' column to the Window List menu.
+* 1549392 Increased the maximum number of desktops to 20, simple define change
+  can increase this to 99 or more. Changed the systray icon tooltip to display
+  the desktop name as an icon may not be available (still only 9 built in).
+* Improvements to WinList, including sortable columns and Hung status column.
+* Improved the menus, adding 'Push to Bottom', 'Always on Top', 'Move to Next'
+  & Previous to the current window menu and greying out unavailable options.
+* Increased the number of windows manged to 160 after recent forum thread.
+* Added  window  names so the  systray  tooltip can be in  agreement  with any
+  desktop naming module used.
+* Changed the compact  window list menu to use  multi-columns  to support more
+  than 40+  windows,  clicking  on titles of  non-compact  menu  displays  all
+  content.
+
+----------------------------
+
 Ver 3.1 test 1 2007/06/12
 
 * 1731298 Improved the  handling of newly opened owned windows  sanitizing any
@@ -428,4 +451,3 @@ Ver 0.7 1999/03/27
 Ver 0.5 1999/03/19
  * First public version, no configure possibilities 
 ----------------------------
-
