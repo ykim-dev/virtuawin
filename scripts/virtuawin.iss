@@ -27,6 +27,17 @@ Name: {app}\modules; Flags: uninsalwaysuninstall
 [Files]
 Source: VirtuaWin.exe; DestDir: {app}
 Source: VirtuaWin.hlp; DestDir: {app}
+Source: 10.ico; DestDir: {app}\icons\
+Source: 11.ico; DestDir: {app}\icons\
+Source: 12.ico; DestDir: {app}\icons\
+Source: 13.ico; DestDir: {app}\icons\
+Source: 14.ico; DestDir: {app}\icons\
+Source: 15.ico; DestDir: {app}\icons\
+Source: 16.ico; DestDir: {app}\icons\
+Source: 17.ico; DestDir: {app}\icons\
+Source: 18.ico; DestDir: {app}\icons\
+Source: 19.ico; DestDir: {app}\icons\
+Source: 20.ico; DestDir: {app}\icons\
 Source: WinList.exe; DestDir: {app}\Modules\
 Source: VWAssigner.exe; DestDir: {app}\Modules\
 Source: UserList.cfg; DestDir: {app}; Flags: onlyifdoesntexist
