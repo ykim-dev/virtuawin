@@ -77,6 +77,8 @@ if [ $REPLY == 'y' ] ; then
     cd ../..
     echo copying standard
     cp ./VirtuaWin.exe ./tmp/standard/
+    cp ./Icons/1[0-9].ico ./tmp/standard/
+    cp ./Icons/20.ico ./tmp/standard/
     cp ./WinList/WinList.exe ./tmp/standard/
     cp ./Modules/Assigner/VWAssigner.exe ./tmp/standard/
     cp ./READMEII.TXT ./tmp/standard/README.TXT
@@ -97,6 +99,8 @@ if [ $REPLY == 'y' ] ; then
     cd ..
     echo copying unicode
     cp ./VirtuaWin.exe ./tmp/unicode/
+    cp ./Icons/1[0-9].ico ./tmp/unicode/
+    cp ./Icons/20.ico ./tmp/unicode/
     cp ./WinList/WinList.exe ./tmp/unicode/
     cp ./Modules/Assigner/VWAssigner.exe ./tmp/unicode/
     cp ./READMEII.TXT ./tmp/unicode/README.TXT
