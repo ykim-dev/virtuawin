@@ -24,3 +24,10 @@
 #DEFAULT (echo ""; id; echo %s; date; cat) >> $CVSROOT/CVSROOT/commitlog
 # or
 #DEFAULT (echo ""; id; echo %{sVv}; date; cat) >> $CVSROOT/CVSROOT/commitlog
+#
+# This line sends all changes to the CVSROOT module to the user specified
+CVSROOT /cvsroot/sitedocs/CVSROOT/cvstools/syncmail %{sVv} jopi@users.sourceforge.net bjasspa@users.sourceforge.net
+#
+# This sends mail to the virtuawin-cvs mailing list.
+DEFAULT /cvsroot/sitedocs/CVSROOT/cvstools/syncmail %{sVv} virtuawin-cvs@lists.sourceforge.net
+
