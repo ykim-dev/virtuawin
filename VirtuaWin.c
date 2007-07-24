@@ -3592,6 +3592,51 @@ wndProc(HWND aHWnd, UINT message, WPARAM wParam, LPARAM lParam)
             disableAll(aHWnd);
         return lParam ;
         
+    case VW_DESKNAME:
+        {
+            // Send over the VirtuaWin install path with WM_COPYDATA
+            //  - always use a byte string so unicode/non-uncode modules can work together
+            COPYDATASTRUCT cds;
+            DWORD ret ;
+#ifdef _UNICODE
+            char buff[128] ;
+#endif
+            if(wParam == 0)
+                ret = FALSE ;
+            else
+            {
+                ret = TRUE ;
+                cds.dwData = 0 - message ;
+                if(lParam == 0)
+                    lParam = currentDesk ;
+                if((lParam >= 0) && (lParam < vwDESKTOP_SIZE) &&
+                   (desktopName[lParam] != NULL))
+                {
+#ifdef _UNICODE
+                    if(!WideCharToMultiByte(CP_ACP,0,desktopName[lParam],-1,(char *) buff,128, 0, 0))
+                        ret = FALSE ;
+                    else
+                    {
+                        cds.cbData = strlen(buff) + 1 ;
+                        cds.lpData = (void *) buff ;
+                    }
+#else
+                    cds.cbData = strlen(desktopName[lParam]) + 1 ;
+                    cds.lpData = (void *) desktopName[lParam] ;
+#endif
+                }
+                else
+                {
+                    cds.cbData = 0 ;
+                    cds.lpData = (void*) NULL ;
+                }
+                if(ret && !SendMessageTimeout((HWND)wParam,WM_COPYDATA,(WPARAM) aHWnd,(LPARAM) &cds,SMTO_ABORTIFHUNG|SMTO_BLOCK,10000,&ret))
+                    ret = FALSE ;
+            }
+            vwLogVerbose((_T("Sent deskname %d to %d, returning %d\n"),(int) lParam,(int) wParam, ret)) ;
+            return ret ;
+        }
+        
         // End plugin messages
         
     case WM_CREATE:		       // when main window is created
