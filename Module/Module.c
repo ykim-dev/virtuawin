@@ -38,6 +38,28 @@ int initialised=0 ;
 HWND vwHandle;                 /* Handle to VirtuaWin */
 TCHAR installPath[MAX_PATH] ;  /* VW install path */
 TCHAR userAppPath[MAX_PATH] ;  /* User's config path */
+TCHAR deskName[MAX_PATH] ;     /* Current desktop's name */
+
+static void
+DisplayInfo(HWND hwnd, TCHAR *msgLabel)
+{
+    TCHAR buff[MAX_PATH+MAX_PATH+MAX_PATH];
+    int deskSize, deskX, deskY, currentDesk ;
+    deskSize = SendMessage(vwHandle, VW_DESKTOP_SIZE,0,0) ;
+    deskX = SendMessage(vwHandle, VW_DESKX,0,0) ;
+    deskY = SendMessage(vwHandle, VW_DESKY,0,0) ;
+    currentDesk = SendMessage(vwHandle, VW_CURDESK,0,0) ;
+    if(!SendMessage(vwHandle, VW_DESKNAME, (WPARAM) hwnd, 0))
+    {
+        MessageBox(hwnd,_T("VirtuaWin failed to send the current Desktop name."),_T("Module Error"), MB_ICONWARNING);
+        exit(1) ;
+    }
+    if(deskName[0] == '\0')
+        _stprintf(deskName,"<Desktop %d>",currentDesk) ;
+    _stprintf(buff,_T("Desktop Size:\t%d\nInstall path:\t%s\t\nUser path:\t%s\t\n\nVW Message:\t%s\nDesk Layout:\t%d x %d\nCurrent Desk:\t%d\nDesk Name:\t%s"),
+              deskSize,installPath,userAppPath,msgLabel,deskX,deskY,currentDesk,deskName) ;
+    MessageBox(hwnd,buff,_T("VirtuaWin Module Example"),0);
+}
 
 
 LRESULT CALLBACK
@@ -51,21 +73,20 @@ MainWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
         vwHandle = (HWND) wParam; /* Should be some error handling here if NULL */
         if(!initialised)
         {
-            TCHAR buff[MAX_PATH+MAX_PATH];
             /* Get the VW Install path and then the user's path - give VirtuaWin 10 seconds to do this */
-            if(!SendMessage(vwHandle, VW_INSTALLPATH, (WPARAM) hwnd, 0) || (initialised != 1))
+            if(!SendMessage(vwHandle, VW_INSTALLPATH, (WPARAM) hwnd, 0) || ((initialised & 1) == 0))
             {
                 MessageBox(hwnd,_T("VirtuaWin failed to send install path."),_T("Module Error"), MB_ICONWARNING);
                 exit(1) ;
             }
-            if(!SendMessage(vwHandle, VW_USERAPPPATH, (WPARAM) hwnd, 0) || (initialised != 3))
+            if(!SendMessage(vwHandle, VW_USERAPPPATH, (WPARAM) hwnd, 0) || ((initialised & 2) == 0))
             {
                 MessageBox(hwnd,_T("VirtuaWin failed to send the UserApp path."),_T("Module Error"), MB_ICONWARNING);
                 exit(1) ;
             }
-            _stprintf(buff,_T("VirtuaWin Module initialized, install path:\n\t%s\nUser path:\n\t%s"),installPath,userAppPath) ;
-            MessageBox(hwnd,buff,_T("Module Plugin"),0);
+            
         }
+        DisplayInfo(hwnd,_T("Init")) ;
         break;
     
     case WM_COPYDATA:
@@ -82,8 +103,9 @@ MainWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 #ifdef _UNICODE
                 MultiByteToWideChar(CP_ACP,0,(char *) cds->lpData,-1,installPath,MAX_PATH) ;
 #else
-                strcpy(installPath,(char *) cds->lpData) ;
+                strncpy(installPath,(char *) cds->lpData,MAX_PATH) ;
 #endif
+                installPath[MAX_PATH-1] = '\0' ;
             }
             else if((cds->dwData == (0-VW_USERAPPPATH)) && ((initialised & 2) == 0))
             {
@@ -93,8 +115,23 @@ MainWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 #ifdef _UNICODE
                 MultiByteToWideChar(CP_ACP,0,(char *) cds->lpData,-1,userAppPath,MAX_PATH) ;
 #else
-                strcpy(userAppPath,(char *) cds->lpData) ;
+                strncpy(userAppPath,(char *) cds->lpData,MAX_PATH) ;
 #endif
+                userAppPath[MAX_PATH-1] = '\0' ;
+            }
+            else if(cds->dwData == (0-VW_DESKNAME))
+            {
+                if(cds->lpData == NULL)
+                    deskName[0] = '\0' ;
+                else
+                {
+#ifdef _UNICODE
+                    MultiByteToWideChar(CP_ACP,0,(char *) cds->lpData,-1,deskName,MAX_PATH) ;
+#else
+                    strncpy(deskName,(char *) cds->lpData,MAX_PATH) ;
+#endif
+                    deskName[MAX_PATH-1] = '\0' ;
+                }
             }
         }
         return TRUE ;
@@ -105,7 +142,10 @@ MainWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
         break;
     case MOD_SETUP:
         /* Optional */
-        MessageBox(hwnd,_T("Add setup here!"),_T("Module Plugin"), 0);
+        DisplayInfo(hwnd,_T("Setup")) ;
+        break;
+    case MOD_CFGCHANGE:
+        DisplayInfo(hwnd,_T("Config Change")) ;
         break;
     case WM_DESTROY:
         PostQuitMessage(0);

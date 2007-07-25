@@ -63,7 +63,7 @@
 #define VW_DESKX       (WM_USER + 21)
 /* Message, retuns desktop height */
 #define VW_DESKY       (WM_USER + 22)
-/* Message, require the window list from VirtuaWin. List will be returned via a WM_COPYDATA
+/* Message, request the window list from VirtuaWin. List will be returned via a WM_COPYDATA
  * message, set wParam to the HWND which is to receive the WM_COPYDATA message */
 #define VW_WINLIST     (WM_USER + 23)
 /* Message, returns the current desktop number */
@@ -116,6 +116,14 @@
    the current state is not changed, 1 for toggle, 2 for disable
    and 3 for enable. Returns the previous state, 1 for enable & 0 for disabled. */
 #define VW_ENABLE_STATE (WM_USER + 42)
+/* Message, return the name of the desk specified by the lParam, if lParam is set
+ * to 0 the current desktop name is returned. The name will be returned via a WM_COPYDATA
+ * message, set wParam to the HWND which is to receive the WM_COPYDATA message */
+#define VW_DESKNAME     (WM_USER + 43)
+/* Message, returns the value of vwDESKTOP_SIZE in Defines.h, this can be used to
+ * quickly obtain the maximum size of any desk based array, i.e. guaranteed to be greater
+ * than the current desktop. Note the this is not true of (DESKX * DESKY) due to hidden desktops. */
+#define VW_DESKTOP_SIZE (WM_USER + 44)
 
 
 /* Message, sent by VirtuaWin after a switch. lParam will contain current desktop number 
