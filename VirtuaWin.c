@@ -3637,6 +3637,9 @@ wndProc(HWND aHWnd, UINT message, WPARAM wParam, LPARAM lParam)
             return ret ;
         }
         
+    case VW_DESKTOP_SIZE:
+        return vwDESKTOP_SIZE;
+        
         // End plugin messages
         
     case WM_CREATE:		       // when main window is created

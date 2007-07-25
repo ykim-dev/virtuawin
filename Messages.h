@@ -120,6 +120,10 @@
  * to 0 the current desktop name is returned. The name will be returned via a WM_COPYDATA
  * message, set wParam to the HWND which is to receive the WM_COPYDATA message */
 #define VW_DESKNAME     (WM_USER + 43)
+/* Message, returns the value of vwDESKTOP_SIZE in Defines.h, this can be used to
+ * quickly obtain the maximum size of any desk based array, i.e. guaranteed to be greater
+ * than the current desktop. Note the this is not true of (DESKX * DESKY) due to hidden desktops. */
+#define VW_DESKTOP_SIZE (WM_USER + 44)
 
 
 /* Message, sent by VirtuaWin after a switch. lParam will contain current desktop number 
