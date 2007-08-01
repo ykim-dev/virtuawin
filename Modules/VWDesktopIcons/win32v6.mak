@@ -27,7 +27,7 @@ CFLAGS	= -nologo -G5 -YX -GX -O2 -DNDEBUG "-I$(TOOLSDIR)\include"
 CFLAGSD = -nologo -G5 -W3 -GX -Z7 -YX -Yd -Od -MLd "-I$(TOOLSDIR)\include"
 LDFLAGS	= /SUBSYSTEM:windows /NOLOGO /INCREMENTAL:no /MACHINE:IX86 /PDB:NONE "/LIBPATH:$(TOOLSDIR)\lib"
 LDFLAGSD= /DEBUG /SUBSYSTEM:windows /NOLOGO /INCREMENTAL:no /MACHINE:IX86 /PDB:NONE "/LIBPATH:$(TOOLSDIR)\lib"
-LIBS	= shell32.lib user32.lib gdi32.lib comctl32.lib
+LIBS	= shell32.lib user32.lib advapi32.lib gdi32.lib comctl32.lib
 
 !IFDEF vwUNICODE
 CUCDEFS = -DUNICODE -D_UNICODE

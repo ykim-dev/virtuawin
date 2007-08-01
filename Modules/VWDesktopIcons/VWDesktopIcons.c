@@ -32,17 +32,23 @@
 #include <stdio.h>
 #include <tchar.h>
 #include <commctrl.h>
+#include "../../Defines.h"
 #include "../../Messages.h"
 #include "Resource.h"
 
+#define vwICON_HIDDEN 0x01
+#define vwICON_MOVED  0x02
+
 typedef struct vwIcon {
     struct vwIcon *next ;
-    TCHAR name[1] ;
+    unsigned char  flags[vwDESKTOP_SIZE] ;
+    POINT          point[vwDESKTOP_SIZE] ;
+    TCHAR          name[1] ;
 } vwIcon ;
 
 #define diItemSize (sizeof(LVITEM) + sizeof(POINT) + (sizeof(TCHAR) * MAX_PATH))
 
-int initialised=0 ;
+unsigned char initialised=0 ;
 HINSTANCE hInst;               /* Instance handle */
 HWND wHnd;                     /* Time tracker Handle */
 HWND vwHandle;                 /* Handle to VirtuaWin */
@@ -54,16 +60,35 @@ char   *diShareItem ;
 TCHAR  *diItemName ;
 POINT  *diItemPos ;
 
-#define MAX_DESK 32
 int     deskCrrnt ;
-vwIcon *iconHideHead[MAX_DESK+1] ;
+int     deskCopy ;
+vwIcon *iconHead ;
 
 static void
-loadConfigFile(void)
+CheckDesktopSettings(void)
 {
-    vwIcon *ci, *ni, *pi ;
-    TCHAR buff[1024], *ss ;
-    int desk, len ;
+    HKEY hkey=NULL ;
+    if((RegOpenKeyEx(HKEY_CURRENT_USER,_T("Software\\Microsoft\\Windows\\Shell\\Bags\\1\\Desktop"), 0,KEY_READ, &hkey) == ERROR_SUCCESS) && (hkey != NULL))
+    {
+        DWORD fflags, fflagsType, fflagsLen ;
+        fflagsLen = 4 ;
+        if((RegQueryValueEx(hkey,_T("FFlags"),NULL,&fflagsType,(LPBYTE) &fflags,&fflagsLen) == ERROR_SUCCESS) && 
+           (fflagsType == REG_DWORD) && (fflagsLen == 4) && (fflags & 0x05))
+        {
+            MessageBox(wHnd,_T("Your current Windows desktop settings appear to be incompatible\n")
+                       _T("with VWDesktopIcons, you need to disable 'Auto Arrange' and\n")
+                       _T("'Align to Grid' settings in the 'Arrange Icons By' desktop context\n")
+                       _T("menu to use this module.\n\nPlease ignore this warning if you have already made this change."),_T("VWDesktopIcons Warning"), MB_ICONWARNING) ;
+        }            
+    }
+}
+
+static void
+LoadConfigFile(void)
+{
+    vwIcon *ci ;
+    TCHAR buff[1024], *ss, *fs, cc ;
+    int desk, len, rr ;
     FILE *fp ;
     
     ss = userAppPath + _tcslen(userAppPath) ;
@@ -76,27 +101,39 @@ loadConfigFile(void)
         {
             ss = NULL ;
             if((buff[0] != ':') &&
-               ((desk = (unsigned short) _ttoi(buff)) > 0) && (desk <= MAX_DESK) &&
-               ((ss=_tcschr(buff,' ')) != NULL) &&
-               (*++ss == 'H') && (*++ss == ' ') &&
-               ((len = _tcslen(++ss)) > 1) &&
-               ((ci = malloc(sizeof(vwIcon)+(len*sizeof(TCHAR)))) != NULL))
+               ((desk = (unsigned short) _ttoi(buff)) > 0) && (desk < vwDESKTOP_SIZE) &&
+               ((fs=_tcschr(buff,' ')) != NULL) &&
+               ((ss=_tcschr(fs+1,' ')) != NULL) && (ss != fs) &&
+               ((len = _tcslen(++ss)) > 1))
             {
                 if(ss[len-1] == '\n')
                     ss[--len] = '\0' ;
-                pi = NULL ;
-                ni = iconHideHead[desk] ;
-                while((ni != NULL) && (_tcscmp(ni->name,ss) < 0))
+                rr = 1 ;
+                ci = iconHead ;
+                while((ci != NULL) && ((rr=_tcscmp(ci->name,ss)) < 0))
+                    ci = ci->next ;
+                if(rr == 0)
                 {
-                    pi = ni ;
-                    ni = ni->next ;
+                    ss[-1] = '\0' ;
+                    while((cc = *++fs) != '\0')
+                    {
+                        if(cc == 'H')
+                            ci->flags[desk] |= vwICON_HIDDEN ;
+                        else if(cc == 'P')
+                        {
+                            ci->point[desk].x = _ttoi(++fs) ;
+                            if((fs=_tcschr(fs,':')) != NULL)
+                            {
+                                ci->point[desk].y = _ttoi(++fs) ;
+                                fs = _tcschr(fs,':') ;
+                            }
+                            if(fs != NULL)
+                                ci->flags[desk] |= vwICON_MOVED ;
+                            else
+                                fs = ss - 1 ;
+                        }
+                    }
                 }
-                if(pi == NULL)
-                    iconHideHead[desk] = ci ;
-                else
-                    pi->next = ci ;
-                ci->next = ni ;
-                _tcscpy(ci->name,ss) ;
             }
         }
         fclose(fp) ;
@@ -104,12 +141,11 @@ loadConfigFile(void)
 }
 
 static void
-saveConfigFile(void)
+SaveConfigFile(void)
 {
     TCHAR *ss ;
-    DWORD dwNumberOfBytes;
-    int ii, jj, rr, itemCount ;
-    vwIcon *icon ;
+    int ii ;
+    vwIcon *ci ;
 #ifdef _UNICODE
     char name[1024] ;
 #else
@@ -123,49 +159,42 @@ saveConfigFile(void)
     *ss = '\0' ;
     if(fp != NULL)
     {
-        itemCount = ListView_GetItemCount(diHandle) ;
-        for(ii=0 ; ii<itemCount ; ii++)
+        ci = iconHead ;
+        while(ci != NULL)
         {
-            diLocalItem->iItem = ii;
-            WriteProcessMemory(diProcess, diShareItem, diLocalItem, diItemSize, &dwNumberOfBytes);
-            SendMessage(diHandle, LVM_GETITEM, 0, (LPARAM)diShareItem);
-            ListView_GetItemPosition(diHandle,ii,(POINT *)(diShareItem+sizeof(LVITEM)));
-            ReadProcessMemory(diProcess, diShareItem, diLocalItem, diItemSize, &dwNumberOfBytes);
-            for(jj=0 ; jj<=MAX_DESK ; jj++)
-            {
-                icon = iconHideHead[jj] ;
-                while((icon != NULL) && ((rr=_tcscmp(icon->name,diItemName)) != 0))
-                {
-                    if(rr > 0)
-                    {
-                        icon = NULL ;
-                        break ;
-                    }
-                    icon = icon->next ;
-                }
-                if(icon != NULL)
-                {
-                    /* icon set to be hidden on this desktop */
 #ifdef _UNICODE
-                    WideCharToMultiByte(CP_ACP,0,diItemName,-1,name,1024, 0, 0) ;
+            name[0] = '\0' ;
 #else
-                    name = diItemName ;
+            name = ci->name ;
 #endif
-                    fprintf(fp,"%d H %s\n",jj,name) ;
+            for(ii=1 ; ii< vwDESKTOP_SIZE ; ii++)
+            {
+                if(ci->flags[ii])
+                {
+#ifdef _UNICODE
+                    if(name[0] == '\0')
+                        WideCharToMultiByte(CP_ACP,0,ci->name,-1,name,1024, 0, 0) ;
+#endif
+                    if(ci->flags[ii] & vwICON_MOVED)
+                        fprintf(fp,"%d %sP%d:%d: %s\n",ii,(ci->flags[ii] & vwICON_HIDDEN) ? "H":"",
+                                (int) ci->point[ii].x,(int) ci->point[ii].y,name) ;
+                    else
+                        fprintf(fp,"%d H %s\n",ii,name) ;
                 }
             }
+            ci = ci->next ;
         }
         fclose(fp) ;
     }
 }
 
 
-static void
-UpdateDesktopIcons(void)
+static int
+UpdateDesktopIcons(int fdesk, int tdesk)
 {
     DWORD dwNumberOfBytes;
     int ii, rr, itemCount ;
-    vwIcon *icon ;
+    vwIcon *ci, *pi, *ti ;
     
     itemCount = ListView_GetItemCount(diHandle) ;
     for(ii=0 ; ii<itemCount ; ii++)
@@ -175,68 +204,114 @@ UpdateDesktopIcons(void)
         SendMessage(diHandle, LVM_GETITEM, 0, (LPARAM)diShareItem);
         ListView_GetItemPosition(diHandle,ii,(POINT *)(diShareItem+sizeof(LVITEM)));
         ReadProcessMemory(diProcess, diShareItem, diLocalItem, diItemSize, &dwNumberOfBytes);
-        icon = iconHideHead[deskCrrnt] ;
-        while((icon != NULL) && ((rr=_tcscmp(icon->name,diItemName)) != 0))
+        rr = 1 ;
+        pi = NULL ;
+        ci = iconHead ;
+        while((ci != NULL) && ((rr=_tcscmp(ci->name,diItemName)) < 0))
         {
-            if(rr > 0)
+            pi = ci ;
+            ci = ci->next ;
+        }
+        if(rr != 0)
+        {
+            if((ti = calloc(1,sizeof(vwIcon)+(_tcslen(diItemName)*sizeof(TCHAR)))) == NULL)
+                return 1 ;
+            _tcscpy(ti->name,diItemName) ;
+            ti->point[0].x = diItemPos->x ;
+            ti->point[0].y = diItemPos->y ;
+            if(pi == NULL)
+                iconHead = ti ;
+            else
+                pi->next = ti ;
+            ti->next = ci ;
+            ci = ti ;
+        }
+        else if(fdesk && ((ci->flags[fdesk] & vwICON_HIDDEN) == 0) &&
+                ((ci->point[fdesk].x != diItemPos->x) ||
+                 (ci->point[fdesk].y != diItemPos->y) ))
+        {
+            ci->point[fdesk].x = diItemPos->x ;
+            ci->point[fdesk].y = diItemPos->y ;
+            if((ci->point[0].x != diItemPos->x) ||
+               (ci->point[0].y != diItemPos->y) )
+                ci->flags[fdesk] |= vwICON_MOVED ;
+            else
+                ci->flags[fdesk] &= ~vwICON_MOVED ;
+        }
+        if(tdesk != fdesk)
+        {
+            if(ci->flags[tdesk] & vwICON_HIDDEN)
             {
-                icon = NULL ;
-                break ;
+                if((ci->point[0].x != diItemPos->x) || ((ci->point[0].y-20000) != diItemPos->y))
+                    ListView_SetItemPosition(diHandle,ii,ci->point[0].x,ci->point[0].y-20000) ;
             }
-            icon = icon->next ;
-        }
-        if(icon != NULL)
-        {
-            /* hide the icon if not already */
-            if(diItemPos->y > -10000)
-                ListView_SetItemPosition(diHandle,ii,diItemPos->x,diItemPos->y-20000) ;
-        }
-        else
-        {
-            /* show the icon if not already */
-            if(diItemPos->y < -10000)
-                ListView_SetItemPosition(diHandle,ii,diItemPos->x,diItemPos->y+20000) ;
+            else if(ci->flags[tdesk] & vwICON_MOVED)
+            {
+                if((ci->point[tdesk].x != diItemPos->x) || (ci->point[tdesk].y != diItemPos->y))
+                    ListView_SetItemPosition(diHandle,ii,ci->point[tdesk].x,ci->point[tdesk].y) ;
+            }
+            else if((ci->point[0].x != diItemPos->x) || (ci->point[0].y != diItemPos->y))
+                ListView_SetItemPosition(diHandle,ii,ci->point[0].x,ci->point[0].y) ;
         }
     }
+    return 0 ;
+}
+
+static int
+SetDesktopIcons(int tdesk)
+{
+    DWORD dwNumberOfBytes;
+    int ii, itemCount ;
+    vwIcon *ci ;
+    
+    itemCount = ListView_GetItemCount(diHandle) ;
+    for(ii=0 ; ii<itemCount ; ii++)
+    {
+        diLocalItem->iItem = ii;
+        WriteProcessMemory(diProcess, diShareItem, diLocalItem, diItemSize, &dwNumberOfBytes);
+        SendMessage(diHandle, LVM_GETITEM, 0, (LPARAM)diShareItem);
+        ListView_GetItemPosition(diHandle,ii,(POINT *)(diShareItem+sizeof(LVITEM)));
+        ReadProcessMemory(diProcess, diShareItem, diLocalItem, diItemSize, &dwNumberOfBytes);
+        ci = iconHead ;
+        while(ci != NULL)
+        {
+            if(!_tcscmp(ci->name,diItemName))
+            {
+                if(ci->flags[tdesk] & vwICON_HIDDEN)
+                    ListView_SetItemPosition(diHandle,ii,ci->point[0].x,ci->point[0].y-20000) ;
+                else if(ci->flags[tdesk] & vwICON_MOVED)
+                    ListView_SetItemPosition(diHandle,ii,ci->point[tdesk].x,ci->point[tdesk].y) ;
+                else
+                    ListView_SetItemPosition(diHandle,ii,ci->point[0].x,ci->point[0].y) ;
+                break ;
+            }
+            ci = ci->next ;
+        }
+    }
+    return 0 ;
 }
 
 static void
 GenerateDesktopIconList(HWND hDlg)
 {
-    DWORD dwNumberOfBytes;
-    int ii, rr, itemCount ;
-    vwIcon *icon ;
+    vwIcon *ci ;
     
     SendDlgItemMessage(hDlg,ID_HIDE_LIST,LB_RESETCONTENT,0,0);
     SendDlgItemMessage(hDlg,ID_SHOW_LIST,LB_RESETCONTENT,0,0);
     
-    itemCount = ListView_GetItemCount(diHandle) ;
-    for(ii=0 ; ii<itemCount ; ii++)
+    ci = iconHead ;
+    while(ci != NULL)
     {
-        diLocalItem->iItem = ii;
-        WriteProcessMemory(diProcess, diShareItem, diLocalItem, diItemSize, &dwNumberOfBytes);
-        SendMessage(diHandle, LVM_GETITEM, 0, (LPARAM)diShareItem);
-        ListView_GetItemPosition(diHandle,ii,(POINT *)(diShareItem+sizeof(LVITEM)));
-        ReadProcessMemory(diProcess, diShareItem, diLocalItem, diItemSize, &dwNumberOfBytes);
-        icon = iconHideHead[deskCrrnt] ;
-        while((icon != NULL) && ((rr=_tcscmp(icon->name,diItemName)) != 0))
-        {
-            if(rr > 0)
-            {
-                icon = NULL ;
-                break ;
-            }
-            icon = icon->next ;
-        }
-        if(icon != NULL)
+        if(ci->flags[deskCrrnt] & vwICON_HIDDEN)
         {
             /* icon is flagged as hidden */
-            SendDlgItemMessage(hDlg,ID_HIDE_LIST,LB_ADDSTRING,0,(LONG) diItemName);
+            SendDlgItemMessage(hDlg,ID_HIDE_LIST,LB_ADDSTRING,0,(LONG) ci->name);
         }
         else
         {
-            SendDlgItemMessage(hDlg,ID_SHOW_LIST,LB_ADDSTRING,0,(LONG) diItemName);
+            SendDlgItemMessage(hDlg,ID_SHOW_LIST,LB_ADDSTRING,0,(LONG) ci->name);
         }
+        ci = ci->next ;
     }
 }
 
@@ -255,57 +330,53 @@ initDialog(HWND hwndDlg, BOOL enableApply)
         EnableWindow(hBtn,FALSE) ;
     if((hBtn=GetDlgItem(hwndDlg,ID_HIDE_ICON)) != NULL)
         EnableWindow(hBtn,FALSE) ;
+    if((hBtn=GetDlgItem(hwndDlg,ID_PASTE)) != NULL)
+        EnableWindow(hBtn,(deskCopy && (deskCopy != deskCrrnt)) ? TRUE:FALSE) ;
 }
 
 static void
-setupShowCurrentIcon(HWND hDlg)
+SetupShowCurrentIcon(HWND hDlg)
 {
-    vwIcon *ci, *pi ;
+    vwIcon *ci ;
     TCHAR buff[1024] ;
-    int rr, len, curSel = SendDlgItemMessage(hDlg, ID_HIDE_LIST, LB_GETCURSEL, 0, 0);
-    if((curSel != LB_ERR) && ((ci = iconHideHead[deskCrrnt]) != NULL) &&
-       ((len=SendDlgItemMessage(hDlg, ID_HIDE_LIST, LB_GETTEXT, curSel, (LPARAM) buff)) > 0))
+    int curSel ;
+    
+    if(((curSel= SendDlgItemMessage(hDlg,ID_HIDE_LIST,LB_GETCURSEL,0,0)) != LB_ERR) &&
+       (SendDlgItemMessage(hDlg,ID_HIDE_LIST,LB_GETTEXT,curSel,(LPARAM) buff) > 0))
     {
-        rr = 0 ;
-        pi = NULL ;
-        while((ci != NULL) && ((rr=_tcscmp(ci->name,buff)) < 0))
+        ci = iconHead ;
+        while(ci != NULL)
         {
-            pi = ci ;
+            if(!_tcscmp(ci->name,buff))
+            {
+                ci->flags[deskCrrnt] &= ~vwICON_HIDDEN ;
+                break ;
+            }
             ci = ci->next ;
-        }
-        if(rr == 0)
-        {
-            if(pi == NULL)
-                iconHideHead[deskCrrnt] = ci->next ;
-            else
-                pi->next = ci->next ;
-            free(ci) ;
         }
     }
 }
 
 static void
-setupHideCurrentIcon(HWND hDlg)
+SetupHideCurrentIcon(HWND hDlg)
 {
-    vwIcon *ci, *ni, *pi ;
+    vwIcon *ci ;
     TCHAR buff[1024] ;
-    int len, curSel = SendDlgItemMessage(hDlg, ID_SHOW_LIST, LB_GETCURSEL, 0, 0);
-    if((curSel != LB_ERR) && ((len=SendDlgItemMessage(hDlg, ID_SHOW_LIST, LB_GETTEXT, curSel, (LPARAM) buff)) > 0) &&
-       ((ci = malloc(sizeof(vwIcon)+(len*sizeof(TCHAR)))) != NULL))
+    int curSel ;
+    
+    if(((curSel= SendDlgItemMessage(hDlg,ID_SHOW_LIST,LB_GETCURSEL,0,0)) != LB_ERR) &&
+       (SendDlgItemMessage(hDlg,ID_SHOW_LIST,LB_GETTEXT,curSel,(LPARAM) buff) > 0))
     {
-        pi = NULL ;
-        ni = iconHideHead[deskCrrnt] ;
-        while((ni != NULL) && (_tcscmp(ni->name,buff) < 0))
+        ci = iconHead ;
+        while(ci != NULL)
         {
-            pi = ni ;
-            ni = ni->next ;
+            if(!_tcscmp(ci->name,buff))
+            {
+                ci->flags[deskCrrnt] |= vwICON_HIDDEN ;
+                break ;
+            }
+            ci = ci->next ;
         }
-        if(pi == NULL)
-            iconHideHead[deskCrrnt] = ci ;
-        else
-            pi->next = ci ;
-        ci->next = ni ;
-        _tcscpy(ci->name,buff) ;
     }
 }
 
@@ -327,26 +398,65 @@ DialogFunc(HWND hwndDlg, UINT msg, WPARAM wParam, LPARAM lParam)
         switch (LOWORD(wParam))
         {
         case IDCANCEL:
+            UpdateDesktopIcons(deskCrrnt,deskCrrnt) ;
             EndDialog(hwndDlg,0);
             return 1;
         
         case ID_OK:
         case ID_APPLY:
-            saveConfigFile() ;
-            UpdateDesktopIcons() ;
+            SetDesktopIcons(deskCrrnt) ;
+            SaveConfigFile() ;
             if(LOWORD(wParam) == ID_OK)
                 EndDialog(hwndDlg,0) ;
             else
                 initDialog(hwndDlg,FALSE) ;
             return 1;
             
+        case ID_RESTORE:
+            if(deskCrrnt)
+            {
+                vwIcon *ci = iconHead ;
+                while(ci != NULL)
+                {
+                    if(ci->point[0].y < -5000)
+                        ci->point[0].y += -20000 ;
+                    ci->flags[deskCrrnt] = 0 ;
+                    ci->point[deskCrrnt] = ci->point[0] ;
+                    ci = ci->next ;
+                }
+                initDialog(hwndDlg,TRUE);
+            }
+            return 1;
+            
+        case ID_COPY:
+            deskCopy = deskCrrnt ;
+            if((hBtn=GetDlgItem(hwndDlg,ID_PASTE)) != NULL)
+                EnableWindow(hBtn,FALSE) ;
+            return 1;
+            
+        case ID_PASTE:
+            if(deskCopy && deskCrrnt)
+            {
+                vwIcon *ci = iconHead ;
+                while(ci != NULL)
+                {
+                    ci->flags[deskCrrnt] = ci->flags[deskCopy] ;
+                    ci->point[deskCrrnt] = ci->point[deskCopy] ;
+                    ci = ci->next ;
+                }
+                initDialog(hwndDlg,TRUE);
+                if((hBtn=GetDlgItem(hwndDlg,ID_PASTE)) != NULL)
+                    EnableWindow(hBtn,FALSE) ;
+            }
+            return 1;
+        
         case ID_SHOW_ICON:
-            setupShowCurrentIcon(hwndDlg) ;
+            SetupShowCurrentIcon(hwndDlg) ;
             initDialog(hwndDlg,TRUE);
             return 1;
         
         case ID_HIDE_ICON:
-            setupHideCurrentIcon(hwndDlg) ;
+            SetupHideCurrentIcon(hwndDlg) ;
             initDialog(hwndDlg,TRUE);
             return 1;
         
@@ -372,34 +482,29 @@ DialogFunc(HWND hwndDlg, UINT msg, WPARAM wParam, LPARAM lParam)
     return FALSE;
 }
 
-static VOID CALLBACK
-startupFailureTimerProc(HWND hwnd, UINT uMsg, UINT idEvent, DWORD dwTime)
-{
-    if(!initialised)
-    {
-        MessageBox(hwnd,_T("VirtuaWin failed to send the UserApp path."),_T("VWDesktopIcons Error"), MB_ICONWARNING);
-        exit(1) ;
-    }
-}
-
 LRESULT CALLBACK
 MainWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
+    int newDesk ;
     switch (msg)
     {
     case MOD_INIT: 
         /* This must be taken care of in order to get the handle to VirtuaWin. */
         /* The handle to VirtuaWin comes in the wParam */
         vwHandle = (HWND) wParam;
-        if((deskCrrnt = SendMessage(vwHandle,VW_CURDESK,0,0)) > MAX_DESK)
+        if((deskCrrnt = SendMessage(vwHandle,VW_CURDESK,0,0)) >= vwDESKTOP_SIZE)
             deskCrrnt = 0 ;
         // If not yet initialized get the user path and initialize.
-        if(!initialised && !SendMessage(vwHandle, VW_USERAPPPATH, (WPARAM) hwnd, 0))
+        if(!initialised)
         {
-            MessageBox(hwnd,_T("VirtuaWin failed to send the UserApp path."),_T("VWDesktopIcons Error"), MB_ICONWARNING);
-            exit(1) ;
+            if(!SendMessage(vwHandle, VW_USERAPPPATH, (WPARAM) hwnd, 0) || !initialised)
+            {
+                MessageBox(hwnd,_T("VirtuaWin failed to send the UserApp path."),_T("VWDesktopIcons Error"), MB_ICONWARNING);
+                exit(1) ;
+            }
+            SetDesktopIcons(deskCrrnt) ;
+            CheckDesktopSettings() ;
         }
-        UpdateDesktopIcons() ;
         break;
     
     case WM_COPYDATA:
@@ -417,17 +522,18 @@ MainWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 #else
                 strcpy(userAppPath,(char *) cds->lpData) ;
 #endif
-                loadConfigFile() ;
+                LoadConfigFile() ;
             }
         }
         return TRUE ;
         
     case MOD_CHANGEDESK:
-        if(lParam > MAX_DESK)
-            deskCrrnt = 0 ;
+        if(lParam >= vwDESKTOP_SIZE)
+            newDesk = 0 ;
         else
-            deskCrrnt = lParam ;
-        UpdateDesktopIcons() ;
+            newDesk = lParam ;
+        UpdateDesktopIcons(deskCrrnt,newDesk) ;
+        deskCrrnt = newDesk ;
         return TRUE ;
    case MOD_QUIT:
         /* This must be handled, otherwise VirtuaWin can't shut down the module */
@@ -520,12 +626,23 @@ WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, INT nCmdS
     diItemPos = (POINT *) (((char *) diLocalItem) + sizeof(LVITEM)) ;
     diItemName = (TCHAR *) (((char *) diLocalItem) + sizeof(LVITEM) + sizeof(POINT)) ; 
     
+    /* get icon list */ 
+    if(UpdateDesktopIcons(0,0))
+    {
+        MessageBox(wHnd,_T("Failed to get the initial list of desktop icons\n"),_T("VWDesktopIcons Error"), MB_ICONERROR) ;
+        exit(1) ;
+    }
+
     /* main messge loop */
     while (GetMessage(&msg, NULL, 0, 0))
     {
         TranslateMessage(&msg);
         DispatchMessage(&msg);
     }
+    
+    UpdateDesktopIcons(deskCrrnt,deskCrrnt) ;
+    SaveConfigFile() ;
+    SetDesktopIcons(0) ;
     VirtualFree(diLocalItem, 0, MEM_RELEASE);
     VirtualFreeEx(diProcess, diShareItem, 0, MEM_RELEASE);
     CloseHandle(diProcess);
