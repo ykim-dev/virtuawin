@@ -283,7 +283,7 @@ checkMouseState(BOOL force)
             }
             else if((hwnd != NULL) && (hwnd != taskHWnd))
             {
-                lParam = (((int)(short) pt.y) << 16) | ((int)(short) pt.x) ;
+                lParam = (((int)(short) pt.y) << 16) | (0x0ffff & ((int)(short) pt.x)) ;
                 if((SendMessageTimeout(hwnd,WM_NCHITTEST,0,lParam,SMTO_ABORTIFHUNG|SMTO_BLOCK,50,&rr) ||
                     (Sleep(1),SendMessageTimeout(hwnd,WM_NCHITTEST,0,lParam,SMTO_ABORTIFHUNG|SMTO_BLOCK,100,&rr))) &&
                    (rr == HTCAPTION))
