@@ -493,13 +493,11 @@ void enableMouse(BOOL turnOn)
  * Sets the icon in the systray and updates the currentDesk variable
  */
 static void
-setIcon(int deskNumber, int hungCount)
+setIcon(int deskNumber, int hungCount, int addCount)
 {
     if(displayTaskbarIcon)
     {
-        int ll, add ;
-        if((add = (deskNumber < 0)))
-            deskNumber = 0 - deskNumber ;
+        int ll ;
         if(hungCount < 0)
         {
             nIconD.hIcon = NULL ;
@@ -517,11 +515,10 @@ setIcon(int deskNumber, int hungCount)
         }
         else
             _stprintf(nIconD.szTip+ll,_T("Desktop %d"),deskNumber) ;
-        if(add)
+        if(addCount)
         {
             // This adds the icon, try up to 3 times as systray process may not have started
-            ll = 3 ;
-            while((Shell_NotifyIcon(NIM_ADD, &nIconD) == 0) && (--ll > 0))
+            while((Shell_NotifyIcon(NIM_ADD, &nIconD) == 0) && (--addCount > 0))
                 Sleep(2000);
         }
         else
@@ -588,7 +585,7 @@ void reLoadIcons(void)
         icons[ii] = NULL;
     while(--ii >= 0) ;
     loadIcons();
-    setIcon(currentDesk,0);
+    setIcon(currentDesk,0,0);
 }
 
 /*************************************************
@@ -1940,7 +1937,7 @@ static VOID CALLBACK monitorTimerProc(HWND hwnd, UINT uMsg, UINT idEvent, DWORD 
         if((mtCount & index) == 0)
         {
             /* flash the icon for half a second each time we try */
-            setIcon(currentDesk,0-hungCount) ;
+            setIcon(currentDesk,0-hungCount,0) ;
             index = nWin ;
             while(--index >= 0)
             {
@@ -1959,14 +1956,14 @@ static VOID CALLBACK monitorTimerProc(HWND hwnd, UINT uMsg, UINT idEvent, DWORD 
         else if(((mtCount-1) & index) == 0)
         {
             /* restore the flashing icon */
-            setIcon(currentDesk,hungCount) ;
+            setIcon(currentDesk,hungCount,0) ;
         }
     }
     else if(mtCount)
     {
         /* hung process problem has been resolved. */
         mtCount = 0 ;
-        setIcon(currentDesk,0);
+        setIcon(currentDesk,0,0);
     }
 
     if(taskbarFixRequired)
@@ -2175,7 +2172,7 @@ static int changeDesk(int newDesk, WPARAM msgWParam)
         initDesktopProperties() ;
         showSetup() ;
     }
-    setIcon(currentDesk,0) ;
+    setIcon(currentDesk,0,0) ;
     if(refreshOnWarp) // Refresh the desktop 
         RedrawWindow( NULL, NULL, NULL, RDW_INVALIDATE | RDW_ERASE | RDW_ALLCHILDREN );
     
@@ -2627,7 +2624,7 @@ static void disableAll(HWND aHWnd)
     if(enabled)
     {   // disable VirtuaWin
         _tcscpy(nIconD.szTip,vwVIRTUAWIN_NAME _T(" - Disabled")); //Tooltip
-        setIcon(0,0);
+        setIcon(0,0,0);
         KillTimer(hWnd, 0x29a);
         enableMouse(FALSE);
         unRegisterAllKeys();
@@ -2638,7 +2635,7 @@ static void disableAll(HWND aHWnd)
         registerAllKeys();
         enableMouse(mouseEnable);
         SetTimer(hWnd, 0x29a, 250, monitorTimerProc);
-        setIcon(currentDesk,0);
+        setIcon(currentDesk,0,0);
         enabled = TRUE;
     }
 }
@@ -3452,7 +3449,7 @@ wndProc(HWND aHWnd, UINT message, WPARAM wParam, LPARAM lParam)
         return TRUE;
         
     case VW_SHOWICON:
-        setIcon(0-currentDesk,0);              // This re-adds the icon
+        setIcon(currentDesk,0,1);              // This re-adds the icon
         return TRUE;
         
     case VW_HELP:
@@ -3770,7 +3767,7 @@ wndProc(HWND aHWnd, UINT message, WPARAM wParam, LPARAM lParam)
         if(message == taskbarRestart)
         {
             goGetTheTaskbarHandle();
-            setIcon(0-currentDesk,0);	// This re-adds the icon
+            setIcon(currentDesk,0,3);	// This re-adds the icon
         }
         break;
     }
@@ -3882,7 +3879,7 @@ VirtuaWinInit(HINSTANCE hInstance)
           NIF_ICON |		    // nIconD.hIcon is valid, use it
           NIF_TIP;		    // nIconD.szTip is valid, use it
     nIconD.uCallbackMessage = VW_SYSTRAY;  // message sent to nIconD.hWnd
-    setIcon(-1,0) ;
+    setIcon(1,0,3) ;
     
     /* Register the keys */
     registerAllKeys();
