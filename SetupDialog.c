@@ -667,9 +667,9 @@ BOOL APIENTRY setupMisc(HWND hDlg, UINT message, UINT wParam, LONG lParam)
         break;
         
     case WM_COMMAND:
-        if( LOWORD(wParam) == IDC_STICKYSAVE    || LOWORD(wParam) == IDC_DISPLAYICON ||
+        if( LOWORD(wParam) == IDC_STICKYSAVE    || LOWORD(wParam) == IDC_USEASSIGN ||
             LOWORD(wParam) == IDC_MENUSTICKY    || LOWORD(wParam) == IDC_MENUACCESS ||
-            LOWORD(wParam) == IDC_MENUASSIGN    || LOWORD(wParam) == IDC_USEASSIGN ||
+            LOWORD(wParam) == IDC_MENUASSIGN    || LOWORD(wParam) == IDC_MENUSHOW || 
             LOWORD(wParam) == IDC_COMPACTMENU   || LOWORD(wParam) == IDC_ASSIGNWINNOW ||
             LOWORD(wParam) == IDC_FIRSTONLY     || LOWORD(wParam) == IDC_SAVEEXITSTATE ||
             LOWORD(wParam) == IDC_HOTWLISTEN    || LOWORD(wParam) == IDC_HOTWLISTW || 
