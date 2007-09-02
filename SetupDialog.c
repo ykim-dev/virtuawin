@@ -49,20 +49,23 @@ static HWND setupKeysHWnd=NULL;
 
 static void vwSetupApply(HWND hDlg, int curPageMask)
 {
-    pageApplyMask |= curPageMask ;
-    if((pageApplyMask & pageChangeMask) == pageChangeMask)
+    if(pageChangeMask)
     {
-        // All pages have now got any changes from the GUI, save them and apply
-        writeConfig();
-        getWorkArea();
-        unRegisterAllKeys();
-        registerAllKeys();
-        enableMouse(mouseEnable);
-        setMouseKey();
-        // Tell modules about the config change
-        postModuleMessage(MOD_CFGCHANGE, 0, 0);
-        pageChangeMask = 0 ;
-        pageApplyMask = 0 ;
+        pageApplyMask |= curPageMask ;
+        if((pageApplyMask & pageChangeMask) == pageChangeMask)
+        {
+            // All pages have now got any changes from the GUI, save them and apply
+            writeConfig();
+            getWorkArea();
+            unRegisterAllKeys();
+            registerAllKeys();
+            enableMouse(mouseEnable);
+            setMouseKey();
+            // Tell modules about the config change
+            postModuleMessage(MOD_CFGCHANGE, 0, 0);
+            pageChangeMask = 0 ;
+            pageApplyMask = 0 ;
+        }
     }
 }
 
@@ -172,6 +175,7 @@ BOOL APIENTRY setupGeneral(HWND hDlg, UINT message, UINT wParam, LONG lParam)
             
             /* Currect desktop properties */
             initDesktopProperties() ;
+            pageChangeMask &= ~0x01 ;
             return (TRUE);
         }
         
@@ -280,7 +284,8 @@ BOOL APIENTRY setupGeneral(HWND hDlg, UINT message, UINT wParam, LONG lParam)
         wPar = LOWORD(wParam);
         if(wPar == IDC_DESKX)
         {
-            pageChangeMask |= 0x01 ;
+            if(HIWORD(wParam) == EN_CHANGE)
+                pageChangeMask |= 0x01 ;
             SendMessage(GetParent(hDlg), PSM_CHANGED, (WPARAM)hDlg, 0L);
             tmpDesksX = SendMessage(GetDlgItem(hDlg, IDC_SLIDERX), UDM_GETPOS, 0, 0);
             if((tmpDesksX * tmpDesksY) > vwDESKTOP_MAX)
@@ -293,7 +298,8 @@ BOOL APIENTRY setupGeneral(HWND hDlg, UINT message, UINT wParam, LONG lParam)
         }
         else if(wPar == IDC_DESKY)
         {
-            pageChangeMask |= 0x01 ;
+            if(HIWORD(wParam) == EN_CHANGE)
+                pageChangeMask |= 0x01 ;
             SendMessage(GetParent(hDlg), PSM_CHANGED, (WPARAM)hDlg, 0L);
             tmpDesksY = SendMessage(GetDlgItem(hDlg, IDC_SLIDERY), UDM_GETPOS, 0, 0);
             if((tmpDesksY * tmpDesksX) > vwDESKTOP_MAX)
