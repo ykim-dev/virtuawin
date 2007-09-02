@@ -42,7 +42,8 @@ HWND listHWnd;     // Handle to the window list
 HWND hwndTask ;
 UINT RM_Shellhook ;
 TCHAR userAppPath[MAX_PATH] ;
-int  deskCount ;
+int deskCount ;
+int deskCrrnt ;
 
 typedef struct vwlWindow {
     struct vwlWindow *next ;
@@ -139,7 +140,7 @@ enumWindowsProc(HWND hwnd, LPARAM lParam)
             state = 1 ;
             sbuff[0] = 'O' ;
         }
-        if(flag > deskCount)
+        if((flag != deskCrrnt) && (flag > deskCount))
             // on a hidden desktop
             return TRUE ;
         fbuff[0] = (flag >= 10) ? ('0' + (flag / 10)) : ' ' ;
@@ -253,7 +254,10 @@ GenerateWinList(HWND hDlg, int update)
         ListView_InsertColumn(listHWnd,3,&col);
     }
     if(vwHandle != 0)
+    {
         deskCount = SendMessage(vwHandle, VW_DESKX, 0, 0) * SendMessage(vwHandle, VW_DESKY, 0, 0) ;
+        deskCrrnt = SendMessage(vwHandle, VW_CURDESK, 0, 0) ;
+    }
     
     EnumWindows(enumWindowsProc, (LPARAM) hDlg);   // get all windows
     
