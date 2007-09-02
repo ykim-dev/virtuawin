@@ -1246,7 +1246,7 @@ static void setForegroundWin(HWND theWin, int makeTop)
         makeTop = 0 ;
     }
     else if(((index = winListFind(theWin)) < 0) || !winList[index].Visible ||
-            !windowIsNotHung(theWin,100))
+            (!windowIsNotHung(theWin,50) && (Sleep(1),!windowIsNotHung(theWin,100))))
     {
         /* don't make the foreground a hidden or non-managed or hung window */
         vwLogBasic((_T("SetForground: %8x - %d %d or HUNG\n"),(int) theWin,index,winList[index].Visible)) ;
