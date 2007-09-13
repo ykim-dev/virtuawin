@@ -2399,16 +2399,15 @@ winListCreateItemList(MenuItem **items,int *numitems)
             {
                 // Fallback plan, maybe this works better for this type of application
                 // Otherwise there is not much we can do (could try looking for an owned window)
+                // Note: some apps (e.g. Opera) only have big icons
                 DWORD theIcon;
-                SendMessageTimeout(winList[c].Handle, WM_GETICON, ICON_SMALL, 0L, 
-                                   SMTO_ABORTIFHUNG | SMTO_BLOCK, 100, &theIcon);
-                if(theIcon == 0)
-                    // some apps (e.g. Opera) only have big icons
-                    SendMessageTimeout(winList[c].Handle, WM_GETICON, ICON_BIG, 0L, 
-                                       SMTO_ABORTIFHUNG | SMTO_BLOCK, 100, &theIcon);
-                hSmallIcon = (HICON)theIcon;
+                if((SendMessageTimeout(winList[c].Handle, WM_GETICON, ICON_SMALL, 0L, 
+                                       SMTO_ABORTIFHUNG | SMTO_BLOCK, 100, &theIcon) && (theIcon != 0)) ||
+                   (SendMessageTimeout(winList[c].Handle, WM_GETICON, ICON_BIG, 0L, 
+                                       SMTO_ABORTIFHUNG | SMTO_BLOCK, 100, &theIcon) && (theIcon != 0)))
+                    hSmallIcon = (HICON) theIcon ;
             }
-            item->icon=hSmallIcon;
+            item->icon = hSmallIcon ;
             if(((item->desk = winList[c].Desk) != currentDesk) && !winList[c].Sticky)
                 doAssignMenu = assignMenu ;
             item->sticky = winList[c].Sticky;
@@ -3147,7 +3146,7 @@ static void renderMenuItem(DRAWITEMSTRUCT* ditem)
     SIZE size;
     int backgroundcolor,textcolor, ll;
 
-    item = (MenuItem*) ditem->itemData;
+    item = (MenuItem *) ditem->itemData;
 
     if((item != NULL) && (ditem->itemState & ODS_SELECTED))
     {
@@ -3174,8 +3173,8 @@ static void renderMenuItem(DRAWITEMSTRUCT* ditem)
 
     if(item != NULL)
     {
-        icon=(ditem->itemState & ODS_CHECKED) ? checkIcon : item->icon;
-        DrawIconEx(ditem->hDC,ditem->rcItem.left+MENU_X_PADDING,ditem->rcItem.top+MENU_Y_PADDING,icon,ICON_SIZE,ICON_SIZE,0,0,DI_NORMAL);
+        if((icon = (ditem->itemState & ODS_CHECKED) ? checkIcon : item->icon) != NULL)
+            DrawIconEx(ditem->hDC,ditem->rcItem.left+MENU_X_PADDING,ditem->rcItem.top+MENU_Y_PADDING,icon,ICON_SIZE,ICON_SIZE,0,0,DI_NORMAL);
         if((ll = _tcslen(item->name)) > 0)
         {
             GetTextExtentPoint32(ditem->hDC,item->name,ll,&size);
