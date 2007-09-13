@@ -43,7 +43,21 @@
 #include <crtdbg.h>
 #endif
 
+/* define some constants that are often missing in early compilers */
+#ifndef WS_EX_NOACTIVATE
+#define WS_EX_NOACTIVATE 0x8000000
+#endif
+/* The virtual screen size system matrix values were only added for WINVER >= 0x0500 (Win2k) */
+#ifndef SM_CMONITORS
+#define SM_XVIRTUALSCREEN       76
+#define SM_YVIRTUALSCREEN       77
+#define SM_CXVIRTUALSCREEN      78
+#define SM_CYVIRTUALSCREEN      79
+#define SM_CMONITORS            80
+#endif
+
 #define calculateDesk(x,y) (((y) * nDesksX) - (nDesksX - (x)))
+#define windowIsNotHung(hWnd,waitTime) (SendMessageTimeout(hWnd,(int)NULL,0,0,SMTO_ABORTIFHUNG|SMTO_BLOCK,waitTime,NULL))
 
 // Variables
 HWND hWnd;		  // handle to VirtuaWin
@@ -143,7 +157,7 @@ short compactMenu = 0;
 BOOL useDeskAssignment = FALSE;
 BOOL saveLayoutOnExit = FALSE;
 BOOL assignOnlyFirst = FALSE;
-BOOL assignImmediately = TRUE;
+int  assignImmediately = 1;
 BOOL cyclingKeysEnabled = FALSE;
 BOOL displayTaskbarIcon = TRUE;
 BOOL noTaskbarCheck = FALSE;
@@ -197,8 +211,6 @@ enum {
 } ;
 int osVersion ;
     
-#define windowIsNotHung(hWnd,waitTime) (SendMessageTimeout(hWnd,(int)NULL,0,0,SMTO_ABORTIFHUNG|SMTO_BLOCK,waitTime,NULL))
-
 #define vwSHWIN_TRYHARD   0x01
 static BOOL showHideWindow(windowType *aWindow, int shwFlags, unsigned char show);
 static int changeDesk(int newDesk, WPARAM msgWParam) ;
@@ -856,14 +868,6 @@ void unRegisterAllKeys(void)
     unRegisterKeys();
 }
 
-/* The virtual screen size system matrix values were only added for WINVER >= 0x0500 (Win2k) */
-#ifndef SM_CMONITORS
-#define SM_XVIRTUALSCREEN       76
-#define SM_YVIRTUALSCREEN       77
-#define SM_CXVIRTUALSCREEN      78
-#define SM_CYVIRTUALSCREEN      79
-#define SM_CMONITORS            80
-#endif
 /************************************************
  * Get screen width and height and store values in
  * global variables
@@ -1618,8 +1622,12 @@ static int winListUpdate(void)
         winList[i].ZOrder[currentDesk] = 1;
         winList[i].Visible = TRUE;
         winList[i].State = 1 ;
+        winList[i].Flags = 0 ;
         winList[i].menuId = 0 ;
-        if(((winList[i].Owner = GetWindow(winList[i].Handle,GW_OWNER)) != NULL) && !IsWindowVisible(winList[i].Owner))
+        winList[i].Owner = GetWindow(winList[i].Handle,GW_OWNER) ;
+        if((winList[i].ExStyle & (WS_EX_TOOLWINDOW|WS_EX_NOACTIVATE)) || ((winList[i].Owner != NULL) && ((winList[i].ExStyle & WS_EX_APPWINDOW) == 0)))
+            winList[i].Flags |= vwWTFLAGS_NO_TASKBAR_BUT ;
+        if((winList[i].Owner != NULL) && ((GetWindowLong(winList[i].Owner,GWL_STYLE) & WS_VISIBLE) == 0))
             winList[i].Owner = NULL ;
         // isn't part of an existing app thats opened a new window
         if(((winList[i].Sticky = checkIfSticky(cname,wname)) == 0) && useDeskAssignment)
@@ -1644,6 +1652,7 @@ static int winListUpdate(void)
                     vwLogBasic((_T("Making tricky window %x owned by %x\n"),
                                 (int) winList[i].Handle,(int) winList[j].Handle)) ;
                     winList[i].Owner = winList[j].Handle ;
+                    winList[j].Flags |= vwWTFLAGS_NO_TASKBAR_BUT | vwWTFLAGS_RM_TASKBAR_BUT ;
                     break ;
                 }
             }
@@ -1714,9 +1723,14 @@ static int winListUpdate(void)
         {
             j = winList[i].Desk ;
             winList[i].Desk = currentDesk ;
-            windowSetDesk(winList[i].Handle,j,assignImmediately,FALSE) ;
-            if(assignImmediately && (hiddenWindowAct == 3) && (newDesk == 0))
-                newDesk = j ;
+            if(j > nDesks)
+                windowSetDesk(winList[i].Handle,j,1,FALSE) ;
+            else
+            {
+                windowSetDesk(winList[i].Handle,j,assignImmediately,FALSE) ;
+                if(assignImmediately && (hiddenWindowAct == 3) && (newDesk == 0))
+                    newDesk = j ;
+            }
         }
     }
     if(vwLogEnabled())
@@ -1727,9 +1741,9 @@ static int winListUpdate(void)
             GetClassName(winList[i].Handle,cname,vwCLASSNAME_MAX);
             if(!GetWindowText(winList[i].Handle,wname,vwWINDOWNAME_MAX))
                 _tcscpy(wname,_T("<None>"));
-            vwLogBasic((_T("Got new window %8x %08x %08x Desk %d Stk %d Trk %d Vis %d Own %x Pos %d %d\n  Class \"%s\" Title \"%s\"\n"),
+            vwLogBasic((_T("Got new window %8x %08x %08x Desk %d Flg %d Stk %d Trk %d Vis %d Own %x Pos %d %d\n  Class \"%s\" Title \"%s\"\n"),
                         (int) winList[i].Handle,(int)winList[i].Style,(int)winList[i].ExStyle,
-                        (int)winList[i].Desk,(int)winList[i].Sticky,(int)winList[i].Tricky,
+                        (int)winList[i].Desk,(int)winList[i].Flags,(int)winList[i].Sticky,(int)winList[i].Tricky,
                         winList[i].Visible,(int) winList[i].Owner,(int) pos.left,(int) pos.top,cname,wname)) ;
         }
     }
@@ -2103,12 +2117,15 @@ static int changeDesk(int newDesk, WPARAM msgWParam)
                     showHideWindow(&winList[x],0,vwVISIBLE_YES) ;
                     y = 1 ;
                 }
-                else if(y && windowIsNotHung(winList[x].Handle,50))
+                else if(y)
                 {
-                    /* It is visible but its position in the taskbar is wrong - fix by removing from the taskbar and then adding again */
-                    PostMessage(taskHWnd, RM_Shellhook, HSHELL_WINDOWDESTROYED, (LPARAM) winList[x].Handle);
-                    Sleep(1);
-                    PostMessage(taskHWnd, RM_Shellhook, HSHELL_WINDOWCREATED, (LPARAM) winList[x].Handle );
+                    if((winList[x].Flags & vwWTFLAGS_NO_TASKBAR_BUT) == 0)
+                    {
+                        /* It is visible but its position in the taskbar is wrong - fix by removing from the taskbar and then adding again */
+                        PostMessage(taskHWnd,RM_Shellhook,HSHELL_WINDOWDESTROYED,(LPARAM) winList[x].Handle) ;
+                        Sleep(1);
+                        PostMessage(taskHWnd,RM_Shellhook,HSHELL_WINDOWCREATED,(LPARAM) winList[x].Handle) ;
+                    }
                     if(activeHWnd == winList[x].Handle)
                         activeRefocus = 1 ;
                 }
@@ -2578,6 +2595,9 @@ static BOOL showHideWindow(windowType* aWindow, int shwFlags, unsigned char show
             /* if minimized dont show popups */
             if(!(aWindow->Style & WS_MINIMIZE))
                 ShowOwnedPopups(aWindow->Handle,(show) ? TRUE:FALSE) ;
+            if(aWindow->Flags & vwWTFLAGS_RM_TASKBAR_BUT)
+                /* Make sure the taskbar does not create a button for this window */
+                PostMessage(taskHWnd, RM_Shellhook, HSHELL_WINDOWDESTROYED, (LPARAM) aWindow->Handle);
         }
         else
         {
@@ -2587,8 +2607,9 @@ static BOOL showHideWindow(windowType* aWindow, int shwFlags, unsigned char show
             {
                 // Restore the window mode
                 SetWindowLong( aWindow->Handle, GWL_EXSTYLE, aWindow->ExStyle );  
-                // Notify taskbar of the change
-                PostMessage(taskHWnd, RM_Shellhook, HSHELL_WINDOWCREATED, (LPARAM) aWindow->Handle );
+                if((aWindow->Flags & vwWTFLAGS_NO_TASKBAR_BUT) == 0)
+                    // Notify taskbar of the change
+                    PostMessage(taskHWnd, RM_Shellhook, HSHELL_WINDOWCREATED, (LPARAM) aWindow->Handle );
                 if((pos.top < -5000) && (pos.top > -30000))
                 {   // Move the window back onto visible area
                     pos.top += 25000 ;
@@ -2600,8 +2621,9 @@ static BOOL showHideWindow(windowType* aWindow, int shwFlags, unsigned char show
                 // This removes window from taskbar and alt+tab list
                 SetWindowLong( aWindow->Handle, GWL_EXSTYLE, 
                                (aWindow->ExStyle & (~WS_EX_APPWINDOW)) | WS_EX_TOOLWINDOW);
-                // Notify taskbar of the change
-                PostMessage(taskHWnd, RM_Shellhook, HSHELL_WINDOWDESTROYED, (LPARAM) aWindow->Handle);
+                if((aWindow->Flags & vwWTFLAGS_NO_TASKBAR_BUT) == 0)
+                    // Notify taskbar of the change
+                    PostMessage(taskHWnd, RM_Shellhook, HSHELL_WINDOWDESTROYED, (LPARAM) aWindow->Handle);
                 if((pos.top > -5000) && (pos.top < 20000))
                 {   // Move the window off visible area
                     pos.top -= 25000 ;
@@ -2876,10 +2898,10 @@ static BOOL CALLBACK WindowInfoDialogFunc(HWND hwndDlg, UINT msg, WPARAM wParam,
                             (int)pos.top,(int)pos.bottom,(int)pos.left,(int)pos.right) ;
             
             if(idx >= 0)
-                _stprintf(ss,_T("being managed\r\n\tOwner:\t%x\r\n\tStyles:\t%08x %08x\r\n\tDesk:\t%d\r\n\tSticky:\t%d\r\n\tTricky:\t%d\r\n\tVisible:\t%d\r\n"),
+                _stprintf(ss,_T("being managed\r\n\tOwner:\t%x\r\n\tStyles:\t%08x %08x\r\n\tDesk:\t%d\r\n\tFlags:\t%d\r\n\tSticky:\t%d\r\n\tTricky:\t%d\r\n\tVisible:\t%d\r\n"),
                           (int)winList[idx].Owner,(int)winList[idx].Style,(int)winList[idx].ExStyle,
-                          (int)winList[idx].Desk,(int)winList[idx].Sticky,(int)winList[idx].Tricky,
-                          (int)winList[idx].Visible) ;
+                          (int)winList[idx].Desk,(int)winList[idx].Flags,(int)winList[idx].Sticky,
+                          (int)winList[idx].Tricky,(int)winList[idx].Visible) ;
             else
                 _tcscpy(ss,_T("not managed\r\n")) ;
             releaseMutex();
@@ -3035,6 +3057,7 @@ static void windowMenu(HWND theWin)
             winList[idx].Tricky = 0 ;
             winList[idx].Visible = TRUE ;
             winList[idx].State = 1 ;
+            winList[idx].Flags = 0 ;
             vwLogBasic((_T("Got new managed window %d\n"),(int) idx)) ;
         }
         releaseMutex();
@@ -3449,7 +3472,7 @@ wndProc(HWND aHWnd, UINT message, WPARAM wParam, LPARAM lParam)
         return TRUE;
         
     case VW_SHOWICON:
-        setIcon(currentDesk,0,1);              // This re-adds the icon
+        setIcon(currentDesk,0,1);            // This re-adds the icon
         return TRUE;
         
     case VW_HELP:
@@ -3780,7 +3803,7 @@ VirtuaWinInit(HINSTANCE hInstance)
     OSVERSIONINFO os;
     WNDCLASSEX wc;
     DWORD threadID;
-    BOOL awStore;
+    int awStore;
     TCHAR *classname = vwVIRTUAWIN_NAME _T("MainClass") ;
     hInst = hInstance;
     

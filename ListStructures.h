@@ -35,6 +35,9 @@
 #define vwVISIBLE_TEMP    2
 #define vwVISIBLE_YESTEMP 3
 
+#define vwWTFLAGS_NO_TASKBAR_BUT  0x01
+#define vwWTFLAGS_RM_TASKBAR_BUT  0x02
+
 typedef struct { // Holds the windows in the list
     HWND           Handle;
     HWND           Owner;
@@ -47,6 +50,7 @@ typedef struct { // Holds the windows in the list
     unsigned char  Tricky;
     unsigned char  Visible;
     unsigned char  State;
+    unsigned char  Flags;
 } windowType;
 
 // Holds data for modules
