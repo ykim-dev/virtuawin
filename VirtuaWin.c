@@ -3433,28 +3433,21 @@ wndProc(HWND aHWnd, UINT message, WPARAM wParam, LPARAM lParam)
         switch (wParam)
         {
         case VW_STEPPREV:
-            stepDelta(-1) ;
-            break;
+            return stepDelta(-1) ;
         case VW_STEPNEXT:
-            stepDelta(1) ;
-            break;
+            return stepDelta(1) ;
         case VW_STEPLEFT:
-            stepLeft();
-            break;
+            return stepLeft();
         case VW_STEPRIGHT:
-            stepRight();
-            break;
+            return stepRight();
         case VW_STEPUP:
-            stepUp();
-            break;
+            return stepUp();
         case VW_STEPDOWN:
-            stepDown();
-            break;
+            return stepDown();
         default:
-            gotoDesk(wParam,FALSE);
-            break;
+            return gotoDesk(wParam,FALSE);
         }
-        return TRUE;
+        return FALSE ;
         
     case VW_CLOSE: 
         shutDown();
@@ -3796,8 +3789,8 @@ wndProc(HWND aHWnd, UINT message, WPARAM wParam, LPARAM lParam)
     return DefWindowProc(aHWnd, message, wParam, lParam);
 }
 
-static int
-VirtuaWinInit(HINSTANCE hInstance)
+static void
+VirtuaWinInit(HINSTANCE hInstance, LPSTR cmdLine)
 {
     OSVERSIONINFO os;
     WNDCLASSEX wc;
@@ -3811,16 +3804,32 @@ VirtuaWinInit(HINSTANCE hInstance)
     _CrtSetDbgFlag (_CRTDBG_ALLOC_MEM_DF|_CRTDBG_DELAY_FREE_MEM_DF|
                     _CRTDBG_LEAK_CHECK_DF|_CRTDBG_DELAY_FREE_MEM_DF);
 #endif
+    /* Is this call to VirtuaWin just to send a message to an already ruinning VW? */
+    if(strncmp(cmdLine,"-msg",4))
+        cmdLine = NULL ;
+    else
+        cmdLine += 4 ;
     
     /* Only one instance may be started */
     hMutex = CreateMutex(NULL, FALSE, vwVIRTUAWIN_NAME _T("PreventSecond"));
     if(GetLastError() == ERROR_ALREADY_EXISTS)
     {
-        // Display configuration window...
-        PostMessage(FindWindow(classname, NULL), VW_SETUP, 0, 0);
-        return 0; // ...and quit 
+        UINT message=VW_SETUP ;
+        WPARAM wParam=0 ;
+        LPARAM lParam=0 ;
+        
+        if((hWnd = FindWindow(classname, NULL)) == NULL)
+            exit(-2) ;
+        
+        /* get the message from the command-line, default is to display configuration window... */
+        if(cmdLine != NULL)
+            sscanf(cmdLine,"%i %i %li",&message,&wParam,&lParam) ;
+        /* post message and quit */
+        exit(SendMessage(hWnd,message,wParam,lParam)) ;
     }
-    
+    if(cmdLine != NULL)
+        /* VW not running, can't post message, return error */
+        exit(-1) ;
     os.dwOSVersionInfoSize = sizeof(os);
     GetVersionEx(&os);
     if(os.dwPlatformId == VER_PLATFORM_WIN32s)
@@ -3855,7 +3864,7 @@ VirtuaWinInit(HINSTANCE hInstance)
     if(RegisterClassEx(&wc) == 0)
     {
         MessageBox(hWnd,_T("Failed to register class!"),vwVIRTUAWIN_NAME _T(" Error"), MB_ICONWARNING);
-        return 0 ;
+        exit(1) ;
     }
     
     readConfig();	// Read the config file
@@ -3891,7 +3900,7 @@ VirtuaWinInit(HINSTANCE hInstance)
                               CW_USEDEFAULT, 0, NULL, NULL, hInstance, NULL)) == NULL)
     {
         MessageBox(hWnd,_T("Failed to create window!"),vwVIRTUAWIN_NAME _T(" Error"), MB_ICONWARNING);
-        return 0 ;
+        exit(2) ;
     }
     
     nIconD.cbSize = sizeof(NOTIFYICONDATA); // size
@@ -3933,19 +3942,17 @@ VirtuaWinInit(HINSTANCE hInstance)
     // if on win9x the tricky windows need to be continually hidden
     taskbarFixRequired = (osVersion <= OSVERSION_9X) ;
     SetTimer(hWnd, 0x29a, 250, monitorTimerProc); 
-    
-    return 1 ;
 }
 
 /*************************************************
  * VirtuaWin start point
  */
-int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
+int APIENTRY
+WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
-    MSG msg;
+    MSG msg ;
     
-    if(!VirtuaWinInit(hInstance))
-        return 0 ;
+    VirtuaWinInit(hInstance,lpCmdLine) ;
     
     /* Main message loop */
     while(GetMessage(&msg, NULL, 0, 0))
