@@ -1,6 +1,18 @@
 ***   VirtuaWin Revision History   ***
 --------------------------------------
 
+Ver 3.1 test 3 2007/09/19
+
+* 1796288  Added -msg command line  argument so  virtuawin.exe  can be used to
+  send a message to the VW already running.
+* Fixed uninitialized variable which could lead to a bad icon draw request.
+* 1766390 Fixed several issues with taskbar buttons appearing
+* 1766352 Fixed mouse negative x position problem.
+* Fixed Setup's Window List menu Show item not enabling the Apply.
+* Added VW_DESKNAME & VW_DESKTOP_SIZE module messages.
+
+----------------------------
+
 Ver 3.1 test 2 2007/07/16
 
 * 1741445 Changed the module messages which use a WM_COPYDATA message to reply
