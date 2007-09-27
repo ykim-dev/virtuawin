@@ -2342,7 +2342,7 @@ winListCreateItemList(MenuItem **items,int *numitems)
 {
     MenuItem *item;
     TCHAR fmt[16], *ss ;
-    TCHAR title[48];
+    TCHAR title[vwWINDOWNAME_MAX+18];
     TCHAR buff[MAX_PATH];
     int i,x,y,c,doAssignMenu=0 ;
     
@@ -2359,6 +2359,7 @@ winListCreateItemList(MenuItem **items,int *numitems)
     lockMutex();
     winListUpdate() ;
     i = 0 ;
+    y = (compactMenu) ? vwWINDOWNAME_MAX:30 ;
     for(c = 0; c < nWin; ++c)
     {
         // ignore owned windows if we are managing the owner and one's on a hidden desktop
@@ -2377,7 +2378,7 @@ winListCreateItemList(MenuItem **items,int *numitems)
         {
             HICON hSmallIcon ;
             
-            GetWindowText(winList[c].Handle, buff, 30);
+            GetWindowText(winList[c].Handle, buff, y);
 #ifdef NDEBUG
             _stprintf(title,fmt,winList[c].Desk,buff);
 #else
