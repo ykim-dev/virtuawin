@@ -712,7 +712,7 @@ BOOL APIENTRY setupExpert(HWND hDlg, UINT message, UINT wParam, LONG lParam)
         SendDlgItemMessage(hDlg, IDC_HIDWINACT, CB_SETCURSEL, hiddenWindowAct, 0) ;
         if(minSwitch)
             SendDlgItemMessage(hDlg, IDC_MINIMIZED, BM_SETCHECK, 1,0);
-        if(releaseFocus)
+        if(!releaseFocus)
             SendDlgItemMessage(hDlg, IDC_FOCUS, BM_SETCHECK, 1,0);
         if(refreshOnWarp)
             SendDlgItemMessage(hDlg, IDC_REFRESH, BM_SETCHECK, 1,0);
@@ -740,7 +740,7 @@ BOOL APIENTRY setupExpert(HWND hDlg, UINT message, UINT wParam, LONG lParam)
             preserveZOrder = SendDlgItemMessage(hDlg, IDC_PRESORDER, CB_GETCURSEL, 0, 0) ;
             hiddenWindowAct = SendDlgItemMessage(hDlg, IDC_HIDWINACT, CB_GETCURSEL, 0, 0) ;
             minSwitch = (SendDlgItemMessage(hDlg, IDC_MINIMIZED, BM_GETCHECK, 0, 0) == BST_CHECKED) ;
-            releaseFocus = (SendDlgItemMessage(hDlg, IDC_FOCUS, BM_GETCHECK, 0, 0) == BST_CHECKED) ;
+            releaseFocus = (SendDlgItemMessage(hDlg, IDC_FOCUS, BM_GETCHECK, 0, 0) != BST_CHECKED) ;
             refreshOnWarp = (SendDlgItemMessage(hDlg, IDC_REFRESH, BM_GETCHECK, 0, 0) == BST_CHECKED) ;
             invertY = (SendDlgItemMessage(hDlg, IDC_INVERTY, BM_GETCHECK, 0, 0) == BST_CHECKED) ;
             noTaskbarCheck = (SendDlgItemMessage(hDlg, IDC_TASKBARDETECT, BM_GETCHECK, 0, 0) != BST_CHECKED) ;

@@ -151,7 +151,7 @@ BEGIN
     COMBOBOX        IDC_PRESORDER, 22, 27, 120, 45, CBS_AUTOHSCROLL | CBS_DROPDOWNLIST | WS_TABSTOP
     LTEXT           "On hidden window activation:", IDC_STATIC, 10, 42, 120, 10
     COMBOBOX        IDC_HIDWINACT, 22, 53, 120, 56, CBS_AUTOHSCROLL | CBS_DROPDOWNLIST | WS_TABSTOP
-    AUTOCHECKBOX    "Release focus on desktop change", IDC_FOCUS,                10,  68, 125, 10
+    AUTOCHECKBOX    "Restore focus on desktop change", IDC_FOCUS,                10,  68, 125, 10
     AUTOCHECKBOX    "Hide minimized windows on desktop change", IDC_MINIMIZED,   10,  79, 155, 10
     AUTOCHECKBOX    "Invert Up/Down", IDC_INVERTY,                               10,  90, 70,  10
     AUTOCHECKBOX    "Hide system tray icon", IDC_DISPLAYICON,                    10,  101, 80,  10
