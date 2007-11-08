@@ -447,7 +447,7 @@ void writeConfig(void)
         fprintf(fp, "Desk_Xsize# %i\n", nDesksX);
         fprintf(fp, "Not_used# 0\n");
         jj = vwDESKTOP_MAX ;
-        while((deskHotkey[jj] == 0) && (desktopName[jj] == NULL))
+        while(jj && (deskHotkey[jj] == 0) && (desktopName[jj] == NULL))
             jj-- ;
         fprintf(fp, "Desk_count# %i\n",jj);
         for(ii=1 ; ii<=jj ; ii++) 
