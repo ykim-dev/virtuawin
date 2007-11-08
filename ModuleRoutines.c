@@ -26,7 +26,6 @@
 #include "ModuleRoutines.h"
 #include "Messages.h"
 #include "ConfigParameters.h"
-#include "ListStructures.h"
 #include "DiskRoutines.h"
 
 // Standard includes
@@ -105,8 +104,8 @@ static void addModule(TCHAR *moduleName, TCHAR *path)
                 MessageBox(hWnd,errMsg,vwVIRTUAWIN_NAME _T(" Error"),MB_ICONWARNING);
                 return;
             }
-            // Wait max 5 sec for the module to initialize itself
-            retVal = WaitForInputIdle( pi.hProcess, 10000); 
+            // Wait max 20 sec for the module to initialize itself
+            retVal = WaitForInputIdle( pi.hProcess, 20000); 
             
             // Find the module with classname 
             myModule = FindWindow(moduleName, NULL);
