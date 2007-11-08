@@ -1,20 +1,19 @@
 ***   VirtuaWin Revision History   ***
 --------------------------------------
 
-Ver 3.1 test 3 2007/09/19
+Ver 3.2 2007/11/08
 
-* 1796288  Added -msg command line  argument so  virtuawin.exe  can be used to
+* Moved the main typedefs into defines.h so they are in the SDK.
+* 1824130 fixed vrituawin.cfg minor corruption.
+* 1816219 Increased module start-up time-out to 20 seconds.
+* 1800940 Allow a longer title string when compact menu is used.
+* 1796288 Added -msg  command line  argument so  virtuawin.exe  can be used to
   send a message to the VW already running.
 * Fixed uninitialized variable which could lead to a bad icon draw request.
 * 1766390 Fixed several issues with taskbar buttons appearing
 * 1766352 Fixed mouse negative x position problem.
 * Fixed Setup's Window List menu Show item not enabling the Apply.
 * Added VW_DESKNAME & VW_DESKTOP_SIZE module messages.
-
-----------------------------
-
-Ver 3.1 test 2 2007/07/16
-
 * 1741445 Changed the module messages which use a WM_COPYDATA message to reply
   directly to the requesting module if the wParam is not 0 (assumed HWND).
 * 1618004 Allowed direct hotkey access to desktops  greater then the X*Y size,
@@ -33,11 +32,6 @@ Ver 3.1 test 2 2007/07/16
 * Changed the compact  window list menu to use  multi-columns  to support more
   than 40+  windows,  clicking  on titles of  non-compact  menu  displays  all
   content.
-
-----------------------------
-
-Ver 3.1 test 1 2007/06/12
-
 * 1731298 Improved the  handling of newly opened owned windows  sanitizing any
   initial desktop assignment
 * 1731312 Simplified VWAssigner to use simple module messages and improved the

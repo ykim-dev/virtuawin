@@ -24,10 +24,12 @@
 #ifndef _DEFINES_H_
 #define _DEFINES_H
 
+#include <windows.h>
+
 // application name and version defines
 #define vwVIRTUAWIN_NAME         _T("VirtuaWin")
 #define vwVIRTUAWIN_EMAIL        _T("VirtuaWin@home.se")
-#define vwVIRTUAWIN_NAME_VERSION _T("VirtuaWin v3.1 test 3")
+#define vwVIRTUAWIN_NAME_VERSION _T("VirtuaWin v3.2")
 
 // Various defines used on several places 
 #define vwWINDOW_MAX     160       // max number of windows to handle
@@ -42,5 +44,58 @@
 // Internal windows messages
 #define VW_SYSTRAY        (WM_USER + 1)  // Sent to us by the systray
 #define VW_MOUSEWARP      (WM_USER + 9)  // Mouse thread message
+
+#define vwTRICKY_POSITION 1
+#define vwTRICKY_WINDOW   2
+
+#define vwVISIBLE_NO      0
+#define vwVISIBLE_YES     1
+#define vwVISIBLE_TEMP    2
+#define vwVISIBLE_YESTEMP 3
+
+#define vwWTFLAGS_NO_TASKBAR_BUT  0x01
+#define vwWTFLAGS_RM_TASKBAR_BUT  0x02
+
+typedef struct { // Holds the windows in the list
+    HWND           Handle;
+    HWND           Owner;
+    long           Style;
+    long           ExStyle;
+    unsigned long  ZOrder[vwDESKTOP_SIZE] ;
+    unsigned short Desk;
+    unsigned short menuId ;
+    unsigned char  Sticky;
+    unsigned char  Tricky;
+    unsigned char  Visible;
+    unsigned char  State;
+    unsigned char  Flags;
+} windowType;
+
+// Holds data for modules
+typedef struct {
+    HWND   Handle;
+    BOOL   Disabled;
+    TCHAR  description[vwMODULENAME_MAX+1];
+} moduleType;
+
+// Holds disabled modules
+typedef struct {
+    TCHAR  moduleName[vwMODULENAME_MAX+1];
+} disModules;
+
+typedef struct {
+    TCHAR         *name;
+    HICON          icon; 
+    unsigned short id;
+    unsigned short desk;
+    unsigned char  sticky;
+} vwMenuItem ;
+
+typedef struct vwWindowMatch {
+    struct vwWindowMatch *next;
+    TCHAR                *match;
+    unsigned short       desk;
+    unsigned char        type;
+} vwWindowMatch ;
 
 #endif
