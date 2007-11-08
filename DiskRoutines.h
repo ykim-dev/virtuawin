@@ -21,11 +21,10 @@
 //  USA.
 //
 
-#include <windows.h>
-#include "ListStructures.h"
-
 #ifndef _DISKROUTINES_H_
 #define _DISKROUTINES_H_
+
+#include <windows.h>
 
 typedef enum { vwMODULES, vwHELP, vwCONFIG, vwLIST, vwTRICKY, vwSTICKY, vwDISABLED, vwWINDOWS_STATE, vwFILE_COUNT } eFileNames;
 

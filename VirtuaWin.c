@@ -69,12 +69,20 @@ HANDLE mouseThread;       // Handle to the mouse thread
 int taskbarEdge;
 int desktopWorkArea[2][4] ;
 
-UINT RM_Shellhook;
+windowType winList[vwWINDOW_MAX];            // list for holding windows
+moduleType moduleList[MAXMODULES];           // list that holds modules
+disModules disabledModules[MAXMODULES*2];    // list with disabled modules
 
-BOOL keysRegistred = FALSE;	// if the switch keys are registrered
-BOOL hotKeysRegistred = FALSE;	// if the switch hot keys are registrered
-BOOL cyclingKeysRegistered = FALSE; // if the cycling keys are registrered
-BOOL menuHotKeyRegistered = FALSE;  // if the menu hotkey is registered
+vwWindowMatch *userList;                     // list for holding user added applications
+vwWindowMatch *stickyList;                   // list with saved sticky windows
+vwWindowMatch *trickyList;                   // list with saved tricky windows
+vwWindowMatch *assignedList;                 // list with all windows that have a predefined desktop
+
+UINT RM_Shellhook;
+BOOL keysRegistred = FALSE;	             // if the switch keys are registrered
+BOOL hotKeysRegistred = FALSE;               // if the switch hot keys are registrered
+BOOL cyclingKeysRegistered = FALSE;          // if the cycling keys are registrered
+BOOL menuHotKeyRegistered = FALSE;           // if the menu hotkey is registered
 
 ATOM vwLeft;
 ATOM vwRight;
@@ -2338,9 +2346,9 @@ static int stepUp(void)
 #define vwPMENU_COL_MASK 0xf00
 
 static int
-winListCreateItemList(MenuItem **items,int *numitems)
+winListCreateItemList(vwMenuItem **items,int *numitems)
 {
-    MenuItem *item;
+    vwMenuItem *item;
     TCHAR fmt[16], *ss ;
     TCHAR title[vwWINDOWNAME_MAX+18];
     TCHAR buff[MAX_PATH];
@@ -2384,7 +2392,7 @@ winListCreateItemList(MenuItem **items,int *numitems)
 #else
             _stprintf(title,fmt,winList[c].Desk,buff,(int) winList[c].Handle);
 #endif
-            if(((item = malloc(sizeof(MenuItem))) == NULL) ||
+            if(((item = malloc(sizeof(vwMenuItem))) == NULL) ||
                ((item->name = _tcsdup(title)) == NULL))
             {
                 while(--i >= 0)
@@ -2460,7 +2468,7 @@ winListCreateItemList(MenuItem **items,int *numitems)
 }
 
 static HMENU
-winListCreateMenu(int flags, int itemCount, MenuItem **items)
+winListCreateMenu(int flags, int itemCount, vwMenuItem **items)
 {
     MENUITEMINFO minfo ;
     HMENU hMenu;
@@ -3106,11 +3114,11 @@ static void measureMenuItem(HWND hwnd,MEASUREITEMSTRUCT* mitem)
 {
     HDC testdc;
     HFONT menufont,oldfont;
-    MenuItem* item;
+    vwMenuItem* item;
     SIZE size;
     TCHAR *measuretext;
 
-    item = (MenuItem*) mitem->itemData;
+    item = (vwMenuItem*) mitem->itemData;
 
     measuretext = (item != NULL) ? item->name : _T("D") ;
 
@@ -3138,7 +3146,7 @@ static void measureMenuItem(HWND hwnd,MEASUREITEMSTRUCT* mitem)
 
 static void renderMenuItem(DRAWITEMSTRUCT* ditem)
 {
-    MenuItem* item;
+    vwMenuItem* item;
     HFONT menufont,oldfont;
     HICON icon;
     UINT oldalign;
@@ -3147,7 +3155,7 @@ static void renderMenuItem(DRAWITEMSTRUCT* ditem)
     SIZE size;
     int backgroundcolor,textcolor, ll;
 
-    item = (MenuItem *) ditem->itemData;
+    item = (vwMenuItem *) ditem->itemData;
 
     if((item != NULL) && (ditem->itemState & ODS_SELECTED))
     {
@@ -3202,8 +3210,8 @@ static void winListPopupMenu(HWND aHWnd, int forceFocusChange)
     HWND hwnd ;
     int scDir=1, flags, retItem, id, ii ;
     
-    // storage for list of MenuItem structs
-    MenuItem *items[vwWINDOW_MAX] ;
+    // storage for list of vwMenuItem structs
+    vwMenuItem *items[vwWINDOW_MAX] ;
     int itemCount;
     
     if((flags = winListCreateItemList(items,&itemCount)) == 0)
@@ -3276,7 +3284,7 @@ static void winListPopupMenu(HWND aHWnd, int forceFocusChange)
         }
     }
     
-    // delete MenuItem list
+    // delete vwMenuItem list
     for (ii=0 ; ii<itemCount ; ii++)
     {
         free(items[ii]->name);

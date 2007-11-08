@@ -60,7 +60,7 @@ endif
 
 SRC	= VirtuaWin.c DiskRoutines.c SetupDialog.c ModuleRoutines.c regex.c
 HEADERS = VirtuaWin.h SetupDialog.h Resource.h regex.h ModuleRoutines.h Messages.h \
-	  ListStructures.h DiskRoutines.h Defines.h ConfigParameters.h
+	  DiskRoutines.h Defines.h ConfigParameters.h
 COFFS   = VirtuaWin.coff
 OBJRES  = VirtuaWin.res
 LIBS	= -lshell32 -luser32 -lgdi32 -lcomctl32

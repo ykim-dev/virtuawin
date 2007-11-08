@@ -32,14 +32,23 @@
 #include "Defines.h"
 
 // externally accessible variables
-extern HWND hWnd;             // The handle to VirtuaWin 
-extern int screenLeft;	      // the screen dimensions, from VirtuaWin.h
+extern HWND hWnd;                                 // The handle to VirtuaWin 
+extern int screenLeft;	                          // the screen dimensions, from VirtuaWin.h
 extern int screenRight;	  
 extern int screenTop;	  
 extern int screenBottom;
 
-extern int curDisabledMod;    // how many disabled modules we have
-extern int knockMode;         // mouse edge kncking mode
+extern int curDisabledMod;                        // how many disabled modules we have
+extern int knockMode;                             // mouse edge kncking mode
+
+extern windowType winList[vwWINDOW_MAX];          // list for holding windows
+extern moduleType moduleList[MAXMODULES];         // list that holds modules
+extern disModules disabledModules[MAXMODULES*2];  // list with disabled modules
+
+extern vwWindowMatch *userList;                   // list for holding user added applications
+extern vwWindowMatch *stickyList;                 // list with saved sticky windows
+extern vwWindowMatch *trickyList;                 // list with saved tricky windows
+extern vwWindowMatch *assignedList;               // list with all windows that have a predefined desktop
 
 // logging defines & macros
 extern int   vwLogFlag ;

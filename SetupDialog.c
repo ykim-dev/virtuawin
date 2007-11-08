@@ -29,7 +29,6 @@
 #include "VirtuaWin.h"
 #include "SetupDialog.h"
 #include "Resource.h"
-#include "ListStructures.h"
 #include "Messages.h"
 #include "DiskRoutines.h"
 #include "ModuleRoutines.h"
