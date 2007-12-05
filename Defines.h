@@ -33,6 +33,7 @@
 
 // Various defines used on several places 
 #define vwWINDOW_MAX     160       // max number of windows to handle
+#define vwHOTKEY_MAX      40       // max number of hotkeys
 #define vwDESKTOP_MAX     20       // max number of desktops
 #define vwDESKTOP_SIZE    (vwDESKTOP_MAX + 2)
 #define vwCLASSNAME_MAX   64       // class name buffer size
@@ -53,49 +54,68 @@
 #define vwVISIBLE_TEMP    2
 #define vwVISIBLE_YESTEMP 3
 
+#define vwHOTKEY_ALT     MOD_ALT
+#define vwHOTKEY_CONTROL MOD_CONTROL
+#define vwHOTKEY_SHIFT   MOD_SHIFT
+#define vwHOTKEY_WIN     MOD_WIN
+#define vwHOTKEY_EXT     0x10
+
 #define vwWTFLAGS_NO_TASKBAR_BUT  0x01
 #define vwWTFLAGS_RM_TASKBAR_BUT  0x02
 
+typedef unsigned int   vwUInt ;
+typedef unsigned short vwUShort ;
+typedef unsigned char  vwUByte ;
+
 typedef struct { // Holds the windows in the list
-    HWND           Handle;
-    HWND           Owner;
-    long           Style;
-    long           ExStyle;
-    unsigned long  ZOrder[vwDESKTOP_SIZE] ;
-    unsigned short Desk;
-    unsigned short menuId ;
-    unsigned char  Sticky;
-    unsigned char  Tricky;
-    unsigned char  Visible;
-    unsigned char  State;
-    unsigned char  Flags;
+    HWND      Handle;
+    HWND      Owner;
+    long      Style;
+    long      ExStyle;
+    vwUInt    ZOrder[vwDESKTOP_SIZE] ;
+    vwUShort  menuId ;
+    vwUByte   Desk;
+    vwUByte   Sticky;
+    vwUByte   Tricky;
+    vwUByte   Visible;
+    vwUByte   State;
+    vwUByte   Flags;
 } windowType;
 
 // Holds data for modules
 typedef struct {
-    HWND   Handle;
-    BOOL   Disabled;
-    TCHAR  description[vwMODULENAME_MAX+1];
+    HWND      Handle;
+    vwUByte   Disabled;
+    TCHAR     description[vwMODULENAME_MAX+1];
 } moduleType;
 
 // Holds disabled modules
 typedef struct {
-    TCHAR  moduleName[vwMODULENAME_MAX+1];
+    TCHAR     moduleName[vwMODULENAME_MAX+1];
 } disModules;
 
 typedef struct {
-    TCHAR         *name;
-    HICON          icon; 
-    unsigned short id;
-    unsigned short desk;
-    unsigned char  sticky;
+    TCHAR    *name;
+    HICON     icon; 
+    vwUInt    zOrder ;
+    vwUShort  id;
+    vwUByte   desk;
+    vwUByte   sticky;
 } vwMenuItem ;
 
 typedef struct vwWindowMatch {
     struct vwWindowMatch *next;
-    TCHAR                *match;
-    unsigned short       desk;
-    unsigned char        type;
+    TCHAR    *match;
+    vwUByte   desk;
+    vwUByte   type;
 } vwWindowMatch ;
+
+typedef struct {
+    ATOM     atom ;
+    vwUByte  key ;
+    vwUByte  modifier ;
+    vwUByte  command ;
+    vwUByte  desk ;
+} vwHotkey ;
 
 #endif

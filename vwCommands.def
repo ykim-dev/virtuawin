@@ -1,0 +1,49 @@
+/* -*- C -*- ****************************************************************
+ *
+ *  			      Copyright 2007 PTC.
+ *			      All Rights Reserved
+ *
+ *  Created By  : Steven Phillips
+ *  Created     : 2007-11-19 16:25:15
+ *  Description :
+ *
+ *  Notes
+ *
+ ****************************************************************************
+ *
+ *  Copyright (c) 2007 PTC.
+ * 
+ *  All Rights Reserved.
+ * 
+ * This  document  may  not, in  whole  or in  part, be  copied,  photocopied,
+ * reproduced,  translated,  or  reduced to any  electronic  medium or machine
+ * readable form without prior written consent from PTC.
+ *
+ ****************************************************************************/
+
+VW_COMMAND (vwCMD_NAV_MOVE_LEFT,      1, 0, "NAV: Move left")
+VW_COMMAND (vwCMD_NAV_MOVE_RIGHT,     2, 0, "NAV: Move right")
+VW_COMMAND (vwCMD_NAV_MOVE_UP,        3, 0, "NAV: Move up")
+VW_COMMAND (vwCMD_NAV_MOVE_DOWN,      4, 0, "NAV: Move down")
+VW_COMMAND (vwCMD_NAV_MOVE_PREV,      5, 0, "NAV: Move to previous")
+VW_COMMAND (vwCMD_NAV_MOVE_NEXT,      6, 0, "NAV: Move to next")
+VW_COMMAND (vwCMD_NAV_MOVE_DESKTOP,   7, 1, "NAV: Move to desktop #")
+VW_COMMAND (vwCMD_WIN_STICKY,         8, 0, "WIN: Toggle sticky")
+VW_COMMAND (vwCMD_WIN_PUSHTOBOTTOM,  24, 0, "WIN: Push to bottom")
+VW_COMMAND (vwCMD_WIN_ALWAYSONTOP,   25, 0, "WIN: Always on top")
+VW_COMMAND (vwCMD_WIN_DISMISS,        9, 0, "WIN: Dismiss")
+VW_COMMAND (vwCMD_WIN_MOVE_DESKTOP,  10, 1, "WIN: Move to desktop #")
+VW_COMMAND (vwCMD_WIN_MOVE_PREV,     12, 0, "WIN: Move to previous desktop")
+VW_COMMAND (vwCMD_WIN_MOVE_NEXT,     14, 0, "WIN: Move to next desktop")
+VW_COMMAND (vwCMD_WIN_MOVE_DESK_FOL, 11, 1, "WIN: Move to desktop # and follow")
+VW_COMMAND (vwCMD_WIN_MOVE_PREV_FOL, 13, 0, "WIN: Move to prev desktop and follow")
+VW_COMMAND (vwCMD_WIN_MOVE_NEXT_FOL, 15, 0, "WIN: Move to next desktop and follow")
+VW_COMMAND (vwCMD_WIN_COPY_DESKTOP,  16, 1, "WIN: Copy to desktop #")
+VW_COMMAND (vwCMD_WIN_COPY_DESK_FOL, 17, 1, "WIN: Copy to desktop # and follow")
+VW_COMMAND (vwCMD_UI_WINMENU_STD,    18, 0, "UI: Open standard window menu")
+VW_COMMAND (vwCMD_UI_WINMENU_CMP,    19, 0, "UI: Open compact window menu")
+VW_COMMAND (vwCMD_UI_WINLIST_STD,    20, 0, "UI: Open standard window list")
+VW_COMMAND (vwCMD_UI_WINLIST_CMP,    21, 0, "UI: Open compact window list")
+VW_COMMAND (vwCMD_UI_WINLIST_MRU,    22, 0, "UI: Open most recently used window list")
+VW_COMMAND (vwCMD_UI_SETUP,          23, 0, "UI: Open VirtuaWin setup")
+VW_COMMAND (vwCMD_END,                0, 0, "Unsupported command")

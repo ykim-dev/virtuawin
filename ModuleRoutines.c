@@ -44,7 +44,8 @@ void unloadModules(void)
 /*************************************************
  * Checks if a module is disabled
  */
-static BOOL checkDisabledList(TCHAR *theModName)
+static int
+checkDisabledList(TCHAR *theModName)
 {
     int modIndex;
     
@@ -66,7 +67,7 @@ static void addModule(TCHAR *moduleName, TCHAR *path)
     PROCESS_INFORMATION pi;  
     int retVal = 1;
     
-    if(nOfModules >= MAXMODULES)
+    if(moduleCount >= MAXMODULES)
     {
         _stprintf(errMsg,_T("Max number of modules where added.\n'%s' won't be loaded."), moduleName);
         MessageBox(hWnd, errMsg,vwVIRTUAWIN_NAME _T(" Error"),MB_ICONWARNING);
@@ -117,21 +118,21 @@ static void addModule(TCHAR *moduleName, TCHAR *path)
         }
         else
         {
-            moduleList[nOfModules].Handle = myModule;
-            moduleList[nOfModules].Disabled = FALSE;
+            moduleList[moduleCount].Handle = myModule;
+            moduleList[moduleCount].Disabled = FALSE;
             moduleName[_tcslen(moduleName)-4] = '\0'; // remove .exe
-            _tcsncpy(moduleList[nOfModules].description, moduleName, 79);
+            _tcsncpy(moduleList[moduleCount].description, moduleName, 79);
             PostMessage(myModule, MOD_INIT, (WPARAM) hWnd , 0);
-            nOfModules++;
+            moduleCount++;
         }
     } 
     else
     { // Module disabled
-        moduleList[nOfModules].Handle = NULL;
-        moduleList[nOfModules].Disabled = TRUE;
+        moduleList[moduleCount].Handle = NULL;
+        moduleList[moduleCount].Disabled = TRUE;
         moduleName[_tcslen(moduleName)-4] = '\0'; // remove .exe
-        _tcsncpy(moduleList[nOfModules].description, moduleName, 79);
-        nOfModules++;
+        _tcsncpy(moduleList[moduleCount].description, moduleName, 79);
+        moduleCount++;
     }
 }
 
@@ -166,7 +167,7 @@ void loadModules(void)
 void sendModuleMessage(UINT Msg, WPARAM wParam,	LPARAM lParam)
 {
     int index;
-    for(index = 0; index < nOfModules; ++index)
+    for(index = 0; index < moduleCount; ++index)
         if(moduleList[index].Handle != NULL) 
             SendMessageTimeout(moduleList[index].Handle,Msg,wParam,lParam,SMTO_ABORTIFHUNG|SMTO_BLOCK,10000,NULL);
 }
@@ -177,7 +178,7 @@ void sendModuleMessage(UINT Msg, WPARAM wParam,	LPARAM lParam)
 void postModuleMessage(UINT Msg, WPARAM wParam, LPARAM lParam)
 {
     int index;
-    for(index = 0; index < nOfModules; ++index) {
+    for(index = 0; index < moduleCount; ++index) {
         if(moduleList[index].Handle != NULL)
             PostMessage(moduleList[index].Handle, Msg, wParam, lParam);
     }

@@ -242,11 +242,10 @@ int loadDisabledModules(disModules *theDisList)
  * Loads window match list from a file
  */
 static void
-loadWindowMatchList(TCHAR *fname, BOOL hasDesk, vwWindowMatch **matchList)
+loadWindowMatchList(TCHAR *fname, int hasDesk, vwWindowMatch **matchList)
 {
     vwWindowMatch *wm, *pwm ;
-    unsigned short desk=0 ;
-    unsigned char type ;
+    vwUByte type, desk=0 ;
     TCHAR buff[1024], *ss ;
     int len ;
     FILE *fp ;
@@ -270,7 +269,7 @@ loadWindowMatchList(TCHAR *fname, BOOL hasDesk, vwWindowMatch **matchList)
             {
                 if(!hasDesk)
                     ss = buff ;
-                else if(((desk = (unsigned short) _ttoi(buff)) > 0) &&
+                else if(((desk = (vwUByte) _ttoi(buff)) > 0) &&
                         ((ss=_tcschr(buff,' ')) != NULL))
                     ss++ ;
             }            
@@ -424,93 +423,46 @@ void writeConfig(void)
     int ii, jj ;
     
     GetFilename(vwCONFIG,1,VWConfigFile);
-    
     if((fp = _tfopen(VWConfigFile,_T("w"))) == NULL)
     {
         MessageBox(NULL,_T("Error writing config file"),vwVIRTUAWIN_NAME _T(" Error"),MB_ICONERROR);
     }
     else
     {
-        fprintf(fp, "Mouse_warp# %i\n", mouseEnable);
-        fprintf(fp, "Mouse_delay# %i\n", mouseDelay);
-        fprintf(fp, "Key_support# %i\n", keyEnable);
-        fprintf(fp, "Release_focus# %i\n", releaseFocus);
-        fprintf(fp, "Not_used# 0\n");
-        fprintf(fp, "Control_key_alt# %i\n", modAlt);
-        fprintf(fp, "Control_key_shift# %i\n", modShift);
-        fprintf(fp, "Control_key_ctrl# %i\n", modCtrl);
-        fprintf(fp, "Control_key_win# %i\n", modWin);
-        fprintf(fp, "Warp_jump# %i\n", warpLength);
-        fprintf(fp, "Switch_minimized# %i\n", minSwitch);
-        fprintf(fp, "Not_used# 0\n");
-        fprintf(fp, "Desk_Ysize# %i\n", nDesksY);
-        fprintf(fp, "Desk_Xsize# %i\n", nDesksX);
-        fprintf(fp, "Not_used# 0\n");
+        fprintf(fp, "ver# 2\n") ;
+        fprintf(fp, "hotkeyCount# %d\n", hotkeyCount);
+        for(ii=0 ; ii<hotkeyCount ; ii++) 
+            fprintf(fp, "hotkey%d# %d %d %d %d\n",ii+1,hotkeyList[ii].key,hotkeyList[ii].modifier,hotkeyList[ii].command,hotkeyList[ii].desk) ;
         jj = vwDESKTOP_MAX ;
-        while(jj && (deskHotkey[jj] == 0) && (desktopName[jj] == NULL))
+        while(jj && (desktopName[jj] == NULL))
             jj-- ;
-        fprintf(fp, "Desk_count# %i\n",jj);
+        fprintf(fp, "desktopNameCount# %d\n",jj);
         for(ii=1 ; ii<=jj ; ii++) 
-        {
-            fprintf(fp, "Hot_key_%d# %i\n", ii,deskHotkey[ii]);
-            fprintf(fp, "Hot_key_Mod%d# %i\n", ii,deskHotkeyMod[ii]);
-            fprintf(fp, "Hot_key_Win%d# %i\n", ii,deskHotkeyWin[ii]);
-            _ftprintf(fp, _T("desktop_name_%d# %s\n"),ii,(desktopName[ii] == NULL) ? _T(""):desktopName[ii]);
-        }
-        fprintf(fp, "Mouse_control_key_support# %i\n", useMouseKey);
-        fprintf(fp, "Mouse_key_alt# %i\n", mouseModAlt);
-        fprintf(fp, "Mouse_key_shift# %i\n", mouseModShift);
-        fprintf(fp, "Mouse_key_ctrl# %i\n", mouseModCtrl);
-        fprintf(fp, "Save_sticky_info# %i\n", saveSticky);
-        fprintf(fp, "Refresh_after_warp# %i\n", refreshOnWarp);
-        fprintf(fp, "No_mouse_wrap# %i\n", noMouseWrap);
-        fprintf(fp, "Sticky_modifier# %i\n", hotkeyStickyMod);
-        fprintf(fp, "Sticky_key# %i\n", hotkeySticky);
-        fprintf(fp, "Preserve_zorder# %i\n", preserveZOrder);
-        fprintf(fp, "Desktop_cycling# %i\n", deskWrap);
-        fprintf(fp, "Invert_Y# %i\n", invertY);
-        fprintf(fp, "WinMenu_sticky# %i\n", stickyMenu);
-        fprintf(fp, "WinMenu_assign# %i\n", assignMenu);
-        fprintf(fp, "WinMenu_direct# %i\n", accessMenu);
-        fprintf(fp, "Desktop_assignment# %i\n", useDeskAssignment);
-        fprintf(fp, "Save_layout# %i\n", saveLayoutOnExit);
-        fprintf(fp, "Assign_first# %i\n", assignOnlyFirst);
-        fprintf(fp, "UseCyclingKeys# %i\n", cyclingKeysEnabled);
-        fprintf(fp, "CycleUp# %i\n", hotCycleUp);
-        fprintf(fp, "CycleUpMod# %i\n", hotCycleUpMod);
-        fprintf(fp, "CycleDown# %i\n", hotCycleDown);
-        fprintf(fp, "CycleDownMod# %i\n", hotCycleDownMod);
-        fprintf(fp, "Hot_key_Menu_Support# %i\n", hotkeyWListEn);
-        fprintf(fp, "Hot_key_Menu# %i\n", hotkeyWList);
-        fprintf(fp, "Hot_key_ModMenu# %i\n", hotkeyWListMod);
-        fprintf(fp, "Hot_key_WinMenu# %i\n", hotkeyWListWin);
-        fprintf(fp, "Display_systray_icon# %i\n", displayTaskbarIcon);
-        fprintf(fp, "Sticky_Win# %i\n", hotkeyStickyWin);
-        fprintf(fp, "Taskbar_detection# %i\n", noTaskbarCheck);
-        fprintf(fp, "Use_trickywindows# %i\n", trickyWindows);
-        fprintf(fp, "Not_used# 0\n");
-        fprintf(fp, "PermanentSticky# %i\n", permanentSticky);
-        fprintf(fp, "CycleUpWin# %i\n", hotCycleUpWin);
-        fprintf(fp, "CycleDownWin# %i\n", hotCycleDownWin);
-        fprintf(fp, "Sticky_Win_En# %i\n", hotkeyStickyEn);
-        fprintf(fp, "Not_used# %i\n",deskHotkey[vwDESKTOP_SIZE-1]);
-        fprintf(fp, "Not_used# %i\n",deskHotkeyMod[vwDESKTOP_SIZE-1]);
-        fprintf(fp, "Not_used# %i\n",deskHotkeyWin[vwDESKTOP_SIZE-1]);
-        fprintf(fp, "AssignImmediately# %i\n", assignImmediately);
-        fprintf(fp, "HiddenWindowAct# %i\n", hiddenWindowAct);
-        _ftprintf(fp, _T("Not_used# 0%s\n"),(desktopName[vwDESKTOP_SIZE-1] == NULL) ? _T(""):desktopName[vwDESKTOP_SIZE-1]);
-        fprintf(fp, "DismissHotkeyEn# %i\n", hotkeyDismissEn);
-        fprintf(fp, "DismissHotkey# %i\n", hotkeyDismiss);
-        fprintf(fp, "DismissHotkeyMod# %i\n", hotkeyDismissMod);
-        fprintf(fp, "DismissHotkeyWin# %i\n", hotkeyDismissWin);
-        fprintf(fp, "LogFlag# %i\n", vwLogFlag);
-        fprintf(fp, "KnockMode# %i\n", knockMode);
-        fprintf(fp, "CompactWinMenu# %i\n", compactMenu);
-        fprintf(fp, "HotWMenuEn# %i\n", hotkeyWMenuEn);
-        fprintf(fp, "HotWMenu# %i\n", hotkeyWMenu);
-        fprintf(fp, "HotWMenuMod# %i\n", hotkeyWMenuMod);
-        fprintf(fp, "HotWMenuWin# %i\n", hotkeyWMenuWin);
-        fprintf(fp, "WinMenu_show# %i\n", showMenu);
+            _ftprintf(fp, _T("desktopName%d# %s\n"),ii,(desktopName[ii] == NULL) ? _T(""):desktopName[ii]);
+        fprintf(fp, "deskX# %d\n", nDesksX);
+        fprintf(fp, "deskY# %d\n", nDesksY);
+        fprintf(fp, "deskWrap# %d\n", deskWrap);
+        fprintf(fp, "useDeskAssignment# %d\n", useDeskAssignment);
+        fprintf(fp, "assignImmediately# %d\n", assignImmediately);
+        fprintf(fp, "winListContent# %d\n", winListContent);
+        fprintf(fp, "winListCompact# %d\n", winListCompact);
+        fprintf(fp, "mouseEnable# %d\n", mouseEnable);
+        fprintf(fp, "mouseJumpLength# %d\n", mouseJumpLength);
+        fprintf(fp, "mouseDelay# %d\n", mouseDelay);
+        fprintf(fp, "mouseWarp# %d\n", mouseWarp);
+        fprintf(fp, "mouseKnock# %d\n", mouseKnock);
+        fprintf(fp, "mouseModifierUsed# %d\n", mouseModifierUsed);
+        fprintf(fp, "mouseModifier# %d\n", mouseModifier);
+        fprintf(fp, "preserveZOrder# %d\n", preserveZOrder);
+        fprintf(fp, "hiddenWindowAct# %d\n", hiddenWindowAct);
+        fprintf(fp, "minSwitch# %d\n", minSwitch);
+        fprintf(fp, "releaseFocus# %d\n", releaseFocus);
+        fprintf(fp, "refreshOnWarp# %d\n", refreshOnWarp);
+        fprintf(fp, "invertY# %d\n", invertY);
+        fprintf(fp, "noTaskbarCheck# %d\n", noTaskbarCheck);
+        fprintf(fp, "trickyWindows# %d\n", trickyWindows);
+        fprintf(fp, "displayTaskbarIcon# %d\n", displayTaskbarIcon);
+        fprintf(fp, "logFlag# %d\n", vwLogFlag);
         fclose(fp);
     }
 }
@@ -518,11 +470,41 @@ void writeConfig(void)
 /*************************************************
  * Reads a saved configuration from file
  */
+/* Get the list of hotkey commands */
+#define VW_COMMAND(a, b, c, d) a = b ,
+enum {
+#include "vwCommands.def"
+} ;
+#undef  VW_COMMAND
+
+static void
+addOldHotkey(int key, int mod, int win, int cmd, int desk)
+{
+    if(key != 0)
+    {
+        hotkeyList[hotkeyCount].key = (vwUByte) key ;
+        hotkeyList[hotkeyCount].modifier = 0 ;
+        if(mod & HOTKEYF_ALT)
+            hotkeyList[hotkeyCount].modifier |= vwHOTKEY_ALT ;
+        if(mod & HOTKEYF_CONTROL)
+            hotkeyList[hotkeyCount].modifier |= vwHOTKEY_CONTROL;
+        if(mod & HOTKEYF_SHIFT)
+            hotkeyList[hotkeyCount].modifier |= vwHOTKEY_SHIFT;
+        if(mod & HOTKEYF_EXT)
+            hotkeyList[hotkeyCount].modifier |= vwHOTKEY_EXT;
+        if(win)
+            hotkeyList[hotkeyCount].modifier |= vwHOTKEY_WIN;
+        hotkeyList[hotkeyCount].command = (vwUByte) cmd ;
+        hotkeyList[hotkeyCount].desk = (vwUByte) desk ;
+        hotkeyCount++ ;
+    }
+}
+
 void readConfig(void)
 {
     TCHAR buff[MAX_PATH], buff2[2048], *ss ;
     FILE *fp, *wfp;
-    int ii, jj, kk, ll ;
+    int ii, jj, ll, ia[24], hk[4] ;
     
     GetFilename(vwCONFIG,1,buff);
     if(GetFileAttributes(buff) == INVALID_FILE_ATTRIBUTES)
@@ -600,44 +582,63 @@ void readConfig(void)
         _stprintf(buff2,_T("Welcome to %s\n\nA new user configuration has been created in directory:\n\n    %s\n\nRight click on tray icon to access the Setup dialog."),vwVIRTUAWIN_NAME_VERSION,UserAppPath) ;
         MessageBox(hWnd,buff2,vwVIRTUAWIN_NAME,MB_ICONINFORMATION);
     }
-    if((fp = _tfopen(buff,_T("r"))) == NULL)
+    if(((fp = _tfopen(buff,_T("r"))) == NULL) ||
+       (fscanf(fp, "%s%d", (char *) buff, &ii) != 2))
     {
         _stprintf(buff2,_T("Error reading config file:\n\n    %s\n\nPlease check file permissions. If you continue to have problems, send e-mail to:\n\n    ") vwVIRTUAWIN_EMAIL,buff);
         MessageBox(hWnd,buff2,vwVIRTUAWIN_NAME _T(" Error"),MB_ICONERROR) ;
         exit(1) ;
     }
-    else
+    else if(strcmp(buff,"ver#"))
     {   
-        fscanf(fp, "%s%i", (char *) buff, &mouseEnable);
-        fscanf(fp, "%s%i", (char *) buff, &mouseDelay);
-        fscanf(fp, "%s%i", (char *) buff, &keyEnable);
-        fscanf(fp, "%s%i", (char *) buff, &releaseFocus);
+        int kk, hkc[5], hks[3] ;
+        ia[7] = ii ;
+        hotkeyCount = 0 ;
+        fscanf(fp, "%s%i", (char *) buff, ia + 9);
+        fscanf(fp, "%s%i", (char *) buff, &jj);
+        fscanf(fp, "%s%i", (char *) buff, ia + 17);
         fscanf(fp, "%s%i", (char *) buff, &ii);
-        fscanf(fp, "%s%i", (char *) buff, &modAlt);
-        fscanf(fp, "%s%i", (char *) buff, &modShift);
-        fscanf(fp, "%s%i", (char *) buff, &modCtrl);
-        fscanf(fp, "%s%i", (char *) buff, &modWin);
-        fscanf(fp, "%s%i", (char *) buff, &warpLength);
-        fscanf(fp, "%s%i", (char *) buff, &minSwitch);
+        fscanf(fp, "%s%i", (char *) buff, hk + 0);
+        fscanf(fp, "%s%i", (char *) buff, hk + 1);
+        fscanf(fp, "%s%i", (char *) buff, hk + 2);
+        fscanf(fp, "%s%i", (char *) buff, hk + 3);
+        if(jj)
+        {
+            jj = hk[0] | hk[1] | hk[2] | hk[3] | vwHOTKEY_EXT ;
+            ii = 3 ;
+            do {
+                hotkeyList[ii].modifier = jj ;
+                hotkeyList[ii].command = vwCMD_NAV_MOVE_LEFT + ii ;
+                hotkeyList[ii].desk = 0 ;
+            } while(--ii >= 0) ;
+            hotkeyList[0].key = VK_LEFT ;
+            hotkeyList[1].key = VK_RIGHT ;
+            hotkeyList[2].key = VK_UP ;
+            hotkeyList[3].key = VK_DOWN ;
+            hotkeyCount = 4 ;
+        }
+        fscanf(fp, "%s%i", (char *) buff, ia + 8);
+        fscanf(fp, "%s%i", (char *) buff, ia + 16);
         fscanf(fp, "%s%i", (char *) buff, &ii);
-        fscanf(fp, "%s%i", (char *) buff, &nDesksY);
-        fscanf(fp, "%s%i", (char *) buff, &nDesksX);
+        fscanf(fp, "%s%i", (char *) buff, ia + 1);
+        fscanf(fp, "%s%i", (char *) buff, ia + 0);
         fscanf(fp, "%s%i", (char *) buff, &ii);
-        nDesks = nDesksX * nDesksY ;
         for(ii=1,jj=9,kk=0 ; ii<=jj ; ii++)
         {
-            fscanf(fp, "%s%i", (char *) buff, deskHotkey + ii);
+            fscanf(fp, "%s%i", (char *) buff, hk + 1);
             if((ii==1) && !strcmp((char *) buff,"Desk_count#"))
             {
-                jj = deskHotkey[1] ;
-                deskHotkey[1] = 0 ;
+                jj = hk[1] ;
+                hk[1] = 0 ;
                 ii = 0 ;
                 kk = 1 ;
             }
             else
             {
-                fscanf(fp, "%s%i", (char *) buff, deskHotkeyMod + ii);
-                fscanf(fp, "%s%i\n", (char *) buff, deskHotkeyWin + ii);
+                fscanf(fp, "%s%i", (char *) buff, hk + 2);
+                fscanf(fp, "%s%i\n", (char *) buff, hk + 3);
+                if(hk[1])
+                    addOldHotkey(hk[1],hk[2],hk[3],vwCMD_NAV_MOVE_DESKTOP,ii) ;
                 if(kk && (_fgetts(buff2,2048,fp) != NULL) && ((ss=_tcschr(buff2,' ')) != NULL) &&
                    ((ll=_tcslen(++ss)) > 1))
                 {
@@ -647,65 +648,154 @@ void readConfig(void)
                 }
             }
         }
-        fscanf(fp, "%s%i", (char *) buff, &useMouseKey);
-        fscanf(fp, "%s%i", (char *) buff, &mouseModAlt);
-        fscanf(fp, "%s%i", (char *) buff, &mouseModShift);
-        fscanf(fp, "%s%i", (char *) buff, &mouseModCtrl);
-        fscanf(fp, "%s%i", (char *) buff, &saveSticky);
-        fscanf(fp, "%s%i", (char *) buff, &refreshOnWarp);
-        fscanf(fp, "%s%i", (char *) buff, &noMouseWrap);
-        fscanf(fp, "%s%i", (char *) buff, &hotkeyStickyMod);
-        fscanf(fp, "%s%i", (char *) buff, &hotkeySticky);
-        fscanf(fp, "%s%i", (char *) buff, &preserveZOrder);
-        fscanf(fp, "%s%i", (char *) buff, &deskWrap);
-        fscanf(fp, "%s%i", (char *) buff, &invertY);
-        fscanf(fp, "%s%hi", (char *) buff, &stickyMenu);
-        fscanf(fp, "%s%hi", (char *) buff, &assignMenu);
-        fscanf(fp, "%s%hi", (char *) buff, &accessMenu);
-        fscanf(fp, "%s%i", (char *) buff, &useDeskAssignment);
-        fscanf(fp, "%s%i", (char *) buff, &saveLayoutOnExit);
-        fscanf(fp, "%s%i", (char *) buff, &assignOnlyFirst);
-        fscanf(fp, "%s%i", (char *) buff, &cyclingKeysEnabled);
-        fscanf(fp, "%s%i", (char *) buff, &hotCycleUp);
-        fscanf(fp, "%s%i", (char *) buff, &hotCycleUpMod);
-        fscanf(fp, "%s%i", (char *) buff, &hotCycleDown);
-        fscanf(fp, "%s%i", (char *) buff, &hotCycleDownMod);
-        fscanf(fp, "%s%i", (char *) buff, &hotkeyWListEn);
-        fscanf(fp, "%s%i", (char *) buff, &hotkeyWList);
-        fscanf(fp, "%s%i", (char *) buff, &hotkeyWListMod);
-        fscanf(fp, "%s%i", (char *) buff, &hotkeyWListWin);
-        fscanf(fp, "%s%i", (char *) buff, &displayTaskbarIcon);
-        fscanf(fp, "%s%i", (char *) buff, &hotkeyStickyWin);
-        fscanf(fp, "%s%i", (char *) buff, &noTaskbarCheck);
-        fscanf(fp, "%s%i", (char *) buff, &trickyWindows);
+        fscanf(fp, "%s%i", (char *) buff, ia + 12);
+        ia[13] = 0 ;
         fscanf(fp, "%s%i", (char *) buff, &ii);
-        fscanf(fp, "%s%i", (char *) buff, &permanentSticky);
-        fscanf(fp, "%s%i", (char *) buff, &hotCycleUpWin);
-        fscanf(fp, "%s%i", (char *) buff, &hotCycleDownWin);
-        fscanf(fp, "%s%i", (char *) buff, &hotkeyStickyEn);
-        fscanf(fp, "%s%i", (char *) buff, deskHotkey + vwDESKTOP_SIZE - 1);
-        fscanf(fp, "%s%i", (char *) buff, deskHotkeyMod + vwDESKTOP_SIZE - 1);
-        fscanf(fp, "%s%i", (char *) buff, deskHotkeyWin + vwDESKTOP_SIZE - 1);
-        fscanf(fp, "%s%i", (char *) buff, &assignImmediately);
-        fscanf(fp, "%s%i\n", (char *) buff, &hiddenWindowAct);
-        if((_fgetts(buff2,2048,fp) != NULL) && ((ss=_tcschr(buff2,' ')) != NULL) && ((ll=_tcslen(++ss)) > 2))
+        if(ii)  ia[13] |= vwHOTKEY_ALT ;
+        fscanf(fp, "%s%i", (char *) buff, &ii);
+        if(ii)  ia[13] |= vwHOTKEY_SHIFT ;
+        fscanf(fp, "%s%i", (char *) buff, &ii);
+        if(ii)  ia[13] |= vwHOTKEY_CONTROL ;
+        fscanf(fp, "%s%i", (char *) buff, &ii);
+        fscanf(fp, "%s%i", (char *) buff, ia + 18);
+        fscanf(fp, "%s%i", (char *) buff, ia + 10);
+        ia[10] = (ia[10] == 0) ;
+        fscanf(fp, "%s%i", (char *) buff, hks + 0);
+        fscanf(fp, "%s%i", (char *) buff, hks + 1);
+        fscanf(fp, "%s%i", (char *) buff, ia + 14);
+        fscanf(fp, "%s%i", (char *) buff, ia + 2);
+        fscanf(fp, "%s%i", (char *) buff, ia + 19);
+        ia[5] = 0 ;
+        fscanf(fp, "%s%i", (char *) buff, &ii);
+        if(ii)  ia[5] |= vwWINLIST_STICKY ;
+        fscanf(fp, "%s%i", (char *) buff, &ii);
+        if(ii)  ia[5] |= vwWINLIST_ASSIGN ;
+        fscanf(fp, "%s%i", (char *) buff, &ii);
+        if(ii)  ia[5] |= vwWINLIST_ACCESS ;
+        fscanf(fp, "%s%i", (char *) buff, ia + 3);
+        fscanf(fp, "%s%i", (char *) buff, &ii);
+        fscanf(fp, "%s%i", (char *) buff, &ii);
+        fscanf(fp, "%s%i", (char *) buff, hkc + 0);
+        fscanf(fp, "%s%i", (char *) buff, hkc + 1);
+        fscanf(fp, "%s%i", (char *) buff, hkc + 2);
+        fscanf(fp, "%s%i", (char *) buff, hkc + 3);
+        fscanf(fp, "%s%i", (char *) buff, hkc + 4);
+        fscanf(fp, "%s%i", (char *) buff, hk + 0);
+        fscanf(fp, "%s%i", (char *) buff, hk + 1);
+        fscanf(fp, "%s%i", (char *) buff, hk + 2);
+        fscanf(fp, "%s%i", (char *) buff, hk + 3);
+        if(hk[0])
         {
-            if(ss[ll-1] == '\n')
-                ss[ll-1] = '\0' ;
-            desktopName[vwDESKTOP_SIZE - 1] = _tcsdup(ss+1) ;
+            kk = hotkeyCount ;
+            addOldHotkey(hk[1],hk[2],hk[3],vwCMD_UI_WINLIST_STD,0) ;
         }
-        fscanf(fp, "%s%i", (char *) buff, &hotkeyDismissEn);
-        fscanf(fp, "%s%i", (char *) buff, &hotkeyDismiss);
-        fscanf(fp, "%s%i", (char *) buff, &hotkeyDismissMod);
-        fscanf(fp, "%s%i", (char *) buff, &hotkeyDismissWin);
-        fscanf(fp, "%s%i", (char *) buff, &vwLogFlag);
-        fscanf(fp, "%s%i", (char *) buff, &knockMode);
-        fscanf(fp, "%s%hi", (char *) buff, &compactMenu);
-        fscanf(fp, "%s%i", (char *) buff, &hotkeyWMenuEn);
-        fscanf(fp, "%s%i", (char *) buff, &hotkeyWMenu);
-        fscanf(fp, "%s%i", (char *) buff, &hotkeyWMenuMod);
-        fscanf(fp, "%s%i", (char *) buff, &hotkeyWMenuWin);
-        fscanf(fp, "%s%hi", (char *) buff, &showMenu);
+        else
+            kk = -1 ;
+        fscanf(fp, "%s%i", (char *) buff, ia + 22);
+        fscanf(fp, "%s%i", (char *) buff, hks + 2);
+        fscanf(fp, "%s%i", (char *) buff, ia + 20);
+        fscanf(fp, "%s%i", (char *) buff, ia + 21);
+        fscanf(fp, "%s%i", (char *) buff, &ii);
+        fscanf(fp, "%s%i", (char *) buff, &ii);
+        fscanf(fp, "%s%i", (char *) buff, &ii);
+        fscanf(fp, "%s%i", (char *) buff, &jj);
+        if(hkc[0])
+        {
+            addOldHotkey(hkc[1],hkc[2],ii,vwCMD_NAV_MOVE_NEXT,0) ;
+            addOldHotkey(hkc[3],hkc[4],jj,vwCMD_NAV_MOVE_PREV,0) ;
+        }
+        fscanf(fp, "%s%i", (char *) buff, &ii);
+        if(ii)
+            addOldHotkey(hks[1],hks[0],hk[2],vwCMD_WIN_STICKY,0) ;
+        fscanf(fp, "%s%i", (char *) buff, &ii);
+        fscanf(fp, "%s%i", (char *) buff, &ii);
+        fscanf(fp, "%s%i", (char *) buff, &ii);
+        fscanf(fp, "%s%i", (char *) buff, ia + 4);
+        fscanf(fp, "%s%i", (char *) buff, ia + 15);
+        fscanf(fp, "%s%i", (char *) buff, &ii);
+        fscanf(fp, "%s%i", (char *) buff, hk + 0);
+        fscanf(fp, "%s%i", (char *) buff, hk + 1);
+        fscanf(fp, "%s%i", (char *) buff, hk + 2);
+        fscanf(fp, "%s%i", (char *) buff, hk + 3);
+        if(hk[0])
+            addOldHotkey(hk[1],hk[2],hk[3],vwCMD_WIN_DISMISS,0) ;
+        fscanf(fp, "%s%i", (char *) buff, ia + 23);
+        fscanf(fp, "%s%i", (char *) buff, ia + 11);
+        fscanf(fp, "%s%i", (char *) buff, ia + 6);
+        if(ia[6] && (kk >= 0))
+            hotkeyList[kk].command = vwCMD_UI_WINMENU_CMP ;
+        fscanf(fp, "%s%i", (char *) buff, hk + 0);
+        fscanf(fp, "%s%i", (char *) buff, hk + 1);
+        fscanf(fp, "%s%i", (char *) buff, hk + 2);
+        fscanf(fp, "%s%i", (char *) buff, hk + 3);
+        if(hk[0])
+            addOldHotkey(hk[1],hk[2],hk[3],vwCMD_UI_WINMENU_STD,0) ;
+        fscanf(fp, "%s%i", (char *) buff, &ii);
+        if(ii)  ia[5] |= vwWINLIST_SHOW ;
         fclose(fp);
     }
+    else if(ii == 2)
+    {
+        /* read the hotkeys and desktop names */
+        hotkeyCount = 0 ;
+        fscanf(fp, "%s%d", (char *) buff, &jj);
+        for(ii=0 ; ii<jj ; ii++) 
+        {
+            if(fscanf(fp, "%s %d %d %d %d", (char *) buff, hk+0, hk+1, hk+2, hk+3) == 5)
+            {
+                hotkeyList[hotkeyCount].key = hk[0] ;
+                hotkeyList[hotkeyCount].modifier = hk[1] ;
+                hotkeyList[hotkeyCount].command = hk[2] ;
+                hotkeyList[hotkeyCount].desk = hk[3] ;
+                hotkeyCount++ ;
+            }
+        }
+        fscanf(fp, "%s%d\n", (char *) buff, &jj);
+        for(ii=1 ; ii<=jj ; ii++)
+        {
+            if((_fgetts(buff2,2048,fp) != NULL) && ((ss=_tcschr(buff2,' ')) != NULL) &&
+               ((ll=_tcslen(++ss)) > 1))
+            {
+                if(ss[ll-1] == '\n')
+                    ss[ll-1] = '\0' ;
+                desktopName[ii] = _tcsdup(ss) ;
+            }
+        }
+        /* now read all the simple flags */
+        for(ii=0 ; ii<24 ; ii++) 
+            fscanf(fp, "%s%d", (char *) buff, ia+ii);
+        fclose(fp);
+    }
+    else
+    {
+        fclose(fp);
+        _stprintf(buff2,_T("Error reading config file:\n\n    %s\n\nUnsupported version %d, please remove."),buff,ii);
+        MessageBox(hWnd,buff2,vwVIRTUAWIN_NAME _T(" Error"),MB_ICONERROR) ;
+        exit(1) ;
+    }
+    nDesksX = ia[0] ;
+    nDesksY = ia[1] ;
+    nDesks = nDesksX * nDesksY ;
+    deskWrap = ia[2] ;
+    useDeskAssignment = ia[3] ;
+    assignImmediately = ia[4] ;
+    winListContent = ia[5] ;
+    winListCompact = ia[6] ;
+    mouseEnable = ia[7] ;
+    mouseJumpLength = ia[8] ;
+    mouseDelay = ia[9] ;
+    mouseWarp = ia[10] ;
+    mouseKnock = ia[11] ;
+    mouseModifierUsed = ia[12] ;
+    mouseModifier = ia[13] ;
+    preserveZOrder = ia[14] ;
+    hiddenWindowAct = ia[15] ;
+    minSwitch = ia[16] ;
+    releaseFocus = ia[17] ;
+    refreshOnWarp = ia[18] ;
+    invertY = ia[19] ;
+    noTaskbarCheck = ia[20] ;
+    trickyWindows = ia[21] ;
+    displayTaskbarIcon = ia[22] ;
+    vwLogFlag = ia[23] ;
 }

@@ -39,9 +39,9 @@ extern int screenTop;
 extern int screenBottom;
 
 extern int curDisabledMod;                        // how many disabled modules we have
-extern int knockMode;                             // mouse edge kncking mode
 
 extern windowType winList[vwWINDOW_MAX];          // list for holding windows
+extern vwHotkey   hotkeyList[vwHOTKEY_MAX];       // list for holding hotkeys
 extern moduleType moduleList[MAXMODULES];         // list that holds modules
 extern disModules disabledModules[MAXMODULES*2];  // list with disabled modules
 
@@ -51,7 +51,7 @@ extern vwWindowMatch *trickyList;                 // list with saved tricky wind
 extern vwWindowMatch *assignedList;               // list with all windows that have a predefined desktop
 
 // logging defines & macros
-extern int   vwLogFlag ;
+extern vwUByte vwLogFlag ;
 extern FILE *vwLogFile ;
 
 #define vwLogEnabled()        (vwLogFile != NULL)
@@ -65,14 +65,14 @@ extern FILE *vwLogFile ;
 
 // Forward declarations of functions
 void vwLogPrint(const TCHAR *format, ...) ;
-void enableMouse(BOOL turnOn) ;
+void enableMouse(int turnOn) ;
 void setMouseKey(void);
-void reLoadIcons(void);
-void registerAllKeys(void);
-void unRegisterAllKeys(void);
+void vwIconReload(void);
+void vwHotkeyRegister(void);
+void vwHotkeyUnregister(void);
 void getWorkArea(void);
-int  assignWindow(HWND theWin, int theDesk, BOOL force, BOOL setActive);
-int  gotoDesk(int theDesk, BOOL force);
+int  assignWindow(HWND theWin, int theDesk, vwUByte follow, vwUByte force, vwUByte setActive);
+int  gotoDesk(int theDesk, vwUByte force);
 void showHelp(HWND aHWnd, UINT context);
 
 #endif
