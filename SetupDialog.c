@@ -126,6 +126,8 @@ BOOL APIENTRY setupGeneral(HWND hDlg, UINT message, UINT wParam, LONG lParam)
         {
             setupHWnd = GetParent(hDlg) ;
             setupKeysHWnd = hDlg ;
+            pageChangeMask = 0 ;
+            pageApplyMask = 0 ;
             /* the setup dialog will be automatically positioned top left of the primary, move this 40 pixels in */
             GetWindowRect(setupHWnd, &config_dlg_rect);
             config_dlg_rect.left += 40 ;
