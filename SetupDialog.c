@@ -40,13 +40,33 @@
 #include <prsht.h>
 #include <commctrl.h>
 
+/* Get the list of hotkey commands */
+#define VW_COMMAND(a, b, c, d) b ,
+static unsigned char vwCommandEnum[]={
+#include "vwCommands.def"
+} ;
+#undef  VW_COMMAND
+
+#define VW_COMMAND(a, b, c, d) d ,
+static TCHAR *vwCommandName[]={
+#include "vwCommands.def"
+} ;
+#undef  VW_COMMAND
+
+#define VW_COMMAND(a, b, c, d) c ,
+static unsigned char vwCommandFlag[]={
+#include "vwCommands.def"
+} ;
+#undef  VW_COMMAND
+
 #define vwPROPSHEET_PAGE_COUNT 6
 
 static int pageChangeMask=0 ;
 static int pageApplyMask=0 ;
 static HWND setupKeysHWnd=NULL;
 
-static void vwSetupApply(HWND hDlg, int curPageMask)
+static void
+vwSetupApply(HWND hDlg, int curPageMask)
 {
     if(pageChangeMask)
     {
@@ -56,10 +76,9 @@ static void vwSetupApply(HWND hDlg, int curPageMask)
             // All pages have now got any changes from the GUI, save them and apply
             writeConfig();
             getWorkArea();
-            unRegisterAllKeys();
-            registerAllKeys();
+            vwHotkeyUnregister();
+            vwHotkeyRegister();
             enableMouse(mouseEnable);
-            setMouseKey();
             // Tell modules about the config change
             postModuleMessage(MOD_CFGCHANGE, 0, 0);
             pageChangeMask = 0 ;
@@ -68,27 +87,22 @@ static void vwSetupApply(HWND hDlg, int curPageMask)
     }
 }
 
-void initDesktopProperties(void)
+void
+initDesktopProperties(void)
 {
     TCHAR buff[32] ;
-    _stprintf(buff,_T("Properties of desktop %d:"),currentDesk) ;
+    int pcm = pageChangeMask ;
+    pageChangeMask = -1 ;
+    _stprintf(buff,_T("Name of desktop %d:"),currentDesk) ;
     SetDlgItemText(setupKeysHWnd, IDC_DESKTOPLBL, buff) ;
     SetDlgItemText(setupKeysHWnd, IDC_DESKTOPNAME, (desktopName[currentDesk] != NULL) ? desktopName[currentDesk]:_T("")) ;
-    SendDlgItemMessage(setupKeysHWnd, IDC_HOTDESK, HKM_SETHOTKEY, MAKEWORD(deskHotkey[currentDesk], deskHotkeyMod[currentDesk]), 0);
-    SendDlgItemMessage(setupKeysHWnd, IDC_HOTDESKW, BM_SETCHECK, (deskHotkeyWin[currentDesk] != 0),0);
+    pageChangeMask = pcm ;
 }
 
-void storeDesktopProperties(void)
+void
+storeDesktopProperties(void)
 {
-    WORD wRawHotKey;
     TCHAR buff[64], *ss ;
-    wRawHotKey = (WORD)SendDlgItemMessage(setupKeysHWnd, IDC_HOTDESK, HKM_GETHOTKEY, 0, 0);
-    deskHotkey[currentDesk] = LOBYTE(wRawHotKey);
-    deskHotkeyMod[currentDesk] = HIBYTE(wRawHotKey);
-    if(SendDlgItemMessage(setupKeysHWnd, IDC_HOTDESKW, BM_GETCHECK, 0, 0) == BST_CHECKED)
-        deskHotkeyWin[currentDesk] = MOD_WIN;
-    else
-        deskHotkeyWin[currentDesk] = FALSE;
     
     GetDlgItemText(setupKeysHWnd,IDC_DESKTOPNAME,buff,64) ;
     if(((desktopName[currentDesk] == NULL) && (buff[0] != '\0')) ||
@@ -116,7 +130,6 @@ BOOL APIENTRY setupGeneral(HWND hDlg, UINT message, UINT wParam, LONG lParam)
     static int tmpDesksY;
     static int tmpDesksX;
     RECT config_dlg_rect;
-    WORD wRawHotKey;
     WORD wPar;
     int maxDesk ;
     
@@ -147,42 +160,35 @@ BOOL APIENTRY setupGeneral(HWND hDlg, UINT message, UINT wParam, LONG lParam)
             // Set init values
             SendMessage(GetDlgItem(hDlg, IDC_SLIDERX), UDM_SETPOS, 0L, MAKELONG(nDesksX, 0));
             SendMessage(GetDlgItem(hDlg, IDC_SLIDERY), UDM_SETPOS, 0L, MAKELONG(nDesksY, 0));
-        
-            /* Control keys */
-            if(keyEnable)
-                SendDlgItemMessage(hDlg, IDC_KEYS, BM_SETCHECK, 1,0);
-            if(modAlt)
-                SendDlgItemMessage(hDlg, IDC_ALT, BM_SETCHECK, 1,0);
-            if(modShift)
-                SendDlgItemMessage(hDlg, IDC_SHIFT, BM_SETCHECK, 1,0);
-            if(modCtrl)
-                SendDlgItemMessage(hDlg, IDC_CTRL, BM_SETCHECK, 1,0);
-            if(modWin)
-                SendDlgItemMessage(hDlg, IDC_WIN, BM_SETCHECK, 1,0);
             
-            /* Cycling key */
+            SendDlgItemMessage(hDlg, IDC_HIDWINACT, CB_ADDSTRING, 0, (LONG) _T("Ignore the event"));
+            SendDlgItemMessage(hDlg, IDC_HIDWINACT, CB_ADDSTRING, 0, (LONG) _T("Move window to current desktop"));
+            SendDlgItemMessage(hDlg, IDC_HIDWINACT, CB_ADDSTRING, 0, (LONG) _T("Show window on current desktop"));
+            SendDlgItemMessage(hDlg, IDC_HIDWINACT, CB_ADDSTRING, 0, (LONG) _T("Change to window's desktop"));
+            SendDlgItemMessage(hDlg, IDC_HIDWINACT, CB_SETCURSEL, hiddenWindowAct, 0) ;
             if(deskWrap)
                 SendDlgItemMessage(hDlg, IDC_DESKCYCLE, BM_SETCHECK, 1, 0);
-            if(cyclingKeysEnabled)
-                SendDlgItemMessage(hDlg, IDC_CYCLINGKEYS, BM_SETCHECK, 1, 0);
-            SendDlgItemMessage(hDlg, IDC_HOTCYCLEUP, HKM_SETHOTKEY, 
-                               MAKEWORD(hotCycleUp, hotCycleUpMod), 0);
-            if(hotCycleUpWin)
-                SendDlgItemMessage(hDlg, IDC_HOTCYCLEUPW, BM_SETCHECK, 1, 0);
-            SendDlgItemMessage(hDlg, IDC_HOTCYCLEDOWN, HKM_SETHOTKEY, 
-                               MAKEWORD(hotCycleDown, hotCycleDownMod), 0);
-            if(hotCycleDownWin)
-                SendDlgItemMessage(hDlg, IDC_HOTCYCLEDOWNW, BM_SETCHECK, 1, 0);
-            
+            if(assignImmediately)
+                SendDlgItemMessage(hDlg, IDC_ASSIGNWINNOW, BM_SETCHECK, 1,0);
+            if(winListCompact)
+                SendDlgItemMessage(hDlg, IDC_COMPACTMENU, BM_SETCHECK, 1, 0);
+            if(winListContent & vwWINLIST_ACCESS)
+                SendDlgItemMessage(hDlg, IDC_MENUACCESS, BM_SETCHECK, 1, 0);
+            if(winListContent & vwWINLIST_ASSIGN)
+                SendDlgItemMessage(hDlg, IDC_MENUASSIGN, BM_SETCHECK, 1, 0);
+            if(winListContent & vwWINLIST_SHOW)
+                SendDlgItemMessage(hDlg, IDC_MENUSHOW, BM_SETCHECK, 1, 0);
+            if(winListContent & vwWINLIST_STICKY)
+                SendDlgItemMessage(hDlg, IDC_MENUSTICKY, BM_SETCHECK, 1, 0);
+
             /* Currect desktop properties */
             initDesktopProperties() ;
-            pageChangeMask &= ~0x01 ;
-            return (TRUE);
+            return TRUE ;
         }
         
     case WM_NOTIFY:
-        
-        switch (((NMHDR FAR *) lParam)->code) {
+        switch (((NMHDR FAR *) lParam)->code)
+        {
         case PSN_SETACTIVE: // Getting focus
             // Initialize the controls.
             break;
@@ -197,71 +203,37 @@ BOOL APIENTRY setupGeneral(HWND hDlg, UINT message, UINT wParam, LONG lParam)
                 if(currentDesk > maxDesk)
                     // user is on an invalid desk, move
                     gotoDesk(1,TRUE);
-                index = nWin ;
+                index = windowCount ;
                 while(--index >= 0)
                 {
                     if((winList[index].Desk > maxDesk) && (winList[index].Desk <= nDesks))
                     {
                         // This window is on an invalid desk, move
-                        assignWindow(winList[index].Handle,1,TRUE,FALSE);
+                        assignWindow(winList[index].Handle,1,FALSE,TRUE,FALSE);
                         count++ ;
                         // must start again as the list will have been updated
-                        index = nWin ; 
+                        index = windowCount ; 
                     }
                 }
             }
             nDesksY = tmpDesksY;
             nDesksX = tmpDesksX;
             nDesks = maxDesk ;
-            reLoadIcons();              
+            vwIconReload();              
             
-            // Control keys
-            if(SendDlgItemMessage(hDlg, IDC_KEYS, BM_GETCHECK, 0, 0) == BST_CHECKED) {
-                keyEnable = TRUE;
-                if(SendDlgItemMessage(hDlg, IDC_ALT, BM_GETCHECK, 0, 0) == BST_CHECKED)
-                    modAlt = MOD_ALT;
-                else
-                    modAlt = FALSE;
-                if(SendDlgItemMessage(hDlg, IDC_SHIFT, BM_GETCHECK, 0, 0) == BST_CHECKED)
-                    modShift = MOD_SHIFT;
-                else
-                    modShift = FALSE;
-                if(SendDlgItemMessage(hDlg, IDC_CTRL, BM_GETCHECK, 0, 0) == BST_CHECKED)
-                    modCtrl = MOD_CONTROL;
-                else
-                    modCtrl = FALSE;
-                if(SendDlgItemMessage(hDlg, IDC_WIN, BM_GETCHECK, 0, 0) == BST_CHECKED)
-                    modWin = MOD_WIN;
-                else
-                    modWin = FALSE;
-            }
-            else
-                keyEnable = FALSE;
-            
-            // Desktop Cycling hot keys
             deskWrap = (SendDlgItemMessage(hDlg, IDC_DESKCYCLE, BM_GETCHECK, 0, 0) == BST_CHECKED) ;
-            if(SendDlgItemMessage(hDlg, IDC_CYCLINGKEYS, BM_GETCHECK, 0, 0) == BST_CHECKED)
-            {
-                cyclingKeysEnabled = TRUE;
-                wRawHotKey = (WORD)SendDlgItemMessage(hDlg, IDC_HOTCYCLEUP, HKM_GETHOTKEY, 0, 0);
-                hotCycleUp = LOBYTE(wRawHotKey);
-                hotCycleUpMod = HIBYTE(wRawHotKey);
-                if(SendDlgItemMessage(hDlg, IDC_HOTCYCLEUPW, BM_GETCHECK, 0, 0) == BST_CHECKED)
-                    hotCycleUpWin = MOD_WIN;
-                else
-                    hotCycleUpWin = FALSE;
-                wRawHotKey = (WORD)SendDlgItemMessage(hDlg, IDC_HOTCYCLEDOWN, HKM_GETHOTKEY, 0, 0);
-                hotCycleDown = LOBYTE(wRawHotKey);
-                hotCycleDownMod = HIBYTE(wRawHotKey);
-                if(SendDlgItemMessage(hDlg, IDC_HOTCYCLEDOWNW, BM_GETCHECK, 0, 0) == BST_CHECKED)
-                    hotCycleDownWin = MOD_WIN;
-                else
-                    hotCycleDownWin = FALSE;
-            }
-            else
-                cyclingKeysEnabled = FALSE;
-            
-            // Direct Desktop Access Hot keys
+            hiddenWindowAct = (vwUByte) SendDlgItemMessage(hDlg, IDC_HIDWINACT, CB_GETCURSEL, 0, 0) ;
+            assignImmediately = (SendDlgItemMessage(hDlg, IDC_ASSIGNWINNOW, BM_GETCHECK, 0, 0) == BST_CHECKED) ;
+            winListCompact = (SendDlgItemMessage(hDlg, IDC_COMPACTMENU, BM_GETCHECK, 0, 0) == BST_CHECKED) ;
+            winListContent = 0 ;
+            if(SendDlgItemMessage(hDlg, IDC_MENUACCESS, BM_GETCHECK, 0, 0) == BST_CHECKED)
+                winListContent |= vwWINLIST_ACCESS ;
+            if(SendDlgItemMessage(hDlg, IDC_MENUASSIGN, BM_GETCHECK, 0, 0) == BST_CHECKED)
+                winListContent |= vwWINLIST_ASSIGN ;
+            if(SendDlgItemMessage(hDlg, IDC_MENUSHOW, BM_GETCHECK, 0, 0) == BST_CHECKED)
+                winListContent |= vwWINLIST_SHOW ;
+            if(SendDlgItemMessage(hDlg, IDC_MENUSTICKY, BM_GETCHECK, 0, 0) == BST_CHECKED)
+                winListContent |= vwWINLIST_STICKY ;
             storeDesktopProperties() ;
             
             vwSetupApply(hDlg,0x01) ;
@@ -311,12 +283,13 @@ BOOL APIENTRY setupGeneral(HWND hDlg, UINT message, UINT wParam, LONG lParam)
             }
             SetFocus(hDlg) ;
         }
-        else if(wPar == IDC_KEYS        || wPar == IDC_ALT          || wPar == IDC_SHIFT  ||
-                wPar == IDC_CTRL        || wPar == IDC_WIN          || 
-                wPar == IDC_DESKCYCLE   || wPar == IDC_CYCLINGKEYS  || wPar == IDC_HOTCYCLEUP ||
-                wPar == IDC_HOTCYCLEUPW || wPar == IDC_HOTCYCLEDOWN || wPar == IDC_HOTCYCLEDOWNW ||
-                wPar == IDC_HOTDESK     || wPar == IDC_HOTDESKW     ||
-                (wPar == IDC_DESKTOPNAME && HIWORD(wParam) == EN_CHANGE))
+        else if((pageChangeMask >= 0) &&
+                ((wPar == IDC_DESKCYCLE)   || (wPar == IDC_COMPACTMENU)  ||
+                 (wPar == IDC_MENUACCESS)  || (wPar == IDC_ASSIGNWINNOW) ||
+                 (wPar == IDC_MENUSHOW)    || (wPar == IDC_MENUSTICKY)   ||
+                 (wPar == IDC_MENUASSIGN)  ||
+                 (wPar == IDC_HIDWINACT   && HIWORD(wParam) == CBN_SELCHANGE) ||
+                 (wPar == IDC_DESKTOPNAME && HIWORD(wParam) == EN_CHANGE)))
         {
             pageChangeMask |= 0x01 ;
             SendMessage(GetParent(hDlg), PSM_CHANGED, (WPARAM)hDlg, 0L); // Enable apply button
@@ -326,6 +299,370 @@ BOOL APIENTRY setupGeneral(HWND hDlg, UINT message, UINT wParam, LONG lParam)
             if((maxDesk = currentDesk + 1) > (tmpDesksX * tmpDesksY))
                 maxDesk = 1 ;
             gotoDesk(maxDesk,TRUE) ;
+        }
+        break;
+    }
+    return (FALSE);
+}
+
+/*************************************************
+ * The "Hotkeys" tab callback
+ */
+static int vwSetupHotkeyCur ;
+static unsigned char vwSetupHotkeyGotKey ;
+
+static void
+vwSetupHotKeysInitList(HWND hDlg)
+{
+    TCHAR buff[128], *ss;
+    int ii, jj, cmd, deskCount ;
+    
+    if((deskCount = nDesks) < currentDesk)
+        deskCount = currentDesk ;
+    
+    SendDlgItemMessage(hDlg,IDC_HOTKEY_LIST,LB_RESETCONTENT,0, 0);
+    ii = 130 ;
+    SendDlgItemMessage(hDlg,IDC_HOTKEY_LIST,LB_SETTABSTOPS,(WPARAM)1,(LPARAM)&ii);
+    for(ii=0 ; ii<hotkeyCount ; ii++)
+    {
+        if(hotkeyList[ii].desk <= deskCount)
+        {
+            cmd = 0 ;
+            while((vwCommandEnum[cmd] != 0) && (vwCommandEnum[cmd] != hotkeyList[ii].command))
+                cmd++ ;
+            ss = buff ;
+            _tcscpy(ss,vwCommandName[cmd]) ;
+            if(hotkeyList[ii].desk && vwCommandEnum[cmd])
+            {
+                ss = _tcschr(ss,'#') ;
+                ss += _stprintf(ss,"%d",hotkeyList[ii].desk) ;
+                _tcscpy(ss,_tcschr(vwCommandName[cmd],'#') + 1) ;
+            }
+            ss += _tcslen(ss) ;
+            *ss++ = '\t' ;
+            if(hotkeyList[ii].modifier & vwHOTKEY_ALT)
+            {
+                *ss++ = 'A' ;
+                *ss++ = ' ' ;
+                *ss++ = '+' ;
+                *ss++ = ' ' ;
+            }
+            if(hotkeyList[ii].modifier & vwHOTKEY_CONTROL)
+            {
+                *ss++ = 'C' ;
+                *ss++ = ' ' ;
+                *ss++ = '+' ;
+                *ss++ = ' ' ;
+            }
+            if(hotkeyList[ii].modifier & vwHOTKEY_SHIFT)
+            {
+                *ss++ = 'S' ;
+                *ss++ = ' ' ;
+                *ss++ = '+' ;
+                *ss++ = ' ' ;
+            }
+            if(hotkeyList[ii].modifier & vwHOTKEY_WIN)
+            {
+                *ss++ = 'W' ;
+                *ss++ = ' ' ;
+                *ss++ = '+' ;
+                *ss++ = ' ' ;
+            }
+            jj = MapVirtualKey((UINT) hotkeyList[ii].key,0);
+            if(hotkeyList[ii].modifier & vwHOTKEY_EXT)
+                jj |= 0x100 ;
+            GetKeyNameText(jj << 16, ss, 20);
+            SendDlgItemMessage(hDlg,IDC_HOTKEY_LIST,LB_ADDSTRING,0,(LONG) buff);
+        }
+    }
+    if(vwSetupHotkeyCur >= 0)
+    {
+        for(ii=0, jj=0 ; ii != vwSetupHotkeyCur ; ii++)
+            if(hotkeyList[ii].desk <= deskCount)
+                jj++ ;
+        SendDlgItemMessage(hDlg,IDC_HOTKEY_LIST,LB_SETCURSEL,jj,0) ;
+    }
+}
+
+static void
+vwSetupHotKeysInit(HWND hDlg, int firstTime)
+{
+    TCHAR buff[10] ;
+    int ii, jj ;
+    
+    if(firstTime)
+    {
+        for(ii=0 ; vwCommandEnum[ii] != 0 ; ii++)
+            SendDlgItemMessage(hDlg, IDC_HOTKEY_CMD, CB_ADDSTRING, 0, (LONG) vwCommandName[ii]) ;
+        SendDlgItemMessage(hDlg, IDC_HOTKEY_CMD, CB_SETCURSEL, 0, 0) ;
+    }
+    else
+    {
+        SendDlgItemMessage(hDlg,IDC_HOTKEY_DSK,CB_RESETCONTENT,0, 0);
+    }
+    if((jj = nDesks) < currentDesk)
+        jj = currentDesk ;
+    for(ii=1 ; ii<=jj ; ii++)
+    {
+        _stprintf(buff,"%d",ii) ;
+        SendDlgItemMessage(hDlg, IDC_HOTKEY_DSK, CB_ADDSTRING, 0, (LONG) buff) ;
+    }
+    SendDlgItemMessage(hDlg,IDC_HOTKEY_DSK,CB_SETCURSEL,currentDesk-1,0) ;
+    EnableWindow(GetDlgItem(hDlg,IDC_HOTKEY_DSK),FALSE) ;
+    EnableWindow(GetDlgItem(hDlg,IDC_HOTKEY_ADD),FALSE) ;
+    EnableWindow(GetDlgItem(hDlg,IDC_HOTKEY_MOD),FALSE) ;
+    EnableWindow(GetDlgItem(hDlg,IDC_HOTKEY_DEL),FALSE) ;
+    vwSetupHotkeyCur = -1 ;
+    vwSetupHotkeyGotKey = 0 ;
+    vwSetupHotKeysInitList(hDlg) ;
+}
+
+static void
+vwSetupHotKeysSetCommand(HWND hDlg)
+{
+    int ii ;
+    if((ii=SendDlgItemMessage(hDlg,IDC_HOTKEY_CMD,CB_GETCURSEL,0,0)) != CB_ERR)
+    {
+        EnableWindow(GetDlgItem(hDlg,IDC_HOTKEY_DSK),(vwCommandFlag[ii] & 0x01)) ;
+        if((vwSetupHotkeyCur >= 0) && vwSetupHotkeyGotKey &&
+           (vwCommandEnum[ii] != hotkeyList[vwSetupHotkeyCur].command))
+        {
+            EnableWindow(GetDlgItem(hDlg,IDC_HOTKEY_ADD),TRUE) ;
+            EnableWindow(GetDlgItem(hDlg,IDC_HOTKEY_MOD),TRUE) ;
+        }
+    }
+}
+
+static void
+vwSetupHotKeysSetDesk(HWND hDlg)
+{
+    int ii ;
+    if((vwSetupHotkeyCur >= 0) && vwSetupHotkeyGotKey &&
+       ((ii=SendDlgItemMessage(hDlg,IDC_HOTKEY_DSK,CB_GETCURSEL,0,0)) != CB_ERR) &&
+       ((ii + 1) != hotkeyList[vwSetupHotkeyCur].desk))
+    {
+        EnableWindow(GetDlgItem(hDlg,IDC_HOTKEY_ADD),TRUE) ;
+        EnableWindow(GetDlgItem(hDlg,IDC_HOTKEY_MOD),TRUE) ;
+    }
+}
+
+static void
+vwSetupHotKeysSetKey(HWND hDlg)
+{
+    vwSetupHotkeyGotKey = ((SendDlgItemMessage(hDlg,IDC_HOTKEY_ENT,HKM_GETHOTKEY,0,0) & 0x0ff) != 0) ;
+    EnableWindow(GetDlgItem(hDlg,IDC_HOTKEY_ADD),vwSetupHotkeyGotKey) ;
+    if(vwSetupHotkeyCur >= 0)
+        EnableWindow(GetDlgItem(hDlg,IDC_HOTKEY_MOD),vwSetupHotkeyGotKey) ;
+}
+
+static void
+vwSetupHotKeysSetItem(HWND hDlg)
+{
+    int ii, deskCount ;
+    
+    if((ii=SendDlgItemMessage(hDlg,IDC_HOTKEY_LIST,LB_GETCURSEL,0,0)) != LB_ERR)
+    {
+        if((deskCount = nDesks) < currentDesk)
+            deskCount = currentDesk ;
+        
+        for(vwSetupHotkeyCur = 0 ; ; vwSetupHotkeyCur++)
+        {
+            if(hotkeyList[vwSetupHotkeyCur].desk > deskCount)
+                ii++ ;
+            if(vwSetupHotkeyCur == ii)
+                break ;
+        } 
+        if(vwSetupHotkeyCur >= hotkeyCount)
+            vwSetupHotkeyCur = -1 ;
+    }
+    else
+        vwSetupHotkeyCur = -1 ;
+    EnableWindow(GetDlgItem(hDlg,IDC_HOTKEY_DEL),(vwSetupHotkeyCur >= 0)) ;
+    if(vwSetupHotkeyCur >= 0)
+    {
+        ii = 0 ;
+        while(vwCommandEnum[ii] != hotkeyList[vwSetupHotkeyCur].command)
+        {
+            if(vwCommandEnum[ii] == 0)
+            {
+                ii = 0 ;
+                break ;
+            }
+            ii++ ;
+        }
+        SendDlgItemMessage(hDlg, IDC_HOTKEY_CMD, CB_SETCURSEL, ii, 0) ;
+        EnableWindow(GetDlgItem(hDlg,IDC_HOTKEY_DSK),(hotkeyList[vwSetupHotkeyCur].desk > 0)) ;
+        if(hotkeyList[vwSetupHotkeyCur].desk > 0)
+            SendDlgItemMessage(hDlg,IDC_HOTKEY_DSK,CB_SETCURSEL,hotkeyList[vwSetupHotkeyCur].desk - 1,0) ;
+        
+        vwSetupHotkeyGotKey = 1 ;
+        ii = 0 ;
+        if(hotkeyList[vwSetupHotkeyCur].modifier & vwHOTKEY_ALT)
+            ii |= HOTKEYF_ALT ;
+        if(hotkeyList[vwSetupHotkeyCur].modifier & vwHOTKEY_CONTROL)
+            ii |= HOTKEYF_CONTROL;
+        if(hotkeyList[vwSetupHotkeyCur].modifier & vwHOTKEY_SHIFT)
+            ii |= HOTKEYF_SHIFT;
+        if(hotkeyList[vwSetupHotkeyCur].modifier & vwHOTKEY_EXT)
+            ii |= HOTKEYF_EXT;
+        SendDlgItemMessage(hDlg,IDC_HOTKEY_ENT,HKM_SETHOTKEY,MAKEWORD(hotkeyList[vwSetupHotkeyCur].key,ii), 0);
+        SendDlgItemMessage(hDlg,IDC_HOTKEY_WIN,BM_SETCHECK,((hotkeyList[vwSetupHotkeyCur].modifier & vwHOTKEY_WIN) != 0), 0);
+    }
+    EnableWindow(GetDlgItem(hDlg,IDC_HOTKEY_MOD),FALSE) ;
+    
+}
+
+static void
+vwSetupHotKeysAddMod(HWND hDlg, int add)
+{
+    int ii, key, mod, cmd, dsk ;
+    
+    if(!add && (vwSetupHotkeyCur < 0))
+        return ;
+    if(((key=SendDlgItemMessage(hDlg,IDC_HOTKEY_ENT,HKM_GETHOTKEY,0,0)) > 0) &&
+       ((cmd=SendDlgItemMessage(hDlg,IDC_HOTKEY_CMD,CB_GETCURSEL,0,0)) != CB_ERR) &&
+       ((dsk=SendDlgItemMessage(hDlg,IDC_HOTKEY_DSK,CB_GETCURSEL,0,0)) != CB_ERR))
+    {
+        ii = HIBYTE(key) ;
+        mod = 0 ;
+        if(ii & HOTKEYF_ALT)
+            mod |= vwHOTKEY_ALT ;
+        if(ii & HOTKEYF_CONTROL)
+            mod |= vwHOTKEY_CONTROL;
+        if(ii & HOTKEYF_SHIFT)
+            mod |= vwHOTKEY_SHIFT;
+        if(ii & HOTKEYF_EXT)
+            mod |= vwHOTKEY_EXT;
+        if(SendDlgItemMessage(hDlg, IDC_HOTKEY_WIN, BM_GETCHECK, 0, 0) == BST_CHECKED)
+            mod |= vwHOTKEY_WIN ;
+        key = LOBYTE(key) ;
+        ii = hotkeyCount ;
+        while(--ii >= 0)
+        {
+            if((hotkeyList[ii].key == key) && (hotkeyList[ii].modifier == mod) &&
+               (add || (ii != vwSetupHotkeyCur)))
+            {
+                MessageBox(hWnd,_T("Another command is already bound to this hotkey."),vwVIRTUAWIN_NAME _T(" Error"), MB_ICONERROR);
+                return ;
+            }
+        }
+
+        if(add)
+        {
+            if(hotkeyCount == vwHOTKEY_MAX)
+            {
+                MessageBox(hWnd,_T("Maximum number of hotkeys has been reached.\n\nPlease report this to problem."),vwVIRTUAWIN_NAME _T(" Error"), MB_ICONERROR);
+                return ;
+            }
+            vwSetupHotkeyCur = hotkeyCount++ ;
+        }
+        hotkeyList[vwSetupHotkeyCur].key = key ;
+        hotkeyList[vwSetupHotkeyCur].modifier = mod ;
+        hotkeyList[vwSetupHotkeyCur].command = vwCommandEnum[cmd] ;
+        hotkeyList[vwSetupHotkeyCur].desk = (vwCommandFlag[cmd] & 0x01) ? dsk+1:0 ;
+        EnableWindow(GetDlgItem(hDlg,IDC_HOTKEY_ADD),FALSE) ;
+        EnableWindow(GetDlgItem(hDlg,IDC_HOTKEY_MOD),FALSE) ;
+        vwSetupHotKeysInitList(hDlg) ;
+        pageChangeMask |= 0x02 ;
+        SendMessage(GetParent(hDlg), PSM_CHANGED, (WPARAM)hDlg, 0L);
+    }
+}
+
+static void
+vwSetupHotKeysDelete(HWND hDlg)
+{
+    int ii ;
+    
+    if((ii=vwSetupHotkeyCur) < 0)
+        return ;
+    while(++ii < hotkeyCount)
+    {
+        hotkeyList[ii-1].key = hotkeyList[ii].key ;
+        hotkeyList[ii-1].modifier = hotkeyList[ii].modifier ;
+        hotkeyList[ii-1].command = hotkeyList[ii].command ;
+        hotkeyList[ii-1].desk = hotkeyList[ii].desk ;
+    }
+    hotkeyCount-- ;
+    vwSetupHotkeyCur = -1 ;
+    EnableWindow(GetDlgItem(hDlg,IDC_HOTKEY_ADD),FALSE) ;
+    EnableWindow(GetDlgItem(hDlg,IDC_HOTKEY_MOD),FALSE) ;
+    EnableWindow(GetDlgItem(hDlg,IDC_HOTKEY_DEL),FALSE) ;
+    vwSetupHotKeysInitList(hDlg) ;
+    pageChangeMask |= 0x02 ;
+    SendMessage(GetParent(hDlg), PSM_CHANGED, (WPARAM)hDlg, 0L);
+}
+
+BOOL APIENTRY setupHotkeys(HWND hDlg, UINT message, UINT wParam, LONG lParam)
+{
+    switch (message) {
+    case WM_INITDIALOG:
+        vwSetupHotKeysInit(hDlg,1) ;
+        return TRUE;
+        
+    case WM_NOTIFY:
+        switch (((NMHDR FAR *) lParam)->code) {
+        case PSN_SETACTIVE:
+            // Initialize the controls.
+            break;
+        case PSN_APPLY:
+            vwSetupApply(hDlg,0x02) ;
+            SetWindowLong(hDlg, DWL_MSGRESULT, TRUE);
+            break;
+        case PSN_KILLACTIVE:
+            SetWindowLong(hDlg, DWL_MSGRESULT, FALSE);
+            return 1;
+        case PSN_RESET:
+            // Reset to the original values.
+            readConfig();
+            SetWindowLong(hDlg, DWL_MSGRESULT, FALSE);
+            break;
+        case PSN_HELP:
+            showHelp(hDlg,6002);
+            break;
+        }
+        break;
+        
+    case WM_COMMAND:
+        switch (LOWORD(wParam))
+        {
+        case IDC_HOTKEY_LIST:
+            if(HIWORD(wParam) == LBN_SELCHANGE)
+                vwSetupHotKeysSetItem(hDlg) ;
+            break ;
+        
+        case IDC_HOTKEY_CMD:
+            if(HIWORD(wParam) == CBN_SELCHANGE)
+                vwSetupHotKeysSetCommand(hDlg) ;
+            break;
+        
+        case IDC_HOTKEY_DSK:
+            if(HIWORD(wParam) == CBN_SELCHANGE)
+                vwSetupHotKeysSetDesk(hDlg) ;
+            break;
+        
+        case IDC_HOTKEY_ENT:
+            if(HIWORD(wParam) == EN_CHANGE)
+                vwSetupHotKeysSetKey(hDlg) ;
+            break;
+        
+        case IDC_HOTKEY_WIN:
+            if(vwSetupHotkeyGotKey)
+            {
+                EnableWindow(GetDlgItem(hDlg,IDC_HOTKEY_ADD),TRUE) ;
+                if(vwSetupHotkeyCur >= 0)
+                    EnableWindow(GetDlgItem(hDlg,IDC_HOTKEY_MOD),TRUE) ;
+            }
+            break;
+        
+        case IDC_HOTKEY_ADD:
+            vwSetupHotKeysAddMod(hDlg,1) ;
+            break;
+        case IDC_HOTKEY_MOD:
+            vwSetupHotKeysAddMod(hDlg,0) ;
+            break;
+        case IDC_HOTKEY_DEL:
+            vwSetupHotKeysDelete(hDlg) ;
+            break;
         }
         break;
     }
@@ -345,24 +682,24 @@ BOOL APIENTRY setupMouse(HWND hDlg, UINT message, UINT wParam, LONG lParam)
         SetDlgItemInt(hDlg, IDC_TIME, mouseDelay * 25, FALSE);
         SendDlgItemMessage(hDlg, IDC_SLIDER, TBM_SETRANGE, TRUE, MAKELONG(1, 80));
         SendDlgItemMessage(hDlg, IDC_SLIDER, TBM_SETPOS, TRUE, mouseDelay >> 1);
-        SetDlgItemInt(hDlg, IDC_JUMP, warpLength, TRUE);
+        SetDlgItemInt(hDlg, IDC_JUMP, mouseJumpLength, TRUE);
         
         if(mouseEnable & 1)
             SendDlgItemMessage(hDlg, IDC_ENABLEMOUSE, BM_SETCHECK, 1,0);
-        if(useMouseKey)
+        if(mouseModifierUsed)
             SendDlgItemMessage(hDlg, IDC_KEYCONTROL, BM_SETCHECK, 1,0);
-        if(mouseModAlt)
+        if(mouseModifier & vwHOTKEY_ALT)
             SendDlgItemMessage(hDlg, IDC_MALT, BM_SETCHECK, 1,0);
-        if(mouseModShift)
-            SendDlgItemMessage(hDlg, IDC_MSHIFT, BM_SETCHECK, 1,0);
-        if(mouseModCtrl)
+        if(mouseModifier & vwHOTKEY_CONTROL)
             SendDlgItemMessage(hDlg, IDC_MCTRL, BM_SETCHECK, 1,0);
-        if(knockMode & 1) 
+        if(mouseModifier & vwHOTKEY_SHIFT)
+            SendDlgItemMessage(hDlg, IDC_MSHIFT, BM_SETCHECK, 1,0);
+        if(mouseKnock & 1) 
             SendDlgItemMessage(hDlg, IDC_KNOCKMODE1, BM_SETCHECK, 1,0);
-        if(knockMode & 2) 
+        if(mouseKnock & 2) 
             SendDlgItemMessage(hDlg, IDC_KNOCKMODE2, BM_SETCHECK, 1,0);
-        if(!noMouseWrap)
-            SendDlgItemMessage(hDlg, IDC_MOUSEWRAP, BM_SETCHECK, 1,0);
+        if(mouseWarp)
+            SendDlgItemMessage(hDlg, IDC_MOUSEWARP, BM_SETCHECK, 1,0);
         if(mouseEnable & 8)
             SendDlgItemMessage(hDlg, IDC_MOUSEMDCHNG, BM_SETCHECK, 1,0);
         if(mouseEnable & 4)
@@ -387,35 +724,29 @@ BOOL APIENTRY setupMouse(HWND hDlg, UINT message, UINT wParam, LONG lParam)
             if(SendDlgItemMessage(hDlg, IDC_MOUSEMDCHNG, BM_GETCHECK, 0, 0) == BST_CHECKED)
                 mouseEnable |= 8 ;
             GetDlgItemText(hDlg, IDC_JUMP, buff, 4);
-            warpLength = _ttoi(buff);
+            mouseJumpLength = _ttoi(buff);
             mouseDelay = (SendDlgItemMessage(hDlg, IDC_SLIDER, TBM_GETPOS, 0, 0)) << 1 ;
-            noMouseWrap = (SendDlgItemMessage(hDlg, IDC_MOUSEWRAP, BM_GETCHECK, 0, 0) != BST_CHECKED) ;
-            knockMode = (SendDlgItemMessage(hDlg, IDC_KNOCKMODE1, BM_GETCHECK, 0, 0) == BST_CHECKED) ;
-            if(knockMode && (warpLength < 24))
+            mouseWarp = (SendDlgItemMessage(hDlg, IDC_MOUSEWARP, BM_GETCHECK, 0, 0) == BST_CHECKED) ;
+            mouseKnock = (SendDlgItemMessage(hDlg, IDC_KNOCKMODE1, BM_GETCHECK, 0, 0) == BST_CHECKED) ;
+            if(mouseKnock && (mouseJumpLength < 24))
             {
-                knockMode = 0 ;
+                mouseKnock = 0 ;
                 SendDlgItemMessage(hDlg, IDC_KNOCKMODE1, BM_SETCHECK, 0,0);
                 MessageBox(hDlg,_T("Mouse jump length is too small to support knocking, must be 24 or greater."),vwVIRTUAWIN_NAME _T(" Error"), MB_ICONERROR); 
             }
             if(SendDlgItemMessage(hDlg, IDC_KNOCKMODE2, BM_GETCHECK, 0, 0) == BST_CHECKED)
-                knockMode |= 2 ;
+                mouseKnock |= 2 ;
                 
-            if(SendDlgItemMessage(hDlg, IDC_KEYCONTROL, BM_GETCHECK, 0, 0) == BST_CHECKED)
-            {
-                useMouseKey = TRUE;
-                mouseModShift = FALSE;
-                mouseModAlt = FALSE;
-                mouseModCtrl = FALSE;
-                if(SendDlgItemMessage(hDlg, IDC_MALT, BM_GETCHECK, 0, 0) == BST_CHECKED)
-                    mouseModAlt = TRUE;
-                if(SendDlgItemMessage(hDlg, IDC_MSHIFT, BM_GETCHECK, 0, 0) == BST_CHECKED)
-                    mouseModShift = TRUE;
-                if(SendDlgItemMessage(hDlg, IDC_MCTRL, BM_GETCHECK, 0, 0) == BST_CHECKED)
-                    mouseModCtrl = TRUE;
-            }
-            else
-                useMouseKey = FALSE;
-            vwSetupApply(hDlg,0x02) ;
+            mouseModifierUsed = (SendDlgItemMessage(hDlg, IDC_KEYCONTROL, BM_GETCHECK, 0, 0) == BST_CHECKED) ;
+            mouseModifier = 0 ;
+            if(SendDlgItemMessage(hDlg, IDC_MALT, BM_GETCHECK, 0, 0) == BST_CHECKED)
+                mouseModifier |= vwHOTKEY_ALT ;
+            if(SendDlgItemMessage(hDlg, IDC_MCTRL, BM_GETCHECK, 0, 0) == BST_CHECKED)
+                mouseModifier |= vwHOTKEY_CONTROL ;
+            if(SendDlgItemMessage(hDlg, IDC_MSHIFT, BM_GETCHECK, 0, 0) == BST_CHECKED)
+                mouseModifier |= vwHOTKEY_SHIFT ;
+            
+            vwSetupApply(hDlg,0x04) ;
             SetWindowLong(hDlg, DWL_MSGRESULT, TRUE);
             break;
         case PSN_KILLACTIVE:
@@ -427,7 +758,7 @@ BOOL APIENTRY setupMouse(HWND hDlg, UINT message, UINT wParam, LONG lParam)
             SetWindowLong(hDlg, DWL_MSGRESULT, FALSE);
             break;
         case PSN_HELP:
-            showHelp(hDlg,6002);
+            showHelp(hDlg,6003);
             break;
         }
         break;
@@ -437,16 +768,16 @@ BOOL APIENTRY setupMouse(HWND hDlg, UINT message, UINT wParam, LONG lParam)
            LOWORD(wParam) == IDC_MALT       || LOWORD(wParam) == IDC_KEYCONTROL  ||
            LOWORD(wParam) == IDC_MCTRL      || LOWORD(wParam) == IDC_KNOCKMODE1  ||
            LOWORD(wParam) == IDC_MSHIFT     || LOWORD(wParam) == IDC_KNOCKMODE2  ||
-           LOWORD(wParam) == IDC_MOUSEWRAP  || LOWORD(wParam) == IDC_MOUSEWLIST  ||
+           LOWORD(wParam) == IDC_MOUSEWARP  || LOWORD(wParam) == IDC_MOUSEWLIST  ||
            LOWORD(wParam) == IDC_MOUSEWMENU || LOWORD(wParam) == IDC_MOUSEMDCHNG )
         {
-            pageChangeMask |= 0x02 ;
+            pageChangeMask |= 0x04 ;
             SendMessage(GetParent(hDlg), PSM_CHANGED, (WPARAM)hDlg, 0L); // Enable apply
         }
         break;
         
     case WM_HSCROLL:
-        pageChangeMask |= 0x02 ;
+        pageChangeMask |= 0x04 ;
         SendMessage(GetParent(hDlg), PSM_CHANGED, (WPARAM)hDlg, 0L);
         SetDlgItemInt(hDlg, IDC_TIME, (SendDlgItemMessage(hDlg, IDC_SLIDER, TBM_GETPOS, 0, 0) * 50), TRUE);
         break;
@@ -463,7 +794,7 @@ static void setupModulesList(HWND hDlg)
     TCHAR tmpName[128];
     
     SendDlgItemMessage(hDlg, IDC_MODLIST, LB_RESETCONTENT, 0, 0);
-    for(index = 0; index < nOfModules; index++)
+    for(index = 0; index < moduleCount; index++)
     {
         _tcsncpy(tmpName,moduleList[index].description,100) ;
         tmpName[100] = '\0' ;
@@ -496,10 +827,11 @@ BOOL APIENTRY setupModules(HWND hDlg, UINT message, UINT wParam, LONG lParam)
             return 1;
         case PSN_RESET:
             // Reset to the original values.
+            readConfig();
             SetWindowLong(hDlg, DWL_MSGRESULT, FALSE);
             break;
         case PSN_HELP:
-            showHelp(hDlg,6003);
+            showHelp(hDlg,6004);
             break;
         }
         break;
@@ -519,7 +851,7 @@ BOOL APIENTRY setupModules(HWND hDlg, UINT message, UINT wParam, LONG lParam)
                 moduleList[index].Handle = NULL;
                 moduleList[index].description[0] = '\0';
             }
-            nOfModules = 0;
+            moduleCount = 0;
             /* sleep for a second to allow the modules to exit cleanly */
             Sleep(1000) ;
             curDisabledMod = loadDisabledModules(disabledModules);
@@ -542,7 +874,7 @@ BOOL APIENTRY setupModules(HWND hDlg, UINT message, UINT wParam, LONG lParam)
                                vwVIRTUAWIN_NAME _T(" Note"), MB_ICONINFORMATION);
                     moduleList[curSel].Disabled = FALSE;
                 }
-                saveDisabledList(nOfModules, moduleList);
+                saveDisabledList(moduleCount, moduleList);
                 setupModulesList(hDlg) ;
             }
         }
@@ -553,151 +885,11 @@ BOOL APIENTRY setupModules(HWND hDlg, UINT message, UINT wParam, LONG lParam)
 }
 
 /*************************************************
- * The "Misc." tab callback
- */
-BOOL APIENTRY setupMisc(HWND hDlg, UINT message, UINT wParam, LONG lParam)
-{
-    WORD wRawHotKey;
-    
-    switch (message) {
-    case WM_INITDIALOG:
-        if(saveSticky)
-            SendDlgItemMessage(hDlg, IDC_STICKYSAVE, BM_SETCHECK, 1,0);
-        if(accessMenu) 
-            SendDlgItemMessage(hDlg, IDC_MENUACCESS, BM_SETCHECK, 1,0);
-        if(assignMenu)
-            SendDlgItemMessage(hDlg, IDC_MENUASSIGN, BM_SETCHECK, 1,0);
-        if(showMenu)
-            SendDlgItemMessage(hDlg, IDC_MENUSHOW, BM_SETCHECK, 1,0);
-        if(stickyMenu) 
-            SendDlgItemMessage(hDlg, IDC_MENUSTICKY, BM_SETCHECK, 1,0);
-        if(compactMenu)
-            SendDlgItemMessage(hDlg, IDC_COMPACTMENU, BM_SETCHECK, 1,0);
-        if(useDeskAssignment)
-            SendDlgItemMessage(hDlg, IDC_USEASSIGN, BM_SETCHECK, 1,0);
-        if(saveLayoutOnExit)
-            SendDlgItemMessage(hDlg, IDC_SAVEEXITSTATE, BM_SETCHECK, 1,0);
-        if(assignOnlyFirst)
-            SendDlgItemMessage(hDlg, IDC_FIRSTONLY, BM_SETCHECK, 1,0);
-        if(assignImmediately)
-            SendDlgItemMessage(hDlg, IDC_ASSIGNWINNOW, BM_SETCHECK, 1,0);
-        if(hotkeyWListEn)
-            SendDlgItemMessage(hDlg, IDC_HOTWLISTEN, BM_SETCHECK, 1, 0);
-        SendDlgItemMessage(hDlg, IDC_HOTWLIST, HKM_SETHOTKEY, MAKEWORD(hotkeyWList, hotkeyWListMod), 0);
-        if(hotkeyWListWin)
-            SendDlgItemMessage(hDlg, IDC_HOTWLISTW, BM_SETCHECK, 1, 0);
-        if(hotkeyWMenuEn)
-            SendDlgItemMessage(hDlg, IDC_HOTWMENUEN, BM_SETCHECK, 1, 0);
-        SendDlgItemMessage(hDlg, IDC_HOTWMENU, HKM_SETHOTKEY, MAKEWORD(hotkeyWMenu, hotkeyWMenuMod), 0);
-        if(hotkeyWMenuWin)
-            SendDlgItemMessage(hDlg, IDC_HOTWMENUW, BM_SETCHECK, 1, 0);
-        if(hotkeyStickyEn)
-            SendDlgItemMessage(hDlg, IDC_HOTSTICKYEN, BM_SETCHECK, 1, 0);
-        SendDlgItemMessage(hDlg, IDC_HOTSTICKY, HKM_SETHOTKEY, MAKEWORD(hotkeySticky, hotkeyStickyMod), 0);
-        if(hotkeyStickyWin)
-            SendDlgItemMessage(hDlg, IDC_HOTSTICKYW, BM_SETCHECK, 1, 0);
-        if(hotkeyDismissEn)
-            SendDlgItemMessage(hDlg, IDC_HOTDISMISSEN, BM_SETCHECK, 1, 0);
-        SendDlgItemMessage(hDlg, IDC_HOTDISMISS, HKM_SETHOTKEY, MAKEWORD(hotkeyDismiss, hotkeyDismissMod), 0);
-        if(hotkeyDismissWin)
-            SendDlgItemMessage(hDlg, IDC_HOTDISMISSW, BM_SETCHECK, 1, 0);
-        return TRUE;
-        
-    case WM_NOTIFY:
-        switch (((NMHDR FAR *) lParam)->code) {
-        case PSN_SETACTIVE:
-            // Initialize the controls.
-            break;
-        case PSN_APPLY:
-            saveSticky = (SendDlgItemMessage(hDlg, IDC_STICKYSAVE, BM_GETCHECK, 0, 0) == BST_CHECKED) ;
-            accessMenu = (SendDlgItemMessage(hDlg, IDC_MENUACCESS, BM_GETCHECK, 0, 0) == BST_CHECKED) ;
-            assignMenu = (SendDlgItemMessage(hDlg, IDC_MENUASSIGN, BM_GETCHECK, 0, 0) == BST_CHECKED) ;
-            showMenu   = (SendDlgItemMessage(hDlg, IDC_MENUSHOW,   BM_GETCHECK, 0, 0) == BST_CHECKED) ;
-            stickyMenu = (SendDlgItemMessage(hDlg, IDC_MENUSTICKY, BM_GETCHECK, 0, 0) == BST_CHECKED) ;
-            compactMenu = (SendDlgItemMessage(hDlg, IDC_COMPACTMENU, BM_GETCHECK, 0, 0) == BST_CHECKED) ;
-            useDeskAssignment = (SendDlgItemMessage(hDlg, IDC_USEASSIGN, BM_GETCHECK, 0, 0) == BST_CHECKED) ;
-            assignOnlyFirst = (SendDlgItemMessage(hDlg, IDC_FIRSTONLY, BM_GETCHECK, 0, 0) == BST_CHECKED) ;
-            assignImmediately = (SendDlgItemMessage(hDlg, IDC_ASSIGNWINNOW, BM_GETCHECK, 0, 0) == BST_CHECKED) ;
-            saveLayoutOnExit = (SendDlgItemMessage(hDlg, IDC_SAVEEXITSTATE, BM_GETCHECK, 0, 0) == BST_CHECKED) ;
-            hotkeyWListEn = (SendDlgItemMessage(hDlg, IDC_HOTWLISTEN, BM_GETCHECK, 0, 0) == BST_CHECKED) ;
-            wRawHotKey = (WORD)SendDlgItemMessage(hDlg, IDC_HOTWLIST, HKM_GETHOTKEY, 0, 0);
-            hotkeyWList = LOBYTE(wRawHotKey);
-            hotkeyWListMod = HIBYTE(wRawHotKey);
-            if(SendDlgItemMessage(hDlg, IDC_HOTWLISTW, BM_GETCHECK, 0, 0) == BST_CHECKED)
-                hotkeyWListWin = MOD_WIN;
-            else
-                hotkeyWListWin = FALSE;
-            hotkeyWMenuEn = (SendDlgItemMessage(hDlg, IDC_HOTWMENUEN, BM_GETCHECK, 0, 0) == BST_CHECKED) ;
-            wRawHotKey = (WORD)SendDlgItemMessage(hDlg, IDC_HOTWMENU, HKM_GETHOTKEY, 0, 0);
-            hotkeyWMenu = LOBYTE(wRawHotKey);
-            hotkeyWMenuMod = HIBYTE(wRawHotKey);
-            if(SendDlgItemMessage(hDlg, IDC_HOTWMENUW, BM_GETCHECK, 0, 0) == BST_CHECKED)
-                hotkeyWMenuWin = MOD_WIN;
-            else
-                hotkeyWMenuWin = FALSE;
-            hotkeyStickyEn = (SendDlgItemMessage(hDlg, IDC_HOTSTICKYEN, BM_GETCHECK, 0, 0) == BST_CHECKED) ;
-            wRawHotKey = (WORD)SendDlgItemMessage(hDlg, IDC_HOTSTICKY, HKM_GETHOTKEY, 0, 0);
-            hotkeySticky = LOBYTE(wRawHotKey);
-            hotkeyStickyMod = HIBYTE(wRawHotKey);
-            if(SendDlgItemMessage(hDlg, IDC_HOTSTICKYW, BM_GETCHECK, 0, 0) == BST_CHECKED)
-                hotkeyStickyWin = MOD_WIN;
-            else
-                hotkeyStickyWin = FALSE;
-            hotkeyDismissEn = (SendDlgItemMessage(hDlg, IDC_HOTDISMISSEN, BM_GETCHECK, 0, 0) == BST_CHECKED) ;
-            wRawHotKey = (WORD)SendDlgItemMessage(hDlg, IDC_HOTDISMISS, HKM_GETHOTKEY, 0, 0);
-            hotkeyDismiss = LOBYTE(wRawHotKey);
-            hotkeyDismissMod = HIBYTE(wRawHotKey);
-            if(SendDlgItemMessage(hDlg, IDC_HOTDISMISSW, BM_GETCHECK, 0, 0) == BST_CHECKED)
-                hotkeyDismissWin = MOD_WIN;
-            else
-                hotkeyDismissWin = FALSE;
-            
-            vwSetupApply(hDlg,0x04) ;
-            SetWindowLong(hDlg, DWL_MSGRESULT, TRUE);
-            break;
-        case PSN_KILLACTIVE:
-            SetWindowLong(hDlg, DWL_MSGRESULT, FALSE);
-            return 1;
-        case PSN_RESET:
-            SetWindowLong(hDlg, DWL_MSGRESULT, FALSE);
-            break;
-        case PSN_HELP:
-            showHelp(hDlg,6004);
-            break;
-        }
-        break;
-        
-    case WM_COMMAND:
-        if( LOWORD(wParam) == IDC_STICKYSAVE    || LOWORD(wParam) == IDC_USEASSIGN ||
-            LOWORD(wParam) == IDC_MENUSTICKY    || LOWORD(wParam) == IDC_MENUACCESS ||
-            LOWORD(wParam) == IDC_MENUASSIGN    || LOWORD(wParam) == IDC_MENUSHOW || 
-            LOWORD(wParam) == IDC_COMPACTMENU   || LOWORD(wParam) == IDC_ASSIGNWINNOW ||
-            LOWORD(wParam) == IDC_FIRSTONLY     || LOWORD(wParam) == IDC_SAVEEXITSTATE ||
-            LOWORD(wParam) == IDC_HOTWLISTEN    || LOWORD(wParam) == IDC_HOTWLISTW || 
-            LOWORD(wParam) == IDC_HOTWLIST      || LOWORD(wParam) == IDC_HOTSTICKYEN  ||
-            LOWORD(wParam) == IDC_HOTSTICKY     || LOWORD(wParam) == IDC_HOTSTICKYW ||
-            LOWORD(wParam) == IDC_HOTDISMISSEN  || LOWORD(wParam) == IDC_HOTDISMISS ||
-            LOWORD(wParam) == IDC_HOTDISMISSW   || LOWORD(wParam) == IDC_HOTWMENUEN ||
-            LOWORD(wParam) == IDC_HOTWMENUW     || LOWORD(wParam) == IDC_HOTWMENU)
-        {
-            pageChangeMask |= 0x04 ;
-            SendMessage(GetParent(hDlg), PSM_CHANGED, (WPARAM)hDlg, 0L);
-        }
-        else if (LOWORD(wParam) == IDC_SAVENOW)
-            saveAssignedList(nWin,winList) ;
-        else if(LOWORD(wParam) == IDC_SAVESTICKY)
-            saveStickyWindows(nWin, winList);
-        break;
-    }
-    return (FALSE);
-}
-
-/*************************************************
  * The "Expert" tab callback
  */
 BOOL APIENTRY setupExpert(HWND hDlg, UINT message, UINT wParam, LONG lParam)
 {
-    int newLogFlag ;
+    int oldLogFlag ;
     
     switch (message)
     {
@@ -706,11 +898,6 @@ BOOL APIENTRY setupExpert(HWND hDlg, UINT message, UINT wParam, LONG lParam)
         SendDlgItemMessage(hDlg, IDC_PRESORDER, CB_ADDSTRING, 0, (LONG) _T("Z order"));
         SendDlgItemMessage(hDlg, IDC_PRESORDER, CB_ADDSTRING, 0, (LONG) _T("Taskbar & Z order"));
         SendDlgItemMessage(hDlg, IDC_PRESORDER, CB_SETCURSEL, preserveZOrder, 0) ;
-        SendDlgItemMessage(hDlg, IDC_HIDWINACT, CB_ADDSTRING, 0, (LONG) _T("Ignore the event"));
-        SendDlgItemMessage(hDlg, IDC_HIDWINACT, CB_ADDSTRING, 0, (LONG) _T("Move window to current desktop"));
-        SendDlgItemMessage(hDlg, IDC_HIDWINACT, CB_ADDSTRING, 0, (LONG) _T("Show window on current desktop"));
-        SendDlgItemMessage(hDlg, IDC_HIDWINACT, CB_ADDSTRING, 0, (LONG) _T("Change to window's desktop"));
-        SendDlgItemMessage(hDlg, IDC_HIDWINACT, CB_SETCURSEL, hiddenWindowAct, 0) ;
         if(minSwitch)
             SendDlgItemMessage(hDlg, IDC_MINIMIZED, BM_SETCHECK, 1,0);
         if(!releaseFocus)
@@ -721,12 +908,12 @@ BOOL APIENTRY setupExpert(HWND hDlg, UINT message, UINT wParam, LONG lParam)
             SendDlgItemMessage(hDlg, IDC_INVERTY, BM_SETCHECK, 1,0);
         if(!displayTaskbarIcon)
             SendDlgItemMessage(hDlg, IDC_DISPLAYICON, BM_SETCHECK, 1,0);
+        if(useDeskAssignment)
+            SendDlgItemMessage(hDlg, IDC_USEASSIGN, BM_SETCHECK, 1,0);
         if(!noTaskbarCheck)
             SendDlgItemMessage(hDlg, IDC_TASKBARDETECT, BM_SETCHECK, 1,0);
         if(trickyWindows)
             SendDlgItemMessage(hDlg, IDC_TRICKYSUPPORT, BM_SETCHECK, 1,0);
-        if(permanentSticky)
-            SendDlgItemMessage(hDlg, IDC_PERMSTICKY, BM_SETCHECK, 1,0);
         if(vwLogFlag)
             SendDlgItemMessage(hDlg, IDC_DEBUGLOGGING, BM_SETCHECK, 1,0);
         return TRUE;
@@ -738,15 +925,16 @@ BOOL APIENTRY setupExpert(HWND hDlg, UINT message, UINT wParam, LONG lParam)
             // Initialize the controls.
             break;
         case PSN_APPLY:
-            preserveZOrder = SendDlgItemMessage(hDlg, IDC_PRESORDER, CB_GETCURSEL, 0, 0) ;
-            hiddenWindowAct = SendDlgItemMessage(hDlg, IDC_HIDWINACT, CB_GETCURSEL, 0, 0) ;
+            oldLogFlag = vwLogFlag ;
+            preserveZOrder = (vwUByte) SendDlgItemMessage(hDlg, IDC_PRESORDER, CB_GETCURSEL, 0, 0) ;
             minSwitch = (SendDlgItemMessage(hDlg, IDC_MINIMIZED, BM_GETCHECK, 0, 0) == BST_CHECKED) ;
             releaseFocus = (SendDlgItemMessage(hDlg, IDC_FOCUS, BM_GETCHECK, 0, 0) != BST_CHECKED) ;
             refreshOnWarp = (SendDlgItemMessage(hDlg, IDC_REFRESH, BM_GETCHECK, 0, 0) == BST_CHECKED) ;
             invertY = (SendDlgItemMessage(hDlg, IDC_INVERTY, BM_GETCHECK, 0, 0) == BST_CHECKED) ;
+            useDeskAssignment = (SendDlgItemMessage(hDlg, IDC_USEASSIGN, BM_GETCHECK, 0, 0) == BST_CHECKED) ;
             noTaskbarCheck = (SendDlgItemMessage(hDlg, IDC_TASKBARDETECT, BM_GETCHECK, 0, 0) != BST_CHECKED) ;
             trickyWindows = (SendDlgItemMessage(hDlg, IDC_TRICKYSUPPORT, BM_GETCHECK, 0, 0) == BST_CHECKED) ;
-            permanentSticky = (SendDlgItemMessage(hDlg, IDC_PERMSTICKY, BM_GETCHECK, 0, 0) == BST_CHECKED) ;
+            vwLogFlag = (SendDlgItemMessage(hDlg,IDC_DEBUGLOGGING,BM_GETCHECK, 0, 0) == BST_CHECKED) ;
             if(SendDlgItemMessage(hDlg, IDC_DISPLAYICON, BM_GETCHECK, 0, 0) == BST_CHECKED)
             {
                 displayTaskbarIcon = FALSE;
@@ -758,11 +946,9 @@ BOOL APIENTRY setupExpert(HWND hDlg, UINT message, UINT wParam, LONG lParam)
                 PostMessage(hWnd, VW_SHOWICON, 0, 0);
             }
             vwSetupApply(hDlg,0x08) ;
-            newLogFlag = (SendDlgItemMessage(hDlg,IDC_DEBUGLOGGING,BM_GETCHECK, 0, 0) == BST_CHECKED) ;
-            if(vwLogFlag != newLogFlag)
+            if(vwLogFlag != oldLogFlag)
             {
-                vwLogFlag = newLogFlag ;
-                MessageBox(hDlg, vwVIRTUAWIN_NAME _T(" must be restarted for the debug logging change to take effect."),
+                MessageBox(hDlg, vwVIRTUAWIN_NAME _T(" must be restarted for the event logging change to take effect."),
                            vwVIRTUAWIN_NAME _T(" Note"), MB_ICONINFORMATION);
             }
             SetWindowLong(hDlg, DWL_MSGRESULT, TRUE);
@@ -771,6 +957,8 @@ BOOL APIENTRY setupExpert(HWND hDlg, UINT message, UINT wParam, LONG lParam)
             SetWindowLong(hDlg, DWL_MSGRESULT, FALSE);
             return 1;
         case PSN_RESET:
+            // Reset to the original values.
+            readConfig();
             SetWindowLong(hDlg, DWL_MSGRESULT, FALSE);
             break;
         case PSN_HELP:
@@ -813,11 +1001,10 @@ BOOL APIENTRY setupExpert(HWND hDlg, UINT message, UINT wParam, LONG lParam)
         }
         else if(LOWORD(wParam) == IDC_FOCUS      || LOWORD(wParam) == IDC_TRICKYSUPPORT ||
                 LOWORD(wParam) == IDC_MINIMIZED  || LOWORD(wParam) == IDC_DEBUGLOGGING ||
-                LOWORD(wParam) == IDC_PERMSTICKY || LOWORD(wParam) == IDC_DISPLAYICON ||
                 LOWORD(wParam) == IDC_INVERTY    || LOWORD(wParam) == IDC_TASKBARDETECT ||
-                LOWORD(wParam) == IDC_REFRESH    || 
-                (LOWORD(wParam) == IDC_PRESORDER && HIWORD(wParam) == LBN_SELCHANGE) ||
-                (LOWORD(wParam) == IDC_HIDWINACT && HIWORD(wParam) == LBN_SELCHANGE) )
+                LOWORD(wParam) == IDC_REFRESH    || LOWORD(wParam) == IDC_DISPLAYICON ||
+                LOWORD(wParam) == IDC_USEASSIGN  ||
+                (LOWORD(wParam) == IDC_PRESORDER && HIWORD(wParam) == CBN_SELCHANGE) )
         {
             pageChangeMask |= 0x08 ;
             SendMessage(GetParent(hDlg), PSM_CHANGED, (WPARAM)hDlg, 0L);
@@ -923,28 +1110,28 @@ void createPropertySheet(HINSTANCE theHinst, HWND theHwndOwner)
     psp[1].dwSize = sizeof(PROPSHEETPAGE);
     psp[1].dwFlags = PSP_USETITLE|PSP_HASHELP;
     psp[1].hInstance = theHinst;
-    psp[1].pszTemplate = MAKEINTRESOURCE(IDD_PROPPAGE_MOUSE);
+    psp[1].pszTemplate = MAKEINTRESOURCE(IDD_PROPPAGE_HOTKEYS);
     psp[1].pszIcon = NULL;
-    psp[1].pfnDlgProc = setupMouse;
-    psp[1].pszTitle = _T("Mouse");
+    psp[1].pfnDlgProc = setupHotkeys;
+    psp[1].pszTitle = _T("Hotkeys");
     psp[1].lParam = 0;
     
     psp[2].dwSize = sizeof(PROPSHEETPAGE);
     psp[2].dwFlags = PSP_USETITLE|PSP_HASHELP;
     psp[2].hInstance = theHinst;
-    psp[2].pszTemplate = MAKEINTRESOURCE(IDD_PROPPAGE_MODULES);
+    psp[2].pszTemplate = MAKEINTRESOURCE(IDD_PROPPAGE_MOUSE);
     psp[2].pszIcon = NULL;
-    psp[2].pfnDlgProc = setupModules;
-    psp[2].pszTitle = _T("Modules");
+    psp[2].pfnDlgProc = setupMouse;
+    psp[2].pszTitle = _T("Mouse");
     psp[2].lParam = 0;
     
     psp[3].dwSize = sizeof(PROPSHEETPAGE);
     psp[3].dwFlags = PSP_USETITLE|PSP_HASHELP;
     psp[3].hInstance = theHinst;
-    psp[3].pszTemplate = MAKEINTRESOURCE(IDD_PROPPAGE_MISC);
+    psp[3].pszTemplate = MAKEINTRESOURCE(IDD_PROPPAGE_MODULES);
     psp[3].pszIcon = NULL;
-    psp[3].pfnDlgProc = setupMisc;
-    psp[3].pszTitle = _T("Misc.");
+    psp[3].pfnDlgProc = setupModules;
+    psp[3].pszTitle = _T("Modules");
     psp[3].lParam = 0;
     
     psp[4].dwSize = sizeof(PROPSHEETPAGE);
