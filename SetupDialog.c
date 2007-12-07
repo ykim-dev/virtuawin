@@ -75,8 +75,8 @@ vwSetupApply(HWND hDlg, int curPageMask)
         {
             // All pages have now got any changes from the GUI, save them and apply
             writeConfig();
-            getWorkArea();
             vwHotkeyUnregister();
+            vwIconLoad();              
             vwHotkeyRegister();
             enableMouse(mouseEnable);
             // Tell modules about the config change
@@ -84,6 +84,18 @@ vwSetupApply(HWND hDlg, int curPageMask)
             pageChangeMask = 0 ;
             pageApplyMask = 0 ;
         }
+    }
+}
+
+static void
+vwSetupCancel(void)
+{
+    if(pageChangeMask)
+    {
+        // Reset to the original values.
+        readConfig();
+        pageChangeMask = 0 ;
+        pageApplyMask = 0 ;
     }
 }
 
@@ -219,7 +231,6 @@ BOOL APIENTRY setupGeneral(HWND hDlg, UINT message, UINT wParam, LONG lParam)
             nDesksY = tmpDesksY;
             nDesksX = tmpDesksX;
             nDesks = maxDesk ;
-            vwIconReload();              
             
             deskWrap = (SendDlgItemMessage(hDlg, IDC_DESKCYCLE, BM_GETCHECK, 0, 0) == BST_CHECKED) ;
             hiddenWindowAct = (vwUByte) SendDlgItemMessage(hDlg, IDC_HIDWINACT, CB_GETCURSEL, 0, 0) ;
@@ -243,8 +254,7 @@ BOOL APIENTRY setupGeneral(HWND hDlg, UINT message, UINT wParam, LONG lParam)
             SetWindowLong(hDlg, DWL_MSGRESULT, FALSE);
             return 1;
         case PSN_RESET: // Cancel
-            // Reset to the original values.
-            readConfig();
+            vwSetupCancel() ;
             SetWindowLong(hDlg, DWL_MSGRESULT, FALSE);
             break;
         case PSN_HELP:
@@ -612,8 +622,7 @@ BOOL APIENTRY setupHotkeys(HWND hDlg, UINT message, UINT wParam, LONG lParam)
             SetWindowLong(hDlg, DWL_MSGRESULT, FALSE);
             return 1;
         case PSN_RESET:
-            // Reset to the original values.
-            readConfig();
+            vwSetupCancel() ;
             SetWindowLong(hDlg, DWL_MSGRESULT, FALSE);
             break;
         case PSN_HELP:
@@ -753,8 +762,7 @@ BOOL APIENTRY setupMouse(HWND hDlg, UINT message, UINT wParam, LONG lParam)
             SetWindowLong(hDlg, DWL_MSGRESULT, FALSE);
             return 1;
         case PSN_RESET:
-            // Reset to the original values.
-            readConfig();
+            vwSetupCancel() ;
             SetWindowLong(hDlg, DWL_MSGRESULT, FALSE);
             break;
         case PSN_HELP:
@@ -826,8 +834,6 @@ BOOL APIENTRY setupModules(HWND hDlg, UINT message, UINT wParam, LONG lParam)
             SetWindowLong(hDlg, DWL_MSGRESULT, FALSE);
             return 1;
         case PSN_RESET:
-            // Reset to the original values.
-            readConfig();
             SetWindowLong(hDlg, DWL_MSGRESULT, FALSE);
             break;
         case PSN_HELP:
@@ -935,16 +941,8 @@ BOOL APIENTRY setupExpert(HWND hDlg, UINT message, UINT wParam, LONG lParam)
             noTaskbarCheck = (SendDlgItemMessage(hDlg, IDC_TASKBARDETECT, BM_GETCHECK, 0, 0) != BST_CHECKED) ;
             trickyWindows = (SendDlgItemMessage(hDlg, IDC_TRICKYSUPPORT, BM_GETCHECK, 0, 0) == BST_CHECKED) ;
             vwLogFlag = (SendDlgItemMessage(hDlg,IDC_DEBUGLOGGING,BM_GETCHECK, 0, 0) == BST_CHECKED) ;
-            if(SendDlgItemMessage(hDlg, IDC_DISPLAYICON, BM_GETCHECK, 0, 0) == BST_CHECKED)
-            {
-                displayTaskbarIcon = FALSE;
-                PostMessage(hWnd, VW_DELICON, 0, 0);
-            }
-            else
-            {
-                displayTaskbarIcon = TRUE;
-                PostMessage(hWnd, VW_SHOWICON, 0, 0);
-            }
+            displayTaskbarIcon = (SendDlgItemMessage(hDlg, IDC_DISPLAYICON, BM_GETCHECK, 0, 0) != BST_CHECKED) ;
+            
             vwSetupApply(hDlg,0x08) ;
             if(vwLogFlag != oldLogFlag)
             {
@@ -957,8 +955,7 @@ BOOL APIENTRY setupExpert(HWND hDlg, UINT message, UINT wParam, LONG lParam)
             SetWindowLong(hDlg, DWL_MSGRESULT, FALSE);
             return 1;
         case PSN_RESET:
-            // Reset to the original values.
-            readConfig();
+            vwSetupCancel() ;
             SetWindowLong(hDlg, DWL_MSGRESULT, FALSE);
             break;
         case PSN_HELP:

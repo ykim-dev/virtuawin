@@ -64,7 +64,7 @@ enum {
 #endif
 
 #define calculateDesk(x,y) (((y) * nDesksX) - (nDesksX - (x)))
-#define windowIsNotHung(hWnd,waitTime) (SendMessageTimeout(hWnd,(int)NULL,0,0,SMTO_ABORTIFHUNG|SMTO_BLOCK,waitTime,NULL))
+#define windowIsNotHung(inhHWnd,waitTime) (SendMessageTimeout(inhHWnd,(int)NULL,0,0,SMTO_ABORTIFHUNG|SMTO_BLOCK,waitTime,NULL))
 
 // Variables
 HWND hWnd;                                   // handle to VirtuaWin
@@ -137,6 +137,7 @@ vwUByte winListCompact = 0;
 vwUByte useDeskAssignment = FALSE;
 vwUByte assignImmediately = 1;
 vwUByte displayTaskbarIcon = TRUE;
+vwUByte taskbarIconShown = 0;
 vwUByte noTaskbarCheck = FALSE;
 vwUByte trickyWindows = TRUE;
 vwUByte taskbarFixRequired = FALSE;
@@ -466,13 +467,13 @@ vwMouseProc(LPVOID lpParameter)
 void enableMouse(int turnOn)
 {
     // Try to turn on thread if not already running
-    if( turnOn && !mouseEnabled )
+    if(turnOn && !mouseEnabled)
     {
         ResumeThread(mouseThread);
         mouseEnabled = TRUE;
     }
     // Try to turn of thread if already not stopped
-    else if( !turnOn && mouseEnabled )
+    else if(!turnOn && mouseEnabled)
     {
         SuspendThread(mouseThread);
         mouseEnabled = FALSE;
@@ -483,9 +484,9 @@ void enableMouse(int turnOn)
  * Sets the icon in the systray and updates the currentDesk variable
  */
 static void
-setIcon(int deskNumber, int hungCount, int addCount)
+vwIconSet(int deskNumber, int hungCount)
 {
-    if(displayTaskbarIcon)
+    if(displayTaskbarIcon && ((taskbarIconShown & 0x02) == 0))
     {
         int ll ;
         if(hungCount < 0)
@@ -505,21 +506,35 @@ setIcon(int deskNumber, int hungCount, int addCount)
         }
         else
             _stprintf(nIconD.szTip+ll,_T("Desktop %d"),deskNumber) ;
-        if(addCount)
+        if(taskbarIconShown & 0x01)
+            Shell_NotifyIcon(NIM_MODIFY, &nIconD);
+        else
         {
             // This adds the icon, try up to 3 times as systray process may not have started
-            while((Shell_NotifyIcon(NIM_ADD, &nIconD) == 0) && (--addCount > 0))
-                Sleep(2000);
+            for(ll = 3 ;;)
+            {
+                if(Shell_NotifyIcon(NIM_ADD, &nIconD))
+                {
+                    taskbarIconShown |= 0x01 ;
+                    break ;
+                }
+                if(--ll <= 0)
+                    break ;
+                Sleep(2000) ;
+            }
         }
-        else
-            Shell_NotifyIcon(NIM_MODIFY, &nIconD);
+    }
+    else if(taskbarIconShown & 0x01)
+    {
+        Shell_NotifyIcon(NIM_DELETE,&nIconD) ;
+        taskbarIconShown &= ~0x01 ;
     }
 }
 
 /************************ *************************
  * Loads the icons for the systray according to the current setup
  */
-static void
+void
 vwIconLoad(void)
 {
     int xIcon = GetSystemMetrics(SM_CXSMICON);
@@ -552,7 +567,8 @@ vwIconLoad(void)
     _tcscpy(buff,_T("icons/")) ;
     for(ii = 0 ; ii<vwDESKTOP_SIZE ; ii++)
     {
-        if(desktopUsed[ii] != 0)
+        icons[ii] = NULL ;
+        if((desktopUsed[ii] != 0) || (ii == 0))
         {
             /* Try to load user defined icons, otherwise use built in icon or disable icon */
             ss = buff+6 ;
@@ -573,21 +589,11 @@ vwIconLoad(void)
     }
     // Load checkmark icon for sticky
     checkIcon=LoadIcon(hInst,MAKEINTRESOURCE(IDI_CHECK));
+    vwIconSet(currentDesk,0) ;
+    // if on win9x the tricky windows need to be continually hidden
+    taskbarFixRequired = ((osVersion <= OSVERSION_9X) && (taskHWnd != NULL)) ;
 }
 
-/*************************************************
- * Resets all icons and reloads them
- */
-void
-vwIconReload(void)
-{
-    int ii=vwDESKTOP_SIZE-1;
-    do
-        icons[ii] = NULL ;
-    while(--ii >= 0) ;
-    vwIconLoad() ;
-    setIcon(currentDesk,0,0) ;
-}
 
 /************************************************
  * Registering all hotkeys
@@ -1710,7 +1716,7 @@ static VOID CALLBACK monitorTimerProc(HWND hwnd, UINT uMsg, UINT idEvent, DWORD 
         if((mtCount & index) == 0)
         {
             /* flash the icon for half a second each time we try */
-            setIcon(currentDesk,0-hungCount,0) ;
+            vwIconSet(currentDesk,0-hungCount) ;
             index = windowCount ;
             while(--index >= 0)
             {
@@ -1729,14 +1735,14 @@ static VOID CALLBACK monitorTimerProc(HWND hwnd, UINT uMsg, UINT idEvent, DWORD 
         else if(((mtCount-1) & index) == 0)
         {
             /* restore the flashing icon */
-            setIcon(currentDesk,hungCount,0) ;
+            vwIconSet(currentDesk,hungCount) ;
         }
     }
     else if(mtCount)
     {
         /* hung process problem has been resolved. */
         mtCount = 0 ;
-        setIcon(currentDesk,0,0);
+        vwIconSet(currentDesk,0);
     }
 
     if(taskbarFixRequired)
@@ -1878,7 +1884,7 @@ static int changeDesk(int newDesk, WPARAM msgWParam)
                 }
                 else if(y)
                 {
-                    if((winList[x].Flags & vwWTFLAGS_NO_TASKBAR_BUT) == 0)
+                    if(((winList[x].Flags & vwWTFLAGS_NO_TASKBAR_BUT) == 0) && (taskHWnd != NULL))
                     {
                         /* It is visible but its position in the taskbar is wrong - fix by removing from the taskbar and then adding again */
                         PostMessage(taskHWnd,RM_Shellhook,HSHELL_WINDOWDESTROYED,(LPARAM) winList[x].Handle) ;
@@ -1948,7 +1954,7 @@ static int changeDesk(int newDesk, WPARAM msgWParam)
         initDesktopProperties() ;
         showSetup() ;
     }
-    setIcon(currentDesk,0,0) ;
+    vwIconSet(currentDesk,0) ;
     if(refreshOnWarp) // Refresh the desktop 
         RedrawWindow( NULL, NULL, NULL, RDW_INVALIDATE | RDW_ERASE | RDW_ALLCHILDREN );
     
@@ -2400,7 +2406,7 @@ showHideWindow(windowType* aWindow, int shwFlags, unsigned char show)
             /* if minimized dont show popups */
             if(!(aWindow->Style & WS_MINIMIZE))
                 ShowOwnedPopups(aWindow->Handle,(show) ? TRUE:FALSE) ;
-            if(aWindow->Flags & vwWTFLAGS_RM_TASKBAR_BUT)
+            if((aWindow->Flags & vwWTFLAGS_RM_TASKBAR_BUT) && (taskHWnd != NULL))
                 /* Make sure the taskbar does not create a button for this window */
                 PostMessage(taskHWnd, RM_Shellhook, HSHELL_WINDOWDESTROYED, (LPARAM) aWindow->Handle);
         }
@@ -2412,7 +2418,7 @@ showHideWindow(windowType* aWindow, int shwFlags, unsigned char show)
             {
                 // Restore the window mode
                 SetWindowLong( aWindow->Handle, GWL_EXSTYLE, aWindow->ExStyle );  
-                if((aWindow->Flags & vwWTFLAGS_NO_TASKBAR_BUT) == 0)
+                if(((aWindow->Flags & vwWTFLAGS_NO_TASKBAR_BUT) == 0) && (taskHWnd != NULL))
                     // Notify taskbar of the change
                     PostMessage(taskHWnd, RM_Shellhook, HSHELL_WINDOWCREATED, (LPARAM) aWindow->Handle );
                 if((pos.top < -5000) && (pos.top > -30000))
@@ -2426,7 +2432,7 @@ showHideWindow(windowType* aWindow, int shwFlags, unsigned char show)
                 // This removes window from taskbar and alt+tab list
                 SetWindowLong( aWindow->Handle, GWL_EXSTYLE, 
                                (aWindow->ExStyle & (~WS_EX_APPWINDOW)) | WS_EX_TOOLWINDOW);
-                if((aWindow->Flags & vwWTFLAGS_NO_TASKBAR_BUT) == 0)
+                if(((aWindow->Flags & vwWTFLAGS_NO_TASKBAR_BUT) == 0) && (taskHWnd != NULL))
                     // Notify taskbar of the change
                     PostMessage(taskHWnd, RM_Shellhook, HSHELL_WINDOWDESTROYED, (LPARAM) aWindow->Handle);
                 if((pos.top > -5000) && (pos.top < 20000))
@@ -2446,13 +2452,14 @@ showHideWindow(windowType* aWindow, int shwFlags, unsigned char show)
 /************************************************
  * Toggles the disabled state of VirtuaWin
  */
-static void disableAll(HWND aHWnd)
+static void
+vwToggleEnabled(void)
 {
     if(vwEnabled)
     {   // disable VirtuaWin
-        _tcscpy(nIconD.szTip,vwVIRTUAWIN_NAME _T(" - Disabled")); //Tooltip
-        setIcon(0,0,0);
         KillTimer(hWnd, 0x29a);
+        _tcscpy(nIconD.szTip,vwVIRTUAWIN_NAME _T(" - Disabled")); //Tooltip
+        vwIconSet(0,0);
         enableMouse(FALSE);
         vwHotkeyUnregister();
         vwEnabled = FALSE;
@@ -2461,9 +2468,9 @@ static void disableAll(HWND aHWnd)
     {   // Enable VirtuaWin
         vwHotkeyRegister();
         enableMouse(mouseEnable);
-        SetTimer(hWnd, 0x29a, 250, monitorTimerProc);
-        setIcon(currentDesk,0,0);
+        vwIconSet(currentDesk,0);
         vwEnabled = TRUE;
+        SetTimer(hWnd, 0x29a, 250, monitorTimerProc);
     }
 }
 
@@ -3311,11 +3318,13 @@ wndProc(HWND aHWnd, UINT message, WPARAM wParam, LPARAM lParam)
         return TRUE;
         
     case VW_DELICON:
-        Shell_NotifyIcon(NIM_DELETE, &nIconD); // This removes the icon
+        taskbarIconShown |= 0x02 ;
+        vwIconSet(currentDesk,0) ;
         return TRUE;
         
     case VW_SHOWICON:
-        setIcon(currentDesk,0,1);            // This re-adds the icon
+        taskbarIconShown &= ~0x02 ;
+        vwIconSet(currentDesk,0) ;
         return TRUE;
         
     case VW_HELP:
@@ -3449,9 +3458,8 @@ wndProc(HWND aHWnd, UINT message, WPARAM wParam, LPARAM lParam)
         
     case VW_ENABLE_STATE:
         lParam = vwEnabled ;
-        if((wParam == 1) || ((wParam == 2) && vwEnabled) ||
-           ((wParam == 3) && !vwEnabled))
-            disableAll(aHWnd);
+        if((wParam == 1) || ((wParam == 2) && vwEnabled) || ((wParam == 3) && !vwEnabled))
+            vwToggleEnabled() ;
         return lParam ;
         
     case VW_DESKNAME:
@@ -3594,7 +3602,7 @@ wndProc(HWND aHWnd, UINT message, WPARAM wParam, LPARAM lParam)
                     showAll(0);
                     break;
                 case ID_DISABLE:	// Disable VirtuaWin
-                    disableAll(aHWnd);
+                    vwToggleEnabled() ;
                     break;
                 case ID_HELP:		// show help
                     showHelp(aHWnd,0);
@@ -3632,7 +3640,7 @@ wndProc(HWND aHWnd, UINT message, WPARAM wParam, LPARAM lParam)
         if(message == taskbarRestart)
         {
             goGetTheTaskbarHandle();
-            setIcon(currentDesk,0,3);	// This re-adds the icon
+            vwIconSet(currentDesk,0) ;
         }
         break;
     }
@@ -3646,7 +3654,6 @@ VirtuaWinInit(HINSTANCE hInstance, LPSTR cmdLine)
     WNDCLASSEX wc;
     DWORD threadID;
     vwUByte awStore;
-    TCHAR *classname = vwVIRTUAWIN_NAME _T("MainClass") ;
     hInst = hInstance;
     
 #ifdef _WIN32_MEMORY_DEBUG
@@ -3668,7 +3675,7 @@ VirtuaWinInit(HINSTANCE hInstance, LPSTR cmdLine)
         WPARAM wParam=0 ;
         LPARAM lParam=0 ;
         
-        if((hWnd = FindWindow(classname, NULL)) == NULL)
+        if((hWnd = FindWindow(vwVIRTUAWIN_CLASSNAME, NULL)) == NULL)
             exit(-2) ;
         
         /* get the message from the command-line, default is to display configuration window... */
@@ -3707,7 +3714,7 @@ VirtuaWinInit(HINSTANCE hInstance, LPSTR cmdLine)
     wc.hCursor = LoadCursor(NULL, IDC_ARROW);
     wc.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
     wc.lpszMenuName = NULL;
-    wc.lpszClassName = classname;
+    wc.lpszClassName = vwVIRTUAWIN_CLASSNAME;
     wc.hIconSm = (HICON) LoadImage(hInstance, MAKEINTRESOURCE(IDI_VIRTUAWIN), IMAGE_ICON,
                                    GetSystemMetrics(SM_CXSMICON),
                                    GetSystemMetrics(SM_CYSMICON), 0);
@@ -3732,25 +3739,22 @@ VirtuaWinInit(HINSTANCE hInstance, LPSTR cmdLine)
     deskIconHWnd = FindWindow(_T("Progman"), _T("Program Manager")) ;
     deskIconHWnd = FindWindowEx(deskIconHWnd, NULL, _T("SHELLDLL_DefView"),NULL) ;
     deskIconHWnd = FindWindowEx(deskIconHWnd, NULL, _T("SysListView32"), _T("FolderView")) ;
-    getScreenSize();
-    getWorkArea(); // This is dependent on the config
-    
     // Fix some things for the alternate hide method
     RM_Shellhook = RegisterWindowMessage(_T("SHELLHOOK"));
     goGetTheTaskbarHandle();
-    
-    vwIconLoad();
-    
-    if(trickyWindows)
-        loadTrickyList();
+    getScreenSize();
+    getWorkArea();
     
     /* Create window. Note that WS_VISIBLE is not used, and window is never shown. */
-    if((hWnd = CreateWindowEx(0, classname, classname, WS_POPUP, CW_USEDEFAULT, 0,
+    if((hWnd = CreateWindowEx(0, vwVIRTUAWIN_CLASSNAME, vwVIRTUAWIN_CLASSNAME, WS_POPUP, CW_USEDEFAULT, 0,
                               CW_USEDEFAULT, 0, NULL, NULL, hInstance, NULL)) == NULL)
     {
         MessageBox(hWnd,_T("Failed to create window!"),vwVIRTUAWIN_NAME _T(" Error"), MB_ICONWARNING);
         exit(2) ;
     }
+    /* Create the thread responsible for mouse monitoring */   
+    mouseThread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE) vwMouseProc, NULL, 0, &threadID); 	
+    mouseEnabled = TRUE;
     
     nIconD.cbSize = sizeof(NOTIFYICONDATA); // size
     nIconD.hWnd = hWnd;		    // window to receive notifications
@@ -3759,15 +3763,16 @@ VirtuaWinInit(HINSTANCE hInstance, LPSTR cmdLine)
           NIF_ICON |		    // nIconD.hIcon is valid, use it
           NIF_TIP;		    // nIconD.szTip is valid, use it
     nIconD.uCallbackMessage = VW_SYSTRAY;  // message sent to nIconD.hWnd
-    setIcon(1,0,3) ;
     
-    /* Register the keys */
-    vwHotkeyRegister();
-    
-    /* Load the sticky, auto-assign and user defined window list */
+    if(trickyWindows)
+        loadTrickyList();
     loadStickyList();
     loadAssignedList();
     loadUserList();
+    
+    vwIconLoad();
+    vwHotkeyRegister();
+    enableMouse(mouseEnable);
     
     /* always move windows immediately on startup */
     awStore = assignImmediately ;
@@ -3781,14 +3786,6 @@ VirtuaWinInit(HINSTANCE hInstance, LPSTR cmdLine)
     curDisabledMod = loadDisabledModules(disabledModules);
     loadModules();
     
-    /* Create the thread responsible for mouse monitoring */   
-    mouseThread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE) vwMouseProc, NULL, 0, &threadID); 	
-    if(!mouseEnable)
-        // Suspend the thread if mouse support not required
-        enableMouse(FALSE);
-    
-    // if on win9x the tricky windows need to be continually hidden
-    taskbarFixRequired = (osVersion <= OSVERSION_9X) ;
     SetTimer(hWnd, 0x29a, 250, monitorTimerProc); 
 }
 
