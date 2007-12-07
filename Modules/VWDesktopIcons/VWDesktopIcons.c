@@ -49,6 +49,7 @@ typedef struct vwIcon {
 #define diItemSize (sizeof(LVITEM) + sizeof(POINT) + (sizeof(TCHAR) * MAX_PATH))
 
 unsigned char initialised=0 ;
+unsigned char shuttingDown=0 ;
 HINSTANCE hInst;               /* Instance handle */
 HWND wHnd;                     /* Time tracker Handle */
 HWND vwHandle;                 /* Handle to VirtuaWin */
@@ -535,10 +536,6 @@ MainWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
         UpdateDesktopIcons(deskCrrnt,newDesk) ;
         deskCrrnt = newDesk ;
         return TRUE ;
-   case MOD_QUIT:
-        /* This must be handled, otherwise VirtuaWin can't shut down the module */
-        PostQuitMessage(0);
-        break;
     case MOD_SETUP:
         if(wParam != 0)
             hwnd = (HWND) wParam ;
@@ -547,9 +544,20 @@ MainWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
         SetForegroundWindow(hwnd) ;
         DialogBox(hInst, MAKEINTRESOURCE(IDD_MAINDIALOG), hwnd, (DLGPROC) DialogFunc);
         break;
+    
+    case MOD_QUIT:
+        /* This must be handled, otherwise VirtuaWin can't shut down the module */
+    case WM_ENDSESSION:
     case WM_DESTROY:
+        if(shuttingDown == 0)
+        {
+            shuttingDown = 1 ;
+            UpdateDesktopIcons(deskCrrnt,0) ;
+            SaveConfigFile() ;
+        }
         PostQuitMessage(0);
         break;
+    
     default:
         return DefWindowProc(hwnd, msg, wParam, lParam);
     }
@@ -639,10 +647,8 @@ WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, INT nCmdS
         TranslateMessage(&msg);
         DispatchMessage(&msg);
     }
-    
-    UpdateDesktopIcons(deskCrrnt,deskCrrnt) ;
-    SaveConfigFile() ;
-    SetDesktopIcons(0) ;
+    if(shuttingDown == 0)
+        SetDesktopIcons(0) ;
     VirtualFree(diLocalItem, 0, MEM_RELEASE);
     VirtualFreeEx(diProcess, diShareItem, 0, MEM_RELEASE);
     CloseHandle(diProcess);
