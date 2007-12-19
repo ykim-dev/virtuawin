@@ -40,15 +40,15 @@ extern int screenBottom;
 
 extern int curDisabledMod;                        // how many disabled modules we have
 
-extern windowType winList[vwWINDOW_MAX];          // list for holding windows
+extern vwWindow  *windowList;                     // list of managed windows
 extern vwHotkey   hotkeyList[vwHOTKEY_MAX];       // list for holding hotkeys
 extern moduleType moduleList[MAXMODULES];         // list that holds modules
 extern disModules disabledModules[MAXMODULES*2];  // list with disabled modules
 
-extern vwWindowMatch *userList;                   // list for holding user added applications
-extern vwWindowMatch *stickyList;                 // list with saved sticky windows
-extern vwWindowMatch *trickyList;                 // list with saved tricky windows
-extern vwWindowMatch *assignedList;               // list with all windows that have a predefined desktop
+extern vwWindowType *userList;                   // list for holding user added applications
+extern vwWindowType *stickyList;                 // list with saved sticky windows
+extern vwWindowType *trickyList;                 // list with saved tricky windows
+extern vwWindowType *assignedList;               // list with all windows that have a predefined desktop
 
 // logging defines & macros
 extern vwUByte vwLogFlag ;
@@ -65,6 +65,8 @@ extern FILE *vwLogFile ;
 
 // Forward declarations of functions
 void vwLogPrint(const TCHAR *format, ...) ;
+void vwMutexLock(void) ;
+void vwMutexRelease(void) ;
 void enableMouse(int turnOn) ;
 void setMouseKey(void);
 void vwIconLoad(void);
@@ -72,6 +74,7 @@ void vwIconShow(void);
 void vwHotkeyRegister(void);
 void vwHotkeyUnregister(void);
 void getWorkArea(void);
+int  windowListUpdate(void) ;
 int  assignWindow(HWND theWin, int theDesk, vwUByte follow, vwUByte force, vwUByte setActive);
 int  gotoDesk(int theDesk, vwUByte force);
 void showHelp(HWND aHWnd, UINT context);

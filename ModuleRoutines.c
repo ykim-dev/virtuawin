@@ -118,8 +118,8 @@ static void addModule(TCHAR *moduleName, TCHAR *path)
         }
         else
         {
-            moduleList[moduleCount].Handle = myModule;
-            moduleList[moduleCount].Disabled = FALSE;
+            moduleList[moduleCount].handle = myModule;
+            moduleList[moduleCount].disabled = FALSE;
             moduleName[_tcslen(moduleName)-4] = '\0'; // remove .exe
             _tcsncpy(moduleList[moduleCount].description, moduleName, 79);
             PostMessage(myModule, MOD_INIT, (WPARAM) hWnd , 0);
@@ -128,8 +128,8 @@ static void addModule(TCHAR *moduleName, TCHAR *path)
     } 
     else
     { // Module disabled
-        moduleList[moduleCount].Handle = NULL;
-        moduleList[moduleCount].Disabled = TRUE;
+        moduleList[moduleCount].handle = NULL;
+        moduleList[moduleCount].disabled = TRUE;
         moduleName[_tcslen(moduleName)-4] = '\0'; // remove .exe
         _tcsncpy(moduleList[moduleCount].description, moduleName, 79);
         moduleCount++;
@@ -168,8 +168,8 @@ void sendModuleMessage(UINT Msg, WPARAM wParam,	LPARAM lParam)
 {
     int index;
     for(index = 0; index < moduleCount; ++index)
-        if(moduleList[index].Handle != NULL) 
-            SendMessageTimeout(moduleList[index].Handle,Msg,wParam,lParam,SMTO_ABORTIFHUNG|SMTO_BLOCK,10000,NULL);
+        if(moduleList[index].handle != NULL) 
+            SendMessageTimeout(moduleList[index].handle,Msg,wParam,lParam,SMTO_ABORTIFHUNG|SMTO_BLOCK,10000,NULL);
 }
 
 /*************************************************
@@ -179,7 +179,7 @@ void postModuleMessage(UINT Msg, WPARAM wParam, LPARAM lParam)
 {
     int index;
     for(index = 0; index < moduleCount; ++index) {
-        if(moduleList[index].Handle != NULL)
-            PostMessage(moduleList[index].Handle, Msg, wParam, lParam);
+        if(moduleList[index].handle != NULL)
+            PostMessage(moduleList[index].handle, Msg, wParam, lParam);
     }
 }

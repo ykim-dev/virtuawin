@@ -210,23 +210,28 @@ BOOL APIENTRY setupGeneral(HWND hDlg, UINT message, UINT wParam, LONG lParam)
             maxDesk = tmpDesksX * tmpDesksY ;
             if(maxDesk < nDesks)
             {
-                int index, count=0 ;
+                vwWindow *win ;
                 
                 if(currentDesk > maxDesk)
                     // user is on an invalid desk, move
-                    gotoDesk(1,TRUE);
-                index = windowCount ;
-                while(--index >= 0)
+                    gotoDesk(1,TRUE) ;
+                vwMutexLock();
+                windowListUpdate() ;
+                win = windowList ;
+                while(win != NULL)
                 {
-                    if((winList[index].Desk > maxDesk) && (winList[index].Desk <= nDesks))
+                    if((win->desk > maxDesk) && (win->desk <= nDesks))
                     {
                         // This window is on an invalid desk, move
-                        assignWindow(winList[index].Handle,1,FALSE,TRUE,FALSE);
-                        count++ ;
+                        vwMutexRelease();
+                        assignWindow(win->handle,1,FALSE,TRUE,FALSE);
                         // must start again as the list will have been updated
-                        index = windowCount ; 
+                        vwMutexLock();
+                        win = windowList ;
                     }
+                    win = win->next ;
                 }
+                vwMutexRelease();
             }
             nDesksY = tmpDesksY;
             nDesksX = tmpDesksX;
@@ -806,7 +811,7 @@ static void setupModulesList(HWND hDlg)
     {
         _tcsncpy(tmpName,moduleList[index].description,100) ;
         tmpName[100] = '\0' ;
-        if(moduleList[index].Disabled)
+        if(moduleList[index].disabled)
             _tcscat(tmpName,_T(" (disabled)")) ;
         SendDlgItemMessage(hDlg, IDC_MODLIST, LB_ADDSTRING, 0, (LONG)tmpName);
     }
@@ -847,14 +852,14 @@ BOOL APIENTRY setupModules(HWND hDlg, UINT message, UINT wParam, LONG lParam)
         {   // Show config
             int curSel = SendDlgItemMessage(hDlg, IDC_MODLIST, LB_GETCURSEL, 0, 0);
             if(curSel != LB_ERR)
-                PostMessage(moduleList[curSel].Handle, MOD_SETUP, (UINT) hDlg, 0);
+                PostMessage(moduleList[curSel].handle, MOD_SETUP, (UINT) hDlg, 0);
         }
         else if(LOWORD((wParam) == IDC_MODRELOAD))
         {   // Reload
             unloadModules();
             for(index = 0; index < MAXMODULES; index++)
             {
-                moduleList[index].Handle = NULL;
+                moduleList[index].handle = NULL;
                 moduleList[index].description[0] = '\0';
             }
             moduleCount = 0;
@@ -869,16 +874,16 @@ BOOL APIENTRY setupModules(HWND hDlg, UINT message, UINT wParam, LONG lParam)
             int curSel = SendDlgItemMessage(hDlg, IDC_MODLIST, LB_GETCURSEL, 0, 0);
             if(curSel != LB_ERR)
             {
-                if(moduleList[curSel].Disabled == FALSE)
+                if(moduleList[curSel].disabled == FALSE)
                 {   // let's disable
-                    moduleList[curSel].Disabled = TRUE;
-                    PostMessage(moduleList[curSel].Handle, MOD_QUIT, 0, 0);
+                    moduleList[curSel].disabled = TRUE;
+                    PostMessage(moduleList[curSel].handle, MOD_QUIT, 0, 0);
                 }
                 else
                 {   // let's enable
                     MessageBox(hDlg,_T("Press reload or restart VirtuaWin to enable the module"),
                                vwVIRTUAWIN_NAME _T(" Note"), MB_ICONINFORMATION);
-                    moduleList[curSel].Disabled = FALSE;
+                    moduleList[curSel].disabled = FALSE;
                 }
                 saveDisabledList(moduleCount, moduleList);
                 setupModulesList(hDlg) ;

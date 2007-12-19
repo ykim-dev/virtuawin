@@ -201,7 +201,7 @@ saveDisabledList(int theNOfModules, moduleType* theModList)
     {
         int i;
         for(i = 0; i < theNOfModules; ++i)
-            if(theModList[i].Disabled)
+            if(theModList[i].disabled)
                 _ftprintf(fp,_T("%s\n"),theModList[i].description);
         fclose(fp);
     }
@@ -242,9 +242,9 @@ int loadDisabledModules(disModules *theDisList)
  * Loads window match list from a file
  */
 static void
-loadWindowMatchList(TCHAR *fname, int hasDesk, vwWindowMatch **matchList)
+loadWindowMatchList(TCHAR *fname, int hasDesk, vwWindowType **matchList)
 {
-    vwWindowMatch *wm, *pwm ;
+    vwWindowType *wm, *pwm ;
     vwUByte type, desk=0 ;
     TCHAR buff[1024], *ss ;
     int len ;
@@ -289,7 +289,7 @@ loadWindowMatchList(TCHAR *fname, int hasDesk, vwWindowMatch **matchList)
                     type = 0 ;
                 if(((type & 2) == 0) && (len > vwCLASSNAME_MAX))
                     ss[vwCLASSNAME_MAX] = '\0' ;
-                if(((wm = malloc(sizeof(vwWindowMatch))) != NULL) &&
+                if(((wm = malloc(sizeof(vwWindowType))) != NULL) &&
                    ((wm->match = _tcsdup(ss)) != NULL))
                 {
                     wm->next = NULL ;
@@ -320,36 +320,6 @@ loadStickyList(void)
 }
 
 /*************************************************
- * Writes down the classnames of the sticky windows on file
- * File format:
- *   <WinClassName>\n
- *   <WinClassName>\n
- */
-void saveStickyWindows(int theNOfWin, windowType *theWinList)
-{
-    TCHAR buff[MAX_PATH] ;
-    FILE* fp;
-    
-    GetFilename(vwSTICKY,1,buff);
-    if((fp = _tfopen(buff,_T("w"))) == NULL)
-        MessageBox(hWnd,_T("Error writing sticky file"),vwVIRTUAWIN_NAME _T(" Error"),MB_ICONERROR) ;
-    else
-    {
-        int i;
-        for(i = 0; i < theNOfWin; ++i)
-        {
-            if(theWinList[i].Sticky)
-            {
-                GetClassName(theWinList[i].Handle,buff,vwCLASSNAME_MAX);
-                buff[vwCLASSNAME_MAX] = '\0' ;
-                _ftprintf(fp,_T("cn:%s\n"),buff);
-            }
-        }
-        fclose(fp);
-    }
-}
-
-/*************************************************
  * Loads window classnames from tricky file
  */
 void
@@ -359,34 +329,6 @@ loadTrickyList(void)
     
     GetFilename(vwTRICKY,1,fname);
     loadWindowMatchList(fname,0,&trickyList) ;
-}
-
-
-/*************************************************
- * Writes down the current desktop layout to a file
- * File format:
- *   <desk #> <WinClassName>\n
-*   <desk #> <WinClassName>\n
-*/
-void saveAssignedList(int theNOfWin, windowType *theWinList)
-{
-    TCHAR buff[MAX_PATH];
-    FILE *fp;
-    
-    GetFilename(vwWINDOWS_STATE,1,buff);
-    if((fp = _tfopen(buff,_T("w"))) == NULL)
-        MessageBox(hWnd,_T("Error writing desktop configuration file"),vwVIRTUAWIN_NAME _T(" Error"),MB_ICONERROR) ;
-    else
-    {
-        int i;
-        for(i = 0; i < theNOfWin; ++i)
-        {
-            GetClassName(theWinList[i].Handle,buff,vwCLASSNAME_MAX);
-            buff[vwCLASSNAME_MAX] = '\0' ;
-            _ftprintf(fp,_T("%d cn:%s\n"),theWinList[i].Desk,buff);
-        }
-        fclose(fp);
-    }
 }
 
 /*************************************************
@@ -748,6 +690,15 @@ void readConfig(void)
                 hotkeyList[hotkeyCount].command = hk[2] ;
                 hotkeyList[hotkeyCount].desk = hk[3] ;
                 hotkeyCount++ ;
+            }
+        }
+        ii = vwDESKTOP_SIZE ;
+        while(--ii >= 0)
+        {
+            if(desktopName[ii] != NULL)
+            {
+                free(desktopName[ii]) ;
+                desktopName[ii] = NULL ;
             }
         }
         fscanf(fp, "%s%d\n", (char *) buff, &jj);

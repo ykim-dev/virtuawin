@@ -33,8 +33,9 @@
 #define vwVIRTUAWIN_NAME_VERSION _T("VirtuaWin v3.2")
 
 // Various defines used on several places 
-#define vwWINDOW_MAX     160       // max number of windows to handle
 #define vwHOTKEY_MAX      40       // max number of hotkeys
+#define vwWINDOW_MAX     160       // max number of windows to handle
+#define vwWINHASH_SIZE   509       // size of the window hash table
 #define vwDESKTOP_MAX     20       // max number of desktops
 #define vwDESKTOP_SIZE    (vwDESKTOP_MAX + 2)
 #define vwCLASSNAME_MAX   64       // class name buffer size
@@ -50,44 +51,65 @@
 #define vwTRICKY_POSITION 1
 #define vwTRICKY_WINDOW   2
 
-#define vwVISIBLE_NO      0
-#define vwVISIBLE_YES     1
-#define vwVISIBLE_TEMP    2
-#define vwVISIBLE_YESTEMP 3
-
 #define vwHOTKEY_ALT     MOD_ALT
 #define vwHOTKEY_CONTROL MOD_CONTROL
 #define vwHOTKEY_SHIFT   MOD_SHIFT
 #define vwHOTKEY_WIN     MOD_WIN
 #define vwHOTKEY_EXT     0x10
 
-#define vwWTFLAGS_NO_TASKBAR_BUT  0x01
-#define vwWTFLAGS_RM_TASKBAR_BUT  0x02
+#define vwWINFLAGS_INITIALIZED     0x0001
+#define vwWINFLAGS_FOUND           0x0002
+#define vwWINFLAGS_ACTIVATED       0x0004
+#define vwWINFLAGS_VISIBLE         0x0008
+#define vwWINFLAGS_MINIMIZED       0x0010
+#define vwWINFLAGS_WINDOW          0x0020
+#define vwWINFLAGS_MANAGED         0x0040
+#define vwWINFLAGS_SHOWN           0x0080
+#define vwWINFLAGS_SHOW            0x0100
+#define vwWINFLAGS_STICKY          0x0200
+#define vwWINFLAGS_TRICKY          0x0C00
+#define vwWINFLAGS_TRICKY_TYPE     0x0400
+#define vwWINFLAGS_TRICKY_POS      0x0800
+#define vwWINFLAGS_NO_TASKBAR_BUT  0x1000
+#define vwWINFLAGS_RM_TASKBAR_BUT  0x2000
 
 typedef unsigned int   vwUInt ;
 typedef unsigned short vwUShort ;
 typedef unsigned char  vwUByte ;
 
-typedef struct { // Holds the windows in the list
-    HWND      Handle;
-    HWND      Owner;
-    long      Style;
-    long      ExStyle;
-    vwUInt    ZOrder[vwDESKTOP_SIZE] ;
-    vwUShort  menuId ;
-    vwUByte   Desk;
-    vwUByte   Sticky;
-    vwUByte   Tricky;
-    vwUByte   Visible;
-    vwUByte   State;
-    vwUByte   Flags;
-} windowType;
+// Holds data far a non-managed window
+typedef struct vwWindowBase { 
+    struct vwWindowBase *next ;
+    struct vwWindowBase *hash ;
+    HWND                 handle ;
+    vwUInt               flags ;
+} vwWindowBase;
+
+// Holds data far a managed window, start must be the same as vwWindowBase
+typedef struct vwWindow { 
+    struct vwWindow     *next ;
+    struct vwWindow     *hash ;
+    HWND                 handle ;
+    vwUInt               flags ;
+    HWND                 owner;
+    long                 exStyle;
+    vwUInt               zOrder[vwDESKTOP_SIZE] ;
+    vwUShort             menuId ;
+    vwUByte              desk;
+} vwWindow ;
+
+typedef struct vwWindowType {
+    struct vwWindowType *next;
+    TCHAR               *match;
+    vwUByte              desk;
+    vwUByte              type;
+} vwWindowType ;
 
 // Holds data for modules
 typedef struct {
-    HWND      Handle;
-    vwUByte   Disabled;
+    HWND      handle;
     TCHAR     description[vwMODULENAME_MAX+1];
+    vwUByte   disabled;
 } moduleType;
 
 // Holds disabled modules
@@ -103,13 +125,6 @@ typedef struct {
     vwUByte   desk;
     vwUByte   sticky;
 } vwMenuItem ;
-
-typedef struct vwWindowMatch {
-    struct vwWindowMatch *next;
-    TCHAR    *match;
-    vwUByte   desk;
-    vwUByte   type;
-} vwWindowMatch ;
 
 typedef struct {
     ATOM     atom ;
