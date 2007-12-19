@@ -1,0 +1,541 @@
+//
+//  VirtuaWin - Virtual Desktop Manager (virtuawin.sourceforge.net)
+//  WinTypeDialog.c - Window Type Dialog routines.
+// 
+//  Copyright (c) 2007 VirtuaWin (VirtuaWin@home.se)
+// 
+//  This program is free software; you can redistribute it and/or modify
+//  it under the terms of the GNU General Public License as published by
+//  the Free Software Foundation; either version 2 of the License, or
+//  (at your option) any later version.
+//
+//  This program is distributed in the hope that it will be useful,
+//  but WITHOUT ANY WARRANTY; without even the implied warranty of
+//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//  GNU General Public License for more details.
+//
+//  You should have received a copy of the GNU General Public License
+//  along with this program; if not, write to the Free Software
+//  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, 
+//  USA.
+//
+
+// Must compile with define of _WIN32_IE=0x0200 otherwise the dialog
+// will not open on NT/95 without a patch (known MS issue) 
+#define _WIN32_IE 0x0200
+
+// Includes
+#include "VirtuaWin.h"
+#include "Resource.h"
+#include "Messages.h"
+#include "DiskRoutines.h"
+#include "ConfigParameters.h"
+
+// Standard includes
+#include <stdlib.h>
+#include <shellapi.h>
+#include <prsht.h>
+#include <commctrl.h>
+
+static int deskCount ;
+static vwWindowType *winTypeCur ;
+
+static void
+windowTypeDialogInitList(HWND hDlg)
+{
+    static char wtypeNameLabel[vwWTNAME_COUNT] = "CWP" ;
+    vwWindowType *wt ;
+    TCHAR buff[388], *ss;
+    int ii, jj, kk, winTypeCurIdx=0 ;
+    
+    SendDlgItemMessage(hDlg,IDC_WTYPE_LIST,LB_RESETCONTENT,0, 0);
+    ii = 10 ;
+    SendDlgItemMessage(hDlg,IDC_WTYPE_LIST,LB_SETTABSTOPS,(WPARAM) 1,(LPARAM) &ii);
+    ii = 0 ;
+    wt = windowTypeList ;
+    while(wt != NULL)
+    {
+        if(((wt->flags & vwWTFLAGS_MOVE) == 0) || (wt->desk <= deskCount))
+        {
+            ii++ ;
+            ss = buff ;
+            ss += _stprintf(ss,"%d",ii) ;
+            for(jj=0 ; jj<vwWTNAME_COUNT ; jj++)
+            {
+                if(wt->name[jj] != NULL)
+                {
+                    *ss++ = '\t' ;
+                    *ss++ = wtypeNameLabel[jj] ;
+                    *ss++ = 'N' ;
+                    *ss++ = ':' ;
+                    if(wt->flags & (1 << (jj << 1)))
+                        *ss++ = '*' ;
+                    kk = _tcslen(wt->name[jj]) ;
+                    if(kk > 120)
+                    {
+                        _tcsncpy(ss,wt->name[jj],120) ;
+                        ss += 120 ;
+                        *ss++ = '.' ;
+                        *ss++ = '.' ;
+                        *ss++ = '.' ;
+                    }
+                    else
+                    {
+                        _tcsncpy(ss,wt->name[jj],kk) ;
+                        ss += kk ;
+                    }
+                    if(wt->flags & (2 << (jj << 1)))
+                        *ss++ = '*' ;
+                }
+            }
+            *ss = '\0' ;
+            SendDlgItemMessage(hDlg,IDC_WTYPE_LIST,LB_ADDSTRING,0,(LONG) buff);
+            if(wt == winTypeCur)
+                winTypeCurIdx = ii ;
+        }
+        wt = wt->next ;
+    }
+    if(winTypeCurIdx)
+        SendDlgItemMessage(hDlg,IDC_WTYPE_LIST,LB_SETCURSEL,winTypeCurIdx-1,0) ;
+    else
+        winTypeCur = NULL ;
+}
+
+static int wtypeNameEntry[vwWTNAME_COUNT] = { IDC_WTYPE_CNAME, IDC_WTYPE_WNAME, IDC_WTYPE_PNAME } ;
+static void
+windowTypeDialogInitItem(HWND hDlg)
+{
+    vwWindowType *wt ;
+    TCHAR buff[1024] ;
+    int ii ;
+    
+    if(winTypeCur != NULL)
+    {
+        ii = 0 ;
+        wt = windowTypeList ;
+        while(wt != NULL)
+        {
+            if(((wt->flags & vwWTFLAGS_MOVE) == 0) || (wt->desk <= deskCount))
+            {
+                if(wt == winTypeCur)
+                    break ;
+                ii++ ;
+            }
+            wt = wt->next ;
+        }
+        
+        if(wt != NULL)
+        {
+            EnableWindow(GetDlgItem(hDlg,IDC_WTYPE_UP),(ii > 0)) ;
+            ii = vwWTNAME_COUNT-1 ;
+            do {
+                buff[0] = '\0' ;
+                if(wt->name[ii] != NULL)
+                {
+                    if(wt->flags & (1 << (ii << 1)))
+                    {
+                        buff[0] = '*' ;
+                        _tcscpy(buff+1,wt->name[ii]) ;
+                    }
+                    else
+                        _tcscpy(buff,wt->name[ii]) ;
+                    if(wt->flags & (2 << (ii << 1)))
+                        _tcscat(buff,"*") ;
+                }
+                SetDlgItemText(hDlg,wtypeNameEntry[ii],buff) ;
+            } while(--ii >= 0) ;
+            EnableWindow(GetDlgItem(hDlg,IDC_WTYPE_MOD),TRUE) ;
+            EnableWindow(GetDlgItem(hDlg,IDC_WTYPE_DEL),TRUE) ;
+            SendDlgItemMessage(hDlg,IDC_WTYPE_ENABLE,BM_SETCHECK,((wt->flags & vwWTFLAGS_ENABLED) != 0), 0);
+            SendDlgItemMessage(hDlg,IDC_WTYPE_NMANAGE,BM_SETCHECK,((wt->flags & vwWTFLAGS_DONT_MANAGE) != 0), 0);
+            SendDlgItemMessage(hDlg,IDC_WTYPE_AMANAGE,BM_SETCHECK,((wt->flags & vwWTFLAGS_MANAGE) != 0), 0);
+            SendDlgItemMessage(hDlg,IDC_WTYPE_VMANAGE,BM_SETCHECK,((wt->flags & (vwWTFLAGS_DONT_MANAGE|vwWTFLAGS_MANAGE)) == 0), 0);
+            SendDlgItemMessage(hDlg,IDC_WTYPE_STICKY,BM_SETCHECK,((wt->flags & vwWTFLAGS_STICKY) != 0), 0);
+            if((ii = ((wt->flags & vwWTFLAGS_MOVE) != 0)) && wt->desk)
+                SendDlgItemMessage(hDlg,IDC_WTYPE_AMDSK,CB_SETCURSEL,wt->desk-1, 0) ;
+            SendDlgItemMessage(hDlg,IDC_WTYPE_AMOVE,BM_SETCHECK,ii,0);
+            EnableWindow(GetDlgItem(hDlg,IDC_WTYPE_AMDSK),ii) ;
+            EnableWindow(GetDlgItem(hDlg,IDC_WTYPE_AMIMM),ii) ;
+            SendDlgItemMessage(hDlg,IDC_WTYPE_AMIMM,BM_SETCHECK,((wt->flags & vwWTFLAGS_MOVE_IMMEDIATE) != 0), 0);
+            SendDlgItemMessage(hDlg,IDC_WTYPE_WHIDE,CB_SETCURSEL,((wt->flags & vwWTFLAGS_HIDEWIN_MASK) >> vwWTFLAGS_HIDEWIN_BITROT), 0) ;
+            SendDlgItemMessage(hDlg,IDC_WTYPE_THIDE,CB_SETCURSEL,((wt->flags & vwWTFLAGS_HIDETSK_MASK) >> vwWTFLAGS_HIDETSK_BITROT), 0) ;
+            
+            while((wt=wt->next) != NULL)
+                if(((wt->flags & vwWTFLAGS_MOVE) == 0) || (wt->desk <= deskCount))
+                    break ;
+            EnableWindow(GetDlgItem(hDlg,IDC_WTYPE_DOWN),(wt != NULL)) ;
+            return ;
+        }
+    }
+    winTypeCur = NULL ;
+    EnableWindow(GetDlgItem(hDlg,IDC_WTYPE_UP),FALSE) ;
+    EnableWindow(GetDlgItem(hDlg,IDC_WTYPE_DOWN),FALSE) ;
+    EnableWindow(GetDlgItem(hDlg,IDC_WTYPE_MOD),FALSE) ;
+    EnableWindow(GetDlgItem(hDlg,IDC_WTYPE_DEL),FALSE) ;
+}
+
+static void
+windowTypeDialogInit(HWND hDlg, int firstTime)
+{
+    TCHAR buff[10] ;
+    int ii ;
+    
+    if(firstTime)
+    {
+        SendDlgItemMessage(hDlg, IDC_WTYPE_WHIDE, CB_ADDSTRING, 0, (LONG) _T("Standard hide"));
+        SendDlgItemMessage(hDlg, IDC_WTYPE_WHIDE, CB_ADDSTRING, 0, (LONG) _T("Move window"));
+        SendDlgItemMessage(hDlg, IDC_WTYPE_WHIDE, CB_ADDSTRING, 0, (LONG) _T("Minimize window"));
+        SendDlgItemMessage(hDlg, IDC_WTYPE_THIDE, CB_ADDSTRING, 0, (LONG) _T("Standard hide"));
+        SendDlgItemMessage(hDlg, IDC_WTYPE_THIDE, CB_ADDSTRING, 0, (LONG) _T("Do not hide"));
+        SendDlgItemMessage(hDlg, IDC_WTYPE_THIDE, CB_ADDSTRING, 0, (LONG) _T("Toolwin flag"));
+        SendDlgItemMessage(hDlg,IDC_WTYPE_ENABLE,BM_SETCHECK,1,0);
+        SendDlgItemMessage(hDlg,IDC_WTYPE_VMANAGE,BM_SETCHECK,1,0);
+        SendDlgItemMessage(hDlg, IDC_WTYPE_WHIDE, CB_SETCURSEL, 0, 0) ;
+        SendDlgItemMessage(hDlg, IDC_WTYPE_THIDE, CB_SETCURSEL, 0, 0) ;
+        EnableWindow(GetDlgItem(hDlg,IDC_WTYPE_AMDSK),FALSE) ;
+        EnableWindow(GetDlgItem(hDlg,IDC_WTYPE_AMIMM),FALSE) ;
+        EnableWindow(GetDlgItem(hDlg,IDC_WTYPE_APPLY),FALSE) ;
+    }
+    SendDlgItemMessage(hDlg,IDC_WTYPE_AMDSK,CB_RESETCONTENT,0, 0);
+    for(ii=1 ; ii<=deskCount ; ii++)
+    {
+        _stprintf(buff,"%d",ii) ;
+        SendDlgItemMessage(hDlg, IDC_WTYPE_AMDSK, CB_ADDSTRING, 0, (LONG) buff) ;
+    }
+    SendDlgItemMessage(hDlg, IDC_WTYPE_AMDSK, CB_SETCURSEL, 0, 0) ;
+    windowTypeDialogInitList(hDlg) ;
+    windowTypeDialogInitItem(hDlg) ;
+}
+
+static void
+windowTypeDialogSetItem(HWND hDlg)
+{
+    int ii, jj ;
+    
+    if((ii=SendDlgItemMessage(hDlg,IDC_WTYPE_LIST,LB_GETCURSEL,0,0)) != LB_ERR)
+    {
+        jj = 0 ;
+        winTypeCur = windowTypeList ;
+        while(winTypeCur != NULL)
+        {
+            if((winTypeCur->flags & vwWTFLAGS_MOVE) && (winTypeCur->desk > deskCount))
+                ii++ ;
+            if(jj == ii)
+                break ;
+            jj++ ;
+            winTypeCur = winTypeCur->next ;
+        } 
+    }
+    else
+        winTypeCur = NULL ;
+    windowTypeDialogInitItem(hDlg) ;
+}
+
+static void
+windowTypeDialogMoveUp(HWND hDlg)
+{
+    vwWindowType *wt, *pwt, *ppwt ;
+    
+    if(winTypeCur != NULL)
+    {
+        ppwt = pwt = NULL ;
+        wt = windowTypeList ;
+        while((wt != winTypeCur) && (wt != NULL))
+        {
+            if(((wt->flags & vwWTFLAGS_MOVE) == 0) || (wt->desk <= deskCount))
+            {
+                ppwt = pwt ;
+                pwt = wt ;
+            }
+            wt = wt->next ;
+        }
+        if(wt == NULL)
+            winTypeCur = NULL ;
+        else if(pwt != NULL)
+        {
+            wt = pwt ;
+            while(wt->next != winTypeCur)
+                wt = wt->next ;
+            wt->next = winTypeCur->next ;
+            if(pwt == windowTypeList)
+                windowTypeList = winTypeCur ;
+            else
+            {
+                wt = windowTypeList ;
+                while(wt->next != pwt)
+                    wt = wt->next ;
+                wt->next = winTypeCur ;
+            }
+            winTypeCur->next = pwt ;
+            if(ppwt == NULL)
+                EnableWindow(GetDlgItem(hDlg,IDC_WTYPE_UP),FALSE) ;
+            EnableWindow(GetDlgItem(hDlg,IDC_WTYPE_DOWN),TRUE) ;
+            EnableWindow(GetDlgItem(hDlg,IDC_WTYPE_APPLY),TRUE) ;
+        }
+    }
+    windowTypeDialogInitList(hDlg) ;
+}
+
+static void
+windowTypeDialogMoveDown(HWND hDlg)
+{
+    vwWindowType *wt, *pwt ;
+    
+    if(winTypeCur != NULL)
+    {
+        wt = windowTypeList ;
+        while((wt != winTypeCur) && (wt != NULL))
+            wt = wt->next ;
+        if(wt == NULL)
+            winTypeCur = NULL ;
+        else
+        {
+            while(((wt = wt->next) != NULL) && (wt->flags & vwWTFLAGS_MOVE) && (wt->desk > deskCount))
+                ;
+            if(wt != NULL)
+            {
+                if(winTypeCur == windowTypeList)
+                    windowTypeList = winTypeCur->next ;
+                else
+                {
+                    pwt = windowTypeList ;
+                    while(pwt->next != winTypeCur)
+                        pwt = pwt->next ;
+                    pwt->next = winTypeCur->next ;
+                }
+                winTypeCur->next = wt->next ;
+                wt->next = winTypeCur ;
+                wt = winTypeCur ;
+                while(((wt = wt->next) != NULL) && (wt->flags & vwWTFLAGS_MOVE) && (wt->desk > deskCount))
+                    ;
+                if(wt == NULL)
+                    EnableWindow(GetDlgItem(hDlg,IDC_WTYPE_DOWN),FALSE) ;
+                EnableWindow(GetDlgItem(hDlg,IDC_WTYPE_UP),TRUE) ;
+                EnableWindow(GetDlgItem(hDlg,IDC_WTYPE_APPLY),TRUE) ;
+            }
+        }
+    }
+    windowTypeDialogInitList(hDlg) ;
+}
+
+static void
+windowTypeDialogAddMod(HWND hDlg, int add)
+{
+    vwWindowType *wt ;
+    int ii, ll, mallocErr=0 ;
+    TCHAR buff[1024], *ss ;
+    vwUInt flags ;
+    
+    if(add)
+    {
+        if((wt = calloc(1,sizeof(vwWindowType))) == NULL)
+            mallocErr = 1 ;
+        else
+        {
+            wt->next = windowTypeList ;
+            windowTypeList = wt ;
+        }
+    }
+    else
+    {
+        wt = windowTypeList ;
+        while((wt != winTypeCur) && (wt != NULL))
+            wt = wt->next ;
+    }
+    if(wt != NULL)
+    {
+        flags = 0 ;
+        
+        ii = vwWTNAME_COUNT-1 ;
+        do {
+            GetDlgItemText(hDlg,wtypeNameEntry[ii],buff,1024) ;
+            ss = buff ;
+            if(ss[0] != '\0')
+            {
+                if(ss[0] == '*')
+                {
+                    flags |= 1 << (ii << 1) ;
+                    ss++ ;
+                }
+                ll = _tcslen(ss) ;
+                if((ll > 0) && (ss[ll-1] == '*'))
+                {
+                    flags |= 2 << (ii << 1) ;
+                    ss[--ll] = '\0' ;
+                }
+                if((wt->name[ii] != NULL) && _tcscmp(ss,wt->name[ii]))
+                {
+                    free(wt->name[ii]) ;
+                    wt->name[ii] = NULL ;
+                    wt->nameLen[ii] = 0 ;
+                }
+                if(wt->name[ii] == NULL)
+                {
+                    if((wt->name[ii] = _tcsdup(ss)) == NULL)
+                        mallocErr = 1 ;
+                    else
+                        wt->nameLen[ii] = ll ;
+                }
+            }
+            else if(wt->name[ii] != NULL)
+            {
+                free(wt->name[ii]) ;
+                wt->name[ii] = NULL ;
+                wt->nameLen[ii] = 0 ;
+            }
+        } while(--ii >= 0) ;
+        if(SendDlgItemMessage(hDlg,IDC_WTYPE_ENABLE,BM_GETCHECK,0,0) == BST_CHECKED)
+            flags |= vwWTFLAGS_ENABLED ;
+        if(SendDlgItemMessage(hDlg,IDC_WTYPE_NMANAGE,BM_GETCHECK,0,0) == BST_CHECKED)
+            flags |= vwWTFLAGS_DONT_MANAGE ;
+        else if(SendDlgItemMessage(hDlg,IDC_WTYPE_AMANAGE,BM_GETCHECK,0,0) == BST_CHECKED)
+            flags |= vwWTFLAGS_MANAGE ;
+        if(SendDlgItemMessage(hDlg,IDC_WTYPE_STICKY,BM_GETCHECK,0,0) == BST_CHECKED)
+            flags |= vwWTFLAGS_STICKY ;
+        wt->desk = 0 ;
+        if(SendDlgItemMessage(hDlg,IDC_WTYPE_AMOVE,BM_GETCHECK,0,0) == BST_CHECKED)
+        {
+            flags |= vwWTFLAGS_MOVE ;
+            if((ii=SendDlgItemMessage(hDlg,IDC_WTYPE_AMDSK,CB_GETCURSEL,0,0)) != CB_ERR)
+                wt->desk = ii + 1 ;
+        }
+        if(SendDlgItemMessage(hDlg,IDC_WTYPE_AMIMM,BM_GETCHECK,0,0) == BST_CHECKED)
+            flags |= vwWTFLAGS_MOVE_IMMEDIATE ;
+        
+        if((ii=SendDlgItemMessage(hDlg,IDC_WTYPE_WHIDE,CB_GETCURSEL,0,0)) != CB_ERR)
+            flags |= ii << vwWTFLAGS_HIDEWIN_BITROT ;
+        if((ii=SendDlgItemMessage(hDlg,IDC_WTYPE_THIDE,CB_GETCURSEL,0,0)) != CB_ERR)
+            flags |= ii << vwWTFLAGS_HIDETSK_BITROT ;
+        wt->flags = flags ;
+        winTypeCur = wt ;
+        EnableWindow(GetDlgItem(hDlg,IDC_WTYPE_APPLY),TRUE) ;
+    }
+    if(mallocErr)
+        MessageBox(hWnd,_T("System resources are low, failed to create new window type."),vwVIRTUAWIN_NAME _T(" Error"), MB_ICONERROR);
+    windowTypeDialogInitList(hDlg) ;
+    windowTypeDialogInitItem(hDlg) ;
+}
+
+static void
+windowTypeDialogDelete(HWND hDlg)
+{
+    vwWindowType *wt, *pwt ;
+    int ii ;
+    if(winTypeCur != NULL)
+    {
+        pwt = NULL ;
+        wt = windowTypeList ;
+        while((wt != winTypeCur) && (wt != NULL))
+        {
+            pwt = wt ;
+            wt = wt->next ;
+        }
+        if(wt != NULL)
+        {
+            if(pwt == NULL)
+                windowTypeList = wt->next ;
+            else
+                pwt->next = wt->next ;
+            
+            ii = vwWTNAME_COUNT-1 ;
+            do {
+                if(wt->name[ii] != NULL)
+                    free(wt->name[ii]) ;
+            } while(--ii >= 0) ;
+            free(wt) ;
+            EnableWindow(GetDlgItem(hDlg,IDC_WTYPE_APPLY),TRUE) ;
+        }
+        winTypeCur = NULL ;
+    }
+    windowTypeDialogInitList(hDlg) ;
+}
+
+static BOOL CALLBACK
+windowTypeDialogFunc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
+{
+    int ii ;
+    switch (msg)
+    {
+    case WM_INITDIALOG:
+        dialogHWnd = hDlg ;
+        windowTypeDialogInit(hDlg,1) ;
+        return TRUE;
+        
+    case WM_COMMAND:
+        switch (LOWORD(wParam))
+        {
+        case IDC_WTYPE_LIST:
+            if(HIWORD(wParam) == LBN_SELCHANGE)
+                windowTypeDialogSetItem(hDlg) ;
+            break ;
+            
+        case IDC_WTYPE_UP:
+            windowTypeDialogMoveUp(hDlg) ;
+            break ;
+        
+        case IDC_WTYPE_DOWN:
+            windowTypeDialogMoveDown(hDlg) ;
+            break ;
+            
+        case IDC_WTYPE_ADD:
+            windowTypeDialogAddMod(hDlg,1) ;
+            break ;
+        
+        case IDC_WTYPE_MOD:
+            windowTypeDialogAddMod(hDlg,0) ;
+            break ;
+        
+        case IDC_WTYPE_DEL:
+            windowTypeDialogDelete(hDlg) ;
+            break ;
+        
+        case IDC_WTYPE_AMOVE:
+            ii = (SendDlgItemMessage(hDlg,IDC_WTYPE_AMOVE,BM_GETCHECK,0,0) == BST_CHECKED) ;
+            EnableWindow(GetDlgItem(hDlg,IDC_WTYPE_AMDSK),ii) ;
+            EnableWindow(GetDlgItem(hDlg,IDC_WTYPE_AMIMM),ii) ;
+            break ;
+        
+        case IDC_WTYPE_OK:
+            if(IsWindowEnabled(GetDlgItem(hDlg,IDC_WTYPE_APPLY)))
+                saveWindowConfig() ; 
+            EndDialog(hDlg,0);
+            return TRUE;
+            
+        case IDCANCEL:
+            /* load original config back in */ 
+            loadWindowConfig() ; 
+            EndDialog(hDlg,0);
+            return TRUE;
+        
+        case IDC_WTYPE_APPLY:
+            saveWindowConfig() ; 
+            EnableWindow(GetDlgItem(hDlg,IDC_WTYPE_APPLY),FALSE) ;
+            break ;
+            
+        case IDC_WTYPE_HELP:
+            showHelp(hDlg,6005);
+            break ;
+        }
+        break ;
+        
+    case WM_CLOSE:
+        /* load original config back in */ 
+        loadWindowConfig() ; 
+        EndDialog(hDlg,0);
+        return TRUE;
+	
+    }
+    return FALSE;
+}
+
+void
+createWindowTypeDialog(HINSTANCE theHinst, HWND theHwndOwner, vwWindowType *wtype)
+{
+    if((deskCount = nDesks) < currentDesk)
+        deskCount = currentDesk ;
+    winTypeCur = wtype ;
+    dialogOpen = TRUE;
+    DialogBox(theHinst,MAKEINTRESOURCE(IDD_WINDOWTYPEDIALOG),theHwndOwner,(DLGPROC) windowTypeDialogFunc);
+    dialogOpen = FALSE;
+    dialogHWnd = NULL;
+}

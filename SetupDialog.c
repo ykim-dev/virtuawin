@@ -27,7 +27,6 @@
 
 // Includes
 #include "VirtuaWin.h"
-#include "SetupDialog.h"
 #include "Resource.h"
 #include "Messages.h"
 #include "DiskRoutines.h"
@@ -74,7 +73,7 @@ vwSetupApply(HWND hDlg, int curPageMask)
         if((pageApplyMask & pageChangeMask) == pageChangeMask)
         {
             // All pages have now got any changes from the GUI, save them and apply
-            writeConfig();
+            saveVirtuawinConfig();
             vwHotkeyUnregister();
             vwIconLoad();              
             vwHotkeyRegister();
@@ -93,7 +92,7 @@ vwSetupCancel(void)
     if(pageChangeMask)
     {
         // Reset to the original values.
-        readConfig();
+        loadVirtuawinConfig();
         pageChangeMask = 0 ;
         pageApplyMask = 0 ;
     }
@@ -149,15 +148,15 @@ BOOL APIENTRY setupGeneral(HWND hDlg, UINT message, UINT wParam, LONG lParam)
     {
     case WM_INITDIALOG:
         {
-            setupHWnd = GetParent(hDlg) ;
+            dialogHWnd = GetParent(hDlg) ;
             setupKeysHWnd = hDlg ;
             pageChangeMask = 0 ;
             pageApplyMask = 0 ;
             /* the setup dialog will be automatically positioned top left of the primary, move this 40 pixels in */
-            GetWindowRect(setupHWnd, &config_dlg_rect);
+            GetWindowRect(dialogHWnd, &config_dlg_rect);
             config_dlg_rect.left += 40 ;
             config_dlg_rect.top  += 40 ;
-            SetWindowPos(setupHWnd, 0, config_dlg_rect.left, config_dlg_rect.top, 0, 0, SWP_NOZORDER | SWP_NOSIZE | SWP_NOACTIVATE);
+            SetWindowPos(dialogHWnd, 0, config_dlg_rect.left, config_dlg_rect.top, 0, 0, SWP_NOZORDER | SWP_NOSIZE | SWP_NOACTIVATE);
             
             SetDlgItemInt(hDlg, IDC_DESKY, nDesksY, FALSE);
             SetDlgItemInt(hDlg, IDC_DESKX, nDesksX, FALSE);
@@ -180,8 +179,6 @@ BOOL APIENTRY setupGeneral(HWND hDlg, UINT message, UINT wParam, LONG lParam)
             SendDlgItemMessage(hDlg, IDC_HIDWINACT, CB_SETCURSEL, hiddenWindowAct, 0) ;
             if(deskWrap)
                 SendDlgItemMessage(hDlg, IDC_DESKCYCLE, BM_SETCHECK, 1, 0);
-            if(assignImmediately)
-                SendDlgItemMessage(hDlg, IDC_ASSIGNWINNOW, BM_SETCHECK, 1,0);
             if(winListCompact)
                 SendDlgItemMessage(hDlg, IDC_COMPACTMENU, BM_SETCHECK, 1, 0);
             if(winListContent & vwWINLIST_ACCESS)
@@ -239,7 +236,6 @@ BOOL APIENTRY setupGeneral(HWND hDlg, UINT message, UINT wParam, LONG lParam)
             
             deskWrap = (SendDlgItemMessage(hDlg, IDC_DESKCYCLE, BM_GETCHECK, 0, 0) == BST_CHECKED) ;
             hiddenWindowAct = (vwUByte) SendDlgItemMessage(hDlg, IDC_HIDWINACT, CB_GETCURSEL, 0, 0) ;
-            assignImmediately = (SendDlgItemMessage(hDlg, IDC_ASSIGNWINNOW, BM_GETCHECK, 0, 0) == BST_CHECKED) ;
             winListCompact = (SendDlgItemMessage(hDlg, IDC_COMPACTMENU, BM_GETCHECK, 0, 0) == BST_CHECKED) ;
             winListContent = 0 ;
             if(SendDlgItemMessage(hDlg, IDC_MENUACCESS, BM_GETCHECK, 0, 0) == BST_CHECKED)
@@ -300,9 +296,8 @@ BOOL APIENTRY setupGeneral(HWND hDlg, UINT message, UINT wParam, LONG lParam)
         }
         else if((pageChangeMask >= 0) &&
                 ((wPar == IDC_DESKCYCLE)   || (wPar == IDC_COMPACTMENU)  ||
-                 (wPar == IDC_MENUACCESS)  || (wPar == IDC_ASSIGNWINNOW) ||
+                 (wPar == IDC_MENUACCESS)  || (wPar == IDC_MENUASSIGN)   ||
                  (wPar == IDC_MENUSHOW)    || (wPar == IDC_MENUSTICKY)   ||
-                 (wPar == IDC_MENUASSIGN)  ||
                  (wPar == IDC_HIDWINACT   && HIWORD(wParam) == CBN_SELCHANGE) ||
                  (wPar == IDC_DESKTOPNAME && HIWORD(wParam) == EN_CHANGE)))
         {
@@ -919,12 +914,10 @@ BOOL APIENTRY setupExpert(HWND hDlg, UINT message, UINT wParam, LONG lParam)
             SendDlgItemMessage(hDlg, IDC_INVERTY, BM_SETCHECK, 1,0);
         if(!displayTaskbarIcon)
             SendDlgItemMessage(hDlg, IDC_DISPLAYICON, BM_SETCHECK, 1,0);
-        if(useDeskAssignment)
-            SendDlgItemMessage(hDlg, IDC_USEASSIGN, BM_SETCHECK, 1,0);
         if(!noTaskbarCheck)
             SendDlgItemMessage(hDlg, IDC_TASKBARDETECT, BM_SETCHECK, 1,0);
-        if(trickyWindows)
-            SendDlgItemMessage(hDlg, IDC_TRICKYSUPPORT, BM_SETCHECK, 1,0);
+        if(useWindowTypes)
+            SendDlgItemMessage(hDlg, IDC_USEWINTYPES, BM_SETCHECK, 1,0);
         if(vwLogFlag)
             SendDlgItemMessage(hDlg, IDC_DEBUGLOGGING, BM_SETCHECK, 1,0);
         return TRUE;
@@ -942,9 +935,8 @@ BOOL APIENTRY setupExpert(HWND hDlg, UINT message, UINT wParam, LONG lParam)
             releaseFocus = (SendDlgItemMessage(hDlg, IDC_FOCUS, BM_GETCHECK, 0, 0) != BST_CHECKED) ;
             refreshOnWarp = (SendDlgItemMessage(hDlg, IDC_REFRESH, BM_GETCHECK, 0, 0) == BST_CHECKED) ;
             invertY = (SendDlgItemMessage(hDlg, IDC_INVERTY, BM_GETCHECK, 0, 0) == BST_CHECKED) ;
-            useDeskAssignment = (SendDlgItemMessage(hDlg, IDC_USEASSIGN, BM_GETCHECK, 0, 0) == BST_CHECKED) ;
             noTaskbarCheck = (SendDlgItemMessage(hDlg, IDC_TASKBARDETECT, BM_GETCHECK, 0, 0) != BST_CHECKED) ;
-            trickyWindows = (SendDlgItemMessage(hDlg, IDC_TRICKYSUPPORT, BM_GETCHECK, 0, 0) == BST_CHECKED) ;
+            useWindowTypes = (SendDlgItemMessage(hDlg, IDC_USEWINTYPES, BM_GETCHECK, 0, 0) == BST_CHECKED) ;
             vwLogFlag = (SendDlgItemMessage(hDlg,IDC_DEBUGLOGGING,BM_GETCHECK, 0, 0) == BST_CHECKED) ;
             displayTaskbarIcon = (SendDlgItemMessage(hDlg, IDC_DISPLAYICON, BM_GETCHECK, 0, 0) != BST_CHECKED) ;
             
@@ -977,7 +969,7 @@ BOOL APIENTRY setupExpert(HWND hDlg, UINT message, UINT wParam, LONG lParam)
             TCHAR cmdLn[MAX_PATH+9], *ss ;
             
             _tcscpy(cmdLn,_T("explorer ")) ;
-            GetFilename(vwCONFIG,1,cmdLn+9) ;
+            GetFilename(vwVIRTUAWIN_CFG,1,cmdLn+9) ;
             if((ss = _tcsrchr(cmdLn,'\\')) != NULL)
                 *ss = '\0' ;
             memset(&si, 0, sizeof(si)); 
@@ -1001,11 +993,10 @@ BOOL APIENTRY setupExpert(HWND hDlg, UINT message, UINT wParam, LONG lParam)
                 MessageBox(hWnd,cmdLn,vwVIRTUAWIN_NAME _T(" Error"),MB_ICONWARNING) ;
             }
         }
-        else if(LOWORD(wParam) == IDC_FOCUS      || LOWORD(wParam) == IDC_TRICKYSUPPORT ||
+        else if(LOWORD(wParam) == IDC_FOCUS      || LOWORD(wParam) == IDC_USEWINTYPES ||
                 LOWORD(wParam) == IDC_MINIMIZED  || LOWORD(wParam) == IDC_DEBUGLOGGING ||
                 LOWORD(wParam) == IDC_INVERTY    || LOWORD(wParam) == IDC_TASKBARDETECT ||
                 LOWORD(wParam) == IDC_REFRESH    || LOWORD(wParam) == IDC_DISPLAYICON ||
-                LOWORD(wParam) == IDC_USEASSIGN  ||
                 (LOWORD(wParam) == IDC_PRESORDER && HIWORD(wParam) == CBN_SELCHANGE) )
         {
             pageChangeMask |= 0x08 ;
@@ -1092,7 +1083,8 @@ int CALLBACK propCallBack( HWND hwndDlg, UINT uMsg, LPARAM lParam )
 /*************************************************
  * Creates the property sheet that holds the setup dialog
  */
-void createPropertySheet(HINSTANCE theHinst, HWND theHwndOwner)
+void
+createSetupDialog(HINSTANCE theHinst, HWND theHwndOwner)
 {
     PROPSHEETPAGE psp[vwPROPSHEET_PAGE_COUNT];
     PROPSHEETHEADER psh;
@@ -1167,8 +1159,8 @@ void createPropertySheet(HINSTANCE theHinst, HWND theHwndOwner)
     psh.pfnCallback = (PFNPROPSHEETCALLBACK)propCallBack;
     
     setupKeysHWnd = NULL;
-    setupOpen = TRUE;
+    dialogOpen = TRUE;
     PropertySheet(&psh);
-    setupOpen = FALSE;
-    setupHWnd = NULL;
+    dialogOpen = FALSE;
+    dialogHWnd = NULL;
 }

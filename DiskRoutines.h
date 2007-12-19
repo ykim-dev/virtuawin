@@ -26,7 +26,7 @@
 
 #include <windows.h>
 
-typedef enum { vwMODULES, vwHELP, vwCONFIG, vwLIST, vwTRICKY, vwSTICKY, vwDISABLED, vwWINDOWS_STATE, vwFILE_COUNT } eFileNames;
+typedef enum { vwMODULES, vwVIRTUAWIN_HLP, vwVIRTUAWIN_CFG, vwWINDOW_CFG, vwMODULE_CFG, vwFILE_COUNT } eFileNames;
 
 extern TCHAR *VirtuaWinPath ;
 extern TCHAR *UserAppPath ;
@@ -41,11 +41,9 @@ extern char *UserAppPathStr ;
 void GetFilename(eFileNames filetype, int location, TCHAR *outStr);
 int  loadDisabledModules(disModules *theDisList);
 void saveDisabledList(int theNOfModules, moduleType* theModList);
-void loadTrickyList(void);
-void loadStickyList(void);
-void loadAssignedList(void);
-void loadUserList(void);
-void writeConfig(void);
-void readConfig(void);
+void loadWindowConfig(void);
+void saveWindowConfig(void);
+void loadVirtuawinConfig(void);
+void saveVirtuawinConfig(void);
 
 #endif

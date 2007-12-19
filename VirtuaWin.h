@@ -24,33 +24,29 @@
 #ifndef _VIRTUAWIN_H_
 #define _VIRTUAWIN_H_
 
-// Standard includes
 #include <windows.h>
 #include <stdio.h>
 #include <tchar.h>
 
 #include "Defines.h"
 
-// externally accessible variables
+/* externally accessible variables */
 extern HWND hWnd;                                 // The handle to VirtuaWin 
 extern int screenLeft;	                          // the screen dimensions, from VirtuaWin.h
 extern int screenRight;	  
 extern int screenTop;	  
 extern int screenBottom;
 
-extern int curDisabledMod;                        // how many disabled modules we have
+extern vwWindow *windowList;                      // list of managed windows
+extern vwWindowBase *windowBaseList;              // list of all windows
+extern vwWindowType *windowTypeList;              // list for holding window types
+extern vwHotkey hotkeyList[vwHOTKEY_MAX];         // list for holding hotkeys
 
-extern vwWindow  *windowList;                     // list of managed windows
-extern vwHotkey   hotkeyList[vwHOTKEY_MAX];       // list for holding hotkeys
+extern int curDisabledMod;                        // how many disabled modules we have
 extern moduleType moduleList[MAXMODULES];         // list that holds modules
 extern disModules disabledModules[MAXMODULES*2];  // list with disabled modules
 
-extern vwWindowType *userList;                   // list for holding user added applications
-extern vwWindowType *stickyList;                 // list with saved sticky windows
-extern vwWindowType *trickyList;                 // list with saved tricky windows
-extern vwWindowType *assignedList;               // list with all windows that have a predefined desktop
-
-// logging defines & macros
+/* logging defines & macros */
 extern vwUByte vwLogFlag ;
 extern FILE *vwLogFile ;
 
@@ -63,7 +59,7 @@ extern FILE *vwLogFile ;
 #define vwLogVerbose(a)
 #endif
 
-// Forward declarations of functions
+/* Prototypes from VirtuaWin.c */
 void vwLogPrint(const TCHAR *format, ...) ;
 void vwMutexLock(void) ;
 void vwMutexRelease(void) ;
@@ -78,5 +74,13 @@ int  windowListUpdate(void) ;
 int  assignWindow(HWND theWin, int theDesk, vwUByte follow, vwUByte force, vwUByte setActive);
 int  gotoDesk(int theDesk, vwUByte force);
 void showHelp(HWND aHWnd, UINT context);
+
+/* Prototypes from SetupDialog.c */
+void createSetupDialog(HINSTANCE theHinst, HWND theHwndOwner) ;
+void initDesktopProperties(void) ;
+void storeDesktopProperties(void) ;
+
+/* Prototypes from WinTypeDialog.c */
+void createWindowTypeDialog(HINSTANCE theHinst, HWND theHwndOwner, vwWindowType *wtype) ;
 
 #endif

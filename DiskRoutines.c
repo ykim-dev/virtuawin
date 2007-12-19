@@ -38,6 +38,9 @@
 #endif
 #define VIRTUAWIN_SUBDIR vwVIRTUAWIN_NAME
 
+#define vwWindowTypeDefaultCount 3
+static TCHAR *vwWindowTypeDefaultClassNames[vwWindowTypeDefaultCount]={"ExploreWClass", "IEFrame", "CabinetWClass" } ;
+
 TCHAR *VirtuaWinPath=NULL ;
 TCHAR *UserAppPath=NULL ;
 #ifdef _UNICODE
@@ -138,8 +141,7 @@ void
 GetFilename(eFileNames filetype, int location, TCHAR *outStr)
 {
     static TCHAR *subPath[vwFILE_COUNT] = {
-        _T("modules\\*.exe"), _T("virtuawin"), _T("virtuawin.cfg"), _T("userlist.cfg"), _T("tricky.cfg"),
-        _T("sticky.cfg"), _T("module.cfg"), _T("assignment.cfg")
+        _T("modules\\*.exe"), _T("virtuawin"), _T("virtuawin.cfg"), _T("window.cfg"), _T("module.cfg")
     };
     DWORD len ;
     
@@ -186,37 +188,16 @@ GetFilename(eFileNames filetype, int location, TCHAR *outStr)
 
 
 /*************************************************
- * Write out the disabled modules
- */
-void
-saveDisabledList(int theNOfModules, moduleType* theModList)
-{
-    TCHAR DisabledFileList[MAX_PATH];
-    FILE* fp;
-    
-    GetFilename(vwDISABLED,1,DisabledFileList);
-    if(!(fp = _tfopen(DisabledFileList,_T("w"))))
-        MessageBox(hWnd,_T("Error saving disabled module state"),vwVIRTUAWIN_NAME _T(" Error"),MB_ICONERROR);
-    else
-    {
-        int i;
-        for(i = 0; i < theNOfModules; ++i)
-            if(theModList[i].disabled)
-                _ftprintf(fp,_T("%s\n"),theModList[i].description);
-        fclose(fp);
-    }
-}
-
-/*************************************************
  * Loads module names that should be disabled 
  */
-int loadDisabledModules(disModules *theDisList) 
+int
+loadDisabledModules(disModules *theDisList) 
 {
     TCHAR buff[MAX_PATH];
     int len, nOfDisMod = 0;
     FILE *fp;
     
-    GetFilename(vwDISABLED,1,buff);
+    GetFilename(vwMODULE_CFG,1,buff);
     
     if((fp = _tfopen(buff,_T("r"))) != NULL)
     {
@@ -239,172 +220,160 @@ int loadDisabledModules(disModules *theDisList)
 }
 
 /*************************************************
- * Loads window match list from a file
+ * Write out the disabled modules
  */
-static void
-loadWindowMatchList(TCHAR *fname, int hasDesk, vwWindowType **matchList)
+void
+saveDisabledList(int theNOfModules, moduleType* theModList)
 {
-    vwWindowType *wm, *pwm ;
-    vwUByte type, desk=0 ;
+    TCHAR DisabledFileList[MAX_PATH];
+    FILE* fp;
+    
+    GetFilename(vwMODULE_CFG,1,DisabledFileList);
+    if(!(fp = _tfopen(DisabledFileList,_T("w"))))
+        MessageBox(hWnd,_T("Error saving disabled module state"),vwVIRTUAWIN_NAME _T(" Error"),MB_ICONERROR);
+    else
+    {
+        int i;
+        for(i = 0; i < theNOfModules; ++i)
+            if(theModList[i].disabled)
+                _ftprintf(fp,_T("%s\n"),theModList[i].description);
+        fclose(fp);
+    }
+}
+
+/*************************************************
+ * Reads window types from window.cfg file 
+ */
+void
+loadWindowConfig(void) 
+{
+    vwWindowType *wt, *pwt ;
+    vwWindow *win ;
     TCHAR buff[1024], *ss ;
-    int len ;
+    int ii, ll, mallocErr=0 ;
     FILE *fp ;
     
-    if((wm = *matchList) != NULL)
+    if(windowTypeList != NULL)
     {
-        do {
-            pwm = wm->next ;
-            free(wm->match) ;
-            free(wm) ;
-        } while((wm = pwm) != NULL) ; 
-        *matchList = NULL ;
+        /* free current list first */
+        while((wt = windowTypeList) != NULL)
+        {
+            windowTypeList = wt->next ;
+            ii = vwWTNAME_COUNT - 1 ;
+            do {
+                if(wt->name[ii] != NULL)
+                    free(wt->name[ii]) ;
+            } while(--ii >= 0) ;
+            free(wt) ;
+        }
+        /* set all window zOrder[0] (used to store the vwWindowTypes) to 0 */
+        win = (vwWindow *) windowBaseList ;
+        while(win != NULL)
+        {
+            if(win->flags & vwWINFLAGS_WINDOW)
+                win->zOrder[0] = 0 ;
+            win = win->next ;
+        }
     }
-    pwm = NULL ;
-    if((fp = _tfopen(fname,_T("r"))) != NULL)
+    
+    pwt = wt = NULL ;
+    GetFilename(vwWINDOW_CFG,1,buff);
+    if((fp = _tfopen(buff,_T("r"))) != NULL)
     {
         while(_fgetts(buff,1024,fp) != NULL)
         {
-            ss = NULL ;
-            if(buff[0] != ':')
+            if(!_tcsncmp(buff,"flags# ",7))
             {
-                if(!hasDesk)
-                    ss = buff ;
-                else if(((desk = (vwUByte) _ttoi(buff)) > 0) &&
-                        ((ss=_tcschr(buff,' ')) != NULL))
-                    ss++ ;
-            }            
-            if((ss != NULL) && ((len = _tcslen(ss)) > 1))
-            {
-                if(ss[len-1] == '\n')
-                    ss[--len] = '\0' ;
-                if((ss[2] == ':') &&
-                   ((ss[0] == 'c') || (ss[0] == 'w')) &&
-                   ((ss[1] == 'n') || (ss[1] == 'r')))
+                /* start of a new windowType */
+                if((wt = calloc(1,sizeof(vwWindowType))) == NULL)
                 {
-                    len -= 3 ;
-                    type = (ss[0] == 'w') | ((ss[1] == 'r') ? 2:0) ;
-                    ss += 3 ;
+                    mallocErr = 1 ;
+                    break ;
                 }
+                if(pwt == NULL)
+                    windowTypeList = wt ;
                 else
-                    type = 0 ;
-                if(((type & 2) == 0) && (len > vwCLASSNAME_MAX))
-                    ss[vwCLASSNAME_MAX] = '\0' ;
-                if(((wm = malloc(sizeof(vwWindowType))) != NULL) &&
-                   ((wm->match = _tcsdup(ss)) != NULL))
+                    pwt->next = wt ;
+                pwt = wt ;
+                wt->flags = _ttoi(buff+7) ;
+            }
+            else if(wt != NULL)
+            {
+                if((buff[0] >= '0') && (buff[0] <= '3') && !_tcsncmp(buff+1,"n# ",3))
                 {
-                    wm->next = NULL ;
-                    wm->type = type ;
-                    wm->desk = desk ;
-                    if(pwm == NULL)
-                        *matchList = wm ;
-                    else
-                        pwm->next = wm ;
-                    pwm = wm ;
+                    ll = _tcslen(buff+4) ;
+                    if(buff[ll+3] == '\n')
+                    {
+                        buff[ll+3] = '\0' ;
+                        ll-- ;
+                    }
+                    if((ss = _tcsdup(buff+4)) == NULL)
+                    {
+                        mallocErr = 1 ;
+                        break ;
+                    }
+                    ii = buff[0] - '0' ;
+                    wt->name[ii] = ss ;
+                    wt->nameLen[ii] = ll ;
                 }
+                else if(!_tcsncmp(buff,"desk# ",6) &&
+                        ((wt->desk = _ttoi(buff+6)) >= vwDESKTOP_SIZE))
+                    wt->desk = 0 ;
             }
         }
         fclose(fp) ;
     }
-}
-
-/*************************************************
- * Loads window classnames from sticky file
- */
-void
-loadStickyList(void) 
-{
-    TCHAR fname[MAX_PATH];
-    
-    GetFilename(vwSTICKY,1,fname);
-    loadWindowMatchList(fname,0,&stickyList) ;
-}
-
-/*************************************************
- * Loads window classnames from tricky file
- */
-void
-loadTrickyList(void) 
-{
-    TCHAR fname[MAX_PATH];
-    
-    GetFilename(vwTRICKY,1,fname);
-    loadWindowMatchList(fname,0,&trickyList) ;
-}
-
-/*************************************************
- * Loads the list with classnames that has an desktop assigned
- */
-void
-loadAssignedList(void) 
-{
-    TCHAR fname[MAX_PATH];
-    
-    GetFilename(vwWINDOWS_STATE,1,fname);
-    loadWindowMatchList(fname,1,&assignedList) ;
-}
-
-/*************************************************
- * Loads window titles/classnames from user file 
- */
-void
-loadUserList(void) 
-{
-    TCHAR fname[MAX_PATH];
-    
-    GetFilename(vwLIST,1,fname);
-    loadWindowMatchList(fname,0,&userList) ;
-}
-
-/************************************************
- * Writes down the current configuration on file
- */
-void writeConfig(void)
-{
-    TCHAR VWConfigFile[MAX_PATH];
-    FILE* fp;
-    int ii, jj ;
-    
-    GetFilename(vwCONFIG,1,VWConfigFile);
-    if((fp = _tfopen(VWConfigFile,_T("w"))) == NULL)
-    {
-        MessageBox(NULL,_T("Error writing config file"),vwVIRTUAWIN_NAME _T(" Error"),MB_ICONERROR);
-    }
     else
     {
-        fprintf(fp, "ver# 2\n") ;
-        fprintf(fp, "hotkeyCount# %d\n", hotkeyCount);
-        for(ii=0 ; ii<hotkeyCount ; ii++) 
-            fprintf(fp, "hotkey%d# %d %d %d %d\n",ii+1,hotkeyList[ii].key,hotkeyList[ii].modifier,hotkeyList[ii].command,hotkeyList[ii].desk) ;
-        jj = vwDESKTOP_MAX ;
-        while(jj && (desktopName[jj] == NULL))
-            jj-- ;
-        fprintf(fp, "desktopNameCount# %d\n",jj);
-        for(ii=1 ; ii<=jj ; ii++) 
-            _ftprintf(fp, _T("desktopName%d# %s\n"),ii,(desktopName[ii] == NULL) ? _T(""):desktopName[ii]);
-        fprintf(fp, "deskX# %d\n", nDesksX);
-        fprintf(fp, "deskY# %d\n", nDesksY);
-        fprintf(fp, "deskWrap# %d\n", deskWrap);
-        fprintf(fp, "useDeskAssignment# %d\n", useDeskAssignment);
-        fprintf(fp, "assignImmediately# %d\n", assignImmediately);
-        fprintf(fp, "winListContent# %d\n", winListContent);
-        fprintf(fp, "winListCompact# %d\n", winListCompact);
-        fprintf(fp, "mouseEnable# %d\n", mouseEnable);
-        fprintf(fp, "mouseJumpLength# %d\n", mouseJumpLength);
-        fprintf(fp, "mouseDelay# %d\n", mouseDelay);
-        fprintf(fp, "mouseWarp# %d\n", mouseWarp);
-        fprintf(fp, "mouseKnock# %d\n", mouseKnock);
-        fprintf(fp, "mouseModifierUsed# %d\n", mouseModifierUsed);
-        fprintf(fp, "mouseModifier# %d\n", mouseModifier);
-        fprintf(fp, "preserveZOrder# %d\n", preserveZOrder);
-        fprintf(fp, "hiddenWindowAct# %d\n", hiddenWindowAct);
-        fprintf(fp, "minSwitch# %d\n", minSwitch);
-        fprintf(fp, "releaseFocus# %d\n", releaseFocus);
-        fprintf(fp, "refreshOnWarp# %d\n", refreshOnWarp);
-        fprintf(fp, "invertY# %d\n", invertY);
-        fprintf(fp, "noTaskbarCheck# %d\n", noTaskbarCheck);
-        fprintf(fp, "trickyWindows# %d\n", trickyWindows);
-        fprintf(fp, "displayTaskbarIcon# %d\n", displayTaskbarIcon);
-        fprintf(fp, "logFlag# %d\n", vwLogFlag);
+        /* no window.cfg file yet create the default */
+        for(ii=0 ; ii<vwWindowTypeDefaultCount ; ii++)
+        {
+            if(((wt = calloc(1,sizeof(vwWindowType))) == NULL) ||
+               ((wt->name[0] = strdup(vwWindowTypeDefaultClassNames[ii])) == NULL))
+            {
+                mallocErr = 1 ;
+                break ;
+            }
+            wt->nameLen[0] = _tcslen(vwWindowTypeDefaultClassNames[ii]) ;
+            wt->flags = (vwWTFLAGS_ENABLED|vwWTFLAGS_HIDEWIN_MOVE|vwWTFLAGS_HIDETSK_HIDE) ;
+            if(pwt == NULL)
+                windowTypeList = wt ;
+            else
+                pwt->next = wt ;
+            pwt = wt ;
+        }
+    }
+    if(mallocErr)
+        MessageBox(hWnd,_T("System resources are low, failed to load configuration."),vwVIRTUAWIN_NAME _T(" Error"), MB_ICONERROR);
+}
+
+/*************************************************
+ * Writes the window type list to window.cfg file
+ */
+void
+saveWindowConfig(void) 
+{
+    TCHAR fname[MAX_PATH];
+    vwWindowType *wt ;
+    FILE *fp ;
+    int ii ;
+    
+    GetFilename(vwWINDOW_CFG,1,fname);
+    if((fp = _tfopen(fname,_T("w"))) == NULL)
+        MessageBox(NULL,_T("Error writing window.cfg file"),vwVIRTUAWIN_NAME _T(" Error"),MB_ICONERROR);
+    else
+    {
+        wt = windowTypeList ;
+        while(wt != NULL)
+        {
+            fprintf(fp, "flags# %d\n", wt->flags);
+            for(ii=0 ; ii<vwWTNAME_COUNT ; ii++)
+                if(wt->name[ii] != NULL)
+                    fprintf(fp, "%dn# %s\n",ii,wt->name[ii]);
+            if(wt->desk > 0)
+                fprintf(fp, "desk# %d\n", wt->desk);
+            wt = wt->next ;
+        }
         fclose(fp);
     }
 }
@@ -442,13 +411,14 @@ addOldHotkey(int key, int mod, int win, int cmd, int desk)
     }
 }
 
-void readConfig(void)
+void
+loadVirtuawinConfig(void)
 {
     TCHAR buff[MAX_PATH], buff2[2048], *ss ;
     FILE *fp, *wfp;
     int ii, jj, ll, ia[24], hk[4] ;
     
-    GetFilename(vwCONFIG,1,buff);
+    GetFilename(vwVIRTUAWIN_CFG,1,buff);
     if(GetFileAttributes(buff) == INVALID_FILE_ATTRIBUTES)
     {
         /* config file does not exist - new user, setup configuration, check
@@ -475,10 +445,11 @@ void readConfig(void)
         
         /* If the user path is not the installation path then copy all the
          * config files across to the user area */
+        fp = NULL ;
+        ii = vwFILE_COUNT ;
         if(_tcsicmp(VirtuaWinPath,UserAppPath))
         {
-            ii = vwFILE_COUNT ;
-            while(--ii >= vwCONFIG)
+            while(--ii >= vwVIRTUAWIN_CFG)
             {
                 GetFilename(ii,0,buff);
                 if((fp = _tfopen(buff,_T("rb"))) != NULL)
@@ -502,25 +473,12 @@ void readConfig(void)
                 }
             }
         }
-        else
+        /* check we did not break out due to an error and virtuawin.cfg was found */
+        if((ii >= vwVIRTUAWIN_CFG) || (fp == NULL))
         {
-            /* must create the main VirtuaWin.cfg file */
-            ii = vwCONFIG - 1 ;
-            fp = NULL ;
-        }
-        GetFilename(vwCONFIG,1,buff);
-        /* check a main config file has been copied, if not create a dummy one */
-        if((ii < vwCONFIG) && (fp == NULL) &&
-           (((wfp = _tfopen(buff,_T("wb"))) == NULL) || (fclose(wfp) != 0)))
-            ii = vwCONFIG ;
-            
-        /* check we did not break out due to an error */
-        if(ii >= vwCONFIG)
-        {
-            MessageBox(hWnd,_T("Error occurred creating new user configuration, please check file permissions.\nIf you continue to have problems, send e-mail to:\n\n    ") vwVIRTUAWIN_EMAIL,vwVIRTUAWIN_NAME _T(" Error"),MB_ICONERROR);
+            MessageBox(hWnd,_T("Error occurred creating new user configuration, please check installation & file permissions.\nIf you continue to have problems, send e-mail to:\n\n    ") vwVIRTUAWIN_EMAIL,vwVIRTUAWIN_NAME _T(" Error"),MB_ICONERROR);
             exit(1) ;
         }
-            
         _stprintf(buff2,_T("Welcome to %s\n\nA new user configuration has been created in directory:\n\n    %s\n\nRight click on tray icon to access the Setup dialog."),vwVIRTUAWIN_NAME_VERSION,UserAppPath) ;
         MessageBox(hWnd,buff2,vwVIRTUAWIN_NAME,MB_ICONINFORMATION);
     }
@@ -538,7 +496,7 @@ void readConfig(void)
         hotkeyCount = 0 ;
         fscanf(fp, "%s%i", (char *) buff, ia + 9);
         fscanf(fp, "%s%i", (char *) buff, &jj);
-        fscanf(fp, "%s%i", (char *) buff, ia + 17);
+        fscanf(fp, "%s%i", (char *) buff, ia + 16);
         fscanf(fp, "%s%i", (char *) buff, &ii);
         fscanf(fp, "%s%i", (char *) buff, hk + 0);
         fscanf(fp, "%s%i", (char *) buff, hk + 1);
@@ -560,7 +518,7 @@ void readConfig(void)
             hotkeyCount = 4 ;
         }
         fscanf(fp, "%s%i", (char *) buff, ia + 8);
-        fscanf(fp, "%s%i", (char *) buff, ia + 16);
+        fscanf(fp, "%s%i", (char *) buff, ia + 4);
         fscanf(fp, "%s%i", (char *) buff, &ii);
         fscanf(fp, "%s%i", (char *) buff, ia + 1);
         fscanf(fp, "%s%i", (char *) buff, ia + 0);
@@ -599,14 +557,14 @@ void readConfig(void)
         fscanf(fp, "%s%i", (char *) buff, &ii);
         if(ii)  ia[13] |= vwHOTKEY_CONTROL ;
         fscanf(fp, "%s%i", (char *) buff, &ii);
-        fscanf(fp, "%s%i", (char *) buff, ia + 18);
+        fscanf(fp, "%s%i", (char *) buff, ia + 17);
         fscanf(fp, "%s%i", (char *) buff, ia + 10);
         ia[10] = (ia[10] == 0) ;
         fscanf(fp, "%s%i", (char *) buff, hks + 0);
         fscanf(fp, "%s%i", (char *) buff, hks + 1);
         fscanf(fp, "%s%i", (char *) buff, ia + 14);
         fscanf(fp, "%s%i", (char *) buff, ia + 2);
-        fscanf(fp, "%s%i", (char *) buff, ia + 19);
+        fscanf(fp, "%s%i", (char *) buff, ia + 18);
         ia[5] = 0 ;
         fscanf(fp, "%s%i", (char *) buff, &ii);
         if(ii)  ia[5] |= vwWINLIST_STICKY ;
@@ -614,7 +572,7 @@ void readConfig(void)
         if(ii)  ia[5] |= vwWINLIST_ASSIGN ;
         fscanf(fp, "%s%i", (char *) buff, &ii);
         if(ii)  ia[5] |= vwWINLIST_ACCESS ;
-        fscanf(fp, "%s%i", (char *) buff, ia + 3);
+        fscanf(fp, "%s%i", (char *) buff, &ii);
         fscanf(fp, "%s%i", (char *) buff, &ii);
         fscanf(fp, "%s%i", (char *) buff, &ii);
         fscanf(fp, "%s%i", (char *) buff, hkc + 0);
@@ -633,10 +591,10 @@ void readConfig(void)
         }
         else
             kk = -1 ;
-        fscanf(fp, "%s%i", (char *) buff, ia + 22);
-        fscanf(fp, "%s%i", (char *) buff, hks + 2);
         fscanf(fp, "%s%i", (char *) buff, ia + 20);
-        fscanf(fp, "%s%i", (char *) buff, ia + 21);
+        fscanf(fp, "%s%i", (char *) buff, hks + 2);
+        fscanf(fp, "%s%i", (char *) buff, ia + 19);
+        fscanf(fp, "%s%i", (char *) buff, ia + 3);
         fscanf(fp, "%s%i", (char *) buff, &ii);
         fscanf(fp, "%s%i", (char *) buff, &ii);
         fscanf(fp, "%s%i", (char *) buff, &ii);
@@ -652,7 +610,7 @@ void readConfig(void)
         fscanf(fp, "%s%i", (char *) buff, &ii);
         fscanf(fp, "%s%i", (char *) buff, &ii);
         fscanf(fp, "%s%i", (char *) buff, &ii);
-        fscanf(fp, "%s%i", (char *) buff, ia + 4);
+        fscanf(fp, "%s%i", (char *) buff, &ii);
         fscanf(fp, "%s%i", (char *) buff, ia + 15);
         fscanf(fp, "%s%i", (char *) buff, &ii);
         fscanf(fp, "%s%i", (char *) buff, hk + 0);
@@ -661,7 +619,7 @@ void readConfig(void)
         fscanf(fp, "%s%i", (char *) buff, hk + 3);
         if(hk[0])
             addOldHotkey(hk[1],hk[2],hk[3],vwCMD_WIN_DISMISS,0) ;
-        fscanf(fp, "%s%i", (char *) buff, ia + 23);
+        fscanf(fp, "%s%i", (char *) buff, ia + 21);
         fscanf(fp, "%s%i", (char *) buff, ia + 11);
         fscanf(fp, "%s%i", (char *) buff, ia + 6);
         if(ia[6] && (kk >= 0))
@@ -728,8 +686,8 @@ void readConfig(void)
     nDesksY = ia[1] ;
     nDesks = nDesksX * nDesksY ;
     deskWrap = ia[2] ;
-    useDeskAssignment = ia[3] ;
-    assignImmediately = ia[4] ;
+    useWindowTypes = ia[3] ;
+    minSwitch = ia[4] ;
     winListContent = ia[5] ;
     winListCompact = ia[6] ;
     mouseEnable = ia[7] ;
@@ -741,12 +699,63 @@ void readConfig(void)
     mouseModifier = ia[13] ;
     preserveZOrder = ia[14] ;
     hiddenWindowAct = ia[15] ;
-    minSwitch = ia[16] ;
-    releaseFocus = ia[17] ;
-    refreshOnWarp = ia[18] ;
-    invertY = ia[19] ;
-    noTaskbarCheck = ia[20] ;
-    trickyWindows = ia[21] ;
-    displayTaskbarIcon = ia[22] ;
-    vwLogFlag = ia[23] ;
+    releaseFocus = ia[16] ;
+    refreshOnWarp = ia[17] ;
+    invertY = ia[18] ;
+    noTaskbarCheck = ia[19] ;
+    displayTaskbarIcon = ia[20] ;
+    vwLogFlag = ia[21] ;
+}
+
+/************************************************
+ * Writes down the current configuration on file
+ */
+void
+saveVirtuawinConfig(void)
+{
+    TCHAR VWConfigFile[MAX_PATH];
+    FILE* fp;
+    int ii, jj ;
+    
+    GetFilename(vwVIRTUAWIN_CFG,1,VWConfigFile);
+    if((fp = _tfopen(VWConfigFile,_T("w"))) == NULL)
+    {
+        MessageBox(NULL,_T("Error writing virtuawin.cfg file"),vwVIRTUAWIN_NAME _T(" Error"),MB_ICONERROR);
+    }
+    else
+    {
+        fprintf(fp, "ver# 2\n") ;
+        fprintf(fp, "hotkeyCount# %d\n", hotkeyCount);
+        for(ii=0 ; ii<hotkeyCount ; ii++) 
+            fprintf(fp, "hotkey%d# %d %d %d %d\n",ii+1,hotkeyList[ii].key,hotkeyList[ii].modifier,hotkeyList[ii].command,hotkeyList[ii].desk) ;
+        jj = vwDESKTOP_MAX ;
+        while(jj && (desktopName[jj] == NULL))
+            jj-- ;
+        fprintf(fp, "desktopNameCount# %d\n",jj);
+        for(ii=1 ; ii<=jj ; ii++) 
+            _ftprintf(fp, _T("desktopName%d# %s\n"),ii,(desktopName[ii] == NULL) ? _T(""):desktopName[ii]);
+        fprintf(fp, "deskX# %d\n", nDesksX);
+        fprintf(fp, "deskY# %d\n", nDesksY);
+        fprintf(fp, "deskWrap# %d\n", deskWrap);
+        fprintf(fp, "useWindowTypes# %d\n", useWindowTypes);
+        fprintf(fp, "assignImmediately# %d\n", minSwitch);
+        fprintf(fp, "winListContent# %d\n", winListContent);
+        fprintf(fp, "winListCompact# %d\n", winListCompact);
+        fprintf(fp, "mouseEnable# %d\n", mouseEnable);
+        fprintf(fp, "mouseJumpLength# %d\n", mouseJumpLength);
+        fprintf(fp, "mouseDelay# %d\n", mouseDelay);
+        fprintf(fp, "mouseWarp# %d\n", mouseWarp);
+        fprintf(fp, "mouseKnock# %d\n", mouseKnock);
+        fprintf(fp, "mouseModifierUsed# %d\n", mouseModifierUsed);
+        fprintf(fp, "mouseModifier# %d\n", mouseModifier);
+        fprintf(fp, "preserveZOrder# %d\n", preserveZOrder);
+        fprintf(fp, "hiddenWindowAct# %d\n", hiddenWindowAct);
+        fprintf(fp, "releaseFocus# %d\n", releaseFocus);
+        fprintf(fp, "refreshOnWarp# %d\n", refreshOnWarp);
+        fprintf(fp, "invertY# %d\n", invertY);
+        fprintf(fp, "noTaskbarCheck# %d\n", noTaskbarCheck);
+        fprintf(fp, "displayTaskbarIcon# %d\n", displayTaskbarIcon);
+        fprintf(fp, "logFlag# %d\n", vwLogFlag);
+        fclose(fp);
+    }
 }

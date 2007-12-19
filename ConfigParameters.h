@@ -24,12 +24,16 @@
 #ifndef _CONFIGPARAMETERS_H_
 #define _CONFIGPARAMETERS_H_
 
-extern HWND    setupHWnd;   // handle to the setup dialog, NULL if not open
-extern vwUByte setupOpen;         
+#define vwWINLIST_ACCESS   0x01
+#define vwWINLIST_ASSIGN   0x02
+#define vwWINLIST_SHOW     0x04
+#define vwWINLIST_STICKY   0x08
+
+extern HWND    dialogHWnd;   // handle to the setup dialog, NULL if not open
+extern vwUByte dialogOpen;         
 
 extern int hotkeyCount;            // Number of hotkeys
 extern int moduleCount;            // Number of loaded modules
-extern int windowCount;            // Number of windows in the system
 extern int currentDesk;            // Current desktop
 extern int nDesks;                 // indicates the total number of desks (nDesksX * nDesksY)
 extern int nDesksX;                // indicates the number of desks wide the virtual area is
@@ -48,20 +52,12 @@ extern vwUByte minSwitch;	   // if we should switch minimized windows
 extern vwUByte refreshOnWarp;      // if we should refresh desktop after switch
 extern vwUByte deskWrap;           // If we want to have desktop cycling
 extern vwUByte invertY;            // if up/down should be inverted
-extern vwUByte useDeskAssignment;  // if we have desktop assignment 
-extern vwUByte assignImmediately;  // move an assigned window immediately
 extern vwUByte displayTaskbarIcon; // Should we display the systray icon
 extern vwUByte noTaskbarCheck;     // Should we skip the taskbar search
-extern vwUByte trickyWindows;      // Use the alternate hiding technique
-
-extern TCHAR *desktopName[vwDESKTOP_SIZE];
-
-#define vwWINLIST_ACCESS   0x01
-#define vwWINLIST_ASSIGN   0x02
-#define vwWINLIST_SHOW     0x04
-#define vwWINLIST_STICKY   0x08
-
+extern vwUByte useWindowTypes;     // Use window types
 extern vwUByte winListContent;     // Required content of the winodw list menu
 extern vwUByte winListCompact;     // if window list menu should be compact
+
+extern TCHAR *desktopName[vwDESKTOP_SIZE];
 
 #endif
