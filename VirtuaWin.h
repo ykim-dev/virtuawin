@@ -81,6 +81,6 @@ void initDesktopProperties(void) ;
 void storeDesktopProperties(void) ;
 
 /* Prototypes from WinTypeDialog.c */
-void createWindowTypeDialog(HINSTANCE theHinst, HWND theHwndOwner, vwWindowType *wtype) ;
+void createWindowTypeDialog(HINSTANCE theHinst, HWND theHwndOwner, vwWindowType *wtype, HWND theWin) ;
 
 #endif

@@ -38,6 +38,7 @@
 #include <commctrl.h>
 
 static int deskCount ;
+static HWND initWin ;
 static vwWindowType *winTypeCur ;
 
 static void
@@ -59,7 +60,7 @@ windowTypeDialogInitList(HWND hDlg)
         {
             ii++ ;
             ss = buff ;
-            ss += _stprintf(ss,"%d",ii) ;
+            ss += _stprintf(ss,_T("%d"),ii) ;
             for(jj=0 ; jj<vwWTNAME_COUNT ; jj++)
             {
                 if(wt->name[jj] != NULL)
@@ -140,7 +141,7 @@ windowTypeDialogInitItem(HWND hDlg)
                     else
                         _tcscpy(buff,wt->name[ii]) ;
                     if(wt->flags & (2 << (ii << 1)))
-                        _tcscat(buff,"*") ;
+                        _tcscat(buff,_T("*")) ;
                 }
                 SetDlgItemText(hDlg,wtypeNameEntry[ii],buff) ;
             } while(--ii >= 0) ;
@@ -177,7 +178,9 @@ windowTypeDialogInitItem(HWND hDlg)
 static void
 windowTypeDialogInit(HWND hDlg, int firstTime)
 {
-    TCHAR buff[10] ;
+    TCHAR buff[MAX_PATH] ;
+    HANDLE procHdl ;
+    DWORD procId ;
     int ii ;
     
     if(firstTime)
@@ -199,12 +202,34 @@ windowTypeDialogInit(HWND hDlg, int firstTime)
     SendDlgItemMessage(hDlg,IDC_WTYPE_AMDSK,CB_RESETCONTENT,0, 0);
     for(ii=1 ; ii<=deskCount ; ii++)
     {
-        _stprintf(buff,"%d",ii) ;
+        _stprintf(buff,_T("%d"),ii) ;
         SendDlgItemMessage(hDlg, IDC_WTYPE_AMDSK, CB_ADDSTRING, 0, (LONG) buff) ;
     }
     SendDlgItemMessage(hDlg, IDC_WTYPE_AMDSK, CB_SETCURSEL, 0, 0) ;
     windowTypeDialogInitList(hDlg) ;
     windowTypeDialogInitItem(hDlg) ;
+    if(initWin != NULL)
+    {
+        typedef DWORD (WINAPI *vwGETMODULEFILENAMEEX)(HANDLE,HMODULE,LPTSTR,DWORD) ;
+        extern vwGETMODULEFILENAMEEX vwGetModuleFileNameEx ;
+        
+        buff[0] = 0 ;
+        GetClassName(initWin,buff,MAX_PATH);
+        SetDlgItemText(hDlg,wtypeNameEntry[0],buff) ;
+        buff[0] = 0 ;
+        GetWindowText(initWin,buff,MAX_PATH);
+        SetDlgItemText(hDlg,wtypeNameEntry[1],buff) ;
+        buff[0] = 0 ;
+        if((vwGetModuleFileNameEx != NULL) &&
+           (GetWindowThreadProcessId(initWin,&procId) != 0) && (procId != 0) && 
+           ((procHdl=OpenProcess(PROCESS_QUERY_INFORMATION|PROCESS_VM_READ,FALSE,procId)) != NULL))
+        {
+            vwGetModuleFileNameEx(procHdl,NULL,buff,MAX_PATH) ;
+            CloseHandle(procHdl) ;
+        }
+        SetDlgItemText(hDlg,wtypeNameEntry[2],buff) ;
+        initWin = NULL ;
+    }
 }
 
 static void
@@ -495,6 +520,20 @@ windowTypeDialogFunc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
             EnableWindow(GetDlgItem(hDlg,IDC_WTYPE_AMIMM),ii) ;
             break ;
         
+        case IDC_WTYPE_WHIDE:
+            if((HIWORD(wParam) == CBN_SELCHANGE) &&
+               ((ii=SendDlgItemMessage(hDlg,IDC_WTYPE_WHIDE,CB_GETCURSEL,0,0)) != CB_ERR) && (ii > 0) &&
+               ((ii=SendDlgItemMessage(hDlg,IDC_WTYPE_THIDE,CB_GETCURSEL,0,0)) != CB_ERR) && (ii == 0))
+                SendDlgItemMessage(hDlg, IDC_WTYPE_THIDE, CB_SETCURSEL, 2, 0) ;
+            break ;
+            
+        case IDC_WTYPE_THIDE:
+            if((HIWORD(wParam) == CBN_SELCHANGE) &&
+               ((ii=SendDlgItemMessage(hDlg,IDC_WTYPE_THIDE,CB_GETCURSEL,0,0)) != CB_ERR) && (ii == 1) &&
+               ((ii=SendDlgItemMessage(hDlg,IDC_WTYPE_WHIDE,CB_GETCURSEL,0,0)) != CB_ERR) && (ii == 0))
+                SendDlgItemMessage(hDlg, IDC_WTYPE_WHIDE, CB_SETCURSEL, 1, 0) ;
+            break ;
+
         case IDC_WTYPE_OK:
             if(IsWindowEnabled(GetDlgItem(hDlg,IDC_WTYPE_APPLY)))
                 saveWindowConfig() ; 
@@ -529,13 +568,14 @@ windowTypeDialogFunc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 }
 
 void
-createWindowTypeDialog(HINSTANCE theHinst, HWND theHwndOwner, vwWindowType *wtype)
+createWindowTypeDialog(HINSTANCE theHinst, HWND theHwndOwner, vwWindowType *wtype, HWND theWin)
 {
     if((deskCount = nDesks) < currentDesk)
         deskCount = currentDesk ;
     winTypeCur = wtype ;
-    dialogOpen = TRUE;
-    DialogBox(theHinst,MAKEINTRESOURCE(IDD_WINDOWTYPEDIALOG),theHwndOwner,(DLGPROC) windowTypeDialogFunc);
-    dialogOpen = FALSE;
-    dialogHWnd = NULL;
+    initWin = theWin ;
+    dialogOpen = TRUE ;
+    DialogBox(theHinst,MAKEINTRESOURCE(IDD_WINDOWTYPEDIALOG),theHwndOwner,(DLGPROC) windowTypeDialogFunc) ;
+    dialogOpen = FALSE ;
+    dialogHWnd = NULL ;
 }

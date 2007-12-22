@@ -126,19 +126,18 @@ IDD_PROPPAGE_EXPERT DIALOG 0, 0, 210, 250
 STYLE DS_3DLOOK | WS_CHILD | WS_DISABLED | WS_BORDER
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX        "Advanced Options", IDC_STATIC, 4, 5, 202, 95
+    GROUPBOX        "Advanced Options", IDC_STATIC, 4, 5, 202, 73
     LTEXT           "On desktop change preserve:", IDC_STATIC,  10, 16, 120, 10
     COMBOBOX        IDC_PRESORDER, 22, 26, 130, 45, CBS_AUTOHSCROLL | CBS_DROPDOWNLIST | WS_TABSTOP
-    AUTOCHECKBOX    "Restore focus on desktop change", IDC_FOCUS,                10,  52, 125, 10
-    AUTOCHECKBOX    "Hide minimized windows on desktop change", IDC_MINIMIZED,   10,  63, 155, 10
-    AUTOCHECKBOX    "Invert Up/Down", IDC_INVERTY,                               10,  74,  70, 10
-    AUTOCHECKBOX    "Hide system tray icon", IDC_DISPLAYICON,                    10,  85,  80, 10
+    AUTOCHECKBOX    "Restore focus on desktop change", IDC_FOCUS,                10,  41, 125, 10
+    AUTOCHECKBOX    "Invert Up/Down", IDC_INVERTY,                               10,  52,  70, 10
+    AUTOCHECKBOX    "Hide system tray icon", IDC_DISPLAYICON,                    10,  63,  80, 10
 
-    GROUPBOX        "Workarounds", IDC_STATIC, 4, 103, 202, 58
-    AUTOCHECKBOX    "Enable taskbar detection", IDC_TASKBARDETECT,               10, 114, 100, 10
-    AUTOCHECKBOX    "Enable window specific configuration", IDC_USEWINTYPES,     10, 125, 150, 10
-    AUTOCHECKBOX    "Force refresh after desktop change", IDC_REFRESH,           10, 136, 130, 10
-    AUTOCHECKBOX    "Write events to virtuawin.log", IDC_DEBUGLOGGING,           10, 147, 130, 10
+    GROUPBOX        "Workarounds", IDC_STATIC, 4, 81, 202, 58
+    AUTOCHECKBOX    "Enable taskbar detection", IDC_TASKBARDETECT,               10,  92, 100, 10
+    AUTOCHECKBOX    "Enable window specific configuration", IDC_USEWINTYPES,     10, 103, 150, 10
+    AUTOCHECKBOX    "Force refresh after desktop change", IDC_REFRESH,           10, 114, 130, 10
+    AUTOCHECKBOX    "Write events to virtuawin.log", IDC_DEBUGLOGGING,           10, 125, 130, 10
 
     PUSHBUTTON      "Explore Config",  IDC_EXPLORECNFG, 140, 230, 60, 14
 END

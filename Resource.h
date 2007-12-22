@@ -49,7 +49,6 @@
 #define IDC_MSHIFT        1021
 #define IDC_MCTRL         1022
 #define IDC_JUMP          1023
-#define IDC_MINIMIZED     1028
 #define IDC_HOTKEY_LIST   1031
 #define IDC_HOTKEY_CMD    1032
 #define IDC_HOTKEY_DSK    1033
@@ -127,10 +126,11 @@
 #define ID_WM_BOTTOM     32782
 #define ID_WM_STICKY     32783
 #define ID_WM_MANAGE     32784
-#define ID_WM_INFO       32785
-#define ID_WM_WTYPE      32786
-#define ID_WM_PREV       32787
-#define ID_WM_NEXT       32788
+#define ID_WM_AWTYPE     32785
+#define ID_WM_EWTYPE     32786
+#define ID_WM_INFO       32787
+#define ID_WM_PREV       32788
+#define ID_WM_NEXT       32789
 #define ID_WM_DESK       32790
 
 #endif

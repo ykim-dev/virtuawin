@@ -46,7 +46,11 @@ static unsigned char vwCommandEnum[]={
 } ;
 #undef  VW_COMMAND
 
+#ifdef _UNICODE
+#define VW_COMMAND(a, b, c, d) _T(d) ,
+#else
 #define VW_COMMAND(a, b, c, d) d ,
+#endif
 static TCHAR *vwCommandName[]={
 #include "vwCommands.def"
 } ;
@@ -177,6 +181,10 @@ BOOL APIENTRY setupGeneral(HWND hDlg, UINT message, UINT wParam, LONG lParam)
             SendDlgItemMessage(hDlg, IDC_HIDWINACT, CB_ADDSTRING, 0, (LONG) _T("Show window on current desktop"));
             SendDlgItemMessage(hDlg, IDC_HIDWINACT, CB_ADDSTRING, 0, (LONG) _T("Change to window's desktop"));
             SendDlgItemMessage(hDlg, IDC_HIDWINACT, CB_SETCURSEL, hiddenWindowAct, 0) ;
+            SendDlgItemMessage(hDlg, IDC_TSKBUTACT, CB_ADDSTRING, 0, (LONG) _T("Move window to current desktop"));
+            SendDlgItemMessage(hDlg, IDC_TSKBUTACT, CB_ADDSTRING, 0, (LONG) _T("Show window on current desktop"));
+            SendDlgItemMessage(hDlg, IDC_TSKBUTACT, CB_ADDSTRING, 0, (LONG) _T("Change to window's desktop"));
+            SendDlgItemMessage(hDlg, IDC_TSKBUTACT, CB_SETCURSEL, taskButtonAct-1, 0) ;
             if(deskWrap)
                 SendDlgItemMessage(hDlg, IDC_DESKCYCLE, BM_SETCHECK, 1, 0);
             if(winListCompact)
@@ -236,6 +244,7 @@ BOOL APIENTRY setupGeneral(HWND hDlg, UINT message, UINT wParam, LONG lParam)
             
             deskWrap = (SendDlgItemMessage(hDlg, IDC_DESKCYCLE, BM_GETCHECK, 0, 0) == BST_CHECKED) ;
             hiddenWindowAct = (vwUByte) SendDlgItemMessage(hDlg, IDC_HIDWINACT, CB_GETCURSEL, 0, 0) ;
+            taskButtonAct = (vwUByte) SendDlgItemMessage(hDlg, IDC_TSKBUTACT, CB_GETCURSEL, 0, 0) + 1 ;
             winListCompact = (SendDlgItemMessage(hDlg, IDC_COMPACTMENU, BM_GETCHECK, 0, 0) == BST_CHECKED) ;
             winListContent = 0 ;
             if(SendDlgItemMessage(hDlg, IDC_MENUACCESS, BM_GETCHECK, 0, 0) == BST_CHECKED)
@@ -299,6 +308,7 @@ BOOL APIENTRY setupGeneral(HWND hDlg, UINT message, UINT wParam, LONG lParam)
                  (wPar == IDC_MENUACCESS)  || (wPar == IDC_MENUASSIGN)   ||
                  (wPar == IDC_MENUSHOW)    || (wPar == IDC_MENUSTICKY)   ||
                  (wPar == IDC_HIDWINACT   && HIWORD(wParam) == CBN_SELCHANGE) ||
+                 (wPar == IDC_TSKBUTACT   && HIWORD(wParam) == CBN_SELCHANGE) ||
                  (wPar == IDC_DESKTOPNAME && HIWORD(wParam) == EN_CHANGE)))
         {
             pageChangeMask |= 0x01 ;
@@ -345,7 +355,7 @@ vwSetupHotKeysInitList(HWND hDlg)
             if(hotkeyList[ii].desk && vwCommandEnum[cmd])
             {
                 ss = _tcschr(ss,'#') ;
-                ss += _stprintf(ss,"%d",hotkeyList[ii].desk) ;
+                ss += _stprintf(ss,_T("%d"),hotkeyList[ii].desk) ;
                 _tcscpy(ss,_tcschr(vwCommandName[cmd],'#') + 1) ;
             }
             ss += _tcslen(ss) ;
@@ -414,7 +424,7 @@ vwSetupHotKeysInit(HWND hDlg, int firstTime)
         jj = currentDesk ;
     for(ii=1 ; ii<=jj ; ii++)
     {
-        _stprintf(buff,"%d",ii) ;
+        _stprintf(buff,_T("%d"),ii) ;
         SendDlgItemMessage(hDlg, IDC_HOTKEY_DSK, CB_ADDSTRING, 0, (LONG) buff) ;
     }
     SendDlgItemMessage(hDlg,IDC_HOTKEY_DSK,CB_SETCURSEL,currentDesk-1,0) ;
@@ -904,8 +914,6 @@ BOOL APIENTRY setupExpert(HWND hDlg, UINT message, UINT wParam, LONG lParam)
         SendDlgItemMessage(hDlg, IDC_PRESORDER, CB_ADDSTRING, 0, (LONG) _T("Z order"));
         SendDlgItemMessage(hDlg, IDC_PRESORDER, CB_ADDSTRING, 0, (LONG) _T("Taskbar & Z order"));
         SendDlgItemMessage(hDlg, IDC_PRESORDER, CB_SETCURSEL, preserveZOrder, 0) ;
-        if(minSwitch)
-            SendDlgItemMessage(hDlg, IDC_MINIMIZED, BM_SETCHECK, 1,0);
         if(!releaseFocus)
             SendDlgItemMessage(hDlg, IDC_FOCUS, BM_SETCHECK, 1,0);
         if(refreshOnWarp)
@@ -931,7 +939,6 @@ BOOL APIENTRY setupExpert(HWND hDlg, UINT message, UINT wParam, LONG lParam)
         case PSN_APPLY:
             oldLogFlag = vwLogFlag ;
             preserveZOrder = (vwUByte) SendDlgItemMessage(hDlg, IDC_PRESORDER, CB_GETCURSEL, 0, 0) ;
-            minSwitch = (SendDlgItemMessage(hDlg, IDC_MINIMIZED, BM_GETCHECK, 0, 0) == BST_CHECKED) ;
             releaseFocus = (SendDlgItemMessage(hDlg, IDC_FOCUS, BM_GETCHECK, 0, 0) != BST_CHECKED) ;
             refreshOnWarp = (SendDlgItemMessage(hDlg, IDC_REFRESH, BM_GETCHECK, 0, 0) == BST_CHECKED) ;
             invertY = (SendDlgItemMessage(hDlg, IDC_INVERTY, BM_GETCHECK, 0, 0) == BST_CHECKED) ;
@@ -993,10 +1000,10 @@ BOOL APIENTRY setupExpert(HWND hDlg, UINT message, UINT wParam, LONG lParam)
                 MessageBox(hWnd,cmdLn,vwVIRTUAWIN_NAME _T(" Error"),MB_ICONWARNING) ;
             }
         }
-        else if(LOWORD(wParam) == IDC_FOCUS      || LOWORD(wParam) == IDC_USEWINTYPES ||
-                LOWORD(wParam) == IDC_MINIMIZED  || LOWORD(wParam) == IDC_DEBUGLOGGING ||
-                LOWORD(wParam) == IDC_INVERTY    || LOWORD(wParam) == IDC_TASKBARDETECT ||
-                LOWORD(wParam) == IDC_REFRESH    || LOWORD(wParam) == IDC_DISPLAYICON ||
+        else if(LOWORD(wParam) == IDC_FOCUS       || LOWORD(wParam) == IDC_USEWINTYPES ||
+                LOWORD(wParam) == IDC_DISPLAYICON || LOWORD(wParam) == IDC_DEBUGLOGGING ||
+                LOWORD(wParam) == IDC_INVERTY     || LOWORD(wParam) == IDC_TASKBARDETECT ||
+                LOWORD(wParam) == IDC_REFRESH     || 
                 (LOWORD(wParam) == IDC_PRESORDER && HIWORD(wParam) == CBN_SELCHANGE) )
         {
             pageChangeMask |= 0x08 ;

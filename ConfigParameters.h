@@ -47,8 +47,8 @@ extern vwUByte mouseModifierUsed;  // if user must use a modify key to warp with
 extern vwUByte mouseModifier ;     // modify key required to warp with mouse
 extern vwUByte preserveZOrder;     // Should we preserve the window Z order
 extern vwUByte hiddenWindowAct;    // Hidden window activation action
+extern vwUByte taskButtonAct;	   // Hidden window but visible task button activation action
 extern vwUByte releaseFocus;       // release focus on switch
-extern vwUByte minSwitch;	   // if we should switch minimized windows
 extern vwUByte refreshOnWarp;      // if we should refresh desktop after switch
 extern vwUByte deskWrap;           // If we want to have desktop cycling
 extern vwUByte invertY;            // if up/down should be inverted

@@ -39,7 +39,7 @@
 #define VIRTUAWIN_SUBDIR vwVIRTUAWIN_NAME
 
 #define vwWindowTypeDefaultCount 3
-static TCHAR *vwWindowTypeDefaultClassNames[vwWindowTypeDefaultCount]={"ExploreWClass", "IEFrame", "CabinetWClass" } ;
+static TCHAR *vwWindowTypeDefaultClassNames[vwWindowTypeDefaultCount]={_T("ExploreWClass"),_T("IEFrame"),_T("CabinetWClass")} ;
 
 TCHAR *VirtuaWinPath=NULL ;
 TCHAR *UserAppPath=NULL ;
@@ -282,7 +282,7 @@ loadWindowConfig(void)
     {
         while(_fgetts(buff,1024,fp) != NULL)
         {
-            if(!_tcsncmp(buff,"flags# ",7))
+            if(!_tcsncmp(buff,_T("flags# "),7))
             {
                 /* start of a new windowType */
                 if((wt = calloc(1,sizeof(vwWindowType))) == NULL)
@@ -299,7 +299,7 @@ loadWindowConfig(void)
             }
             else if(wt != NULL)
             {
-                if((buff[0] >= '0') && (buff[0] <= '3') && !_tcsncmp(buff+1,"n# ",3))
+                if((buff[0] >= '0') && (buff[0] <= '3') && !_tcsncmp(buff+1,_T("n# "),3))
                 {
                     ll = _tcslen(buff+4) ;
                     if(buff[ll+3] == '\n')
@@ -316,7 +316,7 @@ loadWindowConfig(void)
                     wt->name[ii] = ss ;
                     wt->nameLen[ii] = ll ;
                 }
-                else if(!_tcsncmp(buff,"desk# ",6) &&
+                else if(!_tcsncmp(buff,_T("desk# "),6) &&
                         ((wt->desk = _ttoi(buff+6)) >= vwDESKTOP_SIZE))
                     wt->desk = 0 ;
             }
@@ -329,13 +329,13 @@ loadWindowConfig(void)
         for(ii=0 ; ii<vwWindowTypeDefaultCount ; ii++)
         {
             if(((wt = calloc(1,sizeof(vwWindowType))) == NULL) ||
-               ((wt->name[0] = strdup(vwWindowTypeDefaultClassNames[ii])) == NULL))
+               ((wt->name[0] = _tcsdup(vwWindowTypeDefaultClassNames[ii])) == NULL))
             {
                 mallocErr = 1 ;
                 break ;
             }
             wt->nameLen[0] = _tcslen(vwWindowTypeDefaultClassNames[ii]) ;
-            wt->flags = (vwWTFLAGS_ENABLED|vwWTFLAGS_HIDEWIN_MOVE|vwWTFLAGS_HIDETSK_HIDE) ;
+            wt->flags = (vwWTFLAGS_ENABLED|vwWTFLAGS_HIDEWIN_MOVE|vwWTFLAGS_HIDETSK_TOOLWN) ;
             if(pwt == NULL)
                 windowTypeList = wt ;
             else
@@ -369,7 +369,7 @@ saveWindowConfig(void)
             fprintf(fp, "flags# %d\n", wt->flags);
             for(ii=0 ; ii<vwWTNAME_COUNT ; ii++)
                 if(wt->name[ii] != NULL)
-                    fprintf(fp, "%dn# %s\n",ii,wt->name[ii]);
+                    _ftprintf(fp,_T("%dn# %s\n"),ii,wt->name[ii]);
             if(wt->desk > 0)
                 fprintf(fp, "desk# %d\n", wt->desk);
             wt = wt->next ;
@@ -489,7 +489,7 @@ loadVirtuawinConfig(void)
         MessageBox(hWnd,buff2,vwVIRTUAWIN_NAME _T(" Error"),MB_ICONERROR) ;
         exit(1) ;
     }
-    else if(strcmp(buff,"ver#"))
+    else if(strcmp((char *) buff,"ver#"))
     {   
         int kk, hkc[5], hks[3] ;
         ia[7] = ii ;
@@ -518,7 +518,7 @@ loadVirtuawinConfig(void)
             hotkeyCount = 4 ;
         }
         fscanf(fp, "%s%i", (char *) buff, ia + 8);
-        fscanf(fp, "%s%i", (char *) buff, ia + 4);
+        fscanf(fp, "%s%i", (char *) buff, &ii);
         fscanf(fp, "%s%i", (char *) buff, &ii);
         fscanf(fp, "%s%i", (char *) buff, ia + 1);
         fscanf(fp, "%s%i", (char *) buff, ia + 0);
@@ -687,7 +687,7 @@ loadVirtuawinConfig(void)
     nDesks = nDesksX * nDesksY ;
     deskWrap = ia[2] ;
     useWindowTypes = ia[3] ;
-    minSwitch = ia[4] ;
+    taskButtonAct = ia[4] ;
     winListContent = ia[5] ;
     winListCompact = ia[6] ;
     mouseEnable = ia[7] ;
@@ -738,7 +738,7 @@ saveVirtuawinConfig(void)
         fprintf(fp, "deskY# %d\n", nDesksY);
         fprintf(fp, "deskWrap# %d\n", deskWrap);
         fprintf(fp, "useWindowTypes# %d\n", useWindowTypes);
-        fprintf(fp, "assignImmediately# %d\n", minSwitch);
+        fprintf(fp, "taskButtonAct# %d\n", taskButtonAct);
         fprintf(fp, "winListContent# %d\n", winListContent);
         fprintf(fp, "winListCompact# %d\n", winListCompact);
         fprintf(fp, "mouseEnable# %d\n", mouseEnable);
