@@ -44,14 +44,14 @@ static vwWindowType *winTypeCur ;
 static void
 windowTypeDialogInitList(HWND hDlg)
 {
+    static int ts[3] = { 16, 20, 120 } ;
     static char wtypeNameLabel[vwWTNAME_COUNT] = "CWP" ;
     vwWindowType *wt ;
     TCHAR buff[388], *ss;
     int ii, jj, kk, winTypeCurIdx=0 ;
     
     SendDlgItemMessage(hDlg,IDC_WTYPE_LIST,LB_RESETCONTENT,0, 0);
-    ii = 10 ;
-    SendDlgItemMessage(hDlg,IDC_WTYPE_LIST,LB_SETTABSTOPS,(WPARAM) 1,(LPARAM) &ii);
+    SendDlgItemMessage(hDlg,IDC_WTYPE_LIST,LB_SETTABSTOPS,(WPARAM) 3,(LPARAM) ts);
     ii = 0 ;
     wt = windowTypeList ;
     while(wt != NULL)
@@ -185,14 +185,14 @@ windowTypeDialogInit(HWND hDlg, int firstTime)
     
     if(firstTime)
     {
-        SendDlgItemMessage(hDlg, IDC_WTYPE_WHIDE, CB_ADDSTRING, 0, (LONG) _T("Standard hide"));
-        SendDlgItemMessage(hDlg, IDC_WTYPE_WHIDE, CB_ADDSTRING, 0, (LONG) _T("Move window"));
-        SendDlgItemMessage(hDlg, IDC_WTYPE_WHIDE, CB_ADDSTRING, 0, (LONG) _T("Minimize window"));
-        SendDlgItemMessage(hDlg, IDC_WTYPE_THIDE, CB_ADDSTRING, 0, (LONG) _T("Standard hide"));
-        SendDlgItemMessage(hDlg, IDC_WTYPE_THIDE, CB_ADDSTRING, 0, (LONG) _T("Do not hide"));
-        SendDlgItemMessage(hDlg, IDC_WTYPE_THIDE, CB_ADDSTRING, 0, (LONG) _T("Toolwin flag"));
-        SendDlgItemMessage(hDlg,IDC_WTYPE_ENABLE,BM_SETCHECK,1,0);
-        SendDlgItemMessage(hDlg,IDC_WTYPE_VMANAGE,BM_SETCHECK,1,0);
+        SendDlgItemMessage(hDlg, IDC_WTYPE_WHIDE, CB_ADDSTRING, 0, (LONG) _T("Hide using standard method"));
+        SendDlgItemMessage(hDlg, IDC_WTYPE_WHIDE, CB_ADDSTRING, 0, (LONG) _T("Hide by move window"));
+        SendDlgItemMessage(hDlg, IDC_WTYPE_WHIDE, CB_ADDSTRING, 0, (LONG) _T("Hide by minimizing window"));
+        SendDlgItemMessage(hDlg, IDC_WTYPE_THIDE, CB_ADDSTRING, 0, (LONG) _T("Hide using standard method"));
+        SendDlgItemMessage(hDlg, IDC_WTYPE_THIDE, CB_ADDSTRING, 0, (LONG) _T("Show - Keep taskbar button visible"));
+        SendDlgItemMessage(hDlg, IDC_WTYPE_THIDE, CB_ADDSTRING, 0, (LONG) _T("Hide by using toolwin flag"));
+        SendDlgItemMessage(hDlg, IDC_WTYPE_ENABLE,BM_SETCHECK,1,0);
+        SendDlgItemMessage(hDlg, IDC_WTYPE_VMANAGE,BM_SETCHECK,1,0);
         SendDlgItemMessage(hDlg, IDC_WTYPE_WHIDE, CB_SETCURSEL, 0, 0) ;
         SendDlgItemMessage(hDlg, IDC_WTYPE_THIDE, CB_SETCURSEL, 0, 0) ;
         EnableWindow(GetDlgItem(hDlg,IDC_WTYPE_AMDSK),FALSE) ;
@@ -531,12 +531,13 @@ windowTypeDialogFunc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
             if((HIWORD(wParam) == CBN_SELCHANGE) &&
                ((ii=SendDlgItemMessage(hDlg,IDC_WTYPE_THIDE,CB_GETCURSEL,0,0)) != CB_ERR) && (ii == 1) &&
                ((ii=SendDlgItemMessage(hDlg,IDC_WTYPE_WHIDE,CB_GETCURSEL,0,0)) != CB_ERR) && (ii == 0))
-                SendDlgItemMessage(hDlg, IDC_WTYPE_WHIDE, CB_SETCURSEL, 1, 0) ;
+                SendDlgItemMessage(hDlg, IDC_WTYPE_WHIDE, CB_SETCURSEL, 2, 0) ;
             break ;
 
         case IDC_WTYPE_OK:
             if(IsWindowEnabled(GetDlgItem(hDlg,IDC_WTYPE_APPLY)))
                 saveWindowConfig() ; 
+            vwWindowTypeReapply() ;
             EndDialog(hDlg,0);
             return TRUE;
             
@@ -548,11 +549,12 @@ windowTypeDialogFunc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
         
         case IDC_WTYPE_APPLY:
             saveWindowConfig() ; 
+            vwWindowTypeReapply() ;
             EnableWindow(GetDlgItem(hDlg,IDC_WTYPE_APPLY),FALSE) ;
             break ;
             
         case IDC_WTYPE_HELP:
-            showHelp(hDlg,6005);
+            showHelp(hDlg,10000);
             break ;
         }
         break ;
