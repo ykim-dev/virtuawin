@@ -29,7 +29,7 @@
 #define vwWINLIST_SHOW     0x04
 #define vwWINLIST_STICKY   0x08
 
-extern HWND    dialogHWnd;   // handle to the setup dialog, NULL if not open
+extern HWND    dialogHWnd;         // handle to the setup dialog, NULL if not open
 extern vwUByte dialogOpen;         
 
 extern int hotkeyCount;            // Number of hotkeys
@@ -40,7 +40,7 @@ extern int nDesksX;                // indicates the number of desks wide the vir
 extern int nDesksY;                // indicates the number of desks tall the virtual area is
 extern int mouseJumpLength;        // How far to jump into new desktop
 extern int mouseDelay;             // Mouse change delay 50ms*mouseDelay 
-extern vwUByte mouseKnock;     // mouse edge kncking mode
+extern vwUByte mouseKnock;         // mouse edge kncking mode
 extern vwUByte mouseEnable;        // Required mouse support
 extern vwUByte mouseWarp;          // if we don't want to move the mouse pointer after switch
 extern vwUByte mouseModifierUsed;  // if user must use a modify key to warp with mouse
@@ -57,6 +57,7 @@ extern vwUByte noTaskbarCheck;     // Should we skip the taskbar search
 extern vwUByte useWindowTypes;     // Use window types
 extern vwUByte winListContent;     // Required content of the winodw list menu
 extern vwUByte winListCompact;     // if window list menu should be compact
+extern vwUByte winMenuCompact;     // if current window menu should be compact
 
 extern TCHAR *desktopName[vwDESKTOP_SIZE];
 

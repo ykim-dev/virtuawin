@@ -18,13 +18,14 @@ functions=4000
 winlist=5000
 setup_dialog=6000
 setup_general=6001
-setup_mouse=6002
-setup_modules=6003
-setup_misc=6004
+setup_hotkeys=6002
+setup_mouse=6003
+setup_modules=6004
 setup_expert=6005
 configuration_files=7000
 custom_icons=8000
 hiding_desktops=9000
+wintype_dialog=10000
 
 [WINDOWS]
 Main="VirtuaWin",(278,188,419,620),27904,(r14876671),(r12632256),f3

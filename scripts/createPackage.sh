@@ -29,20 +29,50 @@ if [ -z "$WINZIP" ] ; then
 fi
 
 if [ -z "$1" ] ; then
-    echo "Usage: createPackage <version> (e.g 3.X.x)"
+    echo "Usage: createPackage <version> [<label>]"
+    echo "E.g.:"
+    echo "      createPackage 3.2.0.0 beta1"
+    echo "      createPackage 3.2 beta2"
+    echo "      createPackage 3.2"
     exit -1
 fi
+if [ -n "$TEST_PACKAGE" ] ; then
+    if [ ! -r VirtuaWin.c ] ; then
+        echo "Test Usage Error: must run script from the source directory"
+        exit -1
+    fi
+    echo "Testing packaging"
+fi
 
-version=$1
-file_ver=`echo $1 | sed s/' '/_/g`
+ver_mjr=`echo $1 | awk -F"." '{ print $1+0 }'`
+ver_mnr=`echo $1 | awk -F"." '{ print $2+0 }'`
+ver_rev=`echo $1 | awk -F"." '{ print $3+0 }'`
+ver_bno=`echo $1 | awk -F"." '{ print $4 }'`
+ver_lbl=$2
+version=${ver_mjr}.${ver_mnr}
+if [ "$ver_rev" != "0" ] ; then
+    version=${version}.${ver_rev}
+fi
+file_ver=${ver_mjr}.${ver_mnr}.${ver_rev}
+if [ -n "$ver_lbl" ] ; then
+    version="${version} ${ver_lbl}"
+    file_ver="${file_ver}.${ver_lbl}"
+fi
 
-echo Creating VirtuaWin package $version - $file_ver
+echo Creating VirtuaWin package: $version - $file_ver
 
-mkdir ./$file_ver
-cd ./$file_ver
+if [ -z "$TEST_PACKAGE" ] ; then
+    mkdir ./$file_ver
+    cd ./$file_ver
 
-cvs checkout README.TXT
-cvs update -d
+    cvs checkout README.TXT
+    cvs update -d
+fi
+
+if [ -z "$ver_bno" ] ; then
+    ver_bno=`grep FILEVERSION VirtuaWin.rc | awk -F"," '{ print $4+1 }'`
+fi
+echo Build: $ver_bno
 
 mkdir tmp
 mkdir tmp/standard
@@ -50,10 +80,15 @@ mkdir tmp/unicode
 
 cat Defines.h | sed -c -e "s/vwVIRTUAWIN_NAME_VERSION _T(\"VirtuaWin v.*\")/vwVIRTUAWIN_NAME_VERSION _T(\"VirtuaWin v$version\")/" > Defines.h.tmp
 mv Defines.h.tmp Defines.h
+cat VirtuaWin.rc | sed -c -e "s/^ FILEVERSION .*/ FILEVERSION ${ver_mjr},${ver_mnr},${ver_rev},${ver_bno}/" > VirtuaWin.rc.tmp
+cat VirtuaWin.rc.tmp | sed -c -e "s/^ PRODUCTVERSION .*/ PRODUCTVERSION ${ver_mjr},${ver_mnr},${ver_rev},${ver_bno}/" > VirtuaWin.rc
+cat VirtuaWin.rc | sed -c -e "s/ VALUE \"FileVersion\", \"[.0-9]*\\\\0\"/ VALUE \"FileVersion\", \"${ver_mjr}.${ver_mnr}.${ver_rev}.${ver_bno}\\\\0\"/" > VirtuaWin.rc.tmp
+cat VirtuaWin.rc.tmp | sed -c -e "s/ VALUE \"ProductVersion\", \"[.0-9]*\\\\0\"/ VALUE \"FileVersion\", \"${ver_mjr}.${ver_mnr}.${ver_rev}.${ver_bno}\\\\0\"/" > VirtuaWin.rc
+rm VirtuaWin.rc.tmp
+cat Help/virtuawin.rtf | sed -c -e "s/ VirtuaWin v[.0-9]* Help/ VirtuaWin v${ver_mjr}.${ver_mnr} Help/" > Help/virtuawin.rtf.tmp
+mv Help/virtuawin.rtf.tmp Help/virtuawin.rtf
 cat WinList/winlist.rc | sed -c -e "s/^CAPTION \"WinList v.*\"/CAPTION \"WinList v$version\"/" > WinList/winlist.rc.tmp
 mv WinList/winlist.rc.tmp WinList/winlist.rc
-cat Modules/Assigner/assigner.rc | sed -c -e "s/^CAPTION \"Assigner v.*\"/CAPTION \"Assigner v$version\"/" > Modules/Assigner/assigner.rc.tmp
-mv Modules/Assigner/assigner.rc.tmp Modules/Assigner/assigner.rc
 cat scripts/virtuawin.iss | sed -c -e "s/^AppVerName=VirtuaWin v.*/AppVerName=VirtuaWin v$version/" > scripts/virtuawin.iss.tmp
 mv scripts/virtuawin.iss.tmp scripts/virtuawin.iss
 $EDITOR HISTORY.TXT
@@ -63,7 +98,7 @@ echo
 if [ $REPLY == 'y' ] ; then
     echo compiling helpfile
     cd Help
-    $HELPCOMPILER -C -E virtuawin.hpj
+    "$HELPCOMPILER" -C -E virtuawin.hpj
     cd ..
     echo building standard
     ./build -S
@@ -72,23 +107,17 @@ if [ $REPLY == 'y' ] ; then
     ./build -S
     ./build
     cd ..
-    cd Modules/Assigner/
-    make
-    cd ../..
     echo copying standard
     cp ./VirtuaWin.exe ./tmp/standard/
     cp ./Icons/1[0-9].ico ./tmp/standard/
     cp ./Icons/20.ico ./tmp/standard/
     cp ./WinList/WinList.exe ./tmp/standard/
-    cp ./Modules/Assigner/VWAssigner.exe ./tmp/standard/
     cp ./READMEII.TXT ./tmp/standard/README.TXT
     cp ./HISTORY.TXT ./tmp/standard/
     cp ./COPYING.TXT ./tmp/standard/
-    cp ./userlist.cfg ./tmp/standard/
-    cp ./tricky.cfg ./tmp/standard/
     cp ./Help/VirtuaWin.hlp ./tmp/standard/VirtuaWin.hlp
-    cp ./scripts/virtuawin.iss ./tmp/standard/
     cp ./scripts/VirtuaWin5.0.ISL ./tmp/standard/
+    cp ./scripts/virtuawin.iss ./tmp/standard/
     echo done standard
     echo building unicode
     ./build -S
@@ -102,17 +131,12 @@ if [ $REPLY == 'y' ] ; then
     cp ./Icons/1[0-9].ico ./tmp/unicode/
     cp ./Icons/20.ico ./tmp/unicode/
     cp ./WinList/WinList.exe ./tmp/unicode/
-    cp ./Modules/Assigner/VWAssigner.exe ./tmp/unicode/
     cp ./READMEII.TXT ./tmp/unicode/README.TXT
     cp ./HISTORY.TXT ./tmp/unicode/
     cp ./COPYING.TXT ./tmp/unicode/
-    cp ./userlist.cfg ./tmp/unicode/
-    cp ./tricky.cfg ./tmp/unicode/
     cp ./Help/VirtuaWin.hlp ./tmp/unicode/VirtuaWin.hlp
-    cp ./scripts/virtuawin.iss ./tmp/unicode/
     cp ./scripts/VirtuaWin5.0.ISL ./tmp/unicode/
-    cat tmp/unicode/virtuawin.iss | sed -e "s/^AppVerName=VirtuaWin/AppVerName=VirtuaWin Unicode/" > tmp/unicode/virtuawin.iss.tmp
-    mv tmp/unicode/virtuawin.iss.tmp tmp/unicode/virtuawin.iss
+    cat ./scripts/virtuawin.iss | sed -e "s/^AppVerName=VirtuaWin/AppVerName=VirtuaWin Unicode/" > ./tmp/unicode/virtuawin.iss
     echo done unicode
 fi
 
@@ -164,6 +188,10 @@ if [ $REPLY == 'y' ] ; then
     fi
     cd ..
     echo Done!
+fi
+if [ -n "$TEST_PACKAGE" ] ; then
+    echo "Test complete"
+    exit 0
 fi
 
 read -p "Move packages? [y/n] " -n 1

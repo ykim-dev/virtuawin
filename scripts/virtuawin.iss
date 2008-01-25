@@ -2,7 +2,7 @@
 
 [Setup]
 AppName=VirtuaWin
-AppVerName=VirtuaWin v3.2
+AppVerName=VirtuaWin v4.0 beta1
 DefaultDirName={pf}\VirtuaWin
 DefaultGroupName=VirtuaWin
 MinVersion=4,4
@@ -39,9 +39,6 @@ Source: 18.ico; DestDir: {app}\icons\
 Source: 19.ico; DestDir: {app}\icons\
 Source: 20.ico; DestDir: {app}\icons\
 Source: WinList.exe; DestDir: {app}\Modules\
-Source: VWAssigner.exe; DestDir: {app}\Modules\
-Source: UserList.cfg; DestDir: {app}; Flags: onlyifdoesntexist
-Source: Tricky.cfg; DestDir: {app}; Flags: onlyifdoesntexist
 Source: COPYING.TXT; DestDir: {app}
 Source: HISTORY.TXT; DestDir: {app}
 Source: README.TXT; DestDir: {app}; Flags: isreadme
@@ -58,13 +55,10 @@ Name: {group}\Uninstall; Filename: {uninstallexe}
 Filename: {app}\VirtuaWin.exe; WorkingDir: {app}; Description: {cm:LaunchProgram,VirtuaWin}; Flags: nowait postinstall skipifsilent
 
 [UninstallDelete]
-Type: files; Name: {app}\VWCONFIG.CFG
-Type: files; Name: {app}\STICKY.CFG
-Type: files; Name: {app}\TRICKY.CFG
-Type: files; Name: {app}\USERLIST.CFG
-Type: files; Name: {app}\VWSTATE.CFG
-Type: files; Name: {app}\VWDISABLED.CFG
-Type: files; Name: {app}\VWWINDOWSSTATE.CFG
+Type: files; Name: {app}\virtuawin.cfg
+Type: files; Name: {app}\window.cfg
+Type: files; Name: {app}\module.cfg
+Type: files; Name: {app}\userpath.cfg
 
 [Code]
 var

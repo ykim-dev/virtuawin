@@ -54,14 +54,14 @@ BEGIN
     LTEXT           "On taskbar button activation:", IDC_STATIC, 10, 124, 120, 10
     COMBOBOX        IDC_TSKBUTACT, 22, 134, 130, 56, CBS_AUTOHSCROLL | CBS_DROPDOWNLIST | WS_TABSTOP
 
-    GROUPBOX        "Menu Configuration", IDC_STATIC, 4, 157, 202, 58
-    LTEXT           "Standard Window List Content:", IDC_STATIC, 10, 168, 120, 10
-    AUTOCHECKBOX    "Access", IDC_MENUACCESS,  22, 179, 40, 10
-    AUTOCHECKBOX    "Assign",   IDC_MENUASSIGN,  67, 179, 40, 10
-    AUTOCHECKBOX    "Copy",   IDC_MENUCOPY,   112, 179, 40, 10
-    AUTOCHECKBOX    "Show",   IDC_MENUSHOW,    22, 190, 40, 10
-    AUTOCHECKBOX    "Sticky", IDC_MENUSTICKY,  67, 190, 40, 10
-    AUTOCHECKBOX    "Mouse opens compact window list", IDC_COMPACTMENU, 10, 201, 120, 10
+    GROUPBOX        "User Interface", IDC_STATIC, 4, 157, 202, 69
+    LTEXT           "Available window list actions:", IDC_STATIC, 10, 168, 120, 10
+    AUTOCHECKBOX    "Access", IDC_MENUACCESS,       22, 179, 40, 10
+    AUTOCHECKBOX    "Move",   IDC_MENUMOVE,         67, 179, 40, 10
+    AUTOCHECKBOX    "Show",   IDC_MENUSHOW,         22, 190, 40, 10
+    AUTOCHECKBOX    "Always Show", IDC_MENUSTICKY,  67, 190, 55, 10
+    AUTOCHECKBOX    "Mouse opens compact window list", IDC_COMPACTWLIST, 10, 201, 130, 10
+    AUTOCHECKBOX    "Mouse opens compact window menu", IDC_COMPACTWMENU, 10, 212, 130, 10
 END
 
 IDD_PROPPAGE_HOTKEYS DIALOG 0, 0, 210, 250
@@ -139,6 +139,7 @@ BEGIN
     AUTOCHECKBOX    "Force refresh after desktop change", IDC_REFRESH,           10, 114, 130, 10
     AUTOCHECKBOX    "Write events to virtuawin.log", IDC_DEBUGLOGGING,           10, 125, 130, 10
 
+    PUSHBUTTON      "Log Windows",     IDC_LOGWINDOWS,   70, 230, 60, 14
     PUSHBUTTON      "Explore Config",  IDC_EXPLORECNFG, 140, 230, 60, 14
 END
 
@@ -152,7 +153,7 @@ BEGIN
     LTEXT           "Copyright (c) 2006-2007 VirtuaWin", IDC_STATIC, 35, 50, 150, 8
     LTEXT           vwVIRTUAWIN_EMAIL, IDC_MAILTO, 50, 60, 190, 8, 0x0100
     LTEXT           "Latest version, info, source, etc. visit:", IDC_STATIC, 35, 72, 150, 8
-    LTEXT           "http://virtuawin.sourceforge.net/", IDC_HTTP, 50, 82, 190, 10, 0x0100
+    LTEXT           vwVIRTUAWIN_WEBSITE, IDC_HTTP, 50, 82, 190, 10, 0x0100
     GROUPBOX        "License", IDC_STATIC, 4, 99, 202, 140, 0x0300
     EDITTEXT        IDC_LICENSE, 10, 110, 190, 125, ES_MULTILINE | ES_READONLY |NOT WS_TABSTOP | NOT WS_BORDER
 END
@@ -190,17 +191,59 @@ BEGIN
     AUTORADIOBUTTON "Never manage windows of this type", IDC_WTYPE_NMANAGE, 18, 193, 130, 10
     AUTORADIOBUTTON "Always manage windows of this type", IDC_WTYPE_AMANAGE, 18, 204, 140, 10
     AUTORADIOBUTTON "Let VirtuaWin decide whether to manage windows", IDC_WTYPE_VMANAGE, 18, 215, 170, 10
-    AUTOCHECKBOX    "Display windows of this type on all desktops", IDC_WTYPE_STICKY,  18, 226, 160, 10
+    AUTOCHECKBOX    "Show windows of this type on all desktops", IDC_WTYPE_STICKY,  18, 226, 160, 10
     AUTOCHECKBOX    "Automatically move windows of this type to Desktop:", IDC_WTYPE_AMOVE, 18, 239, 180, 10
     COMBOBOX        IDC_WTYPE_AMDSK, 200, 237, 40, 200, CBS_AUTOHSCROLL | CBS_DROPDOWNLIST | WS_TABSTOP
     AUTOCHECKBOX    "Move windows immediately", IDC_WTYPE_AMIMM, 30, 251, 100, 10
     LTEXT           "Method for hiding the window:", IDC_STATIC,  18, 264, 110, 10
-    COMBOBOX        IDC_WTYPE_WHIDE, 130, 262, 150, 150, WS_VSCROLL | CBS_DROPDOWNLIST | WS_TABSTOP
+    COMBOBOX        IDC_WTYPE_WHIDE, 130, 262, 130, 150, WS_VSCROLL | CBS_DROPDOWNLIST | WS_TABSTOP
     LTEXT           "Method for hiding taskbar button:", IDC_STATIC,  18, 278, 110, 10
-    COMBOBOX        IDC_WTYPE_THIDE, 130, 276, 150, 150, WS_VSCROLL | CBS_DROPDOWNLIST | WS_TABSTOP
+    COMBOBOX        IDC_WTYPE_THIDE, 130, 276, 130, 150, WS_VSCROLL | CBS_DROPDOWNLIST | WS_TABSTOP
 
     PUSHBUTTON      "OK",      IDC_WTYPE_OK,     111, 295, 40, 14
     DEFPUSHBUTTON   "Cancel",  IDCANCEL,         156, 295, 40, 14
     PUSHBUTTON      "Apply",   IDC_WTYPE_APPLY,  201, 295, 40, 14
     PUSHBUTTON      "Help",    IDC_WTYPE_HELP,   246, 295, 40, 14
 END
+
+#ifndef _MAC
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
+
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION 4,0,0,3
+ PRODUCTVERSION 4,0,0,3
+ FILEFLAGSMASK 0x3fL
+#ifdef _DEBUG
+ FILEFLAGS 0x1L
+#else
+ FILEFLAGS 0x0L
+#endif
+ FILEOS 0x4L
+ FILETYPE 0x1L
+ FILESUBTYPE 0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904b0"
+        BEGIN
+            VALUE "Comments", vwVIRTUAWIN_WEBSITE "\0"
+            VALUE "CompanyName", vwVIRTUAWIN_NAME "\0"
+            VALUE "FileDescription", vwVIRTUAWIN_NAME_VERSION "\0"
+            VALUE "FileVersion", "4.0.0.3\0"
+            VALUE "InternalName", vwVIRTUAWIN_NAME "\0"
+            VALUE "LegalCopyright", "Copyright © 1999-2008\0"
+            VALUE "OriginalFilename", vwVIRTUAWIN_NAME ".exe\0"
+            VALUE "ProductName", vwVIRTUAWIN_NAME "\0"
+            VALUE "FileVersion", "4.0.0.3\0"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x409, 1200
+    END
+END
+
+#endif    // !_MAC

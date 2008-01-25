@@ -71,6 +71,7 @@ void vwHotkeyRegister(void);
 void vwHotkeyUnregister(void);
 void getWorkArea(void);
 int  windowListUpdate(void) ;
+void vwWindowTypeReapply(void) ;
 int  assignWindow(HWND theWin, int theDesk, vwUByte follow, vwUByte force, vwUByte setActive);
 int  gotoDesk(int theDesk, vwUByte force);
 void showHelp(HWND aHWnd, UINT context);
@@ -82,5 +83,10 @@ void storeDesktopProperties(void) ;
 
 /* Prototypes from WinTypeDialog.c */
 void createWindowTypeDialog(HINSTANCE theHinst, HWND theHwndOwner, vwWindowType *wtype, HWND theWin) ;
+
+/* Prototypes from ModuleRoutines.c */
+void loadModules(void);
+void sendModuleMessage(UINT Msg, WPARAM wParam, LPARAM lParam);
+void postModuleMessage(UINT Msg, WPARAM wParam, LPARAM lParam);
 
 #endif
