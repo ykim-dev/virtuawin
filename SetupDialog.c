@@ -140,7 +140,8 @@ storeDesktopProperties(void)
  * The "Key" tab callback
  * This is the firts callback to be called when the property sheet is created
  */
-BOOL APIENTRY setupGeneral(HWND hDlg, UINT message, UINT wParam, LONG lParam)
+BOOL APIENTRY
+setupGeneral(HWND hDlg, UINT message, UINT wParam, LONG lParam)
 {
     static int tmpDesksY;
     static int tmpDesksX;
@@ -188,11 +189,13 @@ BOOL APIENTRY setupGeneral(HWND hDlg, UINT message, UINT wParam, LONG lParam)
             if(deskWrap)
                 SendDlgItemMessage(hDlg, IDC_DESKCYCLE, BM_SETCHECK, 1, 0);
             if(winListCompact)
-                SendDlgItemMessage(hDlg, IDC_COMPACTMENU, BM_SETCHECK, 1, 0);
+                SendDlgItemMessage(hDlg, IDC_COMPACTWLIST, BM_SETCHECK, 1, 0);
+            if(winMenuCompact)
+                SendDlgItemMessage(hDlg, IDC_COMPACTWMENU, BM_SETCHECK, 1, 0);
             if(winListContent & vwWINLIST_ACCESS)
                 SendDlgItemMessage(hDlg, IDC_MENUACCESS, BM_SETCHECK, 1, 0);
             if(winListContent & vwWINLIST_ASSIGN)
-                SendDlgItemMessage(hDlg, IDC_MENUASSIGN, BM_SETCHECK, 1, 0);
+                SendDlgItemMessage(hDlg, IDC_MENUMOVE, BM_SETCHECK, 1, 0);
             if(winListContent & vwWINLIST_SHOW)
                 SendDlgItemMessage(hDlg, IDC_MENUSHOW, BM_SETCHECK, 1, 0);
             if(winListContent & vwWINLIST_STICKY)
@@ -245,11 +248,12 @@ BOOL APIENTRY setupGeneral(HWND hDlg, UINT message, UINT wParam, LONG lParam)
             deskWrap = (SendDlgItemMessage(hDlg, IDC_DESKCYCLE, BM_GETCHECK, 0, 0) == BST_CHECKED) ;
             hiddenWindowAct = (vwUByte) SendDlgItemMessage(hDlg, IDC_HIDWINACT, CB_GETCURSEL, 0, 0) ;
             taskButtonAct = (vwUByte) SendDlgItemMessage(hDlg, IDC_TSKBUTACT, CB_GETCURSEL, 0, 0) + 1 ;
-            winListCompact = (SendDlgItemMessage(hDlg, IDC_COMPACTMENU, BM_GETCHECK, 0, 0) == BST_CHECKED) ;
+            winListCompact = (SendDlgItemMessage(hDlg, IDC_COMPACTWLIST, BM_GETCHECK, 0, 0) == BST_CHECKED) ;
+            winMenuCompact = (SendDlgItemMessage(hDlg, IDC_COMPACTWMENU, BM_GETCHECK, 0, 0) == BST_CHECKED) ;
             winListContent = 0 ;
             if(SendDlgItemMessage(hDlg, IDC_MENUACCESS, BM_GETCHECK, 0, 0) == BST_CHECKED)
                 winListContent |= vwWINLIST_ACCESS ;
-            if(SendDlgItemMessage(hDlg, IDC_MENUASSIGN, BM_GETCHECK, 0, 0) == BST_CHECKED)
+            if(SendDlgItemMessage(hDlg, IDC_MENUMOVE, BM_GETCHECK, 0, 0) == BST_CHECKED)
                 winListContent |= vwWINLIST_ASSIGN ;
             if(SendDlgItemMessage(hDlg, IDC_MENUSHOW, BM_GETCHECK, 0, 0) == BST_CHECKED)
                 winListContent |= vwWINLIST_SHOW ;
@@ -304,9 +308,10 @@ BOOL APIENTRY setupGeneral(HWND hDlg, UINT message, UINT wParam, LONG lParam)
             SetFocus(hDlg) ;
         }
         else if((pageChangeMask >= 0) &&
-                ((wPar == IDC_DESKCYCLE)   || (wPar == IDC_COMPACTMENU)  ||
-                 (wPar == IDC_MENUACCESS)  || (wPar == IDC_MENUASSIGN)   ||
+                ((wPar == IDC_DESKCYCLE)   || (wPar == IDC_COMPACTWLIST) ||
+                 (wPar == IDC_MENUMOVE)    || (wPar == IDC_COMPACTWMENU) ||
                  (wPar == IDC_MENUSHOW)    || (wPar == IDC_MENUSTICKY)   ||
+                 (wPar == IDC_MENUACCESS)  ||
                  (wPar == IDC_HIDWINACT   && HIWORD(wParam) == CBN_SELCHANGE) ||
                  (wPar == IDC_TSKBUTACT   && HIWORD(wParam) == CBN_SELCHANGE) ||
                  (wPar == IDC_DESKTOPNAME && HIWORD(wParam) == EN_CHANGE)))
@@ -691,7 +696,8 @@ BOOL APIENTRY setupHotkeys(HWND hDlg, UINT message, UINT wParam, LONG lParam)
 /*************************************************
  * The "Mouse" tab callback
  */
-BOOL APIENTRY setupMouse(HWND hDlg, UINT message, UINT wParam, LONG lParam)
+BOOL APIENTRY
+setupMouse(HWND hDlg, UINT message, UINT wParam, LONG lParam)
 {
     TCHAR buff[5];
     
@@ -806,7 +812,8 @@ BOOL APIENTRY setupMouse(HWND hDlg, UINT message, UINT wParam, LONG lParam)
 /*************************************************
  * The "Modules" tab callback
  */
-static void setupModulesList(HWND hDlg)
+static void
+setupModulesList(HWND hDlg)
 {
     int index;
     TCHAR tmpName[128];
@@ -822,7 +829,8 @@ static void setupModulesList(HWND hDlg)
     }
 }
 
-BOOL APIENTRY setupModules(HWND hDlg, UINT message, UINT wParam, LONG lParam)
+BOOL APIENTRY
+setupModules(HWND hDlg, UINT message, UINT wParam, LONG lParam)
 {
     int index;
     
@@ -860,8 +868,9 @@ BOOL APIENTRY setupModules(HWND hDlg, UINT message, UINT wParam, LONG lParam)
                 PostMessage(moduleList[curSel].handle, MOD_SETUP, (UINT) hDlg, 0);
         }
         else if(LOWORD((wParam) == IDC_MODRELOAD))
-        {   // Reload
-            unloadModules();
+        {   
+            /* Unload all modules currently running */
+            sendModuleMessage(MOD_QUIT, 0, 0);
             for(index = 0; index < MAXMODULES; index++)
             {
                 moduleList[index].handle = NULL;
@@ -903,7 +912,8 @@ BOOL APIENTRY setupModules(HWND hDlg, UINT message, UINT wParam, LONG lParam)
 /*************************************************
  * The "Expert" tab callback
  */
-BOOL APIENTRY setupExpert(HWND hDlg, UINT message, UINT wParam, LONG lParam)
+BOOL APIENTRY
+setupExpert(HWND hDlg, UINT message, UINT wParam, LONG lParam)
 {
     int oldLogFlag ;
     
@@ -1000,6 +1010,38 @@ BOOL APIENTRY setupExpert(HWND hDlg, UINT message, UINT wParam, LONG lParam)
                 MessageBox(hWnd,cmdLn,vwVIRTUAWIN_NAME _T(" Error"),MB_ICONWARNING) ;
             }
         }
+        else if(LOWORD((wParam) == IDC_LOGWINDOWS))
+        {   // Log Windows
+            TCHAR cname[vwCLASSNAME_MAX], wname[vwWINDOWNAME_MAX] ;
+            vwWindowBase *wb ;
+            vwWindow *win ;
+            RECT pos ;
+                
+            vwMutexLock();
+            windowListUpdate() ;
+            wb = windowBaseList ;
+            while(wb != NULL)
+            {
+                GetWindowRect(wb->handle,&pos) ;
+                GetClassName(wb->handle,cname,vwCLASSNAME_MAX);
+                if(!GetWindowText(wb->handle,wname,vwWINDOWNAME_MAX))
+                    _tcscpy(wname,_T("<None>"));
+                if(wb->flags & vwWINFLAGS_MANAGED)
+                {
+                    win = (vwWindow *) wb ;
+                    vwLogBasic((_T("MNG-WIN: %8x Flg %08x %08x %08x Pos %d %d Own %x (%x) Desk %d\n        Class \"%s\" Title \"%s\"\n"),
+                                (int) wb->handle,(int) wb->flags,(int) GetWindowLong(wb->handle, GWL_STYLE),(int) GetWindowLong(wb->handle, GWL_EXSTYLE),
+                                (int) pos.left, (int) pos.top, (int) GetWindow(wb->handle,GW_OWNER), (int) win->owner, (int) win->desk,cname,wname)) ;
+                }
+                else
+                    vwLogBasic((_T("%s-WIN: %8x Flg %08x %08x %08x Pos %d %d Own %x\n        Class \"%s\" Title \"%s\"\n"),
+                                (wb->flags & vwWINFLAGS_WINDOW) ? "UNM":"NON",
+                                (int) wb->handle,(int) wb->flags,(int) GetWindowLong(wb->handle, GWL_STYLE),(int) GetWindowLong(wb->handle, GWL_EXSTYLE),
+                                (int) pos.left,(int) pos.top, (int) GetWindow(wb->handle,GW_OWNER), cname, wname)) ;
+                wb = wb->next ;
+            }
+            vwMutexRelease();
+        }
         else if(LOWORD(wParam) == IDC_FOCUS       || LOWORD(wParam) == IDC_USEWINTYPES ||
                 LOWORD(wParam) == IDC_DISPLAYICON || LOWORD(wParam) == IDC_DEBUGLOGGING ||
                 LOWORD(wParam) == IDC_INVERTY     || LOWORD(wParam) == IDC_TASKBARDETECT ||
@@ -1011,13 +1053,14 @@ BOOL APIENTRY setupExpert(HWND hDlg, UINT message, UINT wParam, LONG lParam)
         }
         break;
     }
-    return (FALSE);
+    return FALSE ;
 }
 
 /*************************************************
  * The "About" tab callback
  */
-BOOL APIENTRY setupAbout(HWND hDlg, UINT message, UINT wParam, LONG lParam)
+BOOL APIENTRY
+setupAbout(HWND hDlg, UINT message, UINT wParam, LONG lParam)
 {
     TCHAR license[] = _T("This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later version.\r\n \r\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details. \r\n \r\nYou should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.");
     
@@ -1070,7 +1113,8 @@ BOOL APIENTRY setupAbout(HWND hDlg, UINT message, UINT wParam, LONG lParam)
  * Initialize callback function for the property sheet
  * Used for removing the "?" in the title bar
  */
-int CALLBACK propCallBack( HWND hwndDlg, UINT uMsg, LPARAM lParam )
+int CALLBACK
+propCallBack( HWND hwndDlg, UINT uMsg, LPARAM lParam )
 {
     DLGTEMPLATE* ptr;
     
