@@ -27,7 +27,6 @@
 #include "ConfigParameters.h"
 #include "Messages.h"
 #include "Resource.h"
-#include "ModuleRoutines.h"
 
 /* Get the list of hotkey commands */
 #define VW_COMMAND(a, b, c, d) a = b ,

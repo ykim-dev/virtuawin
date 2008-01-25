@@ -23,7 +23,6 @@
 
 // Includes
 #include "VirtuaWin.h"
-#include "ModuleRoutines.h"
 #include "Messages.h"
 #include "ConfigParameters.h"
 #include "DiskRoutines.h"

@@ -30,7 +30,6 @@
 #include "Resource.h"
 #include "Messages.h"
 #include "DiskRoutines.h"
-#include "ModuleRoutines.h"
 #include "ConfigParameters.h"
 
 // Standard includes

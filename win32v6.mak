@@ -37,7 +37,7 @@ CVDDEFS = -DvwLOG_VERBOSE
 !ENDIF
 
 SRC	= VirtuaWin.c DiskRoutines.c SetupDialog.c WinTypeDialog.c ModuleRoutines.c
-HEADERS = VirtuaWin.h Resource.h ModuleRoutines.h Messages.h \
+HEADERS = VirtuaWin.h Resource.h Messages.h \
 	  DiskRoutines.h Defines.h ConfigParameters.h vwCommands.def
 COFFS   = VirtuaWin.coff
 OBJRES  = VirtuaWin.res
