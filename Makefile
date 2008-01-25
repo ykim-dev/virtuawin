@@ -100,3 +100,4 @@ spotless: clean
 # Dependancies
 $(OBJS):  $(HEADERS)
 $(OBJSD): $(HEADERS)
+$(OBJRES):$(HEADERS)
