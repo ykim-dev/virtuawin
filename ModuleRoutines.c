@@ -34,14 +34,6 @@
 
 
 /*************************************************
- * Unloads all modules in the module list
- */
-void unloadModules(void)
-{
-    sendModuleMessage(MOD_QUIT, 0, 0);
-}
-
-/*************************************************
  * Checks if a module is disabled
  */
 static int
