@@ -916,7 +916,7 @@ static void
 vwWindowBaseLink(vwWindowBase *wb) 
 {
     vwWindowBase *wp ;
-    int idx = ((int) (wb->handle)) % vwWINHASH_SIZE ;
+    int idx = ((unsigned int) (wb->handle)) % vwWINHASH_SIZE ;
     
     wb->hash = windowHash[idx] ;
     windowHash[idx] = wb ;
@@ -948,7 +948,7 @@ static void
 vwWindowBaseUnlink(vwWindowBase *wb) 
 {
     vwWindowBase *wp ;
-    int idx = ((int) (wb->handle)) % vwWINHASH_SIZE ;
+    int idx = ((unsigned int) (wb->handle)) % vwWINHASH_SIZE ;
     
     if((wp = windowHash[idx]) == wb)
         windowHash[idx] = wb->hash ;
@@ -1002,7 +1002,7 @@ vwWindowBaseFind(HWND hwnd)
 {
     vwWindowBase *wb ;
     
-    wb = windowHash[((int) hwnd) % vwWINHASH_SIZE] ;
+    wb = windowHash[((unsigned int) hwnd) % vwWINHASH_SIZE] ;
     while(wb != NULL)
     {
         if(wb->handle == hwnd)
@@ -1020,7 +1020,7 @@ vwWindowFind(HWND hwnd)
 {
     vwWindowBase *wb ;
     
-    wb = windowHash[((int) hwnd) % vwWINHASH_SIZE] ;
+    wb = windowHash[((unsigned int) hwnd) % vwWINHASH_SIZE] ;
     while(wb != NULL)
     {
         if(wb->handle == hwnd)
