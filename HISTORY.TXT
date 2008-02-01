@@ -1,6 +1,29 @@
 ***   VirtuaWin Revision History   ***
 --------------------------------------
 
+Ver 4.0 beta1 2008/01/31
+
+* Creation  of a new Window  Type dialog to manage  userlist.cfg,  tricky.cfg,
+  sticky.cfg & assignment.cfg via a UI - no more hacking!
+* 1819203  1810156 Window type  identification  can now be any  combination of
+  class, window or program name.
+* 1798648  1796170 1627782 Changed window  management to store some info about
+  all non-child  windows, allows VirtuaWin to not manage some window types and
+  to manage others.
+* Removed  upper limit on the number of windows  that VW can manage  (although
+  the window list menu is still limited to 255 windows) 
+* 1844268 Added window type option to keep a window's taskbar button visible.
+* 1843300 Rewritten  main  Setup  hotkey  configuration  to  allow  many  more
+  different hotkeys to be created.
+* 1820531 Added MRU window list menu as a hotkey binding
+* 1873636 Fixed exit deadlock issue
+* 1843056 Fixed taskbar detection issues.
+* 1840887 Fixed setup option change issues.
+* 1873639 Added program version info to the exe resource.
+
+
+----------------------------
+
 Ver 3.2 2007/11/08
 
 * Moved the main typedefs into defines.h so they are in the SDK.
