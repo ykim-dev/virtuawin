@@ -35,10 +35,10 @@
 #define INVALID_FILE_ATTRIBUTES	((DWORD)-1)
 #endif
 
-HINSTANCE hInst;   // Instance handle
-HWND hwndMain;	   // Main window handle
-HWND vwHandle;     // Handle to VirtuaWin
-HWND listHWnd;     // Handle to the window list
+HINSTANCE hInst ;   // Instance handle
+HWND hwndMain ;	    // Main window handle
+HWND vwHandle ;     // Handle to VirtuaWin
+HWND listHWnd ;     // Handle to the window list
 HWND hwndTask ;
 UINT RM_Shellhook ;
 TCHAR userAppPath[MAX_PATH] ;
@@ -394,7 +394,8 @@ DialogFunc(HWND hwndDlg, UINT msg, WPARAM wParam, LPARAM lParam)
                     // Restore the window mode
                     SetWindowLong(curw->handle, GWL_EXSTYLE, (curw->exstyle & (~WS_EX_TOOLWINDOW))) ;  
                     // Notify taskbar of the change
-                    PostMessage(hwndTask, RM_Shellhook, 1, (LPARAM) curw->handle);
+                    if(hwndTask != NULL)
+                        PostMessage(hwndTask, RM_Shellhook, 1, (LPARAM) curw->handle);
                 }
                 left = curw->rect.left ;
                 top = curw->rect.top ;
@@ -438,7 +439,8 @@ DialogFunc(HWND hwndDlg, UINT msg, WPARAM wParam, LPARAM lParam)
                         // Restore the window mode
                         SetWindowLong(curw->handle, GWL_EXSTYLE, curw->exstyle) ;  
                         // Notify taskbar of the change
-                        PostMessage( hwndTask, RM_Shellhook, 2, (LPARAM) curw->handle);
+                        if(hwndTask != NULL)
+                            PostMessage(hwndTask, RM_Shellhook, 2, (LPARAM) curw->handle);
                     }
                     SetWindowPos(curw->handle, 0, curw->rect.left, curw->rect.top, 0, 0,
                                  SWP_FRAMECHANGED | SWP_NOZORDER | SWP_NOSIZE | SWP_NOACTIVATE ); 
@@ -505,8 +507,8 @@ goGetTheTaskbarHandle(void)
     
     hwndTask = FindWindowEx(hwndBar, NULL,_T("MSTaskSwWClass"), NULL);
     
-    if(hwndTask == NULL)
-        MessageBox(hwndMain,_T("Could not locate handle to the taskbar.\n This will disable the ability to hide troublesome windows correctly."), _T("VirtuaWinList Error"), MB_ICONWARNING); 
+    /* SF 1843056 - don't complain if not found, may be using a different
+     * shell, leave it to VirtuaWin to complain if appropriate */
 }
 
 LRESULT CALLBACK
