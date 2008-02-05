@@ -9,11 +9,11 @@
 Description
 --------------------------------------------------------------
 VirtuaWin is a small, fast and easy to use virtual desktop manager for
-Windows9x/ME/NT/2000/XP with no unnecessary features. The current desktop is
-indicated by a small icon in the system tray to conserve space. There are many
-configuration possibilities for both mouse and keyboard control. VirtuaWin
-also supports modules for adding features without decreasing the performance
-in VirtuaWin itself.
+Windows9x/ME/NT/2000/XP/Vista with no unnecessary features. The current
+desktop is indicated by a small icon in the system tray to conserve space.
+There are many configuration possibilities for both mouse and keyboard
+control. VirtuaWin also supports modules for adding features without
+decreasing the performance in VirtuaWin itself.
 
 
 Code comments
@@ -52,5 +52,5 @@ VirtuaWin is a freely distributed program and is licensed under the GNU
 General Public License.
 
 Copyright (c) 1999-2005 Johan Piculell
-Copyright (c) 2006-2007 VirtuaWin (VirtuaWin@home.se)
+Copyright (c) 2006-2008 VirtuaWin (VirtuaWin@home.se)
 
