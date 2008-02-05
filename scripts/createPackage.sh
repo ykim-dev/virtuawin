@@ -53,10 +53,10 @@ version=${ver_mjr}.${ver_mnr}
 if [ "$ver_rev" != "0" ] ; then
     version=${version}.${ver_rev}
 fi
-file_ver=${ver_mjr}.${ver_mnr}.${ver_rev}
+file_ver=${version}
 if [ -n "$ver_lbl" ] ; then
     version="${version} ${ver_lbl}"
-    file_ver="${file_ver}.${ver_lbl}"
+    file_ver="${file_ver}_${ver_lbl}"
 fi
 
 echo Creating VirtuaWin package: $version - $file_ver
