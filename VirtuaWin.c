@@ -1550,6 +1550,10 @@ enumWindowsProc(HWND hwnd, LPARAM lParam)
             else
                 win->flags &= ~vwWINFLAGS_VISIBLE ;
         }
+        else if(vwWindowIsShown(win) && vwWindowIsShow(win))
+            /* This is likely to be a HUNG window, make it hung so we actively monitor it */
+            win->flags &= ~vwWINFLAGS_SHOWN ;
+            
     }
     else if(vwWindowIsNotShow(win))
     {
@@ -1575,6 +1579,9 @@ enumWindowsProc(HWND hwnd, LPARAM lParam)
                         (int) win->handle,win->desk,currentDesk,win->flags)) ;
             wb->flags |= vwWINFLAGS_ACTIVATED | vwWINFLAGS_VISIBLE ;
         }
+        else if(vwWindowIsNotShown(win))
+            /* This is likely to be a HUNG window, make it hung so we actively monitor it */
+            win->flags |= vwWINFLAGS_SHOWN ;
     }
     else
     {
@@ -2522,16 +2529,26 @@ winListCreateItemList(int flags, vwMenuItem **items,int *numitems)
     
     if(flags & 0x02)
         /* MRU menu */
-        i = vwPMENU_MRU|vwPMENU_MULTICOL ;
+        x = vwPMENU_MRU|vwPMENU_MULTICOL ;
     else
     {
-        i = listContent << 8 ;
+        x = listContent << 8 ;
         if(listContent != vwWINLIST_ASSIGN)
-            i |= vwPMENU_ALLWIN ;
+            x |= vwPMENU_ALLWIN ;
         if(flags & 0x01)
-            i |= vwPMENU_COMPACT ;
+            x |= vwPMENU_COMPACT ;
+        else
+        {
+            /* automatically switch to compact mode if there are too many windows */
+            y = i ;
+            while(--y > 0)
+                if(items[y]->desk != items[y-1]->desk)
+                    i++ ;
+            if(i > ((desktopWorkArea[1][3]-desktopWorkArea[1][1]) / (ICON_SIZE + (2*MENU_Y_PADDING))))
+                x |= vwPMENU_COMPACT ;
+        }
     }
-    return i ;
+    return x ;
 }
 
 static HMENU
@@ -3908,6 +3925,7 @@ wndProc(HWND aHWnd, UINT message, WPARAM wParam, LPARAM lParam)
         {
             // Send over the window list with WM_COPYDATA
 #if 0
+            // TODO
             COPYDATASTRUCT cds;         
             DWORD ret ;
             vwMutexLock();
