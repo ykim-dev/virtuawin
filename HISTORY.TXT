@@ -1,6 +1,15 @@
 ***   VirtuaWin Revision History   ***
 --------------------------------------
 
+Ver 4.0 beta2 2008/02/07
+
+* 1886979 Fixed flag problem which left windows being 'sticky'.
+* 1887127 Automatically change window-list menu to compact.
+* 1843056 WinList: Removed error dialog if taskbar not found.
+
+
+----------------------------
+
 Ver 4.0 beta1 2008/01/31
 
 * Creation  of a new Window  Type dialog to manage  userlist.cfg,  tricky.cfg,
