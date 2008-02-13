@@ -1503,7 +1503,7 @@ enumWindowsProc(HWND hwnd, LPARAM lParam)
             win->exStyle = exstyle ;
             win->zOrder[0] = (vwUInt) wt ;
             if((style & WS_VISIBLE) == 0)
-                vwLogBasic((_T("Got new unmanaged window %8x Flg %x\n"),(int)win->handle,(int)win->flags)) ;
+                vwLogBasic((_T("Got new unmanaged window %8x Flg %x %x\n"),(int)win->handle,(int)win->flags,(int) exstyle)) ;
         }
         vwWindowBaseLink(wb) ;
         return TRUE;
@@ -1517,7 +1517,6 @@ enumWindowsProc(HWND hwnd, LPARAM lParam)
         if((style & WS_VISIBLE) == 0)
             return TRUE ;
         /* window has become visible, start to manage it... */
-        vwLogBasic((_T("Started managing window %8x %08x Flg %x Desk %d\n"),(int)win->handle,(int)style,(int)win->flags,(int)win->desk)) ;
         vwWindowBaseUnlink(wb) ;
         wb->flags = (wb->flags & ~(vwWINFLAGS_INITIALIZED|vwWINFLAGS_MINIMIZED|vwWINFLAGS_MAXIMIZED)) | (vwWINFLAGS_VISIBLE | vwWINFLAGS_MANAGED | vwWINFLAGS_SHOWN | vwWINFLAGS_SHOW) ;
         if(style & WS_MINIMIZE)
@@ -1529,6 +1528,7 @@ enumWindowsProc(HWND hwnd, LPARAM lParam)
         memset(&(win->zOrder[1]),0,(vwDESKTOP_SIZE-1)*sizeof(vwUInt)) ;
         win->zOrder[0] = (vwUInt) vwWindowTypeFind(hwnd,(vwWindowType *) win->zOrder[0]) ;
         win->menuId = 0 ;
+        vwLogBasic((_T("Started managing window %8x %08x Flg %x %x Desk %d\n"),(int)win->handle,(int)style,(int)win->flags,(int)win->exStyle,(int)win->desk)) ;
         vwWindowBaseLink(wb) ;
         return TRUE ;
     }
@@ -1541,7 +1541,7 @@ enumWindowsProc(HWND hwnd, LPARAM lParam)
                 /* this window has been hidden by someone else - stop handling it
                  * unless VirtualWin knows its not visible (which means it is
                  * probably a hung process so keep it.) */
-                vwLogBasic((_T("Stopped managing window %8x %08x Flg %x Desk %d\n"),(int)win->handle,(int)style,(int)win->flags,(int)win->desk)) ;
+                vwLogBasic((_T("Stopped managing window %8x %08x Flg %x %x Desk %d\n"),(int)win->handle,(int)style,(int)win->flags,(int)win->exStyle,(int)win->desk)) ;
                 vwWindowBaseUnlink(wb) ;
                 /* should check for visible children? */
                 win->flags &= ~(vwWINFLAGS_MANAGED | vwWINFLAGS_VISIBLE) ;
@@ -1583,15 +1583,20 @@ enumWindowsProc(HWND hwnd, LPARAM lParam)
             /* This is likely to be a HUNG window, make it hung so we actively monitor it */
             win->flags |= vwWINFLAGS_SHOWN ;
     }
-    else
+    else if(vwWindowIsNotVisible(win))
+        win->flags |= vwWINFLAGS_VISIBLE ;
+    else if(vwWindowIsShown(win))
     {
         /* if visible and shown store the latest style & exStyle flags */
-        win->flags |= vwWINFLAGS_VISIBLE ;
         if(((style & WS_MINIMIZE) != 0) ^ ((win->flags & vwWINFLAGS_MINIMIZED) != 0))
             win->flags ^= vwWINFLAGS_MINIMIZED ;
         if(((style & WS_MAXIMIZE) != 0) ^ ((win->flags & vwWINFLAGS_MAXIMIZED) != 0))
             win->flags ^= vwWINFLAGS_MAXIMIZED ;
-        win->exStyle = GetWindowLong(hwnd, GWL_EXSTYLE) ;
+        style = GetWindowLong(hwnd, GWL_EXSTYLE) ;
+        if((win->exStyle & WS_EX_TOOLWINDOW) ^ (style & WS_EX_TOOLWINDOW))
+            vwLogBasic((_T("TOOLWIN flag about to change! %x (%x -> %x)\n"),
+                        (int) win->handle,win->exStyle,style)) ;
+        win->exStyle = style ;
     }
     return TRUE;
 }
@@ -3277,6 +3282,7 @@ popupWindowMenu(HWND theWin, int wmFlags)
                 win->flags |= vwWINFLAGS_MINIMIZED ;
             if(ExStyle & WS_MAXIMIZE)
                 win->flags |= vwWINFLAGS_MAXIMIZED ;
+            vwLogBasic((_T("Manually started managing window %8x %08x Flg %x %x\n"),(int)win->handle,(int)ExStyle,(int)win->flags,(int)win->exStyle)) ;
             vwWindowBaseLink((vwWindowBase *) win) ;
             /* Complete the initialization */
             windowListUpdate() ;
