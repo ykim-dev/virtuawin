@@ -1028,9 +1028,10 @@ setupExpert(HWND hDlg, UINT message, UINT wParam, LONG lParam)
                 if(wb->flags & vwWINFLAGS_MANAGED)
                 {
                     win = (vwWindow *) wb ;
-                    vwLogBasic((_T("MNG-WIN: %8x Flg %08x %08x %08x Pos %d %d Own %x (%x) Desk %d\n        Class \"%s\" Title \"%s\"\n"),
+                    vwLogBasic((_T("MNG-WIN: %8x Flg %08x %08x %08x Pos %d %d Proc %d %x Own %x Link %x Desk %d\n        Class \"%s\" Title \"%s\"\n"),
                                 (int) wb->handle,(int) wb->flags,(int) GetWindowLong(wb->handle, GWL_STYLE),(int) GetWindowLong(wb->handle, GWL_EXSTYLE),
-                                (int) pos.left, (int) pos.top, (int) GetWindow(wb->handle,GW_OWNER), (int) win->owner, (int) win->desk,cname,wname)) ;
+                                (int) pos.left, (int) pos.top,(int)win->processId,(int)((win->processNext == NULL) ? 0:win->processNext->handle),
+                                (int) GetWindow(wb->handle,GW_OWNER),(int)((win->linkedNext == NULL) ? 0:win->linkedNext->handle),(int) win->desk,cname,wname)) ;
                 }
                 else
                     vwLogBasic((_T("%s-WIN: %8x Flg %08x %08x %08x Pos %d %d Own %x\n        Class \"%s\" Title \"%s\"\n"),
