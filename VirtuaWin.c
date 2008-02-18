@@ -978,12 +978,96 @@ vwWindowBaseUnlink(vwWindowBase *wb)
 }
 
 
+static vwWindowBase *
+vwWindowBaseCreate(vwUInt flags, HWND hwnd) 
+{
+    vwWindowBase *wb ;
+    vwWindow *win, *pwin ;
+    
+    if(flags & vwWINFLAGS_WINDOW)
+    {
+        if((win = windowFreeList) != NULL)
+        {
+            windowFreeList = win->next ;
+            memset(win,0,sizeof(vwWindow)) ;
+        }
+        else
+            win = calloc(1,sizeof(vwWindow)) ;
+        wb = (vwWindowBase *) win ;
+    }
+    else
+    {
+        if((wb = windowBaseFreeList) != NULL)
+        {
+            windowBaseFreeList = wb->next ;
+            memset(wb,0,sizeof(vwWindowBase)) ;
+        }
+        else
+            wb = calloc(1,sizeof(vwWindowBase)) ;
+        win = NULL ;
+    }
+    if(wb == NULL)
+    {
+        static vwUByte printedError=FALSE ;
+        if(!printedError)
+        {
+            printedError = TRUE ;
+            MessageBox(hWnd,_T("System resources are low, windows may not be managed."),vwVIRTUAWIN_NAME _T(" Error"), MB_ICONERROR);
+        }
+        return NULL ;
+    }
+    wb->handle = hwnd ;
+    wb->flags = flags ;
+    if(win != NULL)
+    {
+        if(GetWindowThreadProcessId(hwnd,&(win->processId)) == 0)
+            win->processId = 0 ;
+        else if((pwin = windowList) != NULL)
+        {
+            do
+            {
+                if(win->processId == pwin->processId)
+                {
+                    if((win->processNext = pwin->processNext) == NULL)
+                        win->processNext = pwin ;
+                    pwin->processNext = win ;
+                    break ;
+                }
+            } while((pwin = pwin->next) != NULL) ;
+        }
+    }
+    vwWindowBaseLink(wb) ;
+    
+    return wb ;
+}
+
 static void
 vwWindowBaseDelete(vwWindowBase *wb) 
 {
     vwWindowBaseUnlink(wb) ; 
     if(vwWindowIsWindow(wb))
     {
+        vwWindow *pWin, *nWin ;
+        if((nWin = ((vwWindow *) wb)->processNext) != NULL)
+        {
+            pWin = nWin ;
+            while(pWin->processNext != (vwWindow *) wb)
+                pWin = pWin->processNext ;
+            if(pWin == nWin)
+                pWin->processNext = NULL ;
+            else
+                pWin->processNext = nWin ;
+        }
+        if((nWin = ((vwWindow *) wb)->linkedNext) != NULL)
+        {
+            pWin = nWin ;
+            while(pWin->linkedNext != (vwWindow *) wb)
+                pWin = pWin->linkedNext ;
+            if(pWin == nWin)
+                pWin->linkedNext = NULL ;
+            else
+                pWin->linkedNext = nWin ;
+        }
         wb->next = (vwWindowBase *) windowFreeList ;
         windowFreeList = (vwWindow *) wb ;
     }
@@ -1282,59 +1366,52 @@ showWindowType(HWND theWin, int add)
 
 /************************************************
  * Moves a window to a given desk
+ * move can be one of the following values:
+ * 0 - Window will be moved on next desktop change
+ * 1 - Window will be moved immediately
+ * 2 - Window will be shown on the current desktop.
  */
-// TODO - pass in an vwWindow
 static int
-windowSetDesk(HWND theWin, int theDesk, vwUByte move, vwUByte setActive)
+vwWindowSetDesk(vwWindow *win, int theDesk, vwUByte move, vwUByte setActive)
 {
-    HWND ownerWin, activeHWnd ;
-    vwWindow *win ;
+    vwWindow *ewin ;
+    HWND activeHWnd ;
     vwUInt show ;
-    int ret=0 ;
     
     activeHWnd = GetForegroundWindow() ;
-    vwLogBasic((_T("Set window desk: %x %d %d (%x)\n"),(int) theWin,theDesk,move,(int) activeHWnd)) ;
+    vwLogBasic((_T("Set window desk: %x %d %d (%x)\n"),(int) win->handle,theDesk,move,(int) activeHWnd)) ;
+    
+    ewin = (win->linkedNext != NULL) ? win:NULL ;
     do {
-        ownerWin = 0 ;
-        win = windowList ;
-        while(win != NULL)
+        if(vwWindowIsShownNotHung(win))
+            win->zOrder[theDesk] = win->zOrder[currentDesk] ;
+        else if(win->desk != theDesk)
+            win->zOrder[theDesk] = win->zOrder[win->desk] ;
+        if(vwWindowIsNotSticky(win) && ((win->desk != theDesk) || (vwWindowIsShow(win) && (theDesk != currentDesk))))
         {
-            if((win->handle == theWin) || (win->owner == theWin))
+            /* if temporarily show the window on this desk */ 
+            if(move > 1)
             {
-                // Even if the window does not have to be moved, it was found so return true
-                ret = 1 ;
-                if(vwWindowIsShownNotHung(win))
-                    win->zOrder[theDesk] = win->zOrder[currentDesk] ;
-                else if(win->desk != theDesk)
-                    win->zOrder[theDesk] = win->zOrder[win->desk] ;
-                if(vwWindowIsNotSticky(win) && ((win->desk != theDesk) || (vwWindowIsShow(win) && (theDesk != currentDesk))))
-                {
-                    /* if temporarily show the window on this desk */ 
-                    if(move > 1)
-                    {
-                        if(theDesk == currentDesk)
-                            show = vwWINSH_FLAGS_SHOW ;
-                        else
-                            show = vwWINSH_FLAGS_HIDE ;
-                    }
-                    else
-                    {
-                        win->desk = theDesk;
-                        if((currentDesk == theDesk) || (move == 0))
-                            show = vwWINSH_FLAGS_SHOW ;
-                        else
-                            show = vwWINSH_FLAGS_HIDE ;
-                    }
-                    if(!show && (activeHWnd == win->handle))
-                        setActive = TRUE ;
-                    vwWindowShowHide(win,show) ;
-                    if((win->owner != 0) && (win->owner != theWin))
-                        ownerWin = win->owner ;
-                }
+                if(theDesk == currentDesk)
+                    show = vwWINSH_FLAGS_SHOW ;
+                else
+                    show = vwWINSH_FLAGS_HIDE ;
             }
-            win = vwWindowGetNext(win) ;
+            else
+            {
+                win->desk = theDesk;
+                if((currentDesk == theDesk) || (move == 0))
+                    show = vwWINSH_FLAGS_SHOW ;
+                else
+                    show = vwWINSH_FLAGS_HIDE ;
+            }
+            if(!show && (activeHWnd == win->handle))
+                setActive = TRUE ;
+            vwWindowShowHide(win,show) ;
         }
-    } while((theWin = ownerWin) != 0) ;
+        win = win->linkedNext ;
+    } while(win != ewin) ;
+    
     if(setActive)
     {
         // we have just assigned the foreground window to a different
@@ -1356,56 +1433,45 @@ windowSetDesk(HWND theWin, int theDesk, vwUByte move, vwUByte setActive)
         vwLogVerbose((_T("Looking for replacement active: %x\n"),(int) activeHWnd)) ;
         setForegroundWin(activeHWnd,0) ;
     }
-    return ret ;
+    return 1 ;
 }
 
 /************************************************
  * Sets a windows sticky setting
  */
-// TODO - pass in an vwWindow
 static int
-windowSetSticky(HWND theWin, int state)
+vwWindowSetSticky(vwWindow *win, int state)
 {
+    vwWindow *ewin ;
     vwUInt zOrder ;
-    HWND ownerWin ;
-    vwWindow *win ;
-    int ii, ret=0 ;
+    int ii ;
     
+    ewin = (win->linkedNext != NULL) ? win:NULL ;
     do {
-        ownerWin = 0 ;
-        win = windowList ;
-        while(win != NULL)
+        if(state < 0) // toggle sticky state - set state so all owner windows are set correctly.
+            state = vwWindowIsSticky(win) ^ TRUE;
+        vwLogVerbose((_T("Setting Sticky: %x %x - %d -> %d\n"),(int) win->handle,
+                      (int) theWin,(int) vwWindowIsSticky(win),state)) ;
+        if(state)
         {
-            if((win->handle == theWin) || (win->owner == theWin))
-            {
-                if(state < 0) // toggle sticky state - set state so all owner windows are set correctly.
-                    state = vwWindowIsSticky(win) ^ TRUE;
-                vwLogVerbose((_T("Setting Sticky: %x %x - %d -> %d\n"),(int) win->handle,
-                              (int) theWin,(int) vwWindowIsSticky(win),state)) ;
-                if(state)
-                {
-                    win->flags |= vwWINFLAGS_STICKY ;
-                    // set its zOrder of all desks to its zOrder on its current desk
-                    zOrder = win->zOrder[win->desk] ;
-                    ii = vwDESKTOP_SIZE - 1 ;
-                    do
-                        win->zOrder[ii] = zOrder ;
-                    while(--ii >= 0) ;
-                    // if not currently set to show (i.e. was on another desktop) then make it visible
-                    if(vwWindowIsNotShow(win))
-                        vwWindowShowHide(win,vwWINSH_FLAGS_SHOW) ;
-                }
-                else
-                    win->flags &= ~vwWINFLAGS_STICKY ;
-                win->desk = currentDesk;
-                if((win->owner != 0) && (win->owner != theWin))
-                    ownerWin = win->owner ;
-                ret = 1 ;
-            }
-            win = vwWindowGetNext(win) ;
+            win->flags |= vwWINFLAGS_STICKY ;
+            // set its zOrder of all desks to its zOrder on its current desk
+            zOrder = win->zOrder[win->desk] ;
+            ii = vwDESKTOP_SIZE - 1 ;
+            do
+                win->zOrder[ii] = zOrder ;
+            while(--ii >= 0) ;
+            // if not currently set to show (i.e. was on another desktop) then make it visible
+            if(vwWindowIsNotShow(win))
+                vwWindowShowHide(win,vwWINSH_FLAGS_SHOW) ;
         }
-    } while((theWin = ownerWin) != 0) ;
-    return ret ;
+        else
+            win->flags &= ~vwWINFLAGS_STICKY ;
+        win->desk = currentDesk;
+        win = win->linkedNext ;
+    } while(win != ewin) ;
+    
+    return 1 ;
 }
 
 /*************************************************
@@ -1417,7 +1483,7 @@ enumWindowsProc(HWND hwnd, LPARAM lParam)
     vwWindowType *wt ;
     vwWindow *win ;
     vwWindowBase *wb, *pwb ;
-    HWND owner, phwnd ;
+    HWND phwnd ;
     vwUInt flags ;
     int style, exstyle ;
     RECT pos ;
@@ -1432,7 +1498,6 @@ enumWindowsProc(HWND hwnd, LPARAM lParam)
             return TRUE ;
         
         wt = vwWindowTypeFind(hwnd,NULL) ;
-        owner = GetWindow(hwnd,GW_OWNER) ;
         exstyle = GetWindowLong(hwnd, GWL_EXSTYLE) ;
         /* Criterias for a window to be handeled by VirtuaWin
          * Note: some apps like winamp use the WS_EX_TOOLWINDOW flag to remove themselves from
@@ -1442,7 +1507,7 @@ enumWindowsProc(HWND hwnd, LPARAM lParam)
             flags = 0 ;
         else if((wt != NULL) && (wt->flags & vwWTFLAGS_DONT_MANAGE))
             flags = 1 ;
-        else if((exstyle & WS_EX_TOOLWINDOW) && ((style & WS_POPUP) || (owner != NULL)))
+        else if((exstyle & WS_EX_TOOLWINDOW) && ((style & WS_POPUP) || (GetWindow(hwnd,GW_OWNER) != NULL)))
             flags = 1 ;
         else
             flags = (((phwnd=GetParent(hwnd)) != NULL) && (phwnd != desktopHWnd) &&
@@ -1452,18 +1517,8 @@ enumWindowsProc(HWND hwnd, LPARAM lParam)
                        ((pwb=vwWindowBaseFind(phwnd)) != NULL) && 
                        vwWindowIsManaged(pwb) && vwWindowIsNotTrickyPos(pwb) && vwWindowIsNotHideByMove(pwb)))) ;
         if(flags)
-        {
             // dont manage this window
             flags = vwWINFLAGS_FOUND ;
-            if((wb = windowBaseFreeList) != NULL)
-            {
-                windowBaseFreeList = wb->next ;
-                memset(wb,0,sizeof(vwWindowBase)) ;
-            }
-            else
-                wb = calloc(1,sizeof(vwWindowBase)) ;
-            win = NULL ;
-        }
         else
         {
             if(style & WS_VISIBLE)
@@ -1476,36 +1531,16 @@ enumWindowsProc(HWND hwnd, LPARAM lParam)
                 flags |= vwWINFLAGS_MINIMIZED ;
             if(style & WS_MAXIMIZE)
                 flags |= vwWINFLAGS_MAXIMIZED ;
-            if((win = windowFreeList) != NULL)
-            {
-                windowFreeList = win->next ;
-                memset(win,0,sizeof(vwWindow)) ;
-            }
-            else
-                win = calloc(1,sizeof(vwWindow)) ;
-            wb = (vwWindowBase *) win ;
         }
-        if(wb == NULL)
+        if(((wb = vwWindowBaseCreate(flags,hwnd)) != NULL) && vwWindowIsWindow(wb))
         {
-            static vwUByte printedError=FALSE ;
-            if(!printedError)
-            {
-                printedError = TRUE ;
-                MessageBox(hWnd,_T("System resources are low, windows may not be managed."),vwVIRTUAWIN_NAME _T(" Error"), MB_ICONERROR);
-            }
-            return TRUE;
-        }
-        wb->handle = hwnd ;
-        wb->flags = flags ;
-        if(win != NULL)
-        {
-            win->owner = owner ;
+            win = (vwWindow *) wb ;
             win->exStyle = exstyle ;
             win->zOrder[0] = (vwUInt) wt ;
             if((style & WS_VISIBLE) == 0)
-                vwLogBasic((_T("Got new unmanaged window %8x Flg %x %x\n"),(int)win->handle,(int)win->flags,(int) exstyle)) ;
+                vwLogBasic((_T("Got new unmanaged window %8x Proc %d Flg %x %x (%08x)\n"),
+                            (int)win->handle,(int)win->processId,(int)win->flags,(int) exstyle,(int)style)) ;
         }
-        vwWindowBaseLink(wb) ;
         return TRUE;
     }
     wb->flags |= vwWINFLAGS_FOUND ;
@@ -1523,12 +1558,12 @@ enumWindowsProc(HWND hwnd, LPARAM lParam)
             win->flags |= vwWINFLAGS_MINIMIZED ;
         if(style & WS_MAXIMIZE)
             win->flags |= vwWINFLAGS_MAXIMIZED ;
-        win->owner = GetWindow(hwnd,GW_OWNER) ;
         win->exStyle = GetWindowLong(hwnd, GWL_EXSTYLE) ;
         memset(&(win->zOrder[1]),0,(vwDESKTOP_SIZE-1)*sizeof(vwUInt)) ;
         win->zOrder[0] = (vwUInt) vwWindowTypeFind(hwnd,(vwWindowType *) win->zOrder[0]) ;
         win->menuId = 0 ;
-        vwLogBasic((_T("Started managing window %8x %08x Flg %x %x Desk %d\n"),(int)win->handle,(int)style,(int)win->flags,(int)win->exStyle,(int)win->desk)) ;
+        vwLogBasic((_T("Started managing window %8x Proc %d Flg %x %x (%08x)\n"),
+                    (int)win->handle,(int)win->processId,(int)win->flags,(int)win->exStyle,(int)style)) ;
         vwWindowBaseLink(wb) ;
         return TRUE ;
     }
@@ -1541,7 +1576,8 @@ enumWindowsProc(HWND hwnd, LPARAM lParam)
                 /* this window has been hidden by someone else - stop handling it
                  * unless VirtualWin knows its not visible (which means it is
                  * probably a hung process so keep it.) */
-                vwLogBasic((_T("Stopped managing window %8x %08x Flg %x %x Desk %d\n"),(int)win->handle,(int)style,(int)win->flags,(int)win->exStyle,(int)win->desk)) ;
+                vwLogBasic((_T("Stopped managing window %8x Proc %d Flg %x %x (%08x) Desk %d\n"),
+                            (int)win->handle,(int)win->processId,(int)win->flags,(int) win->exStyle,(int)style,(int)win->desk)) ;
                 vwWindowBaseUnlink(wb) ;
                 /* should check for visible children? */
                 win->flags &= ~(vwWINFLAGS_MANAGED | vwWINFLAGS_VISIBLE) ;
@@ -1584,10 +1620,10 @@ enumWindowsProc(HWND hwnd, LPARAM lParam)
             win->flags |= vwWINFLAGS_SHOWN ;
     }
     else if(vwWindowIsNotVisible(win))
+        /* if visible and shown store the latest style & exStyle flags */
         win->flags |= vwWINFLAGS_VISIBLE ;
     else if(vwWindowIsShown(win))
     {
-        /* if visible and shown store the latest style & exStyle flags */
         if(((style & WS_MINIMIZE) != 0) ^ ((win->flags & vwWINFLAGS_MINIMIZED) != 0))
             win->flags ^= vwWINFLAGS_MINIMIZED ;
         if(((style & WS_MAXIMIZE) != 0) ^ ((win->flags & vwWINFLAGS_MAXIMIZED) != 0))
@@ -1604,7 +1640,6 @@ enumWindowsProc(HWND hwnd, LPARAM lParam)
 int
 windowListUpdate(void)
 {
-    DWORD iprocId, jprocId ;
     HWND activeHWnd ;
     vwWindowType *wt ;
     vwWindowBase *wb, *wbn ;
@@ -1650,98 +1685,93 @@ windowListUpdate(void)
                     win->desk = wt->desk ;
                 }
             }
-            if((win->exStyle & (WS_EX_TOOLWINDOW|WS_EX_NOACTIVATE)) || ((win->owner != NULL) && ((win->exStyle & WS_EX_APPWINDOW) == 0)))
-                win->flags |= vwWINFLAGS_NO_TASKBAR_BUT ;
             GetWindowRect(win->handle,&pos) ;
             if((pos.left == -32000) && (pos.top == -32000))
                 win->flags |= vwWINFLAGS_TRICKY_POS ;
-            // remove the owner if its not visible
-            if((win->owner != NULL) && ((GetWindowLong(win->owner,GWL_STYLE) & WS_VISIBLE) == 0))
-                win->owner = NULL ;
             win = vwWindowGetNext(win) ;
         }
-        // now finish of initialization of owned windows
+        // now finish of initialization of linked windows
         win = nw ;
         while(win != NULL)
         {
-            if(((win->flags & vwWINFLAGS_TRICKY_POS) != 0) && (win->owner == NULL) && (GetWindowThreadProcessId(win->handle,&iprocId) != 0))
+            HWND owner = GetWindow(win->handle,GW_OWNER) ;
+            if((win->exStyle & (WS_EX_TOOLWINDOW|WS_EX_NOACTIVATE)) || ((owner != NULL) && ((win->exStyle & WS_EX_APPWINDOW) == 0)))
+                win->flags |= vwWINFLAGS_NO_TASKBAR_BUT ;
+            if(((win->flags & vwWINFLAGS_TRICKY_POS) != 0) && (win->processId != 0) && 
+               (owner == NULL) && ((ww = win->processNext) != NULL))
             {
                 /* some apps like Excel and Adobe Reader create one main window
                  * and a hidden tricky position windows per file open for the
                  * task bar, if this is one make it owned by the main window */
-                ww = windowList ;
-                while(ww != NULL)
+                for(;;)
                 {
-                    if((ww != win) && (ww->flags & vwWINFLAGS_FOUND) &&
-                       ((ww->flags & vwWINFLAGS_TRICKY_POS) == 0) &&
-                       (GetWindowThreadProcessId(ww->handle,&jprocId) != 0) &&
-                       (jprocId == iprocId))
+                    if((ww->flags & vwWINFLAGS_FOUND) && vwWindowIsManaged(ww) && ((ww->flags & vwWINFLAGS_TRICKY_POS) == 0))
                     {
                         vwLogBasic((_T("Making tricky window %x owned by %x\n"),
                                     (int) win->handle,(int) ww->handle)) ;
-                        win->owner = ww->handle ;
                         ww->flags |= vwWINFLAGS_NO_TASKBAR_BUT | vwWINFLAGS_RM_TASKBAR_BUT ;
                         break ;
                     }
-                    ww = vwWindowGetNext(ww) ;
-                }
-            }
-            if(win->owner != NULL)
-            {
-                ww = windowList ;
-                while(ww != NULL)
-                {
-                    if(ww->handle == win->owner)
+                    if((ww = ww->processNext) == win)
                     {
-                        if((ww->flags & vwWINFLAGS_FOUND) == 0)
-                            /* owner has gone */
-                            win->owner = NULL ;
-                        else if(win->handle == ww->owner)
-                            /* circular owner loop, break the loop */
-                            ww->owner = NULL ;
-                        if(win->owner != NULL)
-                        {
-                            // an existing app has either unhidden an old window or popped up a new one 
-                            // use the existing window's settings for this one
-                            if(ww->owner != NULL)
-                                win->owner = ww->owner ;
-                            
-                            if((ww->flags & vwWINFLAGS_INITIALIZED) == 0)
-                            {
-                                /* two linked windows have started together, treat them as one, but put
-                                 * the info onto the parent window to avoid dupication and order issues */
-                                if(vwWindowIsSticky(win))
-                                {
-                                    ww->flags |= vwWINFLAGS_STICKY ;
-                                    win->flags ^= vwWINFLAGS_STICKY ;
-                                }
-                                if(win->desk != currentDesk)
-                                {
-                                    ww->desk = ww->desk ;
-                                    win->desk = currentDesk ;
-                                }
-                            }
-                            else
-                            {
-                                if(vwWindowIsSticky(ww))
-                                    win->flags |= vwWINFLAGS_STICKY ;
-                                if((win->desk = ww->desk) != currentDesk)
-                                    win->flags |= vwWINFLAGS_ACTIVATED ;
-                            }
-                            /* TODO - minimize method should be considered */
-                            if(vwWindowIsHideByMove(win) && vwWindowIsNotHideByMove(ww) && vwWindowIsShown(ww))
-                            {
-                                // if an owned window is flagged as tricky we must make the parent window
-                                // tricky otherwise the call to ShowOwnedPopups is likely to break things
-                                ww->flags = (ww->flags & ~vwWINFLAGS_HIDEWIN_MASK) | vwWTFLAGS_HIDEWIN_MOVE ;
-                                if((ww->flags & vwWINFLAGS_HIDETSK_MASK) == vwWINFLAGS_HIDETSK_HIDE)
-                                    ww->flags |= vwWINFLAGS_HIDETSK_TOOLWN ;
-                                vwLogBasic((_T("Making parent window %x hide by move\n"),(int) ww->handle)) ;
-                            }
-                        }
+                        ww = NULL ;
                         break ;
                     }
-                    ww = vwWindowGetNext(ww) ;
+                }
+            }
+            else
+                ww = NULL ;
+            while((owner != NULL) && (ww == NULL))
+            {
+                /* only keep the owner if it is from the same process */
+                ww = win->processNext ;
+                while(ww != NULL)
+                {
+                    if(ww == win)
+                    {
+                        ww = NULL ;
+                        break ;
+                    }
+                    else if(ww->handle == owner)
+                        break ;
+                    ww = ww->processNext ;
+                }
+                owner = GetWindow(owner,GW_OWNER) ;
+            }
+            if((ww != NULL) && (ww->flags & vwWINFLAGS_FOUND))
+            {
+                /* This window is linked to its owner */
+                vwWindow *wl ;
+                if((wl=win->linkedNext) != NULL)
+                {
+                    while(wl->linkedNext != win)
+                        wl = wl->linkedNext ;
+                }
+                else
+                    wl = win ;
+                if((wl->linkedNext = ww->linkedNext) == NULL)
+                    wl->linkedNext = ww ;
+                ww->linkedNext = win ;
+                
+                /* TODO - minimize method should be considered */
+                if(vwWindowIsHideByMove(win) && vwWindowIsNotHideByMove(ww) && vwWindowIsShown(ww))
+                {
+                    // if an owned window is flagged as tricky we must make the parent window
+                    // tricky otherwise the call to ShowOwnedPopups is likely to break things
+                    ww->flags = (ww->flags & ~vwWINFLAGS_HIDEWIN_MASK) | vwWTFLAGS_HIDEWIN_MOVE ;
+                    if((ww->flags & vwWINFLAGS_HIDETSK_MASK) == vwWINFLAGS_HIDETSK_HIDE)
+                        ww->flags |= vwWINFLAGS_HIDETSK_TOOLWN ;
+                    vwLogBasic((_T("Making parent window %x hide by move\n"),(int) ww->handle)) ;
+                }
+                
+                if(ww->flags & vwWINFLAGS_INITIALIZED)
+                {
+                    /* If the parent window is already initialized then grab its sticky state and 
+                     * if its desk is not the current the treat this as an activation */
+                    if(vwWindowIsSticky(ww))
+                        win->flags |= vwWINFLAGS_STICKY ;
+                    if((win->desk = ww->desk) != currentDesk)
+                        win->flags |= vwWINFLAGS_ACTIVATED ;
                 }
             }
             win = vwWindowGetNext(win) ;
@@ -1753,20 +1783,20 @@ windowListUpdate(void)
             win->flags |= vwWINFLAGS_INITIALIZED ;
             if(vwWindowIsSticky(win))
             {
-                /* flagged as sticky in cfg or owner is sticky */ 
+                /* flagged as sticky in cfg or linked window is sticky */ 
                 win->desk = currentDesk ;
-                windowSetSticky(win->handle,TRUE) ;
+                vwWindowSetSticky(win,TRUE) ;
             }
             else if(win->desk != currentDesk)
             {
                 j = win->desk ;
                 win->desk = currentDesk ;
                 if(j > nDesks)
-                    windowSetDesk(win->handle,j,1,FALSE) ;
+                    vwWindowSetDesk(win,j,1,FALSE) ;
                 else
                 {
                     vwUByte moveImmediately = ((initialized == 0) || (win->flags & vwWINFLAGS_MOVE_IMMEDIATE)) ;
-                    windowSetDesk(win->handle,j,moveImmediately,FALSE) ;
+                    vwWindowSetDesk(win,j,moveImmediately,FALSE) ;
                     if(moveImmediately && (hiddenWindowAct == 3) && (newDesk == 0))
                         newDesk = j ;
                 }
@@ -1782,9 +1812,10 @@ windowListUpdate(void)
                 GetClassName(win->handle,cname,vwCLASSNAME_MAX);
                 if(!GetWindowText(win->handle,wname,vwWINDOWNAME_MAX))
                     _tcscpy(wname,_T("<None>"));
-                vwLogBasic((_T("Got new window %8x %08x %08x Flg %x Desk %d Own %x Pos %d %d\n  Class \"%s\" Title \"%s\"\n"),
+                vwLogBasic((_T("Got new window %8x %08x %08x Flg %x Desk %d Proc %d %x Link %x Pos %d %d\n  Class \"%s\" Title \"%s\"\n"),
                             (int)win->handle,(int)GetWindowLong(win->handle, GWL_STYLE),(int)win->exStyle,
-                            (int)win->flags,(int)win->desk,(int) win->owner,(int) pos.left,(int) pos.top,cname,wname)) ;
+                            (int)win->flags,(int)win->desk,(int)win->processId,(int)((win->processNext == NULL) ? 0:win->processNext->handle),
+                            (int)((win->linkedNext == NULL) ? 0:win->linkedNext->handle),(int) pos.left,(int) pos.top,cname,wname)) ;
                 win = vwWindowGetNext(win) ;
             }
         }
@@ -1830,8 +1861,8 @@ windowListUpdate(void)
             if((win->desk != currentDesk) && ((activateAction == 0) || (win->desk > nDesks)))
             {
                 j = win->desk ;
-                windowSetDesk(win->handle,currentDesk,2,FALSE) ;
-                windowSetDesk(win->handle,j,1,FALSE) ;
+                vwWindowSetDesk(win,currentDesk,2,FALSE) ;
+                vwWindowSetDesk(win,j,1,FALSE) ;
                 if(win->handle == activeHWnd)
                     activeHWnd = NULL ;
             }
@@ -1839,7 +1870,7 @@ windowListUpdate(void)
             {
                 if((activateAction == 3) && (newDesk == 0))
                     newDesk = win->desk ;
-                windowSetDesk(win->handle,currentDesk,activateAction,FALSE) ;
+                vwWindowSetDesk(win,currentDesk,activateAction,FALSE) ;
             }
         }
         if(win->handle == activeHWnd)
@@ -1881,7 +1912,7 @@ windowListUpdate(void)
                                         (int) lastFGHWnd, lastFGStyle, (int) lastBOFGHWnd, lastBOFGStyle)) ;
                             if((activateAction == 3) && (newDesk == 0))
                                 newDesk = win->desk ;
-                            windowSetDesk(win->handle,currentDesk,activateAction,FALSE) ;
+                            vwWindowSetDesk(win,currentDesk,activateAction,FALSE) ;
                         }
                         win->zOrder[currentDesk] = ++vwZOrder ;
                         // if this is only a temporary display increase its zorder in its main desk
@@ -2040,27 +2071,16 @@ changeDesk(int newDesk, WPARAM msgWParam)
     activeHWnd = NULL;
     if(isDragging || (checkMouseState(1) == 1))
     {
-        /* move the app we are dragging to the new desktop, must handle owner windows */
-        HWND ownerWnd;
-        
-        if(((activeHWnd = dragHWnd) != 0) ||
-           ((dragHWnd = activeHWnd = GetForegroundWindow()) != 0))
+        /* move the app we are dragging to the new desktop, must handle linked windows */
+        if((((activeHWnd = dragHWnd) != 0) ||
+            ((dragHWnd = activeHWnd = GetForegroundWindow()) != 0)) &&
+           ((win = vwWindowFind(dragHWnd)) != NULL))
         {
+            bwn = (win->linkedNext == NULL) ? NULL:win ;
             do {
-                ownerWnd = 0 ;
-                win = windowList ;
-                while(win != NULL)
-                {
-                    if((win->handle == dragHWnd) || (win->owner == dragHWnd))
-                    {
-                        win->desk = newDesk;
-                        win->zOrder[newDesk] = win->zOrder[currentDesk] ;
-                        if((win->owner != 0) && (win->owner != dragHWnd))
-                            ownerWnd = win->owner ;
-                    }
-                    win = vwWindowGetNext(win) ;
-                }
-            } while((dragHWnd = ownerWnd) != 0) ;
+                win->desk = newDesk;
+                win->zOrder[newDesk] = win->zOrder[currentDesk] ;
+            } while((win = win->linkedNext) != bwn) ;
             activeZOrder = 0xffffffff ;
         }
         isDragging = FALSE ;
@@ -2423,6 +2443,12 @@ winListCreateItemList(int flags, vwMenuItem **items,int *numitems)
     // create the window list
     vwMutexLock();
     windowListUpdate() ;
+    win = windowList ;
+    while(win != NULL)
+    {
+        win->menuId = 0 ;
+        win = vwWindowGetNext(win) ;
+    }
     i = 0 ;
     len = (flags & 0x01) ? vwWINDOWNAME_MAX:30 ;
     win = windowList ;
@@ -2431,14 +2457,17 @@ winListCreateItemList(int flags, vwMenuItem **items,int *numitems)
         // ignore owned windows if we are managing the owner and one's on a hidden desktop
         if(win->desk > nDesks)
             ww = win ;
-        else if(win->owner == NULL)
-            ww = NULL ;
-        else
+        else if((win->flags & vwWINFLAGS_NO_TASKBAR_BUT) && ((ww = win->linkedNext) != NULL))
         {
-            ww = windowList ;
-            while((ww->handle != win->owner) && ((ww = vwWindowGetNext(ww)) != NULL))
-                ;
+            while(ww->flags & vwWINFLAGS_NO_TASKBAR_BUT)
+                if((ww = ww->linkedNext) == win)
+                {
+                    ww = NULL ;
+                    break ;
+                }
         }
+        else
+            ww = NULL ;
         if(ww == NULL)
         {
             HICON hSmallIcon ;
@@ -2883,7 +2912,7 @@ assignWindow(HWND theWin, int theDesk, vwUByte follow, vwUByte force, vwUByte se
     windowListUpdate() ;
     ret = 0 ;
     if(((win = vwWindowFind(theWin)) != NULL) && !follow)
-        ret = windowSetDesk(theWin,theDesk,1,setActive) ;
+        ret = vwWindowSetDesk(win,theDesk,1,setActive) ;
     vwMutexRelease();
         
     if((win != NULL) && follow)
@@ -2918,7 +2947,7 @@ accessWindow(HWND theWin, vwUByte method, vwUByte force)
     if(((win = vwWindowFind(theWin)) == NULL) || ((win->desk > nDesks) && !force))
         ret = 0 ;
     else if(method != 3)
-        ret = windowSetDesk(theWin,currentDesk,method,FALSE) ;
+        ret = vwWindowSetDesk(win,currentDesk,method,FALSE) ;
     else
         ret = win->desk ;
         
@@ -2938,8 +2967,9 @@ accessWindow(HWND theWin, vwUByte method, vwUByte force)
  * Used by the module message VW_SETSTICKY
  */
 static int
-setSticky(HWND theWin, int state)
+windowSetSticky(HWND theWin, int state)
 {
+    vwWindow *win ;
     int ret ;
     vwLogBasic((_T("Set sticky window: %x %d\n"),(int) theWin,state)) ;
     
@@ -2948,7 +2978,40 @@ setSticky(HWND theWin, int state)
     
     vwMutexLock();
     windowListUpdate() ;
-    ret = windowSetSticky(theWin,state) ;
+    if((win = vwWindowFind(theWin)) == NULL)
+        ret = 0 ;
+    else
+        ret = vwWindowSetSticky(win,state) ;
+    vwMutexRelease();
+    return ret ;
+}
+
+/************************************************
+ * Gather all windows created by the current window's process
+ */
+static int
+windowGather(HWND theWin)
+{
+    vwWindow *win, *pwin ;
+    int ret ;
+    
+    vwLogBasic((_T("Gather window: %x\n"),(int) theWin)) ;
+    if((theWin == NULL) && ((theWin = GetForegroundWindow()) == NULL))
+        return 0 ;
+    
+    ret = 0 ;
+    vwMutexLock();
+    windowListUpdate() ;
+    if(((win = vwWindowFind(theWin)) != NULL) && ((pwin=win->processNext) != NULL))
+    {
+        while(pwin != win)
+        {
+            if(vwWindowIsManaged(pwin) && (pwin->desk != currentDesk) && (pwin->desk <= nDesks) &&
+               vwWindowSetDesk(pwin,currentDesk,1,0))
+                ret = 1 ;
+            pwin = pwin->processNext ;
+        }
+    }
     vwMutexRelease();
     return ret ;
 }
@@ -2966,7 +3029,7 @@ windowDismiss(HWND theWin)
     HWND hwnd ;
     
     vwLogBasic((_T("Dismissing window: %x\n"),(int) theWin)) ;
-    if(theWin == NULL)
+    if((theWin == NULL) && ((theWin = GetForegroundWindow()) == NULL))
         return 0 ;
     
     while((GetWindowLong(theWin, GWL_STYLE) & WS_CHILD) && 
@@ -2978,7 +3041,7 @@ windowDismiss(HWND theWin)
     if((win = vwWindowFind(theWin)) == NULL)
         ret = 0 ;
     else if(vwWindowIsNotSticky(win) && (win->desk != currentDesk))
-        ret = windowSetDesk(theWin,win->desk,1,FALSE) ;
+        ret = vwWindowSetDesk(win,win->desk,1,FALSE) ;
     else
     {
         ret = CloseWindow(theWin) ;
@@ -2988,8 +3051,7 @@ windowDismiss(HWND theWin)
         win = windowList ;
         while(win != NULL)
         {
-            if((win->desk == currentDesk) &&
-               (win->handle != theWin) && (win->owner != theWin) && 
+            if((win->desk == currentDesk) && (win->handle != theWin) && 
                (win->zOrder[currentDesk] > activeZOrder) &&
                vwWindowIsNotMinimized(win) && vwWindowIsVisible(win))
             {
@@ -3093,10 +3155,11 @@ WindowInfoDialogFunc(HWND hwndDlg, UINT msg, WPARAM wParam, LPARAM lParam)
                 ss += _tcslen(ss) ;
                 _tcscpy(ss,_T("\r\nProcess Name:\t")) ;
                 ss += _tcslen(ss) ;
+                if(GetWindowThreadProcessId(theWin,&procId) == 0)
+                    procId = 0 ;
                 if(vwGetModuleFileNameEx == NULL)
                     _tcscpy(ss,_T("<Unsupported>"));
-                else if((GetWindowThreadProcessId(theWin,&procId) != 0) && (procId != 0) && 
-                        ((procHdl=OpenProcess(PROCESS_QUERY_INFORMATION|PROCESS_VM_READ,FALSE,procId)) != NULL))
+                else if((procId != 0) && ((procHdl=OpenProcess(PROCESS_QUERY_INFORMATION|PROCESS_VM_READ,FALSE,procId)) != NULL))
                 {
                     vwGetModuleFileNameEx(procHdl,NULL,ss,MAX_PATH) ;
                     CloseHandle(procHdl) ;
@@ -3106,16 +3169,17 @@ WindowInfoDialogFunc(HWND hwndDlg, UINT msg, WPARAM wParam, LPARAM lParam)
                 ss += _tcslen(ss) ;
                     
                 GetWindowRect(theWin,&pos) ;
-                ss += _stprintf(ss,_T("\r\n\tHandle:\t%x\r\n\tParent:\t%x\r\n\tOwner:\t%x\r\n\tStyles:\t%08x %08x\r\n\tPosition:\t%d %d %d %d\r\n\r\nThis window is "),
-                                (int)theWin,(int)GetParent(theWin),(int)GetWindow(theWin,GW_OWNER),
+                ss += _stprintf(ss,_T("\r\n\tHandle:\t%x\r\n\tProcess:\t%d\r\n\tParent:\t%x\r\n\tOwner:\t%x\r\n\tStyles:\t%08x %08x\r\n\tPosition:\t%d %d %d %d\r\n\r\nThis window is "),
+                                (int)theWin,(int)procId,(int)GetParent(theWin),(int)GetWindow(theWin,GW_OWNER),
                                 (int)GetWindowLong(theWin,GWL_STYLE),(int)GetWindowLong(theWin,GWL_EXSTYLE),
                                 (int)pos.top,(int)pos.bottom,(int)pos.left,(int)pos.right) ;
                 
                 vwMutexLock();
                 windowListUpdate() ;
                 if((win = vwWindowFind(theWin)) != NULL)
-                    _stprintf(ss,_T("being managed\r\n\tOwner:\t%x\r\n\tFlags:\t%08x\r\n\tExStyle:\t%08x\r\n\tDesk:\t%d\r\n\tHandling:\t%s, %s\r\n"),
-                              (int)win->owner,(int)win->flags,(int)win->exStyle,(int)win->desk,
+                    _stprintf(ss,_T("being managed\r\n\tProc:\t%x\r\n\tLink:\t%x\r\n\tFlags:\t%08x\r\n\tExStyle:\t%08x\r\n\tDesk:\t%d\r\n\tHandling:\t%s, %s\r\n"),
+                              (int)((win->processNext == NULL) ? 0:win->processNext->handle),(int)((win->linkedNext == NULL) ? 0:win->linkedNext->handle),
+                              (int)win->flags,(int)win->exStyle,(int)win->desk,
                               winHandle[(win->flags & vwWTFLAGS_HIDEWIN_MASK) >> vwWTFLAGS_HIDEWIN_BITROT],
                               tbbHandle[(win->flags & vwWTFLAGS_HIDETSK_MASK) >> vwWTFLAGS_HIDETSK_BITROT]) ;
                 else
@@ -3154,7 +3218,7 @@ popupWindowMenu(HWND theWin, int wmFlags)
     TCHAR buff[20];
     POINT pt ;
     HWND pWin ;
-    int ExStyle, ii ;
+    int style, ii ;
     
     vwLogBasic((_T("Window Menu: %x\n"),(int) theWin)) ;
     
@@ -3168,10 +3232,10 @@ popupWindowMenu(HWND theWin, int wmFlags)
        ((hpopup = CreatePopupMenu()) == NULL))
         return ;
     
-    ExStyle = GetWindowLong(theWin,GWL_EXSTYLE) ;
-    AppendMenu(hpopup,(ExStyle & WS_EX_TOPMOST) ? (MF_STRING|MF_GRAYED):MF_STRING,ID_WM_BOTTOM,_T("Push to &Bottom"));
-    AppendMenu(hpopup,(ExStyle & WS_EX_TOPMOST) ? (MF_STRING|MF_CHECKED):MF_STRING,ID_WM_ONTOP,_T("Always on &Top"));
+    style = GetWindowLong(theWin,GWL_EXSTYLE) ;
     AppendMenu(hpopup,MF_STRING,ID_WM_DISMISS,_T("&Dismiss Window"));
+    AppendMenu(hpopup,(style & WS_EX_TOPMOST) ? (MF_STRING|MF_GRAYED):MF_STRING,ID_WM_BOTTOM,_T("Push to &Bottom"));
+    AppendMenu(hpopup,(style & WS_EX_TOPMOST) ? (MF_STRING|MF_CHECKED):MF_STRING,ID_WM_ONTOP,_T("Always on &Top"));
     
     vwMutexLock();
     windowListUpdate() ;
@@ -3180,6 +3244,7 @@ popupWindowMenu(HWND theWin, int wmFlags)
         /* currently managed window */
         Sticky = vwWindowIsSticky(win) ;
         AppendMenu(hpopup,(Sticky) ? (MF_STRING|MF_CHECKED):MF_STRING,ID_WM_STICKY,_T("&Always Show"));
+        AppendMenu(hpopup,(win->processNext == NULL) ? (MF_STRING|MF_GRAYED):MF_STRING,ID_WM_GATHER,_T("&Gather"));
         AppendMenu(hpopup,(deskWrap || (currentDesk < nDesks)) ? MF_STRING:(MF_STRING|MF_GRAYED),ID_WM_NEXT,_T("Move to &Next"));
         AppendMenu(hpopup,(deskWrap || (currentDesk > 1)) ? MF_STRING:(MF_STRING|MF_GRAYED),ID_WM_PREV,_T("Move to &Previous"));
         if((wmFlags & 0x01) == 0)
@@ -3245,7 +3310,7 @@ popupWindowMenu(HWND theWin, int wmFlags)
         windowPushToBottom(theWin) ;
         return ;
     case ID_WM_STICKY:
-        setSticky(theWin,-1) ;
+        windowSetSticky(theWin,-1) ;
         break;
     case ID_WM_INFO:
         DialogBox(hInst,MAKEINTRESOURCE(IDD_WINDOWINFODIALOG),theWin,(DLGPROC) WindowInfoDialogFunc);
@@ -3256,34 +3321,27 @@ popupWindowMenu(HWND theWin, int wmFlags)
     case ID_WM_EWTYPE:
         showWindowType(theWin,0) ;
         return ;
+    case ID_WM_GATHER:
+        windowGather(theWin) ;
+        break ;
     case ID_WM_MANAGE:
         vwMutexLock();
         windowListUpdate() ;
         if(vwWindowFind(theWin) == NULL)
         {
+            vwUInt flags = vwWINFLAGS_FOUND | vwWINFLAGS_VISIBLE | vwWINFLAGS_WINDOW | vwWINFLAGS_MANAGED | vwWINFLAGS_SHOWN | vwWINFLAGS_SHOW ;
+            style = GetWindowLong(theWin,GWL_STYLE) ;
+            if(style & WS_MINIMIZE)
+                flags |= vwWINFLAGS_MINIMIZED ;
+            if(style & WS_MAXIMIZE)
+                flags |= vwWINFLAGS_MAXIMIZED ;
             if((win = (vwWindow *) vwWindowBaseFind(theWin)) != NULL)
                 vwWindowBaseDelete((vwWindowBase *) win)  ;
-            if((win = windowFreeList) != NULL)
-            {
-                windowFreeList = win->next ;
-                memset(win,0,sizeof(vwWindow)) ;
-            }
-            else if((win = calloc(1,sizeof(vwWindow))) == NULL)
-            {
-                MessageBox(hWnd,_T("System resources are low, cannot manage current window."),vwVIRTUAWIN_NAME _T(" Error"), MB_ICONERROR);
+            if((win = (vwWindow *) vwWindowBaseCreate(flags,theWin)) == NULL)
                 return ;
-            }
-            win->handle = theWin ;
-            win->owner = GetWindow(theWin,GW_OWNER) ;
-            win->exStyle = GetWindowLong(theWin, GWL_EXSTYLE) ;
-            win->flags = vwWINFLAGS_FOUND | vwWINFLAGS_VISIBLE | vwWINFLAGS_WINDOW | vwWINFLAGS_MANAGED | vwWINFLAGS_SHOWN | vwWINFLAGS_SHOW ;
-            ExStyle = GetWindowLong(theWin,GWL_STYLE) ;
-            if(ExStyle & WS_MINIMIZE)
-                win->flags |= vwWINFLAGS_MINIMIZED ;
-            if(ExStyle & WS_MAXIMIZE)
-                win->flags |= vwWINFLAGS_MAXIMIZED ;
-            vwLogBasic((_T("Manually started managing window %8x %08x Flg %x %x\n"),(int)win->handle,(int)ExStyle,(int)win->flags,(int)win->exStyle)) ;
-            vwWindowBaseLink((vwWindowBase *) win) ;
+            win->exStyle = GetWindowLong(theWin,GWL_EXSTYLE) ;
+            vwLogBasic((_T("Manually started managing window %8x Proc %d Flg %x %x (%08x)\n"),
+                        (int)win->handle,(int)win->processId,(int)win->flags,(int) win->exStyle,(int)style)) ;
             /* Complete the initialization */
             windowListUpdate() ;
         }
@@ -3300,7 +3358,7 @@ popupWindowMenu(HWND theWin, int wmFlags)
             return ;
         
         if(Sticky)
-            setSticky(theWin,0) ;
+            windowSetSticky(theWin,0) ;
         assignWindow(theWin,ii,FALSE,FALSE,TRUE) ;
         return ;
     }
@@ -3510,7 +3568,7 @@ popupWinListMenu(HWND aHWnd, int wlFlags)
             vwLogBasic((_T("Menu select %x %x (%d)\n"),retItem,(int) hwnd,ii)) ;
             if(retItem & vwPMENU_STICKY)
                 // Sticky toggle
-                setSticky(hwnd,-1) ;
+                windowSetSticky(hwnd,-1) ;
             else
             {
                 if(retItem & vwPMENU_ASSIGN)
@@ -3764,10 +3822,10 @@ wndProc(HWND aHWnd, UINT message, WPARAM wParam, LPARAM lParam)
             gotoDesk(hotkeyList[ii].desk,TRUE);
             break ;
         case vwCMD_WIN_STICKY:
-            setSticky(0,-1);
+            windowSetSticky(0,-1);
             break ;
         case vwCMD_WIN_DISMISS:
-            windowDismiss(GetForegroundWindow());
+            windowDismiss(NULL);
             break ;
         case vwCMD_WIN_MOVE_DESKTOP:
         case vwCMD_WIN_MOVE_DESK_FOL:
@@ -3813,6 +3871,9 @@ wndProc(HWND aHWnd, UINT message, WPARAM wParam, LPARAM lParam)
             break ;
         case vwCMD_UI_CONTROLMENU:
             return popupControlMenu(aHWnd) ;
+        case vwCMD_WIN_GATHER:
+            windowGather(NULL);
+            break ;
         }
         return TRUE;
         
@@ -3891,7 +3952,7 @@ wndProc(HWND aHWnd, UINT message, WPARAM wParam, LPARAM lParam)
     case VW_SETSTICKY:
         if(!vwEnabled)
             return FALSE ;
-        return setSticky((HWND)wParam,(vwUByte) lParam);
+        return windowSetSticky((HWND)wParam,(vwUByte) lParam);
         
     case VW_GETWINDESK:
         {
