@@ -126,12 +126,13 @@
 #define ID_WM_ONTOP      32781
 #define ID_WM_BOTTOM     32782
 #define ID_WM_STICKY     32783
-#define ID_WM_MANAGE     32784
-#define ID_WM_AWTYPE     32785
-#define ID_WM_EWTYPE     32786
-#define ID_WM_INFO       32787
-#define ID_WM_PREV       32788
-#define ID_WM_NEXT       32789
-#define ID_WM_DESK       32790
+#define ID_WM_GATHER     32784
+#define ID_WM_MANAGE     32785
+#define ID_WM_AWTYPE     32786
+#define ID_WM_EWTYPE     32787
+#define ID_WM_INFO       32788
+#define ID_WM_PREV       32789
+#define ID_WM_NEXT       32790
+#define ID_WM_DESK       32791
 
 #endif
