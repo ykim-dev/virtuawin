@@ -128,8 +128,10 @@ typedef struct vwWindow {
     HWND                 handle ;
     vwUInt               flags ;
     /* same as vwWindowBase - end */
-    HWND                 owner;
     long                 exStyle;
+    DWORD                processId ;
+    struct vwWindow     *processNext ;
+    struct vwWindow     *linkedNext ;
     vwUInt               zOrder[vwDESKTOP_SIZE] ;
     vwUByte              menuId ;
     vwUByte              desk;
