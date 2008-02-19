@@ -114,13 +114,14 @@
 
 
 #define ID_SETUP         32771   
-#define ID_WTYPE         32772   
-#define ID_EXIT          32773
-#define ID_FORWARD       32774
-#define ID_BACKWARD      32775
-#define ID_GATHER        32776  
-#define ID_DISABLE       32777
-#define ID_HELP          32778
+#define ID_WTYPE         32772
+#define ID_REAPPLY_RULES 32773
+#define ID_GATHER        32774  
+#define ID_HELP          32775
+#define ID_DISABLE       32776
+#define ID_EXIT          32777
+#define ID_FORWARD       32778
+#define ID_BACKWARD      32779
 
 #define ID_WM_DISMISS    32780
 #define ID_WM_ONTOP      32781
