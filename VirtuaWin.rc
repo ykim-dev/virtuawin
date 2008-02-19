@@ -170,7 +170,7 @@ END
 
 IDD_WINDOWTYPEDIALOG DIALOG 79, 25, 292, 315
 STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "VirtuaWin Window Types"
+CAPTION "VirtuaWin Window Rules"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LISTBOX         IDC_WTYPE_LIST, 6, 6, 280, 112, WS_VSCROLL | WS_HSCROLL | WS_TABSTOP | LBS_USETABSTOPS
@@ -187,7 +187,7 @@ BEGIN
     LTEXT           "Process name:", IDC_STATIC,   6, 170, 50, 8, 0
     EDITTEXT        IDC_WTYPE_PNAME,              60, 168, 135, 12, ES_LEFT | ES_AUTOHSCROLL
 
-    AUTOCHECKBOX    "Window type enabled", IDC_WTYPE_ENABLE,  6, 182, 100, 10
+    AUTOCHECKBOX    "Window rule enabled", IDC_WTYPE_ENABLE,  6, 182, 100, 10
     AUTORADIOBUTTON "Never manage windows of this type", IDC_WTYPE_NMANAGE, 18, 193, 130, 10
     AUTORADIOBUTTON "Always manage windows of this type", IDC_WTYPE_AMANAGE, 18, 204, 140, 10
     AUTORADIOBUTTON "Let VirtuaWin decide whether to manage windows", IDC_WTYPE_VMANAGE, 18, 215, 170, 10
