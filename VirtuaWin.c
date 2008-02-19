@@ -118,10 +118,6 @@ HWND taskHWnd;                  // handle to taskbar
 HWND desktopHWnd;		// handle to the desktop window
 HWND deskIconHWnd;		// handle to the desktop window holding the icons
 HWND lastFGHWnd;		// handle to the last foreground window
-int  lastFGStyle;               // style of the last foreground window
-HWND lastBOFGHWnd;		// handle to the last but one foreground window
-int  lastBOFGStyle;             // style of the last but one foreground window
-HWND lastLostHWnd;		// handle to the last lost window
 HWND dialogHWnd;       		// handle to the setup dialog, NULL if not open
 vwUByte dialogOpen;         
 vwUByte initialized;
@@ -1064,7 +1060,13 @@ vwWindowBaseDelete(vwWindowBase *wb)
             while(pWin->linkedNext != (vwWindow *) wb)
                 pWin = pWin->linkedNext ;
             if(pWin == nWin)
+            {
                 pWin->linkedNext = NULL ;
+                /* 1877997 if the taskbar button was being removed by VW stop
+                 * removing it as all the linked windows have been closed */
+                if(pWin->flags & vwWINFLAGS_RM_TASKBAR_BUT)
+                    pWin->flags &= ~(vwWINFLAGS_NO_TASKBAR_BUT | vwWINFLAGS_RM_TASKBAR_BUT) ;
+            }
             else
                 pWin->linkedNext = nWin ;
         }
@@ -1503,7 +1505,9 @@ enumWindowsProc(HWND hwnd, LPARAM lParam)
          * Note: some apps like winamp use the WS_EX_TOOLWINDOW flag to remove themselves from
          * the taskbar so VW will manage toolwin windows if they are not popups or have owners
          */
-        if((wt != NULL) && (wt->flags & vwWTFLAGS_MANAGE))
+        if(hwnd == hWnd)
+            flags = 1 ;
+        else if((wt != NULL) && (wt->flags & vwWTFLAGS_MANAGE))
             flags = 0 ;
         else if((wt != NULL) && (wt->flags & vwWTFLAGS_DONT_MANAGE))
             flags = 1 ;
@@ -1827,14 +1831,8 @@ windowListUpdate(void)
     // order of events is fairly random. The problem for us is that if
     // windows selects a hidden app (i.e. on another desktop) it is very
     // difficult to differentiate between this and a genuine pop-up event.
-    activeHWnd = GetForegroundWindow() ;
-    if(lastLostHWnd != NULL)
-    {
-        if(activeHWnd == lastLostHWnd)
-            activeHWnd = NULL ;
-        else
-            lastLostHWnd = NULL ;
-    }
+    if(((activeHWnd = GetForegroundWindow()) == lastFGHWnd) || (activeHWnd == hWnd))
+        activeHWnd = NULL ;
     wb = windowBaseList ;
     while(wb != NULL)
     {
@@ -1849,8 +1847,6 @@ windowListUpdate(void)
     }
     
     // Handle the re-assignment of any popped up window, set the zorder and count hung windows
-    vwLogVerbose((_T("Active %8x Last %8x %x LBO %8x %x\n"),(int) activeHWnd,
-                    (int) lastFGHWnd, lastFGStyle, (int) lastBOFGHWnd, lastBOFGStyle)) ;
     win = windowList ;
     while(win != NULL)
     {
@@ -1875,51 +1871,26 @@ windowListUpdate(void)
         }
         if(win->handle == activeHWnd)
         {
-            // one problem with handling tricky windows is if the user closes the last window on a desktop
-            // windows will select a Tricky hidden window as the replacement - try to spot this
-            if(activeHWnd != lastFGHWnd)
+            vwUByte activateAction = (vwWindowDontHideTaskButton(win)) ? taskButtonAct:hiddenWindowAct ;
+            
+            if((win->desk != currentDesk) && ((activateAction == 0) || (win->desk > nDesks)))
             {
-                // one problem with handling tricky windows is if the user
-                // closes or minimises the last window on a desktop windows
-                // will select a Tricky hidden window as the replacement -
-                // try to spot & handle this - a bit messy... 
-                if(vwWindowIsNotShown(win) && (vwWindowIsTrickyPos(win) || vwWindowIsHideByMove(win)) &&
-                   (((lastBOFGHWnd != NULL) && (lastFGHWnd == NULL)) ||
-                    ((lastFGHWnd != NULL) && 
-                     (!IsWindow(lastFGHWnd) ||
-                      ((((lastFGStyle & WS_MINIMIZE) == 0) || (lastBOFGHWnd != lastFGHWnd) || ((lastBOFGStyle & WS_MINIMIZE) == 0)) &&
-                       (GetWindowLong(lastFGHWnd,GWL_STYLE) & WS_MINIMIZE))))))
+                vwLogBasic((_T("Ignore Popup %x %d %d\n"),(int) activeHWnd,(int) activateAction,(int) win->desk)) ;
+                setForegroundWin(NULL,0) ;
+            }
+            else
+            {
+                if(vwWindowIsNotShown(win) && activateAction)
                 {
-                    // not a popup, windows selected replacement - ingore
-                    vwLogBasic((_T("Ignore Popup - %8x %x, Last %8x %x LBO %8x %x\n"),(int) activeHWnd,win->flags,
-                                (int) lastFGHWnd, lastFGStyle, (int) lastBOFGHWnd, lastBOFGStyle)) ;
-                    setForegroundWin(NULL,0) ;
+                    vwLogBasic((_T("Got Popup - Active %x (%d %d)\n"),(int) activeHWnd,(int) activateAction,(int) win->desk)) ;
+                    if((activateAction == 3) && (newDesk == 0))
+                        newDesk = win->desk ;
+                    vwWindowSetDesk(win,currentDesk,activateAction,FALSE) ;
                 }
-                else
-                {
-                    vwUByte activateAction = (vwWindowDontHideTaskButton(win)) ? taskButtonAct:hiddenWindowAct ;
-                    
-                    if((win->desk != currentDesk) && ((activateAction == 0) || (win->desk > nDesks)))
-                    {
-                        vwLogBasic((_T("Ignore Popup2 %d %d\n"),(int) activateAction,win->desk)) ;
-                        setForegroundWin(NULL,0) ;
-                    }
-                    else
-                    {
-                        if(vwWindowIsNotShown(win) && activateAction)
-                        {
-                            vwLogBasic((_T("Got Popup - Active %8x Last %8x %x LBO %8x %x\n"),(int) activeHWnd,
-                                        (int) lastFGHWnd, lastFGStyle, (int) lastBOFGHWnd, lastBOFGStyle)) ;
-                            if((activateAction == 3) && (newDesk == 0))
-                                newDesk = win->desk ;
-                            vwWindowSetDesk(win,currentDesk,activateAction,FALSE) ;
-                        }
-                        win->zOrder[currentDesk] = ++vwZOrder ;
-                        // if this is only a temporary display increase its zorder in its main desk
-                        if(win->desk != currentDesk)
-                            win->zOrder[win->desk] = vwZOrder ;
-                    }
-                }
+                win->zOrder[currentDesk] = ++vwZOrder ;
+                // if this is only a temporary display increase its zorder in its main desk
+                if(win->desk != currentDesk)
+                    win->zOrder[win->desk] = vwZOrder ;
             }
         }
         if(vwWindowIsShow(win) ^ vwWindowIsShown(win))
@@ -1927,14 +1898,7 @@ windowListUpdate(void)
         win = vwWindowGetNext(win) ;
     }
     if(activeHWnd != NULL)
-    {
-        lastBOFGHWnd = lastFGHWnd ;
-        lastBOFGStyle = lastFGStyle ;
-        if((lastFGHWnd = activeHWnd) == hWnd)
-            lastFGHWnd = NULL ;
-        else if(lastFGHWnd != NULL)
-            lastFGStyle = GetWindowLong(activeHWnd,GWL_STYLE) ;
-    }
+        lastFGHWnd = activeHWnd ;
     vwLogVerbose((_T("Updated winList - %d hung, newDesk %d\n"),hungCount,newDesk)) ;
     return ((newDesk << 16) | hungCount) ;
 }
@@ -2244,15 +2208,17 @@ changeDesk(int newDesk, WPARAM msgWParam)
             }
         }
     }
-    if(releaseFocus)     // Release focus maybe?
+    if(releaseFocus)
         activeHWnd = NULL ;
     vwLogBasic((_T("Active found: %x (%d,%d,%d)\n"),(int) activeHWnd,(int)activeZOrder,releaseFocus,activeRefocus)) ;
     if(activeRefocus && (GetForegroundWindow() == activeHWnd))
         /* we have had to fix the taskbar order by destrying and recreating,
          * this loses the current focus so we must refocus the taskbar */
         setForegroundWin(NULL,TRUE) ;
+    /* Take a quick sleep here to give explorer the chance to catch up */
+    Sleep(1) ;
     setForegroundWin(activeHWnd,TRUE) ;
-    // reset the monitor timer to give the system a chance to catch up first
+    /* reset the monitor timer to give the system a chance to catch up first */
     SetTimer(hWnd, 0x29a, 250, monitorTimerProc);
     vwMutexRelease();
     
@@ -2262,11 +2228,21 @@ changeDesk(int newDesk, WPARAM msgWParam)
         showSetup() ;
     }
     vwIconSet(currentDesk,0) ;
-    if(refreshOnWarp) // Refresh the desktop 
+    if(refreshOnWarp)
         RedrawWindow( NULL, NULL, NULL, RDW_INVALIDATE | RDW_ERASE | RDW_ALLCHILDREN );
     
     postModuleMessage(MOD_CHANGEDESK,msgWParam,currentDesk);
-    
+    if(taskHWnd != NULL)
+    {
+        /* this strange piece of code resolves bad pop-up problems, by changing the style
+         * the VW window gets back onto Explorer's window list at a higher point than any
+         * other tricky hidden window so when explorer is looking for a replacement it will
+         * choose VW rather than any other hidden window so now we can easily determine if
+         * a pop-up is a real pop-up or explorer looking for a replacement */
+        SetWindowLong(hWnd, GWL_EXSTYLE,0) ;
+        SetWindowLong(hWnd, GWL_EXSTYLE,WS_EX_TOOLWINDOW) ;
+        PostMessage(taskHWnd, RM_Shellhook, HSHELL_WINDOWDESTROYED, (LPARAM) hWnd);
+    }
     vwLogBasic((_T("Step Desk End (%x)\n"),(int)GetForegroundWindow())) ;
     
     return currentDesk ;
@@ -2762,8 +2738,10 @@ vwWindowShowHide(vwWindow* aWindow, vwUInt flags)
             if(vwWindowIsNotMinimized(aWindow))
                 ShowOwnedPopups(aWindow->handle,(flags & vwWINSH_FLAGS_SHOW) ? TRUE:FALSE) ;
             if((aWindow->flags & vwWINFLAGS_RM_TASKBAR_BUT) && (taskHWnd != NULL))
+            {
                 /* Make sure the taskbar does not create a button for this window */
                 PostMessage(taskHWnd, RM_Shellhook, HSHELL_WINDOWDESTROYED, (LPARAM) aWindow->handle);
+            }
         }
         else if(wflags != vwWINFLAGS_HIDEWIN_MINIM)
         {
@@ -3276,11 +3254,11 @@ popupWindowMenu(HWND theWin, int wmFlags)
     {
         if(wt != NULL)
         {
-            AppendMenu(hpopup,MF_STRING,ID_WM_EWTYPE,_T("Edit &Window Type"));
-            AppendMenu(hpopup,MF_STRING,ID_WM_AWTYPE,_T("Add Window Type"));
+            AppendMenu(hpopup,MF_STRING,ID_WM_EWTYPE,_T("Edit &Window Rule"));
+            AppendMenu(hpopup,MF_STRING,ID_WM_AWTYPE,_T("Add Window Rule"));
         }
         else
-            AppendMenu(hpopup,MF_STRING,ID_WM_AWTYPE,_T("Add &Window Type"));
+            AppendMenu(hpopup,MF_STRING,ID_WM_AWTYPE,_T("Add &Window Rule"));
     }
     AppendMenu(hpopup,MF_STRING,ID_WM_INFO,_T("&Info"));
     vwMutexRelease();
@@ -3653,9 +3631,12 @@ popupControlMenu(HWND aHWnd)
         minfo.fState = MFS_DEFAULT ;
         SetMenuItemInfo(hpopup,ID_SETUP,FALSE,&minfo) ;
         if(useWindowTypes)
-            AppendMenu(hpopup,MF_STRING,ID_WTYPE,_T("&Window Type")) ;
+        {
+            AppendMenu(hpopup,MF_STRING,ID_WTYPE,_T("&Window Rules")) ;
+            AppendMenu(hpopup,MF_STRING,ID_REAPPLY_RULES,_T("&Re-apply Rules")) ;
+        }
     }
-    AppendMenu(hpopup,MF_STRING,ID_GATHER,_T("&Gather"));
+    AppendMenu(hpopup,MF_STRING,ID_GATHER,_T("&Gather All"));
     AppendMenu(hpopup,MF_STRING,ID_HELP,_T("&Help"));
     AppendMenu(hpopup,MF_STRING,ID_DISABLE,(vwEnabled) ? _T("&Disable") : _T("&Enable"));
     AppendMenu(hpopup,MF_SEPARATOR,0,NULL) ;
@@ -3677,6 +3658,18 @@ popupControlMenu(HWND aHWnd)
     case ID_WTYPE:		// show window type dialog
         showWindowType(NULL,0) ;
         break;
+    case ID_REAPPLY_RULES:
+        vwWindowTypeReapply() ;
+        break ;
+    case ID_GATHER:		// gather all windows
+        vwWindowShowAll(0);
+        break;
+    case ID_HELP:		// show help
+        showHelp(aHWnd,0);
+        break;
+    case ID_DISABLE:	// Disable VirtuaWin
+        vwToggleEnabled() ;
+        break;
     case ID_EXIT:		// exit application
         DestroyWindow(aHWnd);
         break;
@@ -3685,15 +3678,6 @@ popupControlMenu(HWND aHWnd)
         break;
     case ID_BACKWARD:	// move to the previous desktop
         stepDelta(-1) ;
-        break;
-    case ID_GATHER:		// gather all windows
-        vwWindowShowAll(0);
-        break;
-    case ID_DISABLE:	// Disable VirtuaWin
-        vwToggleEnabled() ;
-        break;
-    case ID_HELP:		// show help
-        showHelp(aHWnd,0);
         break;
     }
     PostMessage(aHWnd, 0, 0, 0);	
@@ -4288,12 +4272,13 @@ VirtuaWinInit(HINSTANCE hInstance, LPSTR cmdLine)
     getWorkArea();
     
     /* Create window. Note that WS_VISIBLE is not used, and window is never shown. */
-    if((hWnd = CreateWindowEx(0, vwVIRTUAWIN_CLASSNAME, vwVIRTUAWIN_CLASSNAME, WS_POPUP, CW_USEDEFAULT, 0,
-                              CW_USEDEFAULT, 0, NULL, NULL, hInstance, NULL)) == NULL)
+    if((hWnd = CreateWindowEx(WS_EX_TOOLWINDOW, vwVIRTUAWIN_CLASSNAME, vwVIRTUAWIN_CLASSNAME, WS_VISIBLE, -32000, 10,
+                              -32000, 10, NULL, NULL, hInstance, NULL)) == NULL)
     {
-        MessageBox(hWnd,_T("Failed to create window!"),vwVIRTUAWIN_NAME _T(" Error"), MB_ICONWARNING);
+        MessageBox(NULL,_T("Failed to create window1!"),vwVIRTUAWIN_NAME _T(" Error"), MB_ICONWARNING);
         exit(2) ;
     }
+    
     /* Create the thread responsible for mouse monitoring */   
     mouseThread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE) vwMouseProc, NULL, 0, &threadID); 	
     mouseEnabled = TRUE;
