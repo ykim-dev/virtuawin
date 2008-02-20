@@ -39,7 +39,7 @@ extern int screenBottom;
 
 extern vwWindow *windowList;                      // list of managed windows
 extern vwWindowBase *windowBaseList;              // list of all windows
-extern vwWindowType *windowTypeList;              // list for holding window types
+extern vwWindowRule *windowRuleList;              // list for holding window rules
 extern vwHotkey hotkeyList[vwHOTKEY_MAX];         // list for holding hotkeys
 
 extern int curDisabledMod;                        // how many disabled modules we have
@@ -71,7 +71,7 @@ void vwHotkeyRegister(void);
 void vwHotkeyUnregister(void);
 void getWorkArea(void);
 int  windowListUpdate(void) ;
-void vwWindowTypeReapply(void) ;
+void vwWindowRuleReapply(void) ;
 int  assignWindow(HWND theWin, int theDesk, vwUByte follow, vwUByte force, vwUByte setActive);
 int  gotoDesk(int theDesk, vwUByte force);
 void showHelp(HWND aHWnd, UINT context);
@@ -81,8 +81,8 @@ void createSetupDialog(HINSTANCE theHinst, HWND theHwndOwner) ;
 void initDesktopProperties(void) ;
 void storeDesktopProperties(void) ;
 
-/* Prototypes from WinTypeDialog.c */
-void createWindowTypeDialog(HINSTANCE theHinst, HWND theHwndOwner, vwWindowType *wtype, HWND theWin) ;
+/* Prototypes from WinRuleDialog.c */
+void createWindowRuleDialog(HINSTANCE theHinst, HWND theHwndOwner, vwWindowRule *wtype, HWND theWin) ;
 
 /* Prototypes from ModuleRoutines.c */
 void loadModules(void);

@@ -38,15 +38,15 @@
 #endif
 #define VIRTUAWIN_SUBDIR vwVIRTUAWIN_NAME
 
-#define vwWindowTypeDefaultCount 5
-static TCHAR *vwWindowTypeDefault0Names[vwWindowTypeDefaultCount]={
+#define vwWindowRuleDefaultCount 5
+static TCHAR *vwWindowRuleDefault0Names[vwWindowRuleDefaultCount]={
     _T("WindowsForms10."),
     _T("ExploreWClass"),
     _T("IEFrame"),
     _T("CabinetWClass"),
     _T("BaseBar")
 } ;
-static vwUInt vwWindowTypeDefaultFlags[vwWindowTypeDefaultCount]={
+static vwUInt vwWindowRuleDefaultFlags[vwWindowRuleDefaultCount]={
     (vwWTFLAGS_ENABLED|vwWTFLAGS_HIDEWIN_MOVE|vwWTFLAGS_HIDETSK_TOOLWN|vwWTFLAGS_CN_EVAR),
     (vwWTFLAGS_ENABLED|vwWTFLAGS_HIDEWIN_MOVE|vwWTFLAGS_HIDETSK_TOOLWN),
     (vwWTFLAGS_ENABLED|vwWTFLAGS_HIDEWIN_MOVE|vwWTFLAGS_HIDETSK_TOOLWN),
@@ -255,23 +255,23 @@ saveDisabledList(int theNOfModules, moduleType* theModList)
 }
 
 /*************************************************
- * Reads window types from window.cfg file
+ * Reads window rules from window.cfg file
  */
 void
 loadWindowConfig(void)
 {
-    vwWindowType *wt, *pwt ;
+    vwWindowRule *wt, *pwt ;
     vwWindow *win ;
     TCHAR buff[1024], *ss ;
     int ii, ll, mallocErr=0 ;
     FILE *fp ;
 
-    if(windowTypeList != NULL)
+    if(windowRuleList != NULL)
     {
         /* free current list first */
-        while((wt = windowTypeList) != NULL)
+        while((wt = windowRuleList) != NULL)
         {
-            windowTypeList = wt->next ;
+            windowRuleList = wt->next ;
             ii = vwWTNAME_COUNT - 1 ;
             do {
                 if(wt->name[ii] != NULL)
@@ -279,7 +279,7 @@ loadWindowConfig(void)
             } while(--ii >= 0) ;
             free(wt) ;
         }
-        /* set all window zOrder[0] (used to store the vwWindowTypes) to 0 */
+        /* set all window zOrder[0] (used to store the vwWindowRules) to 0 */
         win = (vwWindow *) windowBaseList ;
         while(win != NULL)
         {
@@ -297,14 +297,14 @@ loadWindowConfig(void)
         {
             if(!_tcsncmp(buff,_T("flags# "),7))
             {
-                /* start of a new windowType */
-                if((wt = calloc(1,sizeof(vwWindowType))) == NULL)
+                /* start of a new windowRule */
+                if((wt = calloc(1,sizeof(vwWindowRule))) == NULL)
                 {
                     mallocErr = 1 ;
                     break ;
                 }
                 if(pwt == NULL)
-                    windowTypeList = wt ;
+                    windowRuleList = wt ;
                 else
                     pwt->next = wt ;
                 pwt = wt ;
@@ -339,19 +339,19 @@ loadWindowConfig(void)
     else
     {
         /* no window.cfg file yet create the default */
-        ii = vwWindowTypeDefaultCount ;
+        ii = vwWindowRuleDefaultCount ;
         while(--ii >= 0)
         {
-            if(((wt = calloc(1,sizeof(vwWindowType))) == NULL) ||
-               ((wt->name[0] = _tcsdup(vwWindowTypeDefault0Names[ii])) == NULL))
+            if(((wt = calloc(1,sizeof(vwWindowRule))) == NULL) ||
+               ((wt->name[0] = _tcsdup(vwWindowRuleDefault0Names[ii])) == NULL))
             {
                 mallocErr = 1 ;
                 break ;
             }
-            wt->nameLen[0] = _tcslen(vwWindowTypeDefault0Names[ii]) ;
-            wt->flags = vwWindowTypeDefaultFlags[ii] ;
-            wt->next = windowTypeList ;
-            windowTypeList = wt ;
+            wt->nameLen[0] = _tcslen(vwWindowRuleDefault0Names[ii]) ;
+            wt->flags = vwWindowRuleDefaultFlags[ii] ;
+            wt->next = windowRuleList ;
+            windowRuleList = wt ;
         }
     }
     if(mallocErr)
@@ -359,13 +359,13 @@ loadWindowConfig(void)
 }
 
 /*************************************************
- * Writes the window type list to window.cfg file
+ * Writes the window rule list to window.cfg file
  */
 void
 saveWindowConfig(void)
 {
     TCHAR fname[MAX_PATH];
-    vwWindowType *wt ;
+    vwWindowRule *wt ;
     FILE *fp ;
     int ii ;
 
@@ -374,7 +374,7 @@ saveWindowConfig(void)
         MessageBox(NULL,_T("Error writing window.cfg file"),vwVIRTUAWIN_NAME _T(" Error"),MB_ICONERROR);
     else
     {
-        wt = windowTypeList ;
+        wt = windowRuleList ;
         while(wt != NULL)
         {
             fprintf(fp, "flags# %d\n", wt->flags);
@@ -701,7 +701,7 @@ loadVirtuawinConfig(void)
         vwConfigReadInt(fp,buff,ii,nDesksX);
         vwConfigReadInt(fp,buff,ii,nDesksY);
         vwConfigReadInt(fp,buff,ii,deskWrap);
-        vwConfigReadInt(fp,buff,ii,useWindowTypes);
+        vwConfigReadInt(fp,buff,ii,useWindowRules);
         vwConfigReadInt(fp,buff,ii,taskButtonAct);
         vwConfigReadInt(fp,buff,ii,winListContent);
         vwConfigReadInt(fp,buff,ii,winListCompact);
@@ -763,7 +763,7 @@ saveVirtuawinConfig(void)
         fprintf(fp, "deskX# %d\n", nDesksX);
         fprintf(fp, "deskY# %d\n", nDesksY);
         fprintf(fp, "deskWrap# %d\n", deskWrap);
-        fprintf(fp, "useWindowTypes# %d\n", useWindowTypes);
+        fprintf(fp, "useWindowRules# %d\n", useWindowRules);
         fprintf(fp, "taskButtonAct# %d\n", taskButtonAct);
         fprintf(fp, "winListContent# %d\n", winListContent);
         fprintf(fp, "winListCompact# %d\n", winListCompact);

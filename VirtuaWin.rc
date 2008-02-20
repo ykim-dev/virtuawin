@@ -135,7 +135,7 @@ BEGIN
 
     GROUPBOX        "Workarounds", IDC_STATIC, 4, 81, 202, 58
     AUTOCHECKBOX    "Enable taskbar detection", IDC_TASKBARDETECT,               10,  92, 100, 10
-    AUTOCHECKBOX    "Enable window specific configuration", IDC_USEWINTYPES,     10, 103, 150, 10
+    AUTOCHECKBOX    "Enable window specific configuration", IDC_USEWINRULES,     10, 103, 150, 10
     AUTOCHECKBOX    "Force refresh after desktop change", IDC_REFRESH,           10, 114, 130, 10
     AUTOCHECKBOX    "Write events to virtuawin.log", IDC_DEBUGLOGGING,           10, 125, 130, 10
 
@@ -168,7 +168,7 @@ BEGIN
     DEFPUSHBUTTON   "OK", IDCANCEL,  105, 190, 40, 14
 END
 
-IDD_WINDOWTYPEDIALOG DIALOG 79, 25, 292, 315
+IDD_WINDOWRULEDIALOG DIALOG 79, 25, 292, 315
 STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "VirtuaWin Window Rules"
 FONT 8, "MS Shell Dlg"

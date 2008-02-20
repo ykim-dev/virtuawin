@@ -107,7 +107,7 @@ vwWindowBase *windowBaseList;                // list of all windows
 vwWindow     *windowList;                    // list of managed windows
 vwWindow     *windowFreeList;                // list of free, ready for reuse
 vwWindowBase *windowBaseFreeList;            // list of free, ready for reuse
-vwWindowType *windowTypeList;                // list for holding window types
+vwWindowRule *windowRuleList;                // list for holding window rules
 moduleType moduleList[MAXMODULES];           // list that holds modules
 disModules disabledModules[MAXMODULES*2];    // list with disabled modules
 
@@ -159,7 +159,7 @@ vwUByte winMenuCompact = 1 ;
 vwUByte displayTaskbarIcon = 1 ;
 vwUByte taskbarIconShown = 0 ;
 vwUByte noTaskbarCheck = 0 ;
-vwUByte useWindowTypes = 1 ;
+vwUByte useWindowRules = 1 ;
 vwUByte taskbarFixRequired = 0 ;
 
 HANDLE mouseThread;                          // Handle to the mouse thread
@@ -1120,19 +1120,19 @@ vwWindowFind(HWND hwnd)
     return NULL ;
 }
 
-static vwWindowType *
-vwWindowTypeFind(HWND hwnd, vwWindowType *owt)
+static vwWindowRule *
+vwWindowRuleFind(HWND hwnd, vwWindowRule *owt)
 {
     TCHAR name[vwWTNAME_COUNT][MAX_PATH] ;
-    vwWindowType *wt ;
+    vwWindowRule *wt ;
     int nameLen[vwWTNAME_COUNT], infoGot=0, ii, bi ;
     
     if(owt != NULL)
     {
-        /* the original windowType is stored in zOrder[0] but not maintained.
+        /* the original windowRule is stored in zOrder[0] but not maintained.
          * If the user has triggered a reload the list will have changed, so
          * check the value is correct */
-        wt = windowTypeList ;
+        wt = windowRuleList ;
         while(wt != NULL)
         {
             if(wt == owt)
@@ -1145,7 +1145,7 @@ vwWindowTypeFind(HWND hwnd, vwWindowType *owt)
         }
     }
         
-    wt = windowTypeList ;
+    wt = windowRuleList ;
     while(wt)
     {
         if(wt->flags & vwWTFLAGS_ENABLED)
@@ -1332,29 +1332,29 @@ showSetup(void)
 }
 
 /************************************************
- * Show the window type dialog and perform some stuff before and after display
+ * Show the window rule dialog and perform some stuff before and after display
  */
 static void
-showWindowType(HWND theWin, int add)
+showWindowRule(HWND theWin, int add)
 {
-    vwWindowType *wt=NULL ;
+    vwWindowRule *wt=NULL ;
     vwWindow *win ;
     
-    if(!dialogOpen && useWindowTypes)
+    if(!dialogOpen && useWindowRules)
     {
         if((theWin != NULL) && !add)
         {
             vwMutexLock();
             wt = NULL ;
             if((win = vwWindowFind(theWin)) != NULL)
-                wt = (vwWindowType *) win->zOrder[0] ;
-            wt = vwWindowTypeFind(theWin,wt) ;
+                wt = (vwWindowRule *) win->zOrder[0] ;
+            wt = vwWindowRuleFind(theWin,wt) ;
             vwMutexRelease();
             theWin = NULL ;
         }
-        vwLogVerbose((_T("About to open windowType\n"))) ;
-        createWindowTypeDialog(hInst,hWnd,wt,theWin);
-        vwLogVerbose((_T("createWindowTypeDialog returned\n"))) ;
+        vwLogVerbose((_T("About to open windowRule\n"))) ;
+        createWindowRuleDialog(hInst,hWnd,wt,theWin);
+        vwLogVerbose((_T("createWindowRuleDialog returned\n"))) ;
     }
     else if((dialogHWnd != NULL) && (GetForegroundWindow() != dialogHWnd))
     {
@@ -1482,7 +1482,7 @@ vwWindowSetSticky(vwWindow *win, int state)
 static int CALLBACK
 enumWindowsProc(HWND hwnd, LPARAM lParam) 
 {
-    vwWindowType *wt ;
+    vwWindowRule *wt ;
     vwWindow *win ;
     vwWindowBase *wb, *pwb ;
     HWND phwnd ;
@@ -1499,7 +1499,7 @@ enumWindowsProc(HWND hwnd, LPARAM lParam)
             // Dont manage VW setup
             return TRUE ;
         
-        wt = vwWindowTypeFind(hwnd,NULL) ;
+        wt = vwWindowRuleFind(hwnd,NULL) ;
         exstyle = GetWindowLong(hwnd, GWL_EXSTYLE) ;
         /* Criterias for a window to be handeled by VirtuaWin
          * Note: some apps like winamp use the WS_EX_TOOLWINDOW flag to remove themselves from
@@ -1564,7 +1564,7 @@ enumWindowsProc(HWND hwnd, LPARAM lParam)
             win->flags |= vwWINFLAGS_MAXIMIZED ;
         win->exStyle = GetWindowLong(hwnd, GWL_EXSTYLE) ;
         memset(&(win->zOrder[1]),0,(vwDESKTOP_SIZE-1)*sizeof(vwUInt)) ;
-        win->zOrder[0] = (vwUInt) vwWindowTypeFind(hwnd,(vwWindowType *) win->zOrder[0]) ;
+        win->zOrder[0] = (vwUInt) vwWindowRuleFind(hwnd,(vwWindowRule *) win->zOrder[0]) ;
         win->menuId = 0 ;
         vwLogBasic((_T("Started managing window %8x Proc %d Flg %x %x (%08x)\n"),
                     (int)win->handle,(int)win->processId,(int)win->flags,(int)win->exStyle,(int)style)) ;
@@ -1645,7 +1645,7 @@ int
 windowListUpdate(void)
 {
     HWND activeHWnd ;
-    vwWindowType *wt ;
+    vwWindowRule *wt ;
     vwWindowBase *wb, *wbn ;
     vwWindow *nw, *win, *ww ;
     RECT pos ;
@@ -1677,7 +1677,7 @@ windowListUpdate(void)
         win = nw ;
         while(win != NULL)
         {
-            wt = (vwWindowType *) win->zOrder[0] ;
+            wt = (vwWindowRule *) win->zOrder[0] ;
             win->desk = currentDesk;
             win->zOrder[currentDesk] = 1;
             if(wt != NULL)
@@ -3190,7 +3190,7 @@ static void
 popupWindowMenu(HWND theWin, int wmFlags)
 {
     unsigned char Sticky=0 ;
-    vwWindowType *wt=NULL ;
+    vwWindowRule *wt=NULL ;
     vwWindow *win ;
     HMENU hpopup, moveMenu=NULL ;
     TCHAR buff[20];
@@ -3245,12 +3245,12 @@ popupWindowMenu(HWND theWin, int wmFlags)
             buff[14] = (ii%10)+'0' ;
             AppendMenu(moveMenu,(ii == currentDesk) ? (MF_STRING|MF_GRAYED):MF_STRING,ID_WM_DESK+ii,buff) ;
         }
-        wt = vwWindowTypeFind(theWin,(vwWindowType *) win->zOrder[0]) ;
+        wt = vwWindowRuleFind(theWin,(vwWindowRule *) win->zOrder[0]) ;
     }
     else
         AppendMenu(hpopup,MF_STRING,ID_WM_MANAGE,_T("&Manage Window"));
     AppendMenu(hpopup,MF_SEPARATOR,0,NULL) ;
-    if(useWindowTypes)
+    if(useWindowRules)
     {
         if(wt != NULL)
         {
@@ -3294,10 +3294,10 @@ popupWindowMenu(HWND theWin, int wmFlags)
         DialogBox(hInst,MAKEINTRESOURCE(IDD_WINDOWINFODIALOG),theWin,(DLGPROC) WindowInfoDialogFunc);
         return ;
     case ID_WM_AWTYPE:
-        showWindowType(theWin,1) ;
+        showWindowRule(theWin,1) ;
         return ;
     case ID_WM_EWTYPE:
-        showWindowType(theWin,0) ;
+        showWindowRule(theWin,0) ;
         return ;
     case ID_WM_GATHER:
         windowGather(theWin) ;
@@ -3473,7 +3473,7 @@ popupWinListMenu(HWND aHWnd, int wlFlags)
     
     if(dialogOpen)
     {
-        /* dont allow access to this menu while setup or window type
+        /* dont allow access to this menu while setup or window rule
          * dialog is open as its behaviour is less predictable (shutting
          * down while setup is open will hang the virtuawin process) */
         showSetup() ;
@@ -3573,7 +3573,7 @@ popupWinListMenu(HWND aHWnd, int wlFlags)
 }
 
 void
-vwWindowTypeReapply(void)
+vwWindowRuleReapply(void)
 {
     vwWindow *win, *nwin ;
     int doUpdate=0 ;
@@ -3611,7 +3611,7 @@ popupControlMenu(HWND aHWnd)
     
     if(dialogOpen)
     {
-        /* dont allow access to this menu while setup or window type
+        /* dont allow access to this menu while setup or window rule
          * dialog is open as its behaviour is less predictable (shutting
          * down while setup is open will hang the virtuawin process) */
         showSetup() ;
@@ -3630,7 +3630,7 @@ popupControlMenu(HWND aHWnd)
         minfo.fMask = MIIM_STATE ;
         minfo.fState = MFS_DEFAULT ;
         SetMenuItemInfo(hpopup,ID_SETUP,FALSE,&minfo) ;
-        if(useWindowTypes)
+        if(useWindowRules)
         {
             AppendMenu(hpopup,MF_STRING,ID_WTYPE,_T("&Window Rules")) ;
             AppendMenu(hpopup,MF_STRING,ID_REAPPLY_RULES,_T("&Re-apply Rules")) ;
@@ -3655,11 +3655,11 @@ popupControlMenu(HWND aHWnd)
     case ID_SETUP:		// show setup box
         showSetup();
         break;
-    case ID_WTYPE:		// show window type dialog
-        showWindowType(NULL,0) ;
+    case ID_WTYPE:		// show window rule dialog
+        showWindowRule(NULL,0) ;
         break;
     case ID_REAPPLY_RULES:
-        vwWindowTypeReapply() ;
+        vwWindowRuleReapply() ;
         break ;
     case ID_GATHER:		// gather all windows
         vwWindowShowAll(0);
@@ -3851,7 +3851,7 @@ wndProc(HWND aHWnd, UINT message, WPARAM wParam, LPARAM lParam)
             vwWindowShowAll(0);
             break ;
         case vwCMD_UI_WTYPE_SETUP:
-            showWindowType(NULL,0) ;
+            showWindowRule(NULL,0) ;
             break ;
         case vwCMD_UI_CONTROLMENU:
             return popupControlMenu(aHWnd) ;
@@ -4291,7 +4291,7 @@ VirtuaWinInit(HINSTANCE hInstance, LPSTR cmdLine)
           NIF_TIP;		    // nIconD.szTip is valid, use it
     nIconD.uCallbackMessage = VW_SYSTRAY;  // message sent to nIconD.hWnd
     
-    if(useWindowTypes)
+    if(useWindowRules)
         loadWindowConfig();
     
     vwIconLoad();

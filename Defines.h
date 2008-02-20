@@ -78,13 +78,13 @@ typedef unsigned char  vwUByte ;
 #define vwWTFLAGS_DONT_MANAGE     0x40000000
 #define vwWTFLAGS_ENABLED         0x80000000
 
-typedef struct vwWindowType {
-    struct vwWindowType *next;
+typedef struct vwWindowRule {
+    struct vwWindowRule *next;
     TCHAR               *name[vwWTNAME_COUNT] ;
     vwUInt               flags ; 
     vwUByte              desk ;
     vwUByte              nameLen[vwWTNAME_COUNT] ;
-} vwWindowType ;
+} vwWindowRule ;
 
 /* vwWindow structures for storing information about one window */
 #define vwWINFLAGS_INITIALIZED     0x00000001

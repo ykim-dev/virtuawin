@@ -54,7 +54,7 @@ extern vwUByte deskWrap;           // If we want to have desktop cycling
 extern vwUByte invertY;            // if up/down should be inverted
 extern vwUByte displayTaskbarIcon; // Should we display the systray icon
 extern vwUByte noTaskbarCheck;     // Should we skip the taskbar search
-extern vwUByte useWindowTypes;     // Use window types
+extern vwUByte useWindowRules;     // Use window rules
 extern vwUByte winListContent;     // Required content of the winodw list menu
 extern vwUByte winListCompact;     // if window list menu should be compact
 extern vwUByte winMenuCompact;     // if current window menu should be compact

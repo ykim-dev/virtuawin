@@ -933,8 +933,8 @@ setupExpert(HWND hDlg, UINT message, UINT wParam, LONG lParam)
             SendDlgItemMessage(hDlg, IDC_DISPLAYICON, BM_SETCHECK, 1,0);
         if(!noTaskbarCheck)
             SendDlgItemMessage(hDlg, IDC_TASKBARDETECT, BM_SETCHECK, 1,0);
-        if(useWindowTypes)
-            SendDlgItemMessage(hDlg, IDC_USEWINTYPES, BM_SETCHECK, 1,0);
+        if(useWindowRules)
+            SendDlgItemMessage(hDlg, IDC_USEWINRULES, BM_SETCHECK, 1,0);
         if(vwLogFlag)
             SendDlgItemMessage(hDlg, IDC_DEBUGLOGGING, BM_SETCHECK, 1,0);
         return TRUE;
@@ -952,7 +952,7 @@ setupExpert(HWND hDlg, UINT message, UINT wParam, LONG lParam)
             refreshOnWarp = (SendDlgItemMessage(hDlg, IDC_REFRESH, BM_GETCHECK, 0, 0) == BST_CHECKED) ;
             invertY = (SendDlgItemMessage(hDlg, IDC_INVERTY, BM_GETCHECK, 0, 0) == BST_CHECKED) ;
             noTaskbarCheck = (SendDlgItemMessage(hDlg, IDC_TASKBARDETECT, BM_GETCHECK, 0, 0) != BST_CHECKED) ;
-            useWindowTypes = (SendDlgItemMessage(hDlg, IDC_USEWINTYPES, BM_GETCHECK, 0, 0) == BST_CHECKED) ;
+            useWindowRules = (SendDlgItemMessage(hDlg, IDC_USEWINRULES, BM_GETCHECK, 0, 0) == BST_CHECKED) ;
             vwLogFlag = (SendDlgItemMessage(hDlg,IDC_DEBUGLOGGING,BM_GETCHECK, 0, 0) == BST_CHECKED) ;
             displayTaskbarIcon = (SendDlgItemMessage(hDlg, IDC_DISPLAYICON, BM_GETCHECK, 0, 0) != BST_CHECKED) ;
             
@@ -1042,7 +1042,7 @@ setupExpert(HWND hDlg, UINT message, UINT wParam, LONG lParam)
             }
             vwMutexRelease();
         }
-        else if(LOWORD(wParam) == IDC_FOCUS       || LOWORD(wParam) == IDC_USEWINTYPES ||
+        else if(LOWORD(wParam) == IDC_FOCUS       || LOWORD(wParam) == IDC_USEWINRULES ||
                 LOWORD(wParam) == IDC_DISPLAYICON || LOWORD(wParam) == IDC_DEBUGLOGGING ||
                 LOWORD(wParam) == IDC_INVERTY     || LOWORD(wParam) == IDC_TASKBARDETECT ||
                 LOWORD(wParam) == IDC_REFRESH     || 
