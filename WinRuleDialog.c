@@ -1,6 +1,6 @@
 //
 //  VirtuaWin - Virtual Desktop Manager (virtuawin.sourceforge.net)
-//  WinTypeDialog.c - Window Type Dialog routines.
+//  WinRuleDialog.c - Window Rule Dialog routines.
 // 
 //  Copyright (c) 2007 VirtuaWin (VirtuaWin@home.se)
 // 
@@ -39,21 +39,21 @@
 
 static int deskCount ;
 static HWND initWin ;
-static vwWindowType *winTypeCur ;
+static vwWindowRule *winRuleCur ;
 
 static void
-windowTypeDialogInitList(HWND hDlg)
+windowRuleDialogInitList(HWND hDlg)
 {
     static int ts[3] = { 16, 20, 120 } ;
     static char wtypeNameLabel[vwWTNAME_COUNT] = "CWP" ;
-    vwWindowType *wt ;
+    vwWindowRule *wt ;
     TCHAR buff[388], *ss;
-    int ii, jj, kk, winTypeCurIdx=0 ;
+    int ii, jj, kk, winRuleCurIdx=0 ;
     
     SendDlgItemMessage(hDlg,IDC_WTYPE_LIST,LB_RESETCONTENT,0, 0);
     SendDlgItemMessage(hDlg,IDC_WTYPE_LIST,LB_SETTABSTOPS,(WPARAM) 3,(LPARAM) ts);
     ii = 0 ;
-    wt = windowTypeList ;
+    wt = windowRuleList ;
     while(wt != NULL)
     {
         if(((wt->flags & vwWTFLAGS_MOVE) == 0) || (wt->desk <= deskCount))
@@ -91,34 +91,34 @@ windowTypeDialogInitList(HWND hDlg)
             }
             *ss = '\0' ;
             SendDlgItemMessage(hDlg,IDC_WTYPE_LIST,LB_ADDSTRING,0,(LONG) buff);
-            if(wt == winTypeCur)
-                winTypeCurIdx = ii ;
+            if(wt == winRuleCur)
+                winRuleCurIdx = ii ;
         }
         wt = wt->next ;
     }
-    if(winTypeCurIdx)
-        SendDlgItemMessage(hDlg,IDC_WTYPE_LIST,LB_SETCURSEL,winTypeCurIdx-1,0) ;
+    if(winRuleCurIdx)
+        SendDlgItemMessage(hDlg,IDC_WTYPE_LIST,LB_SETCURSEL,winRuleCurIdx-1,0) ;
     else
-        winTypeCur = NULL ;
+        winRuleCur = NULL ;
 }
 
 static int wtypeNameEntry[vwWTNAME_COUNT] = { IDC_WTYPE_CNAME, IDC_WTYPE_WNAME, IDC_WTYPE_PNAME } ;
 static void
-windowTypeDialogInitItem(HWND hDlg)
+windowRuleDialogInitItem(HWND hDlg)
 {
-    vwWindowType *wt ;
+    vwWindowRule *wt ;
     TCHAR buff[1024] ;
     int ii ;
     
-    if(winTypeCur != NULL)
+    if(winRuleCur != NULL)
     {
         ii = 0 ;
-        wt = windowTypeList ;
+        wt = windowRuleList ;
         while(wt != NULL)
         {
             if(((wt->flags & vwWTFLAGS_MOVE) == 0) || (wt->desk <= deskCount))
             {
-                if(wt == winTypeCur)
+                if(wt == winRuleCur)
                     break ;
                 ii++ ;
             }
@@ -168,7 +168,7 @@ windowTypeDialogInitItem(HWND hDlg)
             return ;
         }
     }
-    winTypeCur = NULL ;
+    winRuleCur = NULL ;
     EnableWindow(GetDlgItem(hDlg,IDC_WTYPE_UP),FALSE) ;
     EnableWindow(GetDlgItem(hDlg,IDC_WTYPE_DOWN),FALSE) ;
     EnableWindow(GetDlgItem(hDlg,IDC_WTYPE_MOD),FALSE) ;
@@ -176,7 +176,7 @@ windowTypeDialogInitItem(HWND hDlg)
 }
 
 static void
-windowTypeDialogInit(HWND hDlg, int firstTime)
+windowRuleDialogInit(HWND hDlg, int firstTime)
 {
     TCHAR buff[MAX_PATH] ;
     HANDLE procHdl ;
@@ -206,8 +206,8 @@ windowTypeDialogInit(HWND hDlg, int firstTime)
         SendDlgItemMessage(hDlg, IDC_WTYPE_AMDSK, CB_ADDSTRING, 0, (LONG) buff) ;
     }
     SendDlgItemMessage(hDlg, IDC_WTYPE_AMDSK, CB_SETCURSEL, 0, 0) ;
-    windowTypeDialogInitList(hDlg) ;
-    windowTypeDialogInitItem(hDlg) ;
+    windowRuleDialogInitList(hDlg) ;
+    windowRuleDialogInitItem(hDlg) ;
     if(initWin != NULL)
     {
         typedef DWORD (WINAPI *vwGETMODULEFILENAMEEX)(HANDLE,HMODULE,LPTSTR,DWORD) ;
@@ -233,39 +233,39 @@ windowTypeDialogInit(HWND hDlg, int firstTime)
 }
 
 static void
-windowTypeDialogSetItem(HWND hDlg)
+windowRuleDialogSetItem(HWND hDlg)
 {
     int ii, jj ;
     
     if((ii=SendDlgItemMessage(hDlg,IDC_WTYPE_LIST,LB_GETCURSEL,0,0)) != LB_ERR)
     {
         jj = 0 ;
-        winTypeCur = windowTypeList ;
-        while(winTypeCur != NULL)
+        winRuleCur = windowRuleList ;
+        while(winRuleCur != NULL)
         {
-            if((winTypeCur->flags & vwWTFLAGS_MOVE) && (winTypeCur->desk > deskCount))
+            if((winRuleCur->flags & vwWTFLAGS_MOVE) && (winRuleCur->desk > deskCount))
                 ii++ ;
             if(jj == ii)
                 break ;
             jj++ ;
-            winTypeCur = winTypeCur->next ;
+            winRuleCur = winRuleCur->next ;
         } 
     }
     else
-        winTypeCur = NULL ;
-    windowTypeDialogInitItem(hDlg) ;
+        winRuleCur = NULL ;
+    windowRuleDialogInitItem(hDlg) ;
 }
 
 static void
-windowTypeDialogMoveUp(HWND hDlg)
+windowRuleDialogMoveUp(HWND hDlg)
 {
-    vwWindowType *wt, *pwt, *ppwt ;
+    vwWindowRule *wt, *pwt, *ppwt ;
     
-    if(winTypeCur != NULL)
+    if(winRuleCur != NULL)
     {
         ppwt = pwt = NULL ;
-        wt = windowTypeList ;
-        while((wt != winTypeCur) && (wt != NULL))
+        wt = windowRuleList ;
+        while((wt != winRuleCur) && (wt != NULL))
         {
             if(((wt->flags & vwWTFLAGS_MOVE) == 0) || (wt->desk <= deskCount))
             {
@@ -275,62 +275,62 @@ windowTypeDialogMoveUp(HWND hDlg)
             wt = wt->next ;
         }
         if(wt == NULL)
-            winTypeCur = NULL ;
+            winRuleCur = NULL ;
         else if(pwt != NULL)
         {
             wt = pwt ;
-            while(wt->next != winTypeCur)
+            while(wt->next != winRuleCur)
                 wt = wt->next ;
-            wt->next = winTypeCur->next ;
-            if(pwt == windowTypeList)
-                windowTypeList = winTypeCur ;
+            wt->next = winRuleCur->next ;
+            if(pwt == windowRuleList)
+                windowRuleList = winRuleCur ;
             else
             {
-                wt = windowTypeList ;
+                wt = windowRuleList ;
                 while(wt->next != pwt)
                     wt = wt->next ;
-                wt->next = winTypeCur ;
+                wt->next = winRuleCur ;
             }
-            winTypeCur->next = pwt ;
+            winRuleCur->next = pwt ;
             if(ppwt == NULL)
                 EnableWindow(GetDlgItem(hDlg,IDC_WTYPE_UP),FALSE) ;
             EnableWindow(GetDlgItem(hDlg,IDC_WTYPE_DOWN),TRUE) ;
             EnableWindow(GetDlgItem(hDlg,IDC_WTYPE_APPLY),TRUE) ;
         }
     }
-    windowTypeDialogInitList(hDlg) ;
+    windowRuleDialogInitList(hDlg) ;
 }
 
 static void
-windowTypeDialogMoveDown(HWND hDlg)
+windowRuleDialogMoveDown(HWND hDlg)
 {
-    vwWindowType *wt, *pwt ;
+    vwWindowRule *wt, *pwt ;
     
-    if(winTypeCur != NULL)
+    if(winRuleCur != NULL)
     {
-        wt = windowTypeList ;
-        while((wt != winTypeCur) && (wt != NULL))
+        wt = windowRuleList ;
+        while((wt != winRuleCur) && (wt != NULL))
             wt = wt->next ;
         if(wt == NULL)
-            winTypeCur = NULL ;
+            winRuleCur = NULL ;
         else
         {
             while(((wt = wt->next) != NULL) && (wt->flags & vwWTFLAGS_MOVE) && (wt->desk > deskCount))
                 ;
             if(wt != NULL)
             {
-                if(winTypeCur == windowTypeList)
-                    windowTypeList = winTypeCur->next ;
+                if(winRuleCur == windowRuleList)
+                    windowRuleList = winRuleCur->next ;
                 else
                 {
-                    pwt = windowTypeList ;
-                    while(pwt->next != winTypeCur)
+                    pwt = windowRuleList ;
+                    while(pwt->next != winRuleCur)
                         pwt = pwt->next ;
-                    pwt->next = winTypeCur->next ;
+                    pwt->next = winRuleCur->next ;
                 }
-                winTypeCur->next = wt->next ;
-                wt->next = winTypeCur ;
-                wt = winTypeCur ;
+                winRuleCur->next = wt->next ;
+                wt->next = winRuleCur ;
+                wt = winRuleCur ;
                 while(((wt = wt->next) != NULL) && (wt->flags & vwWTFLAGS_MOVE) && (wt->desk > deskCount))
                     ;
                 if(wt == NULL)
@@ -340,31 +340,31 @@ windowTypeDialogMoveDown(HWND hDlg)
             }
         }
     }
-    windowTypeDialogInitList(hDlg) ;
+    windowRuleDialogInitList(hDlg) ;
 }
 
 static void
-windowTypeDialogAddMod(HWND hDlg, int add)
+windowRuleDialogAddMod(HWND hDlg, int add)
 {
-    vwWindowType *wt ;
+    vwWindowRule *wt ;
     int ii, ll, mallocErr=0 ;
     TCHAR buff[1024], *ss ;
     vwUInt flags ;
     
     if(add)
     {
-        if((wt = calloc(1,sizeof(vwWindowType))) == NULL)
+        if((wt = calloc(1,sizeof(vwWindowRule))) == NULL)
             mallocErr = 1 ;
         else
         {
-            wt->next = windowTypeList ;
-            windowTypeList = wt ;
+            wt->next = windowRuleList ;
+            windowRuleList = wt ;
         }
     }
     else
     {
-        wt = windowTypeList ;
-        while((wt != winTypeCur) && (wt != NULL))
+        wt = windowRuleList ;
+        while((wt != winRuleCur) && (wt != NULL))
             wt = wt->next ;
     }
     if(wt != NULL)
@@ -432,25 +432,25 @@ windowTypeDialogAddMod(HWND hDlg, int add)
         if((ii=SendDlgItemMessage(hDlg,IDC_WTYPE_THIDE,CB_GETCURSEL,0,0)) != CB_ERR)
             flags |= ii << vwWTFLAGS_HIDETSK_BITROT ;
         wt->flags = flags ;
-        winTypeCur = wt ;
+        winRuleCur = wt ;
         EnableWindow(GetDlgItem(hDlg,IDC_WTYPE_APPLY),TRUE) ;
     }
     if(mallocErr)
-        MessageBox(hWnd,_T("System resources are low, failed to create new window type."),vwVIRTUAWIN_NAME _T(" Error"), MB_ICONERROR);
-    windowTypeDialogInitList(hDlg) ;
-    windowTypeDialogInitItem(hDlg) ;
+        MessageBox(hWnd,_T("System resources are low, failed to create new window rule."),vwVIRTUAWIN_NAME _T(" Error"), MB_ICONERROR);
+    windowRuleDialogInitList(hDlg) ;
+    windowRuleDialogInitItem(hDlg) ;
 }
 
 static void
-windowTypeDialogDelete(HWND hDlg)
+windowRuleDialogDelete(HWND hDlg)
 {
-    vwWindowType *wt, *pwt ;
+    vwWindowRule *wt, *pwt ;
     int ii ;
-    if(winTypeCur != NULL)
+    if(winRuleCur != NULL)
     {
         pwt = NULL ;
-        wt = windowTypeList ;
-        while((wt != winTypeCur) && (wt != NULL))
+        wt = windowRuleList ;
+        while((wt != winRuleCur) && (wt != NULL))
         {
             pwt = wt ;
             wt = wt->next ;
@@ -458,7 +458,7 @@ windowTypeDialogDelete(HWND hDlg)
         if(wt != NULL)
         {
             if(pwt == NULL)
-                windowTypeList = wt->next ;
+                windowRuleList = wt->next ;
             else
                 pwt->next = wt->next ;
             
@@ -470,20 +470,20 @@ windowTypeDialogDelete(HWND hDlg)
             free(wt) ;
             EnableWindow(GetDlgItem(hDlg,IDC_WTYPE_APPLY),TRUE) ;
         }
-        winTypeCur = NULL ;
+        winRuleCur = NULL ;
     }
-    windowTypeDialogInitList(hDlg) ;
+    windowRuleDialogInitList(hDlg) ;
 }
 
 static BOOL CALLBACK
-windowTypeDialogFunc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
+windowRuleDialogFunc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     int ii ;
     switch (msg)
     {
     case WM_INITDIALOG:
         dialogHWnd = hDlg ;
-        windowTypeDialogInit(hDlg,1) ;
+        windowRuleDialogInit(hDlg,1) ;
         return TRUE;
         
     case WM_COMMAND:
@@ -491,27 +491,27 @@ windowTypeDialogFunc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
         {
         case IDC_WTYPE_LIST:
             if(HIWORD(wParam) == LBN_SELCHANGE)
-                windowTypeDialogSetItem(hDlg) ;
+                windowRuleDialogSetItem(hDlg) ;
             break ;
             
         case IDC_WTYPE_UP:
-            windowTypeDialogMoveUp(hDlg) ;
+            windowRuleDialogMoveUp(hDlg) ;
             break ;
         
         case IDC_WTYPE_DOWN:
-            windowTypeDialogMoveDown(hDlg) ;
+            windowRuleDialogMoveDown(hDlg) ;
             break ;
             
         case IDC_WTYPE_ADD:
-            windowTypeDialogAddMod(hDlg,1) ;
+            windowRuleDialogAddMod(hDlg,1) ;
             break ;
         
         case IDC_WTYPE_MOD:
-            windowTypeDialogAddMod(hDlg,0) ;
+            windowRuleDialogAddMod(hDlg,0) ;
             break ;
         
         case IDC_WTYPE_DEL:
-            windowTypeDialogDelete(hDlg) ;
+            windowRuleDialogDelete(hDlg) ;
             break ;
         
         case IDC_WTYPE_AMOVE:
@@ -537,7 +537,7 @@ windowTypeDialogFunc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
         case IDC_WTYPE_OK:
             if(IsWindowEnabled(GetDlgItem(hDlg,IDC_WTYPE_APPLY)))
                 saveWindowConfig() ; 
-            vwWindowTypeReapply() ;
+            vwWindowRuleReapply() ;
             EndDialog(hDlg,0);
             return TRUE;
             
@@ -549,7 +549,7 @@ windowTypeDialogFunc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
         
         case IDC_WTYPE_APPLY:
             saveWindowConfig() ; 
-            vwWindowTypeReapply() ;
+            vwWindowRuleReapply() ;
             EnableWindow(GetDlgItem(hDlg,IDC_WTYPE_APPLY),FALSE) ;
             break ;
             
@@ -570,14 +570,14 @@ windowTypeDialogFunc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 }
 
 void
-createWindowTypeDialog(HINSTANCE theHinst, HWND theHwndOwner, vwWindowType *wtype, HWND theWin)
+createWindowRuleDialog(HINSTANCE theHinst, HWND theHwndOwner, vwWindowRule *wtype, HWND theWin)
 {
     if((deskCount = nDesks) < currentDesk)
         deskCount = currentDesk ;
-    winTypeCur = wtype ;
+    winRuleCur = wtype ;
     initWin = theWin ;
     dialogOpen = TRUE ;
-    DialogBox(theHinst,MAKEINTRESOURCE(IDD_WINDOWTYPEDIALOG),theHwndOwner,(DLGPROC) windowTypeDialogFunc) ;
+    DialogBox(theHinst,MAKEINTRESOURCE(IDD_WINDOWRULEDIALOG),theHwndOwner,(DLGPROC) windowRuleDialogFunc) ;
     dialogOpen = FALSE ;
     dialogHWnd = NULL ;
 }

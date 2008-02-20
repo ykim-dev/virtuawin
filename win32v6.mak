@@ -36,7 +36,7 @@ CUCDEFS = -DUNICODE -D_UNICODE
 CVDDEFS = -DvwLOG_VERBOSE
 !ENDIF
 
-SRC	= VirtuaWin.c DiskRoutines.c SetupDialog.c WinTypeDialog.c ModuleRoutines.c
+SRC	= VirtuaWin.c DiskRoutines.c SetupDialog.c WinRuleDialog.c ModuleRoutines.c
 HEADERS = VirtuaWin.h Resource.h Messages.h \
 	  DiskRoutines.h Defines.h ConfigParameters.h vwCommands.def
 COFFS   = VirtuaWin.coff
