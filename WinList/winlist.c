@@ -110,7 +110,6 @@ enumWindowsProc(HWND hwnd, LPARAM lParam)
     vwlWindow *win ;
     TCHAR fbuff[4], sbuff[4];
     int idx, flag, state, exstyle, style = GetWindowLong(hwnd, GWL_STYLE);
-    HWND phwnd, gphwnd ;
     LVITEM item ;
     RECT rect ;
     
@@ -126,36 +125,36 @@ enumWindowsProc(HWND hwnd, LPARAM lParam)
     sbuff[1] = ' ' ;
     sbuff[2] = '\0' ;
     state = 0 ;
-    if((vwHandle != 0) && ((flag = SendMessage(vwHandle,VW_GETWINDESK,(WPARAM) hwnd,0)) != 0))
+    if((vwHandle != 0) && ((flag = SendMessage(vwHandle,VW_WINGETINFO,(WPARAM) hwnd,0)) != 0))
     {
-        // This is a currently managed window
-        if(flag < 0)
+        if((flag & vwWINFLAGS_WINDOW) == 0)
+            return TRUE ;
+        if((flag & vwWINFLAGS_MANAGED) == 0)
         {
-            state = 2 ;
-            flag = 0 - flag ;
-            sbuff[0] = 'H' ;
+            // This is a known unmanaged window
+            fbuff[0] = 'U' ;
+            flag = 0 ;
         }
         else
         {
-            state = 1 ;
-            sbuff[0] = 'O' ;
+            if(((flag & vwWINFLAGS_SHOWN) == 0) ^ ((flag & vwWINFLAGS_SHOW) == 0))
+            {
+                /* if show but not shown or vice versa then the window is hung */
+                state = 2 ;
+                sbuff[0] = 'H' ;
+            }
+            else
+            {
+                state = 1 ;
+                sbuff[0] = 'O' ;
+            }
+            flag = vwWindowGetInfoDesk(flag) ;
+            if((flag != deskCrrnt) && (flag > deskCount))
+                // on a hidden desktop
+                return TRUE ;
+            fbuff[0] = (flag >= 10) ? ('0' + (flag / 10)) : ' ' ;
+            fbuff[1] = '0' + (flag % 10) ;
         }
-        if((flag != deskCrrnt) && (flag > deskCount))
-            // on a hidden desktop
-            return TRUE ;
-        fbuff[0] = (flag >= 10) ? ('0' + (flag / 10)) : ' ' ;
-        fbuff[1] = '0' + (flag % 10) ;
-    }
-    else if((((phwnd=GetParent(hwnd)) != NULL) && (phwnd != GetDesktopWindow()) &&
-             ((GetWindowLong(phwnd, GWL_STYLE) & WS_VISIBLE) ||
-              (((gphwnd=GetParent(phwnd)) != NULL) && (gphwnd != GetDesktopWindow())))) ||
-            ((exstyle & WS_EX_TOOLWINDOW) && ((style & WS_POPUP) || (GetWindow(hwnd,GW_OWNER) == NULL)) && (rect.top < -5000)))
-        return TRUE ;
-    else if((rect.top < -5000) && (rect.top > -30000))
-    {
-        // If at the hidden position then flag as likely lost
-        fbuff[0] = '*' ;
-        flag = -2 ;
     }
     else if(style & WS_VISIBLE)
     {
@@ -305,13 +304,14 @@ enumWindowsSaveListProc(HWND hwnd, LPARAM lParam)
         strcpy(text,"<None>");
     
     if(vwHandle != 0)
-        desk = SendMessage(vwHandle,VW_GETWINDESK,(WPARAM) hwnd,0) ;
+        desk = SendMessage(vwHandle,VW_WINGETINFO,(WPARAM) hwnd,0) ;
     else
         desk = 0 ;
-    fprintf(wdFp,"%8x %08x %08x %8x %8x %8x %4d %s\n%8d %8x %8d %8d %8d %8d      %s\n",
+    fprintf(wdFp,"%8x %08x %08x %8x %8x %8x %6x %s\n%8d %8x %8d %8d %8d %8d %6d %s\n",
             (int)hwnd,style,exstyle,(int)GetParent(hwnd),
-            (int)GetWindow(hwnd,GW_OWNER),(int)GetClassLong(hwnd,GCL_HICON),desk,text,
-            (int)procId,(int)threadId,(int)pos.top,(int)pos.bottom,(int)pos.left,(int)pos.right,class) ;
+            (int)GetWindow(hwnd,GW_OWNER),(int)GetClassLong(hwnd,GCL_HICON),(desk & 0x00ffffff),text,
+            (int)procId,(int)threadId,(int)pos.top,(int)pos.bottom,(int)pos.left,(int)pos.right,
+            ((desk >> vwWTFLAGS_HIDEWIN_BITROT) & 0x00ff),class) ;
     
     return TRUE;
 }
