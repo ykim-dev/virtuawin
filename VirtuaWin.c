@@ -73,19 +73,21 @@ enum {
 #define vwWindowIsShownNotHung(win)   (((win)->flags & vwWINFLAGS_SHOWN) && ((win)->flags & vwWINFLAGS_SHOW))
 #define vwWindowIsShow(win)           (((win)->flags & vwWINFLAGS_SHOW) != 0)
 #define vwWindowIsSticky(win)         (((win)->flags & vwWINFLAGS_STICKY) != 0)
-#define vwWindowIsTrickyPos(win)      (((win)->flags & vwWINFLAGS_TRICKY_POS) != 0)
-#define vwWindowIsHideByMove(win)     (((win)->flags & vwWINFLAGS_HIDEWIN_MASK) == vwWTFLAGS_HIDEWIN_MOVE)
+#define vwWindowIsHideByHide(win)     (((win)->flags & vwWINFLAGS_HIDEWIN_MASK) == vwWINFLAGS_HIDEWIN_HIDE)
+#define vwWindowIsHideByMove(win)     (((win)->flags & vwWINFLAGS_HIDEWIN_MASK) == vwWINFLAGS_HIDEWIN_MOVE)
+#define vwWindowIsHideByMinim(win)    (((win)->flags & vwWINFLAGS_HIDEWIN_MASK) == vwWINFLAGS_HIDEWIN_MINIM)
 
 #define vwWindowIsNotWindow(win)      (((win)->flags & vwWINFLAGS_WINDOW) == 0)
 #define vwWindowIsNotVisible(win)     (((win)->flags & vwWINFLAGS_VISIBLE) == 0)
 #define vwWindowIsNotMinimized(win)   (((win)->flags & vwWINFLAGS_MINIMIZED) == 0)
 #define vwWindowIsNotMaximized(win)   (((win)->flags & vwWINFLAGS_MAXIMIZED) == 0)
 #define vwWindowIsNotManaged(win)     (((win)->flags & vwWINFLAGS_MANAGED) == 0)
-#define vwWindowIsNotTrickyPos(win)   (((win)->flags & vwWINFLAGS_TRICKY_POS) == 0)
 #define vwWindowIsNotShown(win)       (((win)->flags & vwWINFLAGS_SHOWN) == 0)
 #define vwWindowIsNotShow(win)        (((win)->flags & vwWINFLAGS_SHOW) == 0)
 #define vwWindowIsNotSticky(win)      (((win)->flags & vwWINFLAGS_STICKY) == 0)
-#define vwWindowIsNotHideByMove(win)  (((win)->flags & vwWINFLAGS_HIDEWIN_MASK) != vwWTFLAGS_HIDEWIN_MOVE)
+#define vwWindowIsNotHideByHide(win)  (((win)->flags & vwWINFLAGS_HIDEWIN_MASK) != vwWINFLAGS_HIDEWIN_HIDE)
+#define vwWindowIsNotHideByMove(win)  (((win)->flags & vwWINFLAGS_HIDEWIN_MASK) != vwWINFLAGS_HIDEWIN_MOVE)
+#define vwWindowIsNotHideByMinim(win) (((win)->flags & vwWINFLAGS_HIDEWIN_MASK) != vwWINFLAGS_HIDEWIN_MINIM)
 
 #define vwWindowDontHideTaskButton(win)   (((win)->flags & vwWINFLAGS_HIDETSK_MASK) == vwWINFLAGS_HIDETSK_DONT)
 
@@ -973,7 +975,6 @@ vwWindowBaseUnlink(vwWindowBase *wb)
     }
 }
 
-
 static vwWindowBase *
 vwWindowBaseCreate(vwUInt flags, HWND hwnd) 
 {
@@ -1018,11 +1019,11 @@ vwWindowBaseCreate(vwUInt flags, HWND hwnd)
     {
         if(GetWindowThreadProcessId(hwnd,&(win->processId)) == 0)
             win->processId = 0 ;
-        else if((pwin = windowList) != NULL)
+        else if((pwin = (vwWindow *) windowBaseList) != NULL)
         {
             do
             {
-                if(win->processId == pwin->processId)
+                if((pwin->flags & vwWINFLAGS_WINDOW) && (win->processId == pwin->processId))
                 {
                     if((win->processNext = pwin->processNext) == NULL)
                         win->processNext = pwin ;
@@ -1078,6 +1079,26 @@ vwWindowBaseDelete(vwWindowBase *wb)
         wb->next = windowBaseFreeList ;
         windowBaseFreeList = wb ;
     }
+}
+
+static void
+vwWindowLink(vwWindow *winP, vwWindow *winC)
+{
+    vwWindow *ww ;
+    if((ww=winC->linkedNext) != NULL)
+    {
+        while(ww->linkedNext != winC)
+        {
+            if(ww == winP)
+                return ;
+            ww = ww->linkedNext ;
+        }
+    }
+    else
+        ww = winC ;
+    if((ww->linkedNext = winP->linkedNext) == NULL)
+        ww->linkedNext = winP ;
+    winP->linkedNext = winC ;
 }
 
 /*************************************************
@@ -1516,10 +1537,10 @@ enumWindowsProc(HWND hwnd, LPARAM lParam)
         else
             flags = (((phwnd=GetParent(hwnd)) != NULL) && (phwnd != desktopHWnd) &&
                      ((pwb=vwWindowBaseFind(phwnd)) != NULL) &&
-                     ((vwWindowIsManaged(pwb) && vwWindowIsNotTrickyPos(pwb) && vwWindowIsNotHideByMove(pwb)) ||
+                     ((vwWindowIsManaged(pwb) && vwWindowIsNotHideByMove(pwb)) ||
                       (vwWindowIsNotManaged(pwb) && ((phwnd=GetParent(phwnd)) != NULL) &&
                        ((pwb=vwWindowBaseFind(phwnd)) != NULL) && 
-                       vwWindowIsManaged(pwb) && vwWindowIsNotTrickyPos(pwb) && vwWindowIsNotHideByMove(pwb)))) ;
+                       vwWindowIsManaged(pwb) && vwWindowIsNotHideByMove(pwb)))) ;
         if(flags)
             // dont manage this window
             flags = vwWINFLAGS_FOUND ;
@@ -1597,31 +1618,40 @@ enumWindowsProc(HWND hwnd, LPARAM lParam)
     }
     else if(vwWindowIsNotShow(win))
     {
-        if(vwWindowIsTrickyPos(win) || vwWindowIsHideByMove(win))
+        if((style & WS_MINIMIZE) == 0)
         {
-            GetWindowRect(hwnd,&pos) ;
-            if(pos.top >= -5000)
+            if(vwWindowIsHideByMinim(win))
             {
-                /* Something has moved this window back into a visible area (or
-                 * at least outside VirtuaWins domain) so make it belong to this
-                 * desktop, update the list entry, also check the location as the
-                 * app may have only made the window visible */
-                vwLogBasic((_T("Got tricky window state change: %x %d (%d) %x -> %d %d\n"),
-                            (int) win->handle,win->desk,currentDesk,win->flags,(int)pos.left,(int)pos.top)) ;
+                vwLogBasic((_T("Got minim-window state change: %x %d (%d) %x -> %x\n"),
+                            (int) win->handle,win->desk,currentDesk,win->flags,style)) ;
                 wb->flags |= vwWINFLAGS_ACTIVATED ;
             }
+            else if(vwWindowIsHideByMove(win))
+            {
+                GetWindowRect(hwnd,&pos) ;
+                if(pos.top >= -5000)
+                {
+                    /* Something has moved this window back into a visible area (or
+                     * at least outside VirtuaWins domain) so make it belong to this
+                     * desktop, update the list entry, also check the location as the
+                     * app may have only made the window visible */
+                    vwLogBasic((_T("Got move-window state change: %x %d (%d) %x -> %d %d\n"),
+                                (int) win->handle,win->desk,currentDesk,win->flags,(int)pos.left,(int)pos.top)) ;
+                    wb->flags |= vwWINFLAGS_ACTIVATED ;
+                }
+            }
+            else if(vwWindowIsNotVisible(win))
+            {
+                /* Something has made this window visible so make it belong to this desktop, update the list entry,
+                 * also check the location as the app may have only made the window visible */
+                vwLogBasic((_T("Got window state change: %x %d (%d) %x\n"),
+                            (int) win->handle,win->desk,currentDesk,win->flags)) ;
+                wb->flags |= vwWINFLAGS_ACTIVATED | vwWINFLAGS_VISIBLE ;
+            }
+            else if(vwWindowIsNotShown(win))
+                /* This is likely to be a HUNG window, make it hung so we actively monitor it */
+                win->flags |= vwWINFLAGS_SHOWN ;
         }
-        else if(vwWindowIsNotVisible(win))
-        {
-            /* Something has made this window visible so make it belong to this desktop, update the list entry,
-             * also check the location as the app may have only made the window visible */
-            vwLogBasic((_T("Got window state change: %x %d (%d) %x\n"),
-                        (int) win->handle,win->desk,currentDesk,win->flags)) ;
-            wb->flags |= vwWINFLAGS_ACTIVATED | vwWINFLAGS_VISIBLE ;
-        }
-        else if(vwWindowIsNotShown(win))
-            /* This is likely to be a HUNG window, make it hung so we actively monitor it */
-            win->flags |= vwWINFLAGS_SHOWN ;
     }
     else if(vwWindowIsNotVisible(win))
         /* if visible and shown store the latest style & exStyle flags */
@@ -1682,16 +1712,13 @@ windowListUpdate(void)
             win->zOrder[currentDesk] = 1;
             if(wt != NULL)
             {
-                win->flags |= (wt->flags & (vwWTFLAGS_HIDEWIN_MASK|vwWTFLAGS_HIDETSK_MASK|vwWTFLAGS_STICKY)) ;
+                win->flags |= (wt->flags & (vwWTFLAGS_HIDEWIN_MASK|vwWTFLAGS_HIDETSK_MASK|vwWTFLAGS_STICKY|vwWTFLAGS_MAIN_WIN|vwWTFLAGS_GROUP_APP)) ;
                 if(vwWindowIsNotSticky(win) && (wt->flags & vwWTFLAGS_MOVE) && (desktopUsed[wt->desk] != 0))
                 {
                     win->flags |= (wt->flags & vwWINFLAGS_MOVE_IMMEDIATE) ;
                     win->desk = wt->desk ;
                 }
             }
-            GetWindowRect(win->handle,&pos) ;
-            if((pos.left == -32000) && (pos.top == -32000))
-                win->flags |= vwWINFLAGS_TRICKY_POS ;
             win = vwWindowGetNext(win) ;
         }
         // now finish of initialization of linked windows
@@ -1701,81 +1728,97 @@ windowListUpdate(void)
             HWND owner = GetWindow(win->handle,GW_OWNER) ;
             if((win->exStyle & (WS_EX_TOOLWINDOW|WS_EX_NOACTIVATE)) || ((owner != NULL) && ((win->exStyle & WS_EX_APPWINDOW) == 0)))
                 win->flags |= vwWINFLAGS_NO_TASKBAR_BUT ;
-            if(((win->flags & vwWINFLAGS_TRICKY_POS) != 0) && (win->processId != 0) && 
-               (owner == NULL) && ((ww = win->processNext) != NULL))
+            if(win->processNext != NULL)
             {
-                /* some apps like Excel and Adobe Reader create one main window
-                 * and a hidden tricky position windows per file open for the
-                 * task bar, if this is one make it owned by the main window */
-                for(;;)
+                if(owner != NULL)
                 {
-                    if((ww->flags & vwWINFLAGS_FOUND) && vwWindowIsManaged(ww) && ((ww->flags & vwWINFLAGS_TRICKY_POS) == 0))
-                    {
-                        vwLogBasic((_T("Making tricky window %x owned by %x\n"),
-                                    (int) win->handle,(int) ww->handle)) ;
-                        ww->flags |= vwWINFLAGS_NO_TASKBAR_BUT | vwWINFLAGS_RM_TASKBAR_BUT ;
-                        break ;
-                    }
-                    if((ww = ww->processNext) == win)
-                    {
-                        ww = NULL ;
-                        break ;
-                    }
+                    /* link the owner if it is from the same process */
+                    ww = win->processNext ;
+                    do {
+                        if(ww->handle == owner)
+                        {
+                            if(ww->flags & vwWINFLAGS_FOUND)
+                            {
+                                vwWindowLink(ww,win) ;
+                                if(vwWindowIsNotHideByHide(win) && vwWindowIsHideByHide(ww) && vwWindowIsShown(ww))
+                                {
+                                    // if an owned window is flagged as hidden by move or minimize we must make the parent window
+                                    // hide by a non-hide method otherwise the call to ShowOwnedPopups is likely to break things
+                                    ww->flags = (ww->flags & ~vwWINFLAGS_HIDEWIN_MASK) | vwWTFLAGS_HIDEWIN_MOVE ;
+                                    if((ww->flags & vwWINFLAGS_HIDETSK_MASK) == vwWINFLAGS_HIDETSK_HIDE)
+                                        ww->flags |= vwWINFLAGS_HIDETSK_TOOLWN ;
+                                    vwLogBasic((_T("Making %x parent window %x hide by move or minim\n"),(int) win->handle,(int) ww->handle)) ;
+                                }
+                            }
+                            break ;
+                        }
+                        else if((ww = ww->processNext) == win)
+                            owner = GetWindow(owner,GW_OWNER) ;
+                    } while(owner != NULL) ;
                 }
-            }
-            else
-                ww = NULL ;
-            while((owner != NULL) && (ww == NULL))
-            {
-                /* only keep the owner if it is from the same process */
-                ww = win->processNext ;
-                while(ww != NULL)
+                if(win->flags & vwWINFLAGS_MINIMIZED)
                 {
+                    /* some apps like Excel and Adobe Reader create one main window
+                     * and a minimized hidden tricky position window per file open for the
+                     * taskbar, if this is one make it owned by the main window */
+                    ww = win->processNext ;
+                    do {
+                        if((ww->flags & (vwWINFLAGS_FOUND|vwWINFLAGS_MANAGED|vwWTFLAGS_MAIN_WIN)) == (vwWINFLAGS_FOUND|vwWINFLAGS_MANAGED|vwWTFLAGS_MAIN_WIN))
+                        {
+                            vwLogBasic((_T("Making %x the main window of %x\n"),(int) ww->handle,(int) win->handle)) ;
+                            ww->flags |= vwWINFLAGS_NO_TASKBAR_BUT | vwWINFLAGS_RM_TASKBAR_BUT ;
+                            vwWindowLink(ww,win) ;
+                            break ;
+                        }
+                    } while((ww = ww->processNext) != win) ;
+                }
+                /* now see if any of this window's process' windows have
+                 * already been initialized with an GROUP_APP flag */
+                ww = win->processNext ;
+                do {
+                    if((ww->flags & (vwWINFLAGS_FOUND|vwWINFLAGS_MANAGED|vwWINFLAGS_GROUP_APP|vwWINFLAGS_INITIALIZED)) == (vwWINFLAGS_FOUND|vwWINFLAGS_MANAGED|vwWINFLAGS_GROUP_APP|vwWINFLAGS_INITIALIZED))
+                    {
+                        vwLogBasic((_T("Linking %x to app %d window %x\n"),(int) win->handle,win->processId,(int) ww->handle)) ;
+                        vwWindowLink(ww,win) ;
+                        break ;
+                    }
+                } while((ww = ww->processNext) != win) ;
+                
+                if((ww == win) && (win->flags & vwWINFLAGS_GROUP_APP))
+                {
+                    /* first window of this app to get the GROUP_APP flag, link all the initialized & managed windows together */
+                    vwLogBasic((_T("Linking all window %x app windows\n"),(int) win->handle,win->processId)) ;
+                    ww = win->processNext ;
+                    do {
+                        if((ww->flags & (vwWINFLAGS_FOUND|vwWINFLAGS_MANAGED|vwWINFLAGS_INITIALIZED)) == (vwWINFLAGS_FOUND|vwWINFLAGS_MANAGED|vwWINFLAGS_INITIALIZED))
+                            vwWindowLink(ww,win) ;
+                    } while((ww = ww->processNext) != win) ;
+                }
+                if(vwWindowIsNotSticky(win) && ((ww=win->linkedNext) != NULL))
+                {
+                    /* if one of the linked windows is sticky then make them all sticky */
+                    do {
+                        if((ww->flags & (vwWINFLAGS_FOUND|vwWINFLAGS_MANAGED|vwWINFLAGS_STICKY)) == (vwWINFLAGS_FOUND|vwWINFLAGS_MANAGED|vwWINFLAGS_STICKY))
+                        {
+                            ww->flags |= vwWINFLAGS_STICKY ;
+                            break ;
+                        }
+                    } while((ww = ww->linkedNext) != win) ;
                     if(ww == win)
                     {
-                        ww = NULL ;
-                        break ;
+                        /* not sticky, look for an initialized window and set this
+                         * window's desk to be the initialized window set activated
+                         * flag if not currently on the current desktop */
+                        ww = win->linkedNext ;
+                        do {
+                            if((ww->flags & (vwWINFLAGS_FOUND|vwWINFLAGS_MANAGED|vwWINFLAGS_INITIALIZED)) == (vwWINFLAGS_FOUND|vwWINFLAGS_MANAGED|vwWINFLAGS_INITIALIZED))
+                            {
+                                if((win->desk = ww->desk) != currentDesk)
+                                    win->flags |= vwWINFLAGS_ACTIVATED ;
+                                break ;
+                            }
+                        } while((ww = ww->linkedNext) != win) ;
                     }
-                    else if(ww->handle == owner)
-                        break ;
-                    ww = ww->processNext ;
-                }
-                owner = GetWindow(owner,GW_OWNER) ;
-            }
-            if((ww != NULL) && (ww->flags & vwWINFLAGS_FOUND))
-            {
-                /* This window is linked to its owner */
-                vwWindow *wl ;
-                if((wl=win->linkedNext) != NULL)
-                {
-                    while(wl->linkedNext != win)
-                        wl = wl->linkedNext ;
-                }
-                else
-                    wl = win ;
-                if((wl->linkedNext = ww->linkedNext) == NULL)
-                    wl->linkedNext = ww ;
-                ww->linkedNext = win ;
-                
-                /* TODO - minimize method should be considered */
-                if(vwWindowIsHideByMove(win) && vwWindowIsNotHideByMove(ww) && vwWindowIsShown(ww))
-                {
-                    // if an owned window is flagged as tricky we must make the parent window
-                    // tricky otherwise the call to ShowOwnedPopups is likely to break things
-                    ww->flags = (ww->flags & ~vwWINFLAGS_HIDEWIN_MASK) | vwWTFLAGS_HIDEWIN_MOVE ;
-                    if((ww->flags & vwWINFLAGS_HIDETSK_MASK) == vwWINFLAGS_HIDETSK_HIDE)
-                        ww->flags |= vwWINFLAGS_HIDETSK_TOOLWN ;
-                    vwLogBasic((_T("Making parent window %x hide by move\n"),(int) ww->handle)) ;
-                }
-                
-                if(ww->flags & vwWINFLAGS_INITIALIZED)
-                {
-                    /* If the parent window is already initialized then grab its sticky state and 
-                     * if its desk is not the current the treat this as an activation */
-                    if(vwWindowIsSticky(ww))
-                        win->flags |= vwWINFLAGS_STICKY ;
-                    if((win->desk = ww->desk) != currentDesk)
-                        win->flags |= vwWINFLAGS_ACTIVATED ;
                 }
             }
             win = vwWindowGetNext(win) ;
@@ -1997,7 +2040,7 @@ monitorTimerProc(HWND hwnd, UINT uMsg, UINT idEvent, DWORD dwTime)
         win = windowList ;
         while(win != NULL)
         {
-            if((vwWindowIsTrickyPos(win) || vwWindowIsHideByMove(win)) && vwWindowIsNotShown(win))
+            if(vwWindowIsNotHideByHide(win) && vwWindowIsNotShown(win))
                 PostMessage(taskHWnd, RM_Shellhook, HSHELL_WINDOWDESTROYED, (LPARAM) win->handle);
             win = vwWindowGetNext(win) ;
         }
@@ -2015,7 +2058,7 @@ changeDesk(int newDesk, WPARAM msgWParam)
     HWND activeHWnd, lzh ;
     vwWindow *win, *bwn ;
     vwUInt activeZOrder=0, cno, czo, bno, bzo, lno, lzo ;
-    int notHung, activeRefocus=0 ;
+    int notHung ;
     
     if(newDesk == currentDesk)
         // Nothing to do
@@ -2051,6 +2094,9 @@ changeDesk(int newDesk, WPARAM msgWParam)
     }
     if(dialogOpen)
         storeDesktopProperties() ;
+    
+    /* must lose the current focus and regain at the end to get things right */
+    setForegroundWin(NULL,0) ;
     
     currentDesk = newDesk;
     /* Calculations for getting the x and y positions */
@@ -2136,7 +2182,6 @@ changeDesk(int newDesk, WPARAM msgWParam)
                         {
                             activeHWnd = win->handle;
                             activeZOrder = win->zOrder[currentDesk];
-                            activeRefocus = bno ;
                         }
                         if(bno && ((win->flags & vwWINFLAGS_NO_TASKBAR_BUT) == 0) && (taskHWnd != NULL))
                         {
@@ -2146,8 +2191,6 @@ changeDesk(int newDesk, WPARAM msgWParam)
                             PostMessage(taskHWnd,RM_Shellhook,HSHELL_WINDOWCREATED,(LPARAM) win->handle) ;
                         }
                     }
-                    if(activeHWnd == win->handle)
-                        activeRefocus = 1 ;
                 }
                 else if(vwWindowIsNotShow(win) &&
                         vwWindowShowHide(win,vwWINSH_FLAGS_SHOW))
@@ -2157,7 +2200,6 @@ changeDesk(int newDesk, WPARAM msgWParam)
                     {
                         activeHWnd = win->handle;
                         activeZOrder = win->zOrder[currentDesk];
-                        activeRefocus = 0 ;
                     }
                 }
             }
@@ -2210,14 +2252,11 @@ changeDesk(int newDesk, WPARAM msgWParam)
     }
     if(releaseFocus)
         activeHWnd = NULL ;
-    vwLogBasic((_T("Active found: %x (%d,%d,%d)\n"),(int) activeHWnd,(int)activeZOrder,releaseFocus,activeRefocus)) ;
-    if(activeRefocus && (GetForegroundWindow() == activeHWnd))
-        /* we have had to fix the taskbar order by destrying and recreating,
-         * this loses the current focus so we must refocus the taskbar */
-        setForegroundWin(NULL,TRUE) ;
-    /* Take a quick sleep here to give explorer the chance to catch up */
+    vwLogBasic((_T("Active found: %x (%d,%d)\n"),(int) activeHWnd,(int)activeZOrder,releaseFocus)) ;
+    /* Take a quick sleep here to give everything a chance to catch up, particularly explorer */
     Sleep(1) ;
     setForegroundWin(activeHWnd,TRUE) ;
+    
     /* reset the monitor timer to give the system a chance to catch up first */
     SetTimer(hWnd, 0x29a, 250, monitorTimerProc);
     vwMutexRelease();
@@ -2678,9 +2717,7 @@ vwWindowShowHide(vwWindow* aWindow, vwUInt flags)
     vwLogVerbose((_T("vwWindowShowHide %8x %x %x %x %d %d\n"),(int) aWindow->handle,flags,(int)aWindow->flags,(int)aWindow->exStyle,aWindow->desk,currentDesk)) ;
     if(((flags & vwWINSH_FLAGS_SHOW) != 0) ^ vwWindowIsShown(aWindow))
     {
-        vwUInt wflags, tflags ;
         RECT pos;
-        UINT swpFlags ;
         
         if(windowIsHung(aWindow->handle,50) &&
            (Sleep(1),windowIsHung(aWindow->handle,(flags & vwWINSH_FLAGS_TRYHARD) ? 5000:100)))
@@ -2689,97 +2726,81 @@ vwWindowShowHide(vwWindow* aWindow, vwUInt flags)
             aWindow->flags = (aWindow->flags & ~vwWINSH_FLAGS_SHOW) | (flags & vwWINSH_FLAGS_SHOW) ;
             return FALSE ;
         }
-        wflags = aWindow->flags & vwWINFLAGS_HIDEWIN_MASK ;
-        tflags = aWindow->flags & vwWINFLAGS_HIDETSK_MASK ;
         if(flags & vwWINSH_FLAGS_SHOW)
         {
-            // must still make the window visible in the same way it was hidden
-            if(vwWindowIsTrickyPos(aWindow))
-            {
-                wflags = vwWINFLAGS_HIDEWIN_MOVE ;
-                if(tflags == 0)
-                    tflags = vwWINFLAGS_HIDETSK_TOOLWN ;
-            }                
+            vwLogVerbose((_T("vwWindowShow %8x %x %x %x %d %d\n"),(int) aWindow->handle,flags,(int)aWindow->flags,(int)aWindow->exStyle,aWindow->desk,currentDesk)) ;
             aWindow->flags |= (vwWINFLAGS_SHOWN|vwWINFLAGS_SHOW) ;
-            if(wflags == vwWINFLAGS_HIDEWIN_MOVE)
-                GetWindowRect(aWindow->handle,&pos) ;
-            vwLogVerbose((_T("vwWindowShow %8x %x %x %x %x %x %d %d\n"),(int) aWindow->handle,flags,wflags,tflags,(int)aWindow->flags,(int)aWindow->exStyle,aWindow->desk,currentDesk)) ;
-            if((tflags == vwWINFLAGS_HIDETSK_TOOLWN) && ((aWindow->flags & vwWINFLAGS_NO_TASKBAR_BUT) == 0) && (taskHWnd != NULL))
+            if((aWindow->flags & (vwWINFLAGS_HIDETSK_MASK|vwWINFLAGS_NO_TASKBAR_BUT)) == vwWINFLAGS_HIDETSK_TOOLWN)
             {
                 // Restore the window mode & notify taskbar of the change
-                SetWindowLong( aWindow->handle, GWL_EXSTYLE, aWindow->exStyle );  
-                PostMessage(taskHWnd, RM_Shellhook, HSHELL_WINDOWCREATED, (LPARAM) aWindow->handle) ;
+                SetWindowLong(aWindow->handle, GWL_EXSTYLE, aWindow->exStyle) ;  
+                if(taskHWnd != NULL)
+                    PostMessage(taskHWnd, RM_Shellhook, HSHELL_WINDOWCREATED, (LPARAM) aWindow->handle) ;
+            }
+            if(vwWindowIsHideByHide(aWindow))
+            {
+                SetWindowPos(aWindow->handle,0,0,0,0,0,(SWP_SHOWWINDOW | SWP_NOZORDER | SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE)) ;
+                /* if minimized dont show popups */
+                if(vwWindowIsNotMinimized(aWindow))
+                    ShowOwnedPopups(aWindow->handle,TRUE) ;
+                if((aWindow->flags & vwWINFLAGS_RM_TASKBAR_BUT) && (taskHWnd != NULL))
+                {
+                    /* Make sure the taskbar does not create a button for this window */
+                    Sleep(1);
+                    PostMessage(taskHWnd, RM_Shellhook, HSHELL_WINDOWDESTROYED, (LPARAM) aWindow->handle);
+                }
+            }
+            else if(vwWindowIsNotMinimized(aWindow))
+            {
+                if(vwWindowIsNotHideByMinim(aWindow))
+                {
+                    // show/hide the window by moving it off screen
+                    GetWindowRect(aWindow->handle,&pos) ;
+                    if((pos.top < -5000) && (pos.top > -30000))
+                    {   // Move the window back onto visible area
+                        pos.top += 25000 ;
+                        SetWindowPos(aWindow->handle,0,pos.left,pos.top,0,0,(SWP_FRAMECHANGED | SWP_DEFERERASE | SWP_NOZORDER | SWP_NOSIZE | SWP_NOACTIVATE | SWP_NOSENDCHANGING)) ; 
+                    }
+                }
+                else if(vwWindowIsMaximized(aWindow))
+                    ShowWindow(aWindow->handle,SW_MAXIMIZE) ;
+                else
+                    ShowWindow(aWindow->handle,SW_RESTORE) ;
             }
         }
         else
         {
+            vwLogVerbose((_T("vwWindowHide %8x %x %x %x %d %d\n"),(int) aWindow->handle,flags,(int)aWindow->flags,(int)aWindow->exStyle,aWindow->desk,currentDesk)) ;
             aWindow->flags &= ~(vwWINFLAGS_SHOWN|vwWINFLAGS_SHOW) ;
-            if(wflags != vwWINFLAGS_HIDEWIN_MINIM)
+            if(vwWindowIsHideByHide(aWindow))
             {
-                GetWindowRect(aWindow->handle,&pos) ;
-                if((pos.left == -32000) && (pos.top == -32000))
+                SetWindowPos(aWindow->handle,0,0,0,0,0,(SWP_HIDEWINDOW | SWP_NOZORDER | SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE)) ;
+                /* if minimized dont show popups */
+                if(vwWindowIsNotMinimized(aWindow))
+                    ShowOwnedPopups(aWindow->handle,FALSE) ;
+            }
+            else if(vwWindowIsNotMinimized(aWindow))
+            {
+                if(vwWindowIsNotHideByMinim(aWindow))
                 {
-                    aWindow->flags |= vwWINFLAGS_TRICKY_POS ;
-                    wflags = vwWINFLAGS_HIDEWIN_MOVE ;
-                    if(tflags == 0)
-                        tflags = vwWINFLAGS_HIDETSK_TOOLWN ;
+                    // show/hide the window by moving it off screen
+                    GetWindowRect(aWindow->handle,&pos) ;
+                    if((pos.top > -5000) && (pos.top < 20000))
+                    {   // Move the window off visible area
+                        pos.top -= 25000 ;
+                        SetWindowPos(aWindow->handle,0,pos.left,pos.top,0,0,(SWP_FRAMECHANGED | SWP_DEFERERASE | SWP_NOZORDER | SWP_NOSIZE | SWP_NOACTIVATE | SWP_NOSENDCHANGING)) ; 
+                    }
                 }
                 else
-                    aWindow->flags &= ~vwWINFLAGS_TRICKY_POS ;
+                    CloseWindow(aWindow->handle) ;
             }
-            vwLogVerbose((_T("vwWindowHide %8x %x %x %x %x %x %d %d\n"),(int) aWindow->handle,flags,wflags,tflags,(int)aWindow->flags,(int)aWindow->exStyle,aWindow->desk,currentDesk)) ;
-        }
-        if(wflags == 0)
-        {
-            SetWindowPos(aWindow->handle,0,0,0,0,0,(flags & vwWINSH_FLAGS_SHOW) ? 
-                         (SWP_SHOWWINDOW | SWP_NOZORDER | SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE) : 
-                         (SWP_HIDEWINDOW | SWP_NOZORDER | SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE) ) ;
-            /* if minimized dont show popups */
-            if(vwWindowIsNotMinimized(aWindow))
-                ShowOwnedPopups(aWindow->handle,(flags & vwWINSH_FLAGS_SHOW) ? TRUE:FALSE) ;
-            if((aWindow->flags & vwWINFLAGS_RM_TASKBAR_BUT) && (taskHWnd != NULL))
+            if((aWindow->flags & (vwWINFLAGS_HIDETSK_MASK|vwWINFLAGS_NO_TASKBAR_BUT)) == vwWINFLAGS_HIDETSK_TOOLWN)
             {
-                /* Make sure the taskbar does not create a button for this window */
-                PostMessage(taskHWnd, RM_Shellhook, HSHELL_WINDOWDESTROYED, (LPARAM) aWindow->handle);
+                // This removes window from taskbar and alt+tab list, must notify taskbar of the change
+                SetWindowLong(aWindow->handle, GWL_EXSTYLE,(aWindow->exStyle & (~WS_EX_APPWINDOW)) | WS_EX_TOOLWINDOW);
+                if(taskHWnd != NULL)
+                    PostMessage(taskHWnd, RM_Shellhook, HSHELL_WINDOWDESTROYED, (LPARAM) aWindow->handle);
             }
-        }
-        else if(wflags != vwWINFLAGS_HIDEWIN_MINIM)
-        {
-            // show/hide the window in the toolbar and move off screen
-            swpFlags = SWP_FRAMECHANGED | SWP_DEFERERASE | SWP_NOZORDER | SWP_NOSIZE | SWP_NOACTIVATE | SWP_NOSENDCHANGING | SWP_NOMOVE ;
-            if(flags & vwWINSH_FLAGS_SHOW)
-            {
-                if((pos.top < -5000) && (pos.top > -30000))
-                {   // Move the window back onto visible area
-                    pos.top += 25000 ;
-                    swpFlags ^= SWP_NOMOVE ;
-                }
-            }
-            else
-            {
-                if((pos.top > -5000) && (pos.top < 20000))
-                {   // Move the window off visible area
-                    pos.top -= 25000 ;
-                    swpFlags ^= SWP_NOMOVE ;
-                }
-            }
-            SetWindowPos(aWindow->handle, 0, pos.left, pos.top, 0, 0, swpFlags) ; 
-        }
-        else if(vwWindowIsNotMinimized(aWindow))
-        {
-            if((flags & vwWINSH_FLAGS_SHOW) == 0)
-                CloseWindow(aWindow->handle) ;
-            else if(vwWindowIsMaximized(aWindow))
-                ShowWindow(aWindow->handle,SW_MAXIMIZE) ;
-            else
-                ShowWindow(aWindow->handle,SW_RESTORE) ;
-        }
-        if(((flags & vwWINSH_FLAGS_SHOW) == 0) && (tflags == vwWINFLAGS_HIDETSK_TOOLWN) && 
-           ((aWindow->flags & vwWINFLAGS_NO_TASKBAR_BUT) == 0) && (taskHWnd != NULL))
-        {
-            // This removes window from taskbar and alt+tab list, must notify taskbar of the change
-            SetWindowLong(aWindow->handle, GWL_EXSTYLE,(aWindow->exStyle & (~WS_EX_APPWINDOW)) | WS_EX_TOOLWINDOW);
-            PostMessage(taskHWnd, RM_Shellhook, HSHELL_WINDOWDESTROYED, (LPARAM) aWindow->handle);
         }
     }
     else if(flags & vwWINSH_FLAGS_SHOW)
@@ -2788,7 +2809,6 @@ vwWindowShowHide(vwWindow* aWindow, vwUInt flags)
         aWindow->flags &= ~vwWINFLAGS_SHOW ;
     return TRUE ;
 }
-
 
 /************************************************
  * Toggles the disabled state of VirtuaWin
@@ -3938,16 +3958,18 @@ wndProc(HWND aHWnd, UINT message, WPARAM wParam, LPARAM lParam)
             return FALSE ;
         return windowSetSticky((HWND)wParam,(vwUByte) lParam);
         
-    case VW_GETWINDESK:
+    case VW_WINGETINFO:
         {
-            vwWindow *win ;
+            vwWindowBase *win ;
             vwMutexLock();
-            if((win = vwWindowFind((HWND)wParam)) == NULL)
+            if((win = vwWindowBaseFind((HWND)wParam)) == NULL)
                 ii = 0;
-            else if(vwWindowIsShown(win) ^ vwWindowIsShow(win))
-                ii = 0 - (int) win->desk ;
             else
-                ii = (int) win->desk ;
+            {
+                ii = (int) (win->flags & 0x00ffffff) ;
+                if(vwWindowIsManaged(win))
+                    ii |= (int) (((vwUInt) (((vwWindow *) win)->desk)) << 24) ;
+            }
             vwMutexRelease();
             return ii ;
         }
@@ -4230,7 +4252,7 @@ VirtuaWinInit(HINSTANCE hInstance, LPSTR cmdLine)
 #endif
     
     /* Create a window class for the window that receives systray notifications.
-       The window will never be displayed */
+     * The window will never be displayed */
     wc.cbSize = sizeof(WNDCLASSEX);
     wc.style = 0;
     wc.lpfnWndProc = wndProc;
@@ -4265,17 +4287,17 @@ VirtuaWinInit(HINSTANCE hInstance, LPSTR cmdLine)
     deskIconHWnd = FindWindow(_T("Progman"), _T("Program Manager")) ;
     deskIconHWnd = FindWindowEx(deskIconHWnd, NULL, _T("SHELLDLL_DefView"),NULL) ;
     deskIconHWnd = FindWindowEx(deskIconHWnd, NULL, _T("SysListView32"), _T("FolderView")) ;
-    // Fix some things for the alternate hide method
+    /* Fix some things for the alternate hide method */
     RM_Shellhook = RegisterWindowMessage(_T("SHELLHOOK"));
     goGetTheTaskbarHandle();
     getScreenSize();
     getWorkArea();
     
     /* Create window. Note that WS_VISIBLE is not used, and window is never shown. */
-    if((hWnd = CreateWindowEx(WS_EX_TOOLWINDOW, vwVIRTUAWIN_CLASSNAME, vwVIRTUAWIN_CLASSNAME, WS_VISIBLE, -32000, 10,
-                              -32000, 10, NULL, NULL, hInstance, NULL)) == NULL)
+    if((hWnd = CreateWindowEx(WS_EX_TOOLWINDOW, vwVIRTUAWIN_CLASSNAME, vwVIRTUAWIN_CLASSNAME, WS_VISIBLE,
+                              -30000, -30000, 10, 10, NULL, NULL, hInstance, NULL)) == NULL)
     {
-        MessageBox(NULL,_T("Failed to create window1!"),vwVIRTUAWIN_NAME _T(" Error"), MB_ICONWARNING);
+        MessageBox(NULL,_T("Failed to create window!"),vwVIRTUAWIN_NAME _T(" Error"), MB_ICONWARNING);
         exit(2) ;
     }
     
