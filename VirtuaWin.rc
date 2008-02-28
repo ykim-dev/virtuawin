@@ -54,12 +54,12 @@ BEGIN
     LTEXT           "On taskbar button activation:", IDC_STATIC, 10, 124, 120, 10
     COMBOBOX        IDC_TSKBUTACT, 22, 134, 130, 56, CBS_AUTOHSCROLL | CBS_DROPDOWNLIST | WS_TABSTOP
 
-    GROUPBOX        "User Interface", IDC_STATIC, 4, 157, 202, 69
+    GROUPBOX        "User Interface", IDC_STATIC,   4, 157, 202, 69
     LTEXT           "Available window list actions:", IDC_STATIC, 10, 168, 120, 10
-    AUTOCHECKBOX    "Access", IDC_MENUACCESS,       22, 179, 40, 10
-    AUTOCHECKBOX    "Move",   IDC_MENUMOVE,         67, 179, 40, 10
-    AUTOCHECKBOX    "Show",   IDC_MENUSHOW,         22, 190, 40, 10
-    AUTOCHECKBOX    "Always Show", IDC_MENUSTICKY,  67, 190, 55, 10
+    AUTOCHECKBOX    "Access",      IDC_MENUACCESS, 22, 179, 40, 10
+    AUTOCHECKBOX    "Move Here",   IDC_MENUMOVE,   67, 179, 55, 10
+    AUTOCHECKBOX    "Show",        IDC_MENUSHOW,   22, 190, 40, 10
+    AUTOCHECKBOX    "Always Show", IDC_MENUSTICKY, 67, 190, 55, 10
     AUTOCHECKBOX    "Mouse opens compact window list", IDC_COMPACTWLIST, 10, 201, 130, 10
     AUTOCHECKBOX    "Mouse opens compact window menu", IDC_COMPACTWMENU, 10, 212, 130, 10
 END
@@ -168,7 +168,7 @@ BEGIN
     DEFPUSHBUTTON   "OK", IDCANCEL,  105, 190, 40, 14
 END
 
-IDD_WINDOWRULEDIALOG DIALOG 79, 25, 292, 315
+IDD_WINDOWRULEDIALOG DIALOG 79, 25, 292, 337
 STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "VirtuaWin Window Rules"
 FONT 8, "MS Shell Dlg"
@@ -191,19 +191,21 @@ BEGIN
     AUTORADIOBUTTON "Never manage windows of this type", IDC_WTYPE_NMANAGE, 18, 193, 130, 10
     AUTORADIOBUTTON "Always manage windows of this type", IDC_WTYPE_AMANAGE, 18, 204, 140, 10
     AUTORADIOBUTTON "Let VirtuaWin decide whether to manage windows", IDC_WTYPE_VMANAGE, 18, 215, 170, 10
-    AUTOCHECKBOX    "Show windows of this type on all desktops", IDC_WTYPE_STICKY,  18, 226, 160, 10
-    AUTOCHECKBOX    "Automatically move windows of this type to Desktop:", IDC_WTYPE_AMOVE, 18, 239, 180, 10
-    COMBOBOX        IDC_WTYPE_AMDSK, 200, 237, 40, 200, CBS_AUTOHSCROLL | CBS_DROPDOWNLIST | WS_TABSTOP
-    AUTOCHECKBOX    "Move windows immediately", IDC_WTYPE_AMIMM, 30, 251, 100, 10
-    LTEXT           "Method for hiding the window:", IDC_STATIC,  18, 264, 110, 10
-    COMBOBOX        IDC_WTYPE_WHIDE, 130, 262, 130, 150, WS_VSCROLL | CBS_DROPDOWNLIST | WS_TABSTOP
-    LTEXT           "Method for hiding taskbar button:", IDC_STATIC,  18, 278, 110, 10
-    COMBOBOX        IDC_WTYPE_THIDE, 130, 276, 130, 150, WS_VSCROLL | CBS_DROPDOWNLIST | WS_TABSTOP
+    AUTOCHECKBOX    "Main window of multiple taskbar buttons", IDC_WTYPE_MAINWIN,  18, 226, 160, 10
+    AUTOCHECKBOX    "Show windows of this type on all desktops", IDC_WTYPE_STICKY,  18, 237, 160, 10
+    AUTOCHECKBOX    "Keep all windows of this application together", IDC_WTYPE_GRPAPP,  18, 248, 160, 10
+    AUTOCHECKBOX    "Automatically move windows of this type to Desktop:", IDC_WTYPE_AMOVE, 18, 261, 180, 10
+    COMBOBOX        IDC_WTYPE_AMDSK, 200, 259, 40, 200, CBS_AUTOHSCROLL | CBS_DROPDOWNLIST | WS_TABSTOP
+    AUTOCHECKBOX    "Move windows immediately", IDC_WTYPE_AMIMM, 30, 273, 100, 10
+    LTEXT           "Method for hiding the window:", IDC_STATIC,  18, 286, 110, 10
+    COMBOBOX        IDC_WTYPE_WHIDE, 130, 284, 130, 150, WS_VSCROLL | CBS_DROPDOWNLIST | WS_TABSTOP
+    LTEXT           "Method for hiding taskbar button:", IDC_STATIC,  18, 300, 110, 10
+    COMBOBOX        IDC_WTYPE_THIDE, 130, 298, 130, 150, WS_VSCROLL | CBS_DROPDOWNLIST | WS_TABSTOP
 
-    PUSHBUTTON      "OK",      IDC_WTYPE_OK,     111, 295, 40, 14
-    DEFPUSHBUTTON   "Cancel",  IDCANCEL,         156, 295, 40, 14
-    PUSHBUTTON      "Apply",   IDC_WTYPE_APPLY,  201, 295, 40, 14
-    PUSHBUTTON      "Help",    IDC_WTYPE_HELP,   246, 295, 40, 14
+    PUSHBUTTON      "OK",      IDC_WTYPE_OK,     111, 317, 40, 14
+    DEFPUSHBUTTON   "Cancel",  IDCANCEL,         156, 317, 40, 14
+    PUSHBUTTON      "Apply",   IDC_WTYPE_APPLY,  201, 317, 40, 14
+    PUSHBUTTON      "Help",    IDC_WTYPE_HELP,   246, 317, 40, 14
 END
 
 #ifndef _MAC

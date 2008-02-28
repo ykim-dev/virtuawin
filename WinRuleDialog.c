@@ -151,7 +151,9 @@ windowRuleDialogInitItem(HWND hDlg)
             SendDlgItemMessage(hDlg,IDC_WTYPE_NMANAGE,BM_SETCHECK,((wt->flags & vwWTFLAGS_DONT_MANAGE) != 0), 0);
             SendDlgItemMessage(hDlg,IDC_WTYPE_AMANAGE,BM_SETCHECK,((wt->flags & vwWTFLAGS_MANAGE) != 0), 0);
             SendDlgItemMessage(hDlg,IDC_WTYPE_VMANAGE,BM_SETCHECK,((wt->flags & (vwWTFLAGS_DONT_MANAGE|vwWTFLAGS_MANAGE)) == 0), 0);
+            SendDlgItemMessage(hDlg,IDC_WTYPE_MAINWIN,BM_SETCHECK,((wt->flags & vwWTFLAGS_MAIN_WIN) != 0), 0);
             SendDlgItemMessage(hDlg,IDC_WTYPE_STICKY,BM_SETCHECK,((wt->flags & vwWTFLAGS_STICKY) != 0), 0);
+            SendDlgItemMessage(hDlg,IDC_WTYPE_GRPAPP,BM_SETCHECK,((wt->flags & vwWTFLAGS_GROUP_APP) != 0), 0);
             if((ii = ((wt->flags & vwWTFLAGS_MOVE) != 0)) && wt->desk)
                 SendDlgItemMessage(hDlg,IDC_WTYPE_AMDSK,CB_SETCURSEL,wt->desk-1, 0) ;
             SendDlgItemMessage(hDlg,IDC_WTYPE_AMOVE,BM_SETCHECK,ii,0);
@@ -415,8 +417,12 @@ windowRuleDialogAddMod(HWND hDlg, int add)
             flags |= vwWTFLAGS_DONT_MANAGE ;
         else if(SendDlgItemMessage(hDlg,IDC_WTYPE_AMANAGE,BM_GETCHECK,0,0) == BST_CHECKED)
             flags |= vwWTFLAGS_MANAGE ;
+        if(SendDlgItemMessage(hDlg,IDC_WTYPE_MAINWIN,BM_GETCHECK,0,0) == BST_CHECKED)
+            flags |= vwWTFLAGS_MAIN_WIN ;
         if(SendDlgItemMessage(hDlg,IDC_WTYPE_STICKY,BM_GETCHECK,0,0) == BST_CHECKED)
             flags |= vwWTFLAGS_STICKY ;
+        if(SendDlgItemMessage(hDlg,IDC_WTYPE_GRPAPP,BM_GETCHECK,0,0) == BST_CHECKED)
+            flags |= vwWTFLAGS_GROUP_APP ;
         wt->desk = 0 ;
         if(SendDlgItemMessage(hDlg,IDC_WTYPE_AMOVE,BM_GETCHECK,0,0) == BST_CHECKED)
         {
