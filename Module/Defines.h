@@ -30,7 +30,7 @@
 #define vwVIRTUAWIN_NAME         _T("VirtuaWin")
 #define vwVIRTUAWIN_CLASSNAME    _T("VirtuaWinMainClass")
 #define vwVIRTUAWIN_EMAIL        _T("VirtuaWin@home.se")
-#define vwVIRTUAWIN_NAME_VERSION _T("VirtuaWin v4.0 beta2")
+#define vwVIRTUAWIN_NAME_VERSION _T("VirtuaWin v4.0 beta3")
 #define vwVIRTUAWIN_WEBSITE      _T("http://virtuawin.sourceforge.net/")
 
 /* Various defines used on several places */
@@ -53,38 +53,39 @@ typedef unsigned int   vwUInt ;
 typedef unsigned short vwUShort ;
 typedef unsigned char  vwUByte ;
 
+#define vwWTNAME_COUNT             3
+#define vwWTFLAGS_CN_SVAR          0x00000001
+#define vwWTFLAGS_CN_EVAR          0x00000002
+#define vwWTFLAGS_WN_SVAR          0x00000004
+#define vwWTFLAGS_WN_EVAR          0x00000008
+#define vwWTFLAGS_PN_SVAR          0x00000010
+#define vwWTFLAGS_PN_EVAR          0x00000020
+#define vwWTFLAGS_MANAGE           0x00000200
+#define vwWTFLAGS_DONT_MANAGE      0x00000400
+#define vwWTFLAGS_ENABLED          0x00000800
+#define vwWTFLAGS_STICKY           0x00001000
+#define vwWTFLAGS_MOVE             0x00002000
+#define vwWTFLAGS_MOVE_IMMEDIATE   0x00004000
+#define vwWTFLAGS_MAIN_WIN         0x00008000
+#define vwWTFLAGS_GROUP_APP        0x00010000
+#define vwWTFLAGS_HIDEWIN_MASK     0x0f000000
+#define vwWTFLAGS_HIDEWIN_BITROT   24
+#define vwWTFLAGS_HIDEWIN_HIDE     0x00000000
+#define vwWTFLAGS_HIDEWIN_MOVE     0x01000000
+#define vwWTFLAGS_HIDEWIN_MINIM    0x02000000
+#define vwWTFLAGS_HIDETSK_MASK     0xf0000000
+#define vwWTFLAGS_HIDETSK_BITROT   28
+#define vwWTFLAGS_HIDETSK_HIDE     0x00000000
+#define vwWTFLAGS_HIDETSK_DONT     0x10000000
+#define vwWTFLAGS_HIDETSK_TOOLWN   0x20000000
 
-#define vwWTNAME_COUNT            3
-#define vwWTFLAGS_CN_SVAR         0x00000001
-#define vwWTFLAGS_CN_EVAR         0x00000002
-#define vwWTFLAGS_WN_SVAR         0x00000004
-#define vwWTFLAGS_WN_EVAR         0x00000008
-#define vwWTFLAGS_PN_SVAR         0x00000010
-#define vwWTFLAGS_PN_EVAR         0x00000020
-#define vwWTFLAGS_STICKY          0x00001000
-#define vwWTFLAGS_MOVE            0x00002000
-#define vwWTFLAGS_MOVE_IMMEDIATE  0x00004000
-#define vwWTFLAGS_HIDEWIN_MASK    0x000f0000
-#define vwWTFLAGS_HIDEWIN_BITROT  16
-#define vwWTFLAGS_HIDEWIN_HIDE    0x00000000
-#define vwWTFLAGS_HIDEWIN_MOVE    0x00010000
-#define vwWTFLAGS_HIDEWIN_MINIM   0x00020000
-#define vwWTFLAGS_HIDETSK_MASK    0x00f00000
-#define vwWTFLAGS_HIDETSK_BITROT  20
-#define vwWTFLAGS_HIDETSK_HIDE    0x00000000
-#define vwWTFLAGS_HIDETSK_DONT    0x00100000
-#define vwWTFLAGS_HIDETSK_TOOLWN  0x00200000
-#define vwWTFLAGS_MANAGE          0x20000000
-#define vwWTFLAGS_DONT_MANAGE     0x40000000
-#define vwWTFLAGS_ENABLED         0x80000000
-
-typedef struct vwWindowType {
-    struct vwWindowType *next;
+typedef struct vwWindowRule {
+    struct vwWindowRule *next;
     TCHAR               *name[vwWTNAME_COUNT] ;
     vwUInt               flags ; 
     vwUByte              desk ;
     vwUByte              nameLen[vwWTNAME_COUNT] ;
-} vwWindowType ;
+} vwWindowRule ;
 
 /* vwWindow structures for storing information about one window */
 #define vwWINFLAGS_INITIALIZED     0x00000001
@@ -94,7 +95,7 @@ typedef struct vwWindowType {
 #define vwWINFLAGS_MINIMIZED       0x00000010
 #define vwWINFLAGS_WINDOW          0x00000020
 #define vwWINFLAGS_MANAGED         0x00000040
-#define vwWINFLAGS_TRICKY_POS      0x00000080
+#define vwWINFLAGS_MAXIMIZED       0x00000080
 #define vwWINFLAGS_SHOWN           0x00000100
 #define vwWINFLAGS_SHOW            0x00000200
 #define vwWINFLAGS_NO_TASKBAR_BUT  0x00000400
@@ -102,7 +103,8 @@ typedef struct vwWindowType {
 #define vwWINFLAGS_STICKY          vwWTFLAGS_STICKY        
 #define vwWINFLAGS_MOVE            vwWTFLAGS_MOVE          
 #define vwWINFLAGS_MOVE_IMMEDIATE  vwWTFLAGS_MOVE_IMMEDIATE
-#define vwWINFLAGS_MAXIMIZED       0x00008000
+#define vwWINFLAGS_MAIN_WIN        vwWTFLAGS_MAIN_WIN
+#define vwWINFLAGS_GROUP_APP       vwWTFLAGS_GROUP_APP
 #define vwWINFLAGS_HIDEWIN_MASK    vwWTFLAGS_HIDEWIN_MASK  
 #define vwWINFLAGS_HIDEWIN_HIDE    vwWTFLAGS_HIDEWIN_HIDE  
 #define vwWINFLAGS_HIDEWIN_MOVE    vwWTFLAGS_HIDEWIN_MOVE  
@@ -128,8 +130,10 @@ typedef struct vwWindow {
     HWND                 handle ;
     vwUInt               flags ;
     /* same as vwWindowBase - end */
-    HWND                 owner;
     long                 exStyle;
+    DWORD                processId ;
+    struct vwWindow     *processNext ;
+    struct vwWindow     *linkedNext ;
     vwUInt               zOrder[vwDESKTOP_SIZE] ;
     vwUByte              menuId ;
     vwUByte              desk;

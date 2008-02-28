@@ -1,6 +1,22 @@
 ***   VirtuaWin Revision History   ***
 --------------------------------------
 
+Ver 4.0 beta3 2008/02/28
+
+* Change the term 'Window Type' to 'Window Rule'
+* 1901183 Changed window flags and changed GETWINDESK to WINGETINFO with
+  enhanced functionality
+* 1873544 1897011 Added new 'Group App' window rule and Gather option in
+  window menu
+* 1873539 Added a Re-apply Rules option to Control menu
+* 1896828 1877997 Implemented new 'Main Window' window rule option
+* 1896830 Reimplemented main window hide/show function to improve performance
+  and fix minimize window hiding method
+* 1877491 1737872 Resolved long standing pop-up window event issues.
+
+
+----------------------------
+
 Ver 4.0 beta2 2008/02/07
 
 * 1886979 Fixed flag problem which left windows being 'sticky'.

@@ -30,7 +30,7 @@
 #define vwVIRTUAWIN_NAME         _T("VirtuaWin")
 #define vwVIRTUAWIN_CLASSNAME    _T("VirtuaWinMainClass")
 #define vwVIRTUAWIN_EMAIL        _T("VirtuaWin@home.se")
-#define vwVIRTUAWIN_NAME_VERSION _T("VirtuaWin v4.0 beta2")
+#define vwVIRTUAWIN_NAME_VERSION _T("VirtuaWin v4.0 beta3")
 #define vwVIRTUAWIN_WEBSITE      _T("http://virtuawin.sourceforge.net/")
 
 /* Various defines used on several places */

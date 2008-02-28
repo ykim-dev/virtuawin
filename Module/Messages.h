@@ -94,9 +94,15 @@
             3 - Change to window's desk
    Returns 0 if window was not found (i.e. not managed by VW), non-zero otherwise */
 #define VW_ACCESSWIN   (WM_USER + 39)
-/* Message, return the desk number of a window, 0 if not found (i.e. not managed),
- * (0 - desktop_number) is returned if the window is flagged as hung (i.e. -3 instead of 3). */
-#define VW_GETWINDESK  (WM_USER + 40)
+/* Message, return the information VW has on the window given via wParam. 0 is returned if the
+ * window is not found, otherwise use the 2 macros to extract the window flags (see vwWINFLAGS_*
+ * defines in Defines.h, the hide method flags are not given) and the windows desk. To check
+ * if a window is hung do:
+ *    if(((vwGetWindowInfoFlags(ii) & vwWINFLAGS_SHOWN) == 0) ^ ((vwGetWindowInfoFlags(ii) & vwWINFLAGS_SHOW) == 0))
+ */ 
+#define VW_WINGETINFO  (WM_USER + 40)
+#define vwWindowGetInfoFlags(ii)  ((ii) & 0x00ffffff)
+#define vwWindowGetInfoDesk(ii)   (((ii) >> 24) & 0x00ff)
 /* Message, Desk image generation message, the action of the message depends on the
  * value of wParam:
  *   0 - Returns the current status of image generation
