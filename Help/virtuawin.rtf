@@ -89,7 +89,7 @@
 \par 
 \par \hich\af0\dbch\af17\loch\f0 Setup Dialog}{\v \hich\af0\dbch\af17\loch\f0 setup_dialog}{\uldb 
 \par 
-\par \hich\af0\dbch\af17\loch\f0 Window Type Dialog}{\v \hich\af0\dbch\af17\loch\f0 wintype_dialog}{\uldb 
+\par \hich\af0\dbch\af17\loch\f0 Window Rules Dialog}{\v \hich\af0\dbch\af17\loch\f0 win_rule_dialog}{\uldb 
 \par 
 \par \hich\af0\dbch\af17\loch\f0 Locking or Hiding Desktops}{\v \hich\af0\dbch\af17\loch\f0 hiding_desktops}{\uldb 
 \par 
@@ -225,13 +225,13 @@ play the window. If set to Show window on current desktop the window will be dis
 \hich\af0\dbch\af17\loch\f0  VirtuaWin will do a desktop change to the window\hich\f0 \rquote \loch\f0 s desktop, which will also display the window.
 \par {\pntext\pard\plain\fs20\lang1033\langfe1053\loch\af3\hich\af3\dbch\af17\langfenp1053 \loch\af3\dbch\af17\hich\f3 \'b7\tab}}\pard \ql \fi-360\li480\ri0\widctlpar\jclisttab\tx480{\*\pn \pnlvlblt\ilvl0\ls2\pnrnot0\pnf3\pnindent360\pnsp120\pnhang
 {\pntxtb \'b7}}\faauto\ls2\adjustright\rin0\lin480\itap0 {\b\i \hich\af0\dbch\af17\loch\f0 On taskbar button activation:}{\hich\af0\dbch\af17\loch\f0  As with }{\b\i \hich\af0\dbch\af17\loch\f0 On hidden window activation}{\hich\af0\dbch\af17\loch\f0 
- except this configures the b\hich\af0\dbch\af17\loch\f0 ehaviour for window\hich\f0 \rquote \loch\f0 s whose taskbar button is not hidden (see Window Type Dialog\hich\f0 \rquote \loch\f0 s }{\b\i \hich\af0\dbch\af17\loch\f0 
+ except this configures the b\hich\af0\dbch\af17\loch\f0 ehaviour for window\hich\f0 \rquote \loch\f0 s whose taskbar button is not hidden (see Window Rules Dialog\hich\f0 \rquote \loch\f0 s }{\b\i \hich\af0\dbch\af17\loch\f0 
 Method for hiding taskbar button}{\hich\af0\dbch\af17\loch\f0 ). A window may be configured to not have its taskbar button hidden as the button may be used to indicate some sort of event (for example it \hich\af0\dbch\af17\loch\f0 
 may start to flash), these windows often need to be handled differently. Despite the options label, the method of activation is not important, it is merely whether the window has been configured to always display the taskbar button.
 \par }\pard\plain \s27\ql \li0\ri0\sb240\sa60\widctlpar{\*\pn \pnlvlcont\ilvl0\ls0\pnrnot0\pndec }\faauto\outlinelevel1\adjustright\rin0\lin0\itap0 \b\i\fs20\lang1033\langfe1053\loch\af1\hich\af1\dbch\af17\cgrid\langnp1033\langfenp1053 {
 \hich\af1\dbch\af17\loch\f1 User Interface
 \par {\pntext\pard\plain\fs20\lang1033\langfe1053\loch\af3\hich\af3\dbch\af17\langfenp1053 \loch\af3\dbch\af17\hich\f3 \'b7\tab}}\pard\plain \ql \fi-360\li480\ri0\widctlpar\jclisttab\tx480{\*\pn \pnlvlblt\ilvl0\ls2\pnrnot0\pnf3\pnindent360\pnsp120\pnhang
-{\pntxtb \'b7}}\faauto\ls2\adjustright\rin0\lin480\itap0 \fs20\lang1033\langfe1053\loch\af0\hich\af0\dbch\af17\cgrid\langnp1033\langfenp1053 {\b\i \hich\af0\dbch\af17\loch\f0 Avail\hich\af0\dbch\af17\loch\f0 able window list actions}{\i 
+{\pntxtb \'b7}}\faauto\ls2\adjustright\rin0\lin480\itap0 \fs20\lang1033\langfe1053\loch\af0\hich\af0\dbch\af17\cgrid\langnp1033\langfenp1053 {\b\i \hich\af0\dbch\af17\loch\f0 Available window list actions}{\i 
 \hich\af0\dbch\af17\loch\f0  }{\hich\af0\dbch\af17\loch\f0 can be used to configure the contents of the Window List menu, available options are:
 \par {\pntext\pard\plain\fs20\lang1033\langfe1053\loch\af3\hich\af3\dbch\af17\langfenp1053 \loch\af3\dbch\af17\hich\f3 \'b7\tab}}\pard \ql \fi-360\li840\ri0\widctlpar\jclisttab\tx840{\*\pn \pnlvlblt\ilvl0\ls2\pnrnot0\pnf3\pnindent360\pnsp120\pnhang
 {\pntxtb \'b7}}\faauto\ls2\adjustright\rin0\lin840\itap0 {\b\i \hich\af0\dbch\af17\loch\f0 Switch To}{\i \hich\af0\dbch\af17\loch\f0  }{\hich\af0\dbch\af17\loch\f0 can be used to access any window directly, meaning that VirtuaWin will change to the window
@@ -251,15 +251,17 @@ re than one function is selected, the menus will be displayed side-by-side. Sele
 \par }{\b \hich\af0\dbch\af17\loch\f0 Note:}{\hich\af0\dbch\af17\loch\f0  \hich\af0\dbch\af17\loch\f0 
 The menus will only contain the windows that are possible to affect during the time, for example, moving a window to the same desktop that it already belongs to is pointless and therefore windows on the current desktop will not appear in the }{\b 
 \hich\af0\dbch\af17\loch\f0 Move Here}{\hich\af0\dbch\af17\loch\f0  colu\hich\af0\dbch\af17\loch\f0 mn.
-\par {\listtext\pard\plain\f3\fs20 \loch\af3\dbch\af0\hich\f3 \'b7\tab}}\pard \ql \fi-360\li480\ri0\widctlpar\jclisttab\tx480\faauto\ls9\adjustright\rin0\lin480\itap0 {\b\i\lang1033\langfe1033\dbch\af0\langfenp1033 Mouse opens compact window list.}{
-\hich\af0\dbch\af17\loch\f0  If checked the compact form of the window list is opened by the mouse rather than the standard form. The window list can be opened using the mouse by left clicking on the system tray icon or by middle clicking on a th
+\par {\pntext\pard\plain\fs20\lang1033\langfe1053\loch\af3\hich\af3\dbch\af17\langfenp1053 \loch\af3\dbch\af17\hich\f3 \'b7\tab}}\pard \ql \fi-360\li480\ri0\widctlpar\jclisttab\tx480{\*\pn \pnlvlblt\ilvl0\ls2\pnrnot0\pnf3\pnindent360\pnsp120\pnhang
+{\pntxtb \'b7}}\faauto\ls2\adjustright\rin0\lin480\itap0 {\b\i \hich\af0\dbch\af17\loch\f0 Mouse opens compact window list.}{\hich\af0\dbch\af17\loch\f0
+ If checked the compact form of the window list is opened by the mouse rather than the standard form. The window list can be opened using the mouse by left clicking on the system tray icon or by middle clicking on a th
 \hich\af0\dbch\af17\loch\f0 e desktop (if enable, see }{\b \hich\af0\dbch\af17\loch\f0 Enable middle button window list activation}{\hich\af0\dbch\af17\loch\f0 ).
 \par }\pard \ql \li480\ri0\widctlpar\faauto\adjustright\rin0\lin480\itap0 {\hich\af0\dbch\af17\loch\f0 The compact form of the Window List displays only one column, clicking on the title of the column will change the menu to the next column.
 \par }{\b \hich\af0\dbch\af17\loch\f0 Note:}{\hich\af0\dbch\af17\loch\f0  The compact list has two further advant\hich\af0\dbch\af17\loch\f0 
 ages, firstly it is able to support many more windows (multiple menu columns will be automatically used if there are too many windows to display in a single column) and the length of text for each window is truncated to 128 characters rather than only 30 
 \hich\af0\dbch\af17\loch\f0 f\hich\af0\dbch\af17\loch\f0 or the non-compact form.
-\par {\listtext\pard\plain\f3\fs20 \loch\af3\dbch\af0\hich\f3 \'b7\tab}}\pard \ql \fi-360\li480\ri0\widctlpar\jclisttab\tx480\faauto\ls9\adjustright\rin0\lin480\itap0 {\b\i\lang1033\langfe1033\dbch\af0\langfenp1033 Mouse opens compact window menu.}{
-\hich\af0\dbch\af17\loch\f0  If checked the compact form of the window menu is opened by the mouse rather than the standard form. The window menu can be opened using the mouse by middle clicking on a the desktop (if enable, s\hich\af0\dbch\af17\loch\f0 
+\par {\pntext\pard\plain\fs20\lang1033\langfe1053\loch\af3\hich\af3\dbch\af17\langfenp1053 \loch\af3\dbch\af17\hich\f3 \'b7\tab}}\pard \ql \fi-360\li480\ri0\widctlpar\jclisttab\tx480{\*\pn \pnlvlblt\ilvl0\ls2\pnrnot0\pnf3\pnindent360\pnsp120\pnhang
+{\pntxtb \'b7}}\faauto\ls2\adjustright\rin0\lin480\itap0 {\b\i \hich\af0\dbch\af17\loch\f0 Mouse opens compact window menu.}{\hich\af0\dbch\af17\loch\f0
+ If checked the compact form of the window menu is opened by the mouse rather than the standard form. The window menu can be opened using the mouse by middle clicking on a the desktop (if enable, s\hich\af0\dbch\af17\loch\f0 
 ee }{\b \hich\af0\dbch\af17\loch\f0 Enable middle button window menu activation}{\hich\af0\dbch\af17\loch\f0 ).
 \par }\pard \ql \li480\ri0\widctlpar\faauto\adjustright\rin0\lin480\itap0 {\hich\af0\dbch\af17\loch\f0 The compact form of the Window Menu uses sub-menus to keep the size of the main menu small.
 \par }\pard \ql \li0\ri0\widctlpar\faauto\adjustright\rin0\lin0\itap0 {
@@ -290,16 +292,18 @@ Invert Up/Down}{\hich\af0\dbch\af17\loch\f0  setting). This command fails if the
 \par {\pntext\pard\plain\fs20\lang1033\langfe1053\loch\af3\hich\af3\dbch\af17\langfenp1053 \loch\af3\dbch\af17\hich\f3 \'b7\tab}}\pard \ql \fi-360\li480\ri0\widctlpar\jclisttab\tx480{\*\pn \pnlvlblt\ilvl0\ls2\pnrnot0\pnf3\pnindent360\pnsp120\pnhang
 {\pntxtb \'b7}}\faauto\ls2\adjustright\rin0\lin480\itap0 {\b \hich\af0\dbch\af17\loch\f0 NAV: Move to desktop #}{\hich\af0\dbch\af17\loch\f0  - moves directly to the desktop specified.}{\b 
 \par {\pntext\pard\plain\fs20\lang1033\langfe1053\loch\af3\hich\af3\dbch\af17\langfenp1053 \loch\af3\dbch\af17\hich\f3 \'b7\tab}}\pard \ql \fi-360\li480\ri0\widctlpar\jclisttab\tx480{\*\pn \pnlvlblt\ilvl0\ls2\pnrnot0\pnf3\pnindent360\pnsp120\pnhang
-{\pntxtb \'b7}}\faauto\ls2\adjustright\rin0\lin480\itap0 {\b \hich\af0\dbch\af17\loch\f0 WIN: Push to bottom}{\hich\af0\dbch\af17\loch\f0  - pushes the window to the back of the desktop, i.e. under every other window.
+{\pntxtb \'b7}}\faauto\ls2\adjustright\rin0\lin480\itap0 {\b \hich\af0\dbch\af17\loch\f0 WIN: Toggle always show}{\hich\af0\dbch\af17\loch\f0  - toggles whether the current window is visible on all desktops or just the current one. }{\b 
 \par {\pntext\pard\plain\fs20\lang1033\langfe1053\loch\af3\hich\af3\dbch\af17\langfenp1053 \loch\af3\dbch\af17\hich\f3 \'b7\tab}}\pard \ql \fi-360\li480\ri0\widctlpar\jclisttab\tx480{\*\pn \pnlvlblt\ilvl0\ls2\pnrnot0\pnf3\pnindent360\pnsp120\pnhang
 {\pntxtb \'b7}}\faauto\ls2\adjustright\rin0\lin480\itap0 {\b \hich\af0\dbch\af17\loch\f0 WIN: Always on top}{\hich\af0\dbch\af17\loch\f0  - toggles the Window \hich\f0 \lquote \loch\f0 Always on top\hich\f0 \rquote \hich\af0\dbch\af17\loch\f0 
  property which keeps the window above other windows. }{\b 
+\par {\pntext\pard\plain\fs20\lang1033\langfe1053\loch\af3\hich\af3\dbch\af17\langfenp1053 \loch\af3\dbch\af17\hich\f3 \'b7\tab}}\pard \ql \fi-360\li480\ri0\widctlpar\jclisttab\tx480{\*\pn \pnlvlblt\ilvl0\ls2\pnrnot0\pnf3\pnindent360\pnsp120\pnhang
+{\pntxtb \'b7}}\faauto\ls2\adjustright\rin0\lin480\itap0 {\b \hich\af0\dbch\af17\loch\f0 WIN: Push to bottom}{\hich\af0\dbch\af17\loch\f0  - pushes the window to the back of the desktop, i.e. under every other window.
 \par {\pntext\pard\plain\fs20\lang1033\langfe1053\loch\af3\hich\af3\dbch\af17\langfenp1053 \loch\af3\dbch\af17\hich\f3 \'b7\tab}}\pard \ql \fi-360\li480\ri0\widctlpar\jclisttab\tx480{\*\pn \pnlvlblt\ilvl0\ls2\pnrnot0\pnf3\pnindent360\pnsp120\pnhang
 {\pntxtb \'b7}}\faauto\ls2\adjustright\rin0\lin480\itap0 {\b \hich\af0\dbch\af17\loch\f0 WIN: Dismiss window}{\hich\af0\dbch\af17\loch\f0  - if the current window is only being temporarily show (for example the window list \hich\f0 \lquote }{\b 
 \hich\af0\dbch\af17\loch\f0 Show}{\loch\af0\dbch\af17\hich\f0 \rquote \loch\f0  feature was used to display it, also see option }{\b\i \hich\af0\dbch\af17\loch\f0 On hidden window activation}{\hich\af0\dbch\af17\loch\f0 ) it will be
 \hich\af0\dbch\af17\loch\f0  moved back to its original desktop, otherwise the window will be minimized}{\lang1033\langfe2052\langfenp2052 \hich\af0\dbch\af17\loch\f0 .}{\b 
 \par {\pntext\pard\plain\fs20\lang1033\langfe1053\loch\af3\hich\af3\dbch\af17\langfenp1053 \loch\af3\dbch\af17\hich\f3 \'b7\tab}}\pard \ql \fi-360\li480\ri0\widctlpar\jclisttab\tx480{\*\pn \pnlvlblt\ilvl0\ls2\pnrnot0\pnf3\pnindent360\pnsp120\pnhang
-{\pntxtb \'b7}}\faauto\ls2\adjustright\rin0\lin480\itap0 {\b \hich\af0\dbch\af17\loch\f0 WIN: Toggle always show}{\hich\af0\dbch\af17\loch\f0  - toggles whether the current window is visible on all desktops or just the current one. }{\b 
+{\pntxtb \'b7}}\faauto\ls2\adjustright\rin0\lin480\itap0 {\b \hich\af0\dbch\af17\loch\f0 WIN: Gather process windows}{\hich\af0\dbch\af17\loch\f0  - moves all the windows created by the current window's process onto the current desktop.
 \par {\pntext\pard\plain\fs20\lang1033\langfe1053\loch\af3\hich\af3\dbch\af17\langfenp1053 \loch\af3\dbch\af17\hich\f3 \'b7\tab}}\pard \ql \fi-360\li480\ri0\widctlpar\jclisttab\tx480{\*\pn \pnlvlblt\ilvl0\ls2\pnrnot0\pnf3\pnindent360\pnsp120\pnhang
 {\pntxtb \'b7}}\faauto\ls2\adjustright\rin0\lin480\itap0 {\b \hich\af0\dbch\af17\loch\f0 WIN: Move to next desktop }{\hich\af0\dbch\af17\loch\f0 - moves the current window to nex\hich\af0\dbch\af17\loch\f0 
 t desktop; this command will fail if no window currently has focus or if the current desktop is the last desktop and }{\b\i \hich\af0\dbch\af17\loch\f0 Enable desktop wrapping}{\hich\af0\dbch\af17\loch\f0  is disabled.}{\b 
@@ -331,13 +335,13 @@ d window menu to control the current window; this command will fail if no window
 {\pntxtb \'b7}}\faauto\ls2\adjustright\rin0\lin480\itap0 {\b \hich\af0\dbch\af17\loch\f0 UI: Open standard window list }{\hich\af0\dbch\af17\loch\f0 - opens the standard window list menu which is used to access any window.}{\b 
 \par {\pntext\pard\plain\fs20\lang1033\langfe1053\loch\af3\hich\af3\dbch\af17\langfenp1053 \loch\af3\dbch\af17\hich\f3 \'b7\tab}}\pard \ql \fi-360\li480\ri0\widctlpar\jclisttab\tx480{\*\pn \pnlvlblt\ilvl0\ls2\pnrnot0\pnf3\pnindent360\pnsp120\pnhang
 {\pntxtb \'b7}}\faauto\ls2\adjustright\rin0\lin480\itap0 {\b \hich\af0\dbch\af17\loch\f0 UI: Open compact window list }{\hich\af0\dbch\af17\loch\f0 - ope\hich\af0\dbch\af17\loch\f0 
-ns the compact window list menu which is used to access any window. See option }{\b\i\lang1033\langfe1033\dbch\af0\langfenp1033 Mouse opens compact window list}{\hich\af0\dbch\af17\loch\f0 
+ns the compact window list menu which is used to access any window. See option }{\b\i \hich\af0\dbch\af17\loch\f0 Mouse opens compact window list}{\hich\af0\dbch\af17\loch\f0 
  for more information on the differences between the two window list forms.}{\b 
 \par {\pntext\pard\plain\fs20\lang1033\langfe1053\loch\af3\hich\af3\dbch\af17\langfenp1053 \loch\af3\dbch\af17\hich\f3 \'b7\tab}}\pard \ql \fi-360\li480\ri0\widctlpar\jclisttab\tx480{\*\pn \pnlvlblt\ilvl0\ls2\pnrnot0\pnf3\pnindent360\pnsp120\pnhang
 {\pntxtb \'b7}}\faauto\ls2\adjustright\rin0\lin480\itap0 {\b \hich\af0\dbch\af17\loch\f0 UI: Open most recently used window list}{\hich\af0\dbch\af17\loch\f0  - opens a menu listing all \hich\af0\dbch\af17\loch\f0 
 windows in order of last use, VirtuaWin will switch to the selected window.}{\b \hich\af0\dbch\af17\loch\f0  
 \par {\pntext\pard\plain\fs20\lang1033\langfe1053\loch\af3\hich\af3\dbch\af17\langfenp1053 \loch\af3\dbch\af17\hich\f3 \'b7\tab}}\pard \ql \fi-360\li480\ri0\widctlpar\jclisttab\tx480{\*\pn \pnlvlblt\ilvl0\ls2\pnrnot0\pnf3\pnindent360\pnsp120\pnhang
-{\pntxtb \'b7}}\faauto\ls2\adjustright\rin0\lin480\itap0 {\b \hich\af0\dbch\af17\loch\f0 UI: Open window type setup}{\hich\af0\dbch\af17\loch\f0  - opens the Window Type setup dialog.}{\b 
+{\pntxtb \'b7}}\faauto\ls2\adjustright\rin0\lin480\itap0 {\b \hich\af0\dbch\af17\loch\f0 UI: Open window rules setup}{\hich\af0\dbch\af17\loch\f0  - opens the Window Rules dialog.}{\b 
 \par {\pntext\pard\plain\fs20\lang1033\langfe1053\loch\af3\hich\af3\dbch\af17\langfenp1053 \loch\af3\dbch\af17\hich\f3 \'b7\tab}}\pard \ql \fi-360\li480\ri0\widctlpar\jclisttab\tx480{\*\pn \pnlvlblt\ilvl0\ls2\pnrnot0\pnf3\pnindent360\pnsp120\pnhang
 {\pntxtb \'b7}}\faauto\ls2\adjustright\rin0\lin480\itap0 {\b \hich\af0\dbch\af17\loch\f0 UI: Open VirtuaWin setup}{\hich\af0\dbch\af17\loch\f0  - opens VirtuaWin\hich\f0 \rquote \loch\f0 s main setup dialog.}{\b 
 \par {\pntext\pard\plain\fs20\lang1033\langfe1053\loch\af3\hich\af3\dbch\af17\langfenp1053 \loch\af3\dbch\af17\hich\f3 \'b7\tab}}\pard \ql \fi-360\li480\ri0\widctlpar\jclisttab\tx480{\*\pn \pnlvlblt\ilvl0\ls2\pnrnot0\pnf3\pnindent360\pnsp120\pnhang
@@ -357,12 +361,6 @@ The first sub-window on the Hotkeys tab contains a list of current hotkeys, sele
 NAV: Move to desktop #\hich\f0 \rquote \loch\f0 , the }{\b\i \hich\af0\dbch\af17\loch\f0 Desktop}{\hich\af0\dbch\af17\loch\f0  contains a drop down list of all available desktops, use this to specify the required desktop.
 \par }\pard \ql \li480\ri0\widctlpar{\*\pn \pnlvlcont\ilvl0\ls0\pnrnot0\pndec }\faauto\adjustright\rin0\lin480\itap0 {\b \hich\af0\dbch\af17\loch\f0 Note:}{\hich\af0\dbch\af17\loch\f0 
  Usually this list only contains normal visible desktops, if using a hidden desktop yo\hich\af0\dbch\af17\loch\f0 u must first go to the hidden desktop for it to appear in this list.
-\par {\pntext\pard\plain\fs20\lang1033\langfe1053\loch\af3\hich\af3\dbch\af17\langfenp1053 \loch\af3\dbch\af17\hich\f3 \'b7\tab}}\pard \ql \fi-360\li480\ri0\widctlpar\jclisttab\tx480{\*\pn \pnlvlblt\ilvl0\ls2\pnrnot0\pnf3\pnindent360\pnsp120\pnhang
-{\pntxtb \'b7}}\faauto\ls2\adjustright\rin0\lin480\itap0 {\b\i \hich\af0\dbch\af17\loch\f0 Hotkey.}{\hich\af0\dbch\af17\loch\f0  This will have the effect of pressing the }{\i \hich\af0\dbch\af17\loch\f0 Save Assignment }{\hich\af0\dbch\af17\loch\f0 
-button every time VirtuaWin exits.
-\par {\pntext\pard\plain\fs20\lang1033\langfe1053\loch\af3\hich\af3\dbch\af17\langfenp1053 \loch\af3\dbch\af17\hich\f3 \'b7\tab}}\pard \ql \fi-360\li480\ri0\widctlpar\jclisttab\tx480{\*\pn \pnlvlblt\ilvl0\ls2\pnrnot0\pnf3\pnindent360\pnsp120\pnhang
-{\pntxtb \'b7}}\faauto\ls2\adjustright\rin0\lin480\itap0 {\b\i \hich\af0\dbch\af17\loch\f0 Save sticky on exit.}{\hich\af0\dbch\af17\loch\f0  This will have the effect of pressing the }{\i \hich\af0\dbch\af17\loch\f0 Save Sticky }{
-\hich\af0\dbch\af17\loch\f0 button every time VirtuaWin exits.
 \par {\pntext\pard\plain\fs20\lang1033\langfe1053\loch\af3\hich\af3\dbch\af17\langfenp1053 \loch\af3\dbch\af17\hich\f3 \'b7\tab}}\pard \ql \fi-360\li480\ri0\widctlpar\jclisttab\tx480{\*\pn \pnlvlblt\ilvl0\ls2\pnrnot0\pnf3\pnindent360\pnsp120\pnhang
 {\pntxtb \'b7}}\faauto\ls2\adjustright\rin0\lin480\itap0 {\hich\af0\dbch\af17\loch\f0 Use the }{\b\i \hich\af0\dbch\af17\loch\f0 Hotkey}{\hich\af0\dbch\af17\loch\f0 
  entry to specify the required hotkey by simply clicking into the entry and pressing the required Hotkey combination, the }{\b\i \hich\af0\dbch\af17\loch\f0 + WIN key}{\hich\af0\dbch\af17\loch\f0 
@@ -437,10 +435,10 @@ http://virtuawin.sourceforge.net}}}{\hich\af0\dbch\af17\loch\f0 . There you can 
 \par {\pntext\pard\plain\fs20\lang1033\langfe1053\loch\af3\hich\af3\dbch\af17\langfenp1053 \loch\af3\dbch\af17\hich\f3 \'b7\tab}}\pard \ql \fi-360\li480\ri0\widctlpar\jclisttab\tx480{\*\pn \pnlvlblt\ilvl0\ls2\pnrnot0\pnf3\pnindent360\pnsp120\pnhang
 {\pntxtb \'b7}}\faauto\ls2\adjustright\rin0\lin480\itap0 {\hich\af0\dbch\af17\loch\f0 The list box will display the modules that are currentl\hich\af0\dbch\af17\loch\f0 y loaded.
 \par {\pntext\pard\plain\fs20\lang1033\langfe1053\loch\af3\hich\af3\dbch\af17\langfenp1053 \loch\af3\dbch\af17\hich\f3 \'b7\tab}}\pard \ql \fi-360\li480\ri0\widctlpar\jclisttab\tx480{\*\pn \pnlvlblt\ilvl0\ls2\pnrnot0\pnf3\pnindent360\pnsp120\pnhang
-{\pntxtb \'b7}}\faauto\ls2\adjustright\rin0\lin480\itap0 {\hich\af0\dbch\af17\loch\f0 Press the }{\b\i \hich\af0\dbch\af17\loch\f0 Reload}{\hich\af0\dbch\af17\loch\f0  button for unloading all modules and re-read the module directory.
-\par {\pntext\pard\plain\fs20\lang1033\langfe1053\loch\af3\hich\af3\dbch\af17\langfenp1053 \loch\af3\dbch\af17\hich\f3 \'b7\tab}}\pard \ql \fi-360\li480\ri0\widctlpar\jclisttab\tx480{\*\pn \pnlvlblt\ilvl0\ls2\pnrnot0\pnf3\pnindent360\pnsp120\pnhang
 {\pntxtb \'b7}}\faauto\ls2\adjustright\rin0\lin480\itap0 {\hich\af0\dbch\af17\loch\f0 Pressing the }{\b\i \hich\af0\dbch\af17\loch\f0 Configure }{\hich\af0\dbch\af17\loch\f0 
 button, or by double clicking, will bring up the setup dialog for the selected module, if the selected module has one.
+\par {\pntext\pard\plain\fs20\lang1033\langfe1053\loch\af3\hich\af3\dbch\af17\langfenp1053 \loch\af3\dbch\af17\hich\f3 \'b7\tab}}\pard \ql \fi-360\li480\ri0\widctlpar\jclisttab\tx480{\*\pn \pnlvlblt\ilvl0\ls2\pnrnot0\pnf3\pnindent360\pnsp120\pnhang
+{\pntxtb \'b7}}\faauto\ls2\adjustright\rin0\lin480\itap0 {\hich\af0\dbch\af17\loch\f0 Press the }{\b\i \hich\af0\dbch\af17\loch\f0 Reload}{\hich\af0\dbch\af17\loch\f0  button for unloading all modules and re-read the module directory.
 \par {\pntext\pard\plain\fs20\lang1033\langfe1053\loch\af3\hich\af3\dbch\af17\langfenp1053 \loch\af3\dbch\af17\hich\f3 \'b7\tab}}\pard \qj \fi-360\li480\ri0\widctlpar\jclisttab\tx480{\*\pn \pnlvlblt\ilvl0\ls2\pnrnot0\pnf3\pnindent360\pnsp120\pnhang
 {\pntxtb \'b7}}\faauto\ls2\adjustright\rin0\lin480\itap0 {\hich\af0\dbch\af17\loch\f0 Pressing th\hich\af0\dbch\af17\loch\f0 e }{\b\i \hich\af0\dbch\af17\loch\f0 Enable/Disable}{\hich\af0\dbch\af17\loch\f0 
  button does exactly what it sounds like. Note that you need to restart VirtuaWin in order for enabled modules to become active again. Disabling modules works instantly.
@@ -477,9 +475,9 @@ Options in this group should only be changed if VirtuaWin is not functioning cor
 {\pntxtb \'b7}}\faauto\ls2\adjustright\rin0\lin480\itap0 {\b\i \hich\af0\dbch\af17\loch\f0 Enable taskbar detection.}{\hich\af0\dbch\af17\loch\f0  During startup, Virtu\hich\af0\dbch\af17\loch\f0 
 aWin will try to locate the taskbar to be able to use taskbar warp and alternative hiding. If you use an alternative shell, e.g. LiteStep, then you wont have a taskbar and probably want to disable this.
 \par {\pntext\pard\plain\fs20\lang1033\langfe1053\loch\af3\hich\af3\dbch\af17\langfenp1053 \loch\af3\dbch\af17\hich\f3 \'b7\tab}}\pard \ql \fi-360\li480\ri0\widctlpar\jclisttab\tx480{\*\pn \pnlvlblt\ilvl0\ls2\pnrnot0\pnf3\pnindent360\pnsp120\pnhang
-{\pntxtb \'b7}}\faauto\ls2\adjustright\rin0\lin480\itap0 {\b\i \hich\af0\dbch\af17\loch\f0 Enable window type configuration.}{\hich\af0\dbch\af17\loch\f0  If enabled, wind\hich\af0\dbch\af17\loch\f0 ow specific configurations created via the }{\b\i 
-\hich\af0\dbch\af17\loch\f0 Window Type Dialog}{\hich\af0\dbch\af17\loch\f0  will be applied, see help about the }{\uldb \hich\af0\dbch\af17\loch\f0 Window Type Dialog}{\hich\af0\dbch\af17\loch\f0 
- for more information. This option should be enabled, if not some windows, more notably Explorer windows, may disappear.
+{\pntxtb \'b7}}\faauto\ls2\adjustright\rin0\lin480\itap0 {\b\i \hich\af0\dbch\af17\loch\f0 Enable window rules.}{\hich\af0\dbch\af17\loch\f0  If enabled, wind\hich\af0\dbch\af17\loch\f0 ow specific rules created via the }{\b\i 
+\hich\af0\dbch\af17\loch\f0 Window Rules Dialog}{\hich\af0\dbch\af17\loch\f0  will be applied, see help about the }{\uldb \hich\af0\dbch\af17\loch\f0 Window Rules Dialog}{\hich\af0\dbch\af17\loch\f0 
+ for more information. This option should be enabled, if not some windows, most notably Explorer windows, may disappear.
 \par {\pntext\pard\plain\fs20\lang1033\langfe1053\loch\af3\hich\af3\dbch\af17\langfenp1053 \loch\af3\dbch\af17\hich\f3 \'b7\tab}}\pard \ql \fi-360\li480\ri0\widctlpar\jclisttab\tx480{\*\pn \pnlvlblt\ilvl0\ls2\pnrnot0\pnf3\pnindent360\pnsp120\pnhang
 {\pntxtb \'b7}}\faauto\ls2\adjustright\rin0\lin480\itap0 {\b\i \hich\af0\dbch\af17\loch\f0 Force refresh af\hich\af0\dbch\af17\loch\f0 ter desktop change.}{\hich\af0\dbch\af17\loch\f0 \hich\f0 
  If checked, VirtuaWin will do a refresh after a switch to a new desktop, similar to pressing F5 with \'93\loch\f0 \hich\f0 desktop focus\'94\loch\f0 
@@ -488,64 +486,66 @@ aWin will try to locate the taskbar to be able to use taskbar warp and alternati
 {\pntxtb \'b7}}\faauto\ls2\adjustright\rin0\lin480\itap0 {\b\i \hich\af0\dbch\af17\loch\f0 Write events to the virtuawin.log.}{\hich\af0\dbch\af17\loch\f0 
  If checked VirtuaWin creates a log file detailing all VirtuaWin related events in your user configuration directory (to locate this file see }{\b\i \hich\af0\dbch\af17\loch\f0 Explore Config}{\hich\af0\dbch\af17\loch\f0 ). This is very useful
 \hich\af0\dbch\af17\loch\f0  when attempting to reproduce issues and reporting problems to VirtuaWin.
-\par }\pard \ql \li120\ri0\widctlpar{\*\pn \pnlvlcont\ilvl0\ls0\pnrnot0\pndec }\faauto\adjustright\rin0\lin120\itap0 {
-\par \hich\af0\dbch\af17\loch\f0 The }{\b\i \hich\af0\dbch\af17\loch\f0 Log Windows}{\hich\af0\dbch\af17\loch\f0  button adds information about every window to the virtuawin.log file, this helps gather information required when a problem is encountered. The }{
-\b\i \hich\af0\dbch\af17\loch\f0 Write events to the v\hich\af0\dbch\af17\loch\f0 irtuawin.log}{\hich\af0\dbch\af17\loch\f0  option must be enabled for this feature to have any effect.
-\par \hich\af0\dbch\af17\loch\f0  
-\par \hich\af0\dbch\af17\loch\f0 The }{\b\i \hich\af0\dbch\af17\loch\f0 Explore Config}{\hich\af0\dbch\af17\loch\f0 
- button opens an explorer window displaying the contents of your VirtuaWin configuration directory; this can be used to find your configuration files.
-\par }\pard\plain \s1\qc \li0\ri0\sb240\sa60\keepn\widctlpar{\*\pn \pnlvlcont\ilvl0\ls0\pnrnot0\pndec }\faauto\outlinelevel0\adjustright\rin0\lin0\itap0 \b\fs28\lang1033\langfe1053\kerning28\loch\af1\hich\af1\dbch\af17\cgrid\langnp1033\langfenp1053 {\f0 \page 
-}{\cs16\super \hich\af1\dbch\af17\loch\f1 #{\footnote \pard\plain \ql \li0\ri0\widctlpar{\*\pn \pnlvlcont\ilvl0\ls0\pnrnot0\pndec }\faauto\rin0\lin0\itap0 \fs20\lang1033\langfe1053\loch\af0\hich\af0\dbch\af17\cgrid\langnp1033\langfenp1053 {
-\fs24\lang1053\langfe1033\dbch\af0\langnp1053\langfenp1033 wintype_dialog}}}{\hich\af1\dbch\af17\loch\f1  Window Type Dialog
-\par }\pard\plain \ql \li0\ri0\widctlpar{\*\pn \pnlvlcont\ilvl0\ls0\pnrnot0\pndec }\faauto\adjustright\rin0\lin0\itap0 \fs20\lang1033\langfe1053\loch\af0\hich\af0\dbch\af17\cgrid\langnp1033\langfenp1053 {\hich\af0\dbch\af17\loch\f0 
-The window type dialog is used to improve the way VirtuaWin handles certain types of windows. Each window type configuration consists of two basic parts, the first part controls the window }{\b\i \hich\af0\dbch\af17\loch\f0 identification}{
-\hich\af0\dbch\af17\loch\f0 , i.e. determines what windows the configuration is to be applied to, the second part configures the }{\b\i \hich\af0\dbch\af17\loch\f0 settings}{\hich\af0\dbch\af17\loch\f0 
- to apply to these windows. Each window can have at most one window type configuration applied.
 \par 
 \par {\pntext\pard\plain\fs20\lang1033\langfe1053\loch\af3\hich\af3\dbch\af17\langfenp1053 \loch\af3\dbch\af17\hich\f3 \'b7\tab}}\pard \ql \fi-360\li480\ri0\widctlpar\jclisttab\tx480{\*\pn \pnlvlblt\ilvl0\ls2\pnrnot0\pnf3\pnindent360\pnsp120\pnhang
-{\pntxtb \'b7}}\faauto\ls2\adjustright\rin0\lin480\itap0 {\hich\af0\dbch\af17\loch\f0 The first sub-window on the Window Type dialog \hich\af0\dbch\af17\loch\f0 
-contains a list of all currently defined window types, the order of the list is very important, as a window can only be assigned one window type, when a new window is opened VirtuaWin starts at the top of the list trying to find a window type that matches
+{\pntxtb \'b7}}\faauto\ls2\adjustright\rin0\lin480\itap0 {\hich\af0\dbch\af17\loch\f0 The}{\i \hich\af0\dbch\af17\loch\f0  }{\b\i \hich\af0\dbch\af17\loch\f0 Log Windows}{\hich\af0\dbch\af17\loch\f0 
+ button adds information about every window to the virtuawin.log file, this helps gather information required when a problem is encountered. The }{
+\b\i \hich\af0\dbch\af17\loch\f0 Write events to the v\hich\af0\dbch\af17\loch\f0 irtuawin.log}{\hich\af0\dbch\af17\loch\f0  option must be enabled for this feature to have any effect.
+\par {\pntext\pard\plain\fs20\lang1033\langfe1053\loch\af3\hich\af3\dbch\af17\langfenp1053 \loch\af3\dbch\af17\hich\f3 \'b7\tab}}\pard \ql \fi-360\li480\ri0\widctlpar\jclisttab\tx480{\*\pn \pnlvlblt\ilvl0\ls2\pnrnot0\pnf3\pnindent360\pnsp120\pnhang
+{\pntxtb \'b7}}\faauto\ls2\adjustright\rin0\lin480\itap0 {\hich\af0\dbch\af17\loch\f0 The}{\i \hich\af0\dbch\af17\loch\f0  }{\b\i \hich\af0\dbch\af17\loch\f0 Explore Config}{\hich\af0\dbch\af17\loch\f0 
+  button opens an explorer window displaying the contents of your VirtuaWin configuration directory; this can be used to find your configuration files.
+\par }\pard\plain \s1\qc \li0\ri0\sb240\sa60\keepn\widctlpar{\*\pn \pnlvlcont\ilvl0\ls0\pnrnot0\pndec }\faauto\outlinelevel0\adjustright\rin0\lin0\itap0 \b\fs28\lang1033\langfe1053\kerning28\loch\af1\hich\af1\dbch\af17\cgrid\langnp1033\langfenp1053 {\f0 \page 
+}{\cs16\super \hich\af1\dbch\af17\loch\f1 #{\footnote \pard\plain \ql \li0\ri0\widctlpar{\*\pn \pnlvlcont\ilvl0\ls0\pnrnot0\pndec }\faauto\rin0\lin0\itap0 \fs20\lang1033\langfe1053\loch\af0\hich\af0\dbch\af17\cgrid\langnp1033\langfenp1053 {
+\fs24\lang1053\langfe1033\dbch\af0\langnp1053\langfenp1033 win_rule_dialog}}}{\hich\af1\dbch\af17\loch\f1  Window Rules Dialog
+\par }\pard\plain \ql \li0\ri0\widctlpar{\*\pn \pnlvlcont\ilvl0\ls0\pnrnot0\pndec }\faauto\adjustright\rin0\lin0\itap0 \fs20\lang1033\langfe1053\loch\af0\hich\af0\dbch\af17\cgrid\langnp1033\langfenp1053 {\hich\af0\dbch\af17\loch\f0 
+The window rules dialog is used to improve the way VirtuaWin handles certain types of windows. Each window rule consists of two basic parts, the first part controls the window }{\b\i \hich\af0\dbch\af17\loch\f0 identification}{
+\hich\af0\dbch\af17\loch\f0 , i.e. determines what windows the configuration is to be applied to, the second part configures the }{\b\i \hich\af0\dbch\af17\loch\f0 settings}{\hich\af0\dbch\af17\loch\f0 
+ to apply to these windows. Each window can have at most one window rule applied.
+\par 
+\par {\pntext\pard\plain\fs20\lang1033\langfe1053\loch\af3\hich\af3\dbch\af17\langfenp1053 \loch\af3\dbch\af17\hich\f3 \'b7\tab}}\pard \ql \fi-360\li480\ri0\widctlpar\jclisttab\tx480{\*\pn \pnlvlblt\ilvl0\ls2\pnrnot0\pnf3\pnindent360\pnsp120\pnhang
+{\pntxtb \'b7}}\faauto\ls2\adjustright\rin0\lin480\itap0 {\hich\af0\dbch\af17\loch\f0 The first sub-window on the Window Rules dialog \hich\af0\dbch\af17\loch\f0 
+contains a list of all currently defined window rules, the order of the list is very important, as a window can only be assigned one window rule, when a new window is opened VirtuaWin starts at the top of the list trying to find a window rule that matches
 \hich\af0\dbch\af17\loch\f0 ,\hich\af0\dbch\af17\loch\f0  it stops at the first match.
 \par {\pntext\pard\plain\fs20\lang1033\langfe1053\loch\af3\hich\af3\dbch\af17\langfenp1053 \loch\af3\dbch\af17\hich\f3 \'b7\tab}}\pard \ql \fi-360\li480\ri0\widctlpar\jclisttab\tx480{\*\pn \pnlvlblt\ilvl0\ls2\pnrnot0\pnf3\pnindent360\pnsp120\pnhang
 {\pntxtb \'b7}}\faauto\ls2\adjustright\rin0\lin480\itap0 {\hich\af0\dbch\af17\loch\f0 Press the }{\b\i \hich\af0\dbch\af17\loch\f0 Up}{\hich\af0\dbch\af17\loch\f0  or }{\b\i \hich\af0\dbch\af17\loch\f0 Down}{\hich\af0\dbch\af17\loch\f0 
- button to move the currently selected window type up or down the list; these buttons simply change the order of items in the list, they do not apply any modifications made to the current window type.
+ button to move the currently selected window rule up or down the list; these buttons simply change the order of items in the list, they do not apply any modifications made to the current window rule.
 \par {\pntext\pard\plain\fs20\lang1033\langfe1053\loch\af3\hich\af3\dbch\af17\langfenp1053 \loch\af3\dbch\af17\hich\f3 \'b7\tab}}\pard \ql \fi-360\li480\ri0\widctlpar\jclisttab\tx480{\*\pn \pnlvlblt\ilvl0\ls2\pnrnot0\pnf3\pnindent360\pnsp120\pnhang
 {\pntxtb \'b7}}\faauto\ls2\adjustright\rin0\lin480\itap0 {\hich\af0\dbch\af17\loch\f0 The }{\b\i \hich\af0\dbch\af17\loch\f0 Add}{\hich\af0\dbch\af17\loch\f0 
- button creates a new window type to the top of the list; its window identification and settings will be as per the current dialog state.
+ button creates a new window rule at the top of the list; its window identification and settings will be as per the current dialog state.
 \par {\pntext\pard\plain\fs20\lang1033\langfe1053\loch\af3\hich\af3\dbch\af17\langfenp1053 \loch\af3\dbch\af17\hich\f3 \'b7\tab}}\pard \ql \fi-360\li480\ri0\widctlpar\jclisttab\tx480{\*\pn \pnlvlblt\ilvl0\ls2\pnrnot0\pnf3\pnindent360\pnsp120\pnhang
-{\pntxtb \'b7}}\faauto\ls2\adjustright\rin0\lin480\itap0 {\hich\af0\dbch\af17\loch\f0 The }{\b\i \hich\af0\dbch\af17\loch\f0 Modify}{\hich\af0\dbch\af17\loch\f0  button applies any changes made to the current window type\hich\f0 \rquote \loch\f0 
+{\pntxtb \'b7}}\faauto\ls2\adjustright\rin0\lin480\itap0 {\hich\af0\dbch\af17\loch\f0 The }{\b\i \hich\af0\dbch\af17\loch\f0 Modify}{\hich\af0\dbch\af17\loch\f0  button applies any changes made to the current window rule\hich\f0 \rquote \loch\f0 
 s identification and settings.
 \par }\pard \ql \li480\ri0\widctlpar{\*\pn \pnlvlcont\ilvl0\ls0\pnrnot0\pndec }\faauto\adjustright\rin0\lin480\itap0 {\b \hich\af0\dbch\af17\loch\f0 Note:}{\hich\af0\dbch\af17\loch\f0  \hich\af0\dbch\af17\loch\f0 
-Until this button is pressed all changes to the current window type are ignored; a common mistake is to select a window type, make some changes and then press }{\b\i \hich\af0\dbch\af17\loch\f0 Okay}{\hich\af0\dbch\af17\loch\f0  or }{\b\i 
-\hich\af0\dbch\af17\loch\f0 Apply}{\hich\af0\dbch\af17\loch\f0  - this has no effect as the selected window type was not modified!
+Until this button is pressed all changes to the current window rule are ignored; a common mistake is to select a window rule, make some changes and then press }{\b\i \hich\af0\dbch\af17\loch\f0 Okay}{\hich\af0\dbch\af17\loch\f0  or }{\b\i 
+\hich\af0\dbch\af17\loch\f0 Apply}{\hich\af0\dbch\af17\loch\f0  - this has no effect as the selected window rule was not modified!
 \par {\pntext\pard\plain\fs20\lang1033\langfe1053\loch\af3\hich\af3\dbch\af17\langfenp1053 \loch\af3\dbch\af17\hich\f3 \'b7\tab}}\pard \ql \fi-360\li480\ri0\widctlpar\jclisttab\tx480{\*\pn \pnlvlblt\ilvl0\ls2\pnrnot0\pnf3\pnindent360\pnsp120\pnhang
-{\pntxtb \'b7}}\faauto\ls2\adjustright\rin0\lin480\itap0 {\hich\af0\dbch\af17\loch\f0 The }{\b\i \hich\af0\dbch\af17\loch\f0 Delete}{\hich\af0\dbch\af17\loch\f0  bu\hich\af0\dbch\af17\loch\f0 tton removes the currently selected window type.
+{\pntxtb \'b7}}\faauto\ls2\adjustright\rin0\lin480\itap0 {\hich\af0\dbch\af17\loch\f0 The }{\b\i \hich\af0\dbch\af17\loch\f0 Delete}{\hich\af0\dbch\af17\loch\f0  bu\hich\af0\dbch\af17\loch\f0 tton removes the currently selected window rule.
 \par {\pntext\pard\plain\fs20\lang1033\langfe1053\loch\af3\hich\af3\dbch\af17\langfenp1053 \loch\af3\dbch\af17\hich\f3 \'b7\tab}}\pard \ql \fi-360\li480\ri0\widctlpar\jclisttab\tx480{\*\pn \pnlvlblt\ilvl0\ls2\pnrnot0\pnf3\pnindent360\pnsp120\pnhang
 {\pntxtb \'b7}}\faauto\ls2\adjustright\rin0\lin480\itap0 {\hich\af0\dbch\af17\loch\f0 The }{\b\i \hich\af0\dbch\af17\loch\f0 OK}{\hich\af0\dbch\af17\loch\f0  and }{\b\i \hich\af0\dbch\af17\loch\f0 Apply}{\hich\af0\dbch\af17\loch\f0 
- buttons will save any changes made to the Window Type configuration (see note for }{\b\i \hich\af0\dbch\af17\loch\f0 Modify}{\hich\af0\dbch\af17\loch\f0 ) and re-applies the window type settings to all windows on the current desktop.
+ buttons will save any changes made to the Window Rules configuration (see note for }{\b\i \hich\af0\dbch\af17\loch\f0 Modify}{\hich\af0\dbch\af17\loch\f0 ) and re-applies the window rules to all windows on the current desktop.
 \par }\pard\plain \s27\ql \li0\ri0\sb240\sa60\widctlpar{\*\pn \pnlvlcont\ilvl0\ls0\pnrnot0\pndec }\faauto\outlinelevel1\adjustright\rin0\lin0\itap0 \b\i\fs20\lang1033\langfe1053\loch\af1\hich\af1\dbch\af17\cgrid\langnp1033\langfenp1053 {
 \hich\af1\dbch\af17\loch\f1 Identification
 \par }\pard\plain \ql \li0\ri0\widctlpar{\*\pn \pnlvlcont\ilvl0\ls0\pnrnot0\pndec }\faauto\adjustright\rin0\lin0\itap0 \fs20\lang1033\langfe1053\loch\af0\hich\af0\dbch\af17\cgrid\langnp1033\langfenp1053 {\hich\af0\dbch\af17\loch\f0 A c
-\hich\af0\dbch\af17\loch\f0 ombination of three fields is used to identify what windows the window type is to be applied to:
+\hich\af0\dbch\af17\loch\f0 ombination of three fields is used to identify what windows the window rule is to be applied to:
 \par {\pntext\pard\plain\fs20\lang1033\langfe1053\loch\af3\hich\af3\dbch\af17\langfenp1053 \loch\af3\dbch\af17\hich\f3 \'b7\tab}}\pard \ql \fi-360\li480\ri0\widctlpar\jclisttab\tx480{\*\pn \pnlvlblt\ilvl0\ls2\pnrnot0\pnf3\pnindent360\pnsp120\pnhang
 {\pntxtb \'b7}}\faauto\ls2\adjustright\rin0\lin480\itap0 {\b\i \hich\af0\dbch\af17\loch\f0 Class Name}{\hich\af0\dbch\af17\loch\f0 . Defines the name of the window\hich\f0 \rquote \loch\f0 s class, this can be found in the Window Menu\hich\f0 \rquote 
 \loch\f0 s Info dialog. A \hich\f0 \lquote \loch\f0 *\hich\f0 \rquote \loch\f0  at the beginning and/or at the end can be used\hich\af0\dbch\af17\loch\f0 \hich\f0  for partial string matching (e.g. \'93\loch\f0 \hich\f0 *MyClass*\'94\loch\f0 \hich\f0 
- will match any window class containing the string \'93\loch\f0 \hich\f0 MyClass\'94\loch\f0 ). Leave is field empty if the window type is not to match on the window\hich\f0 \rquote \loch\f0 s class.
+ will match any window class containing the string \'93\loch\f0 \hich\f0 MyClass\'94\loch\f0 ). Leave is field empty if the window rule is not to match on the window\hich\f0 \rquote \loch\f0 s class.
 \par {\pntext\pard\plain\fs20\lang1033\langfe1053\loch\af3\hich\af3\dbch\af17\langfenp1053 \loch\af3\dbch\af17\hich\f3 \'b7\tab}}\pard \ql \fi-360\li480\ri0\widctlpar\jclisttab\tx480{\*\pn \pnlvlblt\ilvl0\ls2\pnrnot0\pnf3\pnindent360\pnsp120\pnhang
 {\pntxtb \'b7}}\faauto\ls2\adjustright\rin0\lin480\itap0 {\b\i \hich\af0\dbch\af17\loch\f0 Window Name}{\hich\af0\dbch\af17\loch\f0 . Defines the title of the window, note that this must\hich\af0\dbch\af17\loch\f0 
- be correctly set for when the window is first created (or when the window types are reapplied). A \hich\f0 \lquote \loch\f0 *\hich\f0 \rquote \loch\f0 \hich\f0  at the beginning and/or at the end can be used for partial string matching (e.g. \'93
+ be correctly set for when the window is first created (or when the window rules are reapplied). A \hich\f0 \lquote \loch\f0 *\hich\f0 \rquote \loch\f0 \hich\f0  at the beginning and/or at the end can be used for partial string matching (e.g. \'93
 \loch\f0 \hich\f0 *Mozilla Firefox\'94\loch\f0  will match any window whose title ends in the string\hich\af0\dbch\af17\loch\f0  \loch\af0\dbch\af17\hich\f0 \'93\loch\f0 \hich\f0 Mozilla Firefox \'94\loch\f0 
-). Leave is field empty if the window type is not to match on the window\hich\f0 \rquote \loch\f0 s title.
+). Leave is field empty if the window rule is not to match on the window\hich\f0 \rquote \loch\f0 s title.
 \par {\pntext\pard\plain\fs20\lang1033\langfe1053\loch\af3\hich\af3\dbch\af17\langfenp1053 \loch\af3\dbch\af17\hich\f3 \'b7\tab}}\pard \ql \fi-360\li480\ri0\widctlpar\jclisttab\tx480{\*\pn \pnlvlblt\ilvl0\ls2\pnrnot0\pnf3\pnindent360\pnsp120\pnhang
 {\pntxtb \'b7}}\faauto\ls2\adjustright\rin0\lin480\itap0 {\b\i \hich\af0\dbch\af17\loch\f0 Program Name}{\hich\af0\dbch\af17\loch\f0 . Defines the full path of the program which created the window, this can be found in the Window Menu\hich\f0 \rquote 
 \loch\f0 s Info dialog. A \hich\f0 \lquote \loch\f0 *\hich\f0 \rquote \loch\f0  at the beginning a\hich\af0\dbch\af17\loch\f0 \hich\f0 nd/or at the end can be used for partial string matching (e.g. \'93\loch\f0 *\\\hich\f0 firefox.exe\'94\loch\f0 
- will match any window created by Firefox). Leave is field empty if the window type is not to match on the window\hich\f0 \rquote \loch\f0 s executable.
+ will match any window created by Firefox). Leave is field empty if the window rule is not to match on the window\hich\f0 \rquote \loch\f0 s executable.
 \par }\pard \ql \li480\ri0\widctlpar{\*\pn \pnlvlcont\ilvl0\ls0\pnrnot0\pndec }\faauto\adjustright\rin0\lin480\itap0 {\b\i \hich\af0\dbch\af17\loch\f0 Note:}{\hich\af0\dbch\af17\loch\f0  The Program Name is not support on early ver\hich\af0\dbch\af17\loch\f0 
 sions of Windows, e.g. Win9x.
 \par {\pntext\pard\plain\fs20\lang1033\langfe1053\loch\af3\hich\af3\dbch\af17\langfenp1053 \loch\af3\dbch\af17\hich\f3 \'b7\tab}}\pard \ql \fi-360\li480\ri0\widctlpar\jclisttab\tx480{\*\pn \pnlvlblt\ilvl0\ls2\pnrnot0\pnf3\pnindent360\pnsp120\pnhang
-{\pntxtb \'b7}}\faauto\ls2\adjustright\rin0\lin480\itap0 {\b\i \hich\af0\dbch\af17\loch\f0 Window type enabled}{\hich\af0\dbch\af17\loch\f0 . If not checked the window type is simply ignored, this option can be useful when tracking down problems.
+{\pntxtb \'b7}}\faauto\ls2\adjustright\rin0\lin480\itap0 {\b\i \hich\af0\dbch\af17\loch\f0 Window rule enabled}{\hich\af0\dbch\af17\loch\f0 . If not checked the window rule is simply ignored, this option can be useful when tracking down problems.
 \par }\pard \ql \li0\ri0\widctlpar{\*\pn \pnlvlcont\ilvl0\ls0\pnrnot0\pndec }\faauto\adjustright\rin0\lin0\itap0 {\hich\af0\dbch\af17\loch\f0 Note: When using the Window Menu\hich\f0 \rquote \loch\f0 
-s Add Window Type feature the three name fields are set to the c\hich\af0\dbch\af17\loch\f0 urrent window\hich\f0 \rquote \loch\f0 s details, it is very unlikely that all three fields are required for the identification, particularly the }{\b\i 
+s Add Window Rule feature the three name fields are set to the c\hich\af0\dbch\af17\loch\f0 urrent window\hich\f0 \rquote \loch\f0 s details, it is very unlikely that all three fields are required for the identification, particularly the }{\b\i 
 \hich\af0\dbch\af17\loch\f0 Window Name}{\hich\af0\dbch\af17\loch\f0 .
 \par }\pard\plain \s27\ql \li0\ri0\sb240\sa60\widctlpar{\*\pn \pnlvlcont\ilvl0\ls0\pnrnot0\pndec }\faauto\outlinelevel1\adjustright\rin0\lin0\itap0 \b\i\fs20\lang1033\langfe1053\loch\af1\hich\af1\dbch\af17\cgrid\langnp1033\langfenp1053 {
 \hich\af1\dbch\af17\loch\f1 Settings
@@ -556,12 +556,19 @@ s Add Window Type feature the three name fields are set to the c\hich\af0\dbch\a
 {\pntxtb \'b7}}\faauto\ls2\adjustright\rin0\lin480\itap0 {\b\i \hich\af0\dbch\af17\loch\f0 Manage windows of this type}{\hich\af0\dbch\af17\loch\f0 . Three radio buttons give the options to }{\b\i \hich\af0\dbch\af17\loch\f0 Never}{
 \hich\af0\dbch\af17\loch\f0  manage, }{\b\i \hich\af0\dbch\af17\loch\f0 Always}{\hich\af0\dbch\af17\loch\f0  manage or }{\b\i \hich\af0\dbch\af17\loch\f0 Let VirtuaWin decide}{\hich\af0\dbch\af17\loch\f0  (default).
 \par {\pntext\pard\plain\fs20\lang1033\langfe1053\loch\af3\hich\af3\dbch\af17\langfenp1053 \loch\af3\dbch\af17\hich\f3 \'b7\tab}}\pard \ql \fi-360\li480\ri0\widctlpar\jclisttab\tx480{\*\pn \pnlvlblt\ilvl0\ls2\pnrnot0\pnf3\pnindent360\pnsp120\pnhang
+{\pntxtb \'b7}}\faauto\ls2\adjustright\rin0\lin480\itap0 {\b\i \hich\af0\dbch\af17\loch\f0 Main window of multiple taskbar buttons}{\hich\af0\dbch\af17\loch\f0
+. If checked the window is flagged as the main visible window for an application which uses multiple taskbar buttons to access this window. For example Excel creates a taskbar button for each file opened but has only one main window, clicking on each taskbar button simply changes which file is viewed in the main windw.
+ This option enables VirtuaWin to identify these main windows and handle them properly by removing the additional taskbar button for the main window (this button is typically removed by the application). Only use this option if changing desktops leads to the creation of an additional taskbar button.
+\par {\pntext\pard\plain\fs20\lang1033\langfe1053\loch\af3\hich\af3\dbch\af17\langfenp1053 \loch\af3\dbch\af17\hich\f3 \'b7\tab}}\pard \ql \fi-360\li480\ri0\widctlpar\jclisttab\tx480{\*\pn \pnlvlblt\ilvl0\ls2\pnrnot0\pnf3\pnindent360\pnsp120\pnhang
 {\pntxtb \'b7}}\faauto\ls2\adjustright\rin0\lin480\itap0 {\b\i \hich\af0\dbch\af17\loch\f0 Show windows of this type on all desktops}{\hich\af0\dbch\af17\loch\f0 . I\hich\af0\dbch\af17\loch\f0 
 f checked any window of this type will be automatically shown on all desktops. This differs from the window not being managed in several ways, firstly the window will not appear in the main Window List menu, also when changing desktops VirtuaWin will not 
 \hich\af0\dbch\af17\loch\f0 g\hich\af0\dbch\af17\loch\f0 ive the focus to a non-managed window.
 \par {\pntext\pard\plain\fs20\lang1033\langfe1053\loch\af3\hich\af3\dbch\af17\langfenp1053 \loch\af3\dbch\af17\hich\f3 \'b7\tab}}\pard \ql \fi-360\li480\ri0\widctlpar\jclisttab\tx480{\*\pn \pnlvlblt\ilvl0\ls2\pnrnot0\pnf3\pnindent360\pnsp120\pnhang
+{\pntxtb \'b7}}\faauto\ls2\adjustright\rin0\lin480\itap0 {\b\i \hich\af0\dbch\af17\loch\f0 Keep all windows of this application together}{\hich\af0\dbch\af17\loch\f0
+. If checked all windows created by the window's application are kept together, i.e. VirtuaWin will move all the application's windows when one of them is moved and if one is flaggd as {\b\i \hich\af0\dbch\af17\loch\f0 Always Show} then all the windows will be.
+\par {\pntext\pard\plain\fs20\lang1033\langfe1053\loch\af3\hich\af3\dbch\af17\langfenp1053 \loch\af3\dbch\af17\hich\f3 \'b7\tab}}\pard \ql \fi-360\li480\ri0\widctlpar\jclisttab\tx480{\*\pn \pnlvlblt\ilvl0\ls2\pnrnot0\pnf3\pnindent360\pnsp120\pnhang
 {\pntxtb \'b7}}\faauto\ls2\adjustright\rin0\lin480\itap0 {\b\i \hich\af0\dbch\af17\loch\f0 Automatically move windows of this type to Desktop}{\hich\af0\dbch\af17\loch\f0 
-. If checked the window will be automatically moved to the given desktop. VirtuaWin will move the window immediately on start-up or when window types are re-applied\hich\af0\dbch\af17\loch\f0 
+. If checked the window will be automatically moved to the given desktop. VirtuaWin will move the window immediately on start-up or when window rules are re-applied\hich\af0\dbch\af17\loch\f0 
 , when VirtuaWin is already running and a new window is opened it is either moved immediately if }{\b\i \hich\af0\dbch\af17\loch\f0 Move windows immediately}{\hich\af0\dbch\af17\loch\f0 
  is enabled or when the window is first dismissed (either by using the user dismissing the window or by changing desktops).
 \par {\pntext\pard\plain\fs20\lang1033\langfe1053\loch\af3\hich\af3\dbch\af17\langfenp1053 \loch\af3\dbch\af17\hich\f3 \'b7\tab}}\pard \ql \fi-360\li480\ri0\widctlpar\jclisttab\tx480{\*\pn \pnlvlblt\ilvl0\ls2\pnrnot0\pnf3\pnindent360\pnsp120\pnhang
@@ -607,7 +614,7 @@ Main user configuration file, the Setup Dialog settings are stored in this file.
 \par 
 \par }\pard\plain \s24\ql \li0\ri0\widctlpar\faauto\outlinelevel2\adjustright\rin0\lin0\itap0 \b\fs24\lang1033\langfe1053\loch\af0\hich\af0\dbch\af17\cgrid\langnp1033\langfenp1053 {\hich\af0\dbch\af17\loch\f0 window.cfg
 \par }\pard\plain \ql \li0\ri0\widctlpar\faauto\adjustright\rin0\lin0\itap0 \fs20\lang1033\langfe1053\loch\af0\hich\af0\dbch\af17\cgrid\langnp1033\langfenp1053 {\hich\af0\dbch\af17\loch\f0 Configuration file used to store t\hich\af0\dbch\af17\loch\f0 
-he specific Window Type setup.
+he specific Window Rule setup.
 \par 
 \par }\pard\plain \s24\ql \li0\ri0\widctlpar\faauto\outlinelevel2\adjustright\rin0\lin0\itap0 \b\fs24\lang1033\langfe1053\loch\af0\hich\af0\dbch\af17\cgrid\langnp1033\langfenp1053 {\hich\af0\dbch\af17\loch\f0 module.cfg
 \par }\pard\plain \ql \li0\ri0\widctlpar\faauto\adjustright\rin0\lin0\itap0 \fs20\lang1033\langfe1053\loch\af0\hich\af0\dbch\af17\cgrid\langnp1033\langfenp1053 {\hich\af0\dbch\af17\loch\f0 Contains the list of currently disabled modules.
