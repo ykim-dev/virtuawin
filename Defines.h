@@ -32,6 +32,7 @@
 #define vwVIRTUAWIN_EMAIL        _T("VirtuaWin@home.se")
 #define vwVIRTUAWIN_NAME_VERSION _T("VirtuaWin v4.0 beta3")
 #define vwVIRTUAWIN_WEBSITE      _T("http://virtuawin.sourceforge.net/")
+#define vwVIRTUAWIN_MODULES_URL  vwVIRTUAWIN_WEBSITE _T("modules.php")
 
 /* Various defines used on several places */
 #define vwHOTKEY_MAX      40       /* max number of hotkeys */

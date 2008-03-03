@@ -838,6 +838,7 @@ setupModules(HWND hDlg, UINT message, UINT wParam, LONG lParam)
     case WM_INITDIALOG:
         setupModulesList(hDlg) ;
         return TRUE;
+    
     case WM_NOTIFY:
         switch (((NMHDR FAR *) lParam)->code)
         {
@@ -901,6 +902,12 @@ setupModules(HWND hDlg, UINT message, UINT wParam, LONG lParam)
                 saveDisabledList(moduleCount, moduleList);
                 setupModulesList(hDlg) ;
             }
+        }
+        else if(LOWORD(wParam) == IDC_GETMODS)
+        {
+            HINSTANCE h = ShellExecute(NULL,_T("open"),vwVIRTUAWIN_MODULES_URL,NULL,NULL,SW_SHOWNORMAL);
+            if((UINT)h < 33)
+                MessageBox(hDlg,_T("Error opening modules link."),vwVIRTUAWIN_NAME _T(" Error"),MB_ICONWARNING);
         }
         break;
     }
@@ -1092,17 +1099,15 @@ setupAbout(HWND hDlg, UINT message, UINT wParam, LONG lParam)
     case WM_COMMAND:
         if(LOWORD(wParam) == IDC_MAILTO)
         {
-            HINSTANCE h = ShellExecute(NULL,_T("open"),_T("mailto:") vwVIRTUAWIN_EMAIL, 
-                                       NULL, NULL, SW_SHOWNORMAL);
+            HINSTANCE h = ShellExecute(NULL,_T("open"),_T("mailto:") vwVIRTUAWIN_EMAIL,NULL,NULL,SW_SHOWNORMAL);
             if((UINT)h < 33)
                 MessageBox(hDlg,_T("Error executing mail program."),vwVIRTUAWIN_NAME _T(" Error"),MB_ICONWARNING);
         }
         else if(LOWORD(wParam) == IDC_HTTP)
         {
-            HINSTANCE h = ShellExecute(NULL,_T("open"),_T("http://virtuawin.sourceforge.net"), 
-                                       NULL, NULL, SW_SHOWNORMAL);
+            HINSTANCE h = ShellExecute(NULL,_T("open"),vwVIRTUAWIN_WEBSITE,NULL,NULL,SW_SHOWNORMAL);
             if((UINT)h < 33)
-                MessageBox(hDlg,_T("Error open web link."),vwVIRTUAWIN_NAME _T(" Error"),MB_ICONWARNING);
+                MessageBox(hDlg,_T("Error opennig website link."),vwVIRTUAWIN_NAME _T(" Error"),MB_ICONWARNING);
         }
         return TRUE;
     }

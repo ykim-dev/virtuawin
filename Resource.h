@@ -63,6 +63,7 @@
 #define IDC_MODLIST       1050
 #define IDC_MODCONFIG     1051
 #define IDC_MODRELOAD     1052
+#define IDC_GETMODS       1053
 #define IDC_REFRESH       1054
 #define IDC_MOUSEWARP     1055
 #define IDC_MOUSEWLIST    1056
