@@ -3956,7 +3956,7 @@ wndProc(HWND aHWnd, UINT message, WPARAM wParam, LPARAM lParam)
     case VW_SETSTICKY:
         if(!vwEnabled)
             return FALSE ;
-        return windowSetSticky((HWND)wParam,(vwUByte) lParam);
+        return windowSetSticky((HWND)wParam,(int) lParam);
         
     case VW_WINGETINFO:
         {
