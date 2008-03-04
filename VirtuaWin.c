@@ -2757,10 +2757,8 @@ vwWindowShowHide(vwWindow* aWindow, vwUInt flags)
                     // show/hide the window by moving it off screen
                     GetWindowRect(aWindow->handle,&pos) ;
                     if((pos.top < -5000) && (pos.top > -30000))
-                    {   // Move the window back onto visible area
-                        pos.top += 25000 ;
-                        SetWindowPos(aWindow->handle,0,pos.left,pos.top,0,0,(SWP_FRAMECHANGED | SWP_DEFERERASE | SWP_NOZORDER | SWP_NOSIZE | SWP_NOACTIVATE | SWP_NOSENDCHANGING)) ; 
-                    }
+                        // Move the window back onto visible area
+                        SetWindowPos(aWindow->handle,0,pos.left,pos.top + 25000,0,0,(SWP_FRAMECHANGED | SWP_DEFERERASE | SWP_NOZORDER | SWP_NOSIZE | SWP_NOACTIVATE | SWP_NOSENDCHANGING)) ; 
                 }
                 else if(vwWindowIsMaximized(aWindow))
                     ShowWindow(aWindow->handle,SW_MAXIMIZE) ;
@@ -2772,6 +2770,13 @@ vwWindowShowHide(vwWindow* aWindow, vwUInt flags)
         {
             vwLogVerbose((_T("vwWindowHide %8x %x %x %x %d %d\n"),(int) aWindow->handle,flags,(int)aWindow->flags,(int)aWindow->exStyle,aWindow->desk,currentDesk)) ;
             aWindow->flags &= ~(vwWINFLAGS_SHOWN|vwWINFLAGS_SHOW) ;
+            if((aWindow->flags & (vwWINFLAGS_HIDETSK_MASK|vwWINFLAGS_NO_TASKBAR_BUT)) == vwWINFLAGS_HIDETSK_TOOLWN)
+            {
+                // This removes window from taskbar and alt+tab list, must notify taskbar of the change
+                SetWindowLong(aWindow->handle, GWL_EXSTYLE,(aWindow->exStyle & (~WS_EX_APPWINDOW)) | WS_EX_TOOLWINDOW);
+                if(taskHWnd != NULL)
+                    PostMessage(taskHWnd, RM_Shellhook, HSHELL_WINDOWDESTROYED, (LPARAM) aWindow->handle);
+            }
             if(vwWindowIsHideByHide(aWindow))
             {
                 SetWindowPos(aWindow->handle,0,0,0,0,0,(SWP_HIDEWINDOW | SWP_NOZORDER | SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE)) ;
@@ -2786,20 +2791,11 @@ vwWindowShowHide(vwWindow* aWindow, vwUInt flags)
                     // show/hide the window by moving it off screen
                     GetWindowRect(aWindow->handle,&pos) ;
                     if((pos.top > -5000) && (pos.top < 20000))
-                    {   // Move the window off visible area
-                        pos.top -= 25000 ;
-                        SetWindowPos(aWindow->handle,0,pos.left,pos.top,0,0,(SWP_FRAMECHANGED | SWP_DEFERERASE | SWP_NOZORDER | SWP_NOSIZE | SWP_NOACTIVATE | SWP_NOSENDCHANGING)) ; 
-                    }
+                        // Move the window off visible area
+                        SetWindowPos(aWindow->handle,0,pos.left,pos.top - 25000,0,0,(SWP_FRAMECHANGED | SWP_DEFERERASE | SWP_NOZORDER | SWP_NOSIZE | SWP_NOACTIVATE | SWP_NOSENDCHANGING)) ; 
                 }
                 else
                     CloseWindow(aWindow->handle) ;
-            }
-            if((aWindow->flags & (vwWINFLAGS_HIDETSK_MASK|vwWINFLAGS_NO_TASKBAR_BUT)) == vwWINFLAGS_HIDETSK_TOOLWN)
-            {
-                // This removes window from taskbar and alt+tab list, must notify taskbar of the change
-                SetWindowLong(aWindow->handle, GWL_EXSTYLE,(aWindow->exStyle & (~WS_EX_APPWINDOW)) | WS_EX_TOOLWINDOW);
-                if(taskHWnd != NULL)
-                    PostMessage(taskHWnd, RM_Shellhook, HSHELL_WINDOWDESTROYED, (LPARAM) aWindow->handle);
             }
         }
     }
