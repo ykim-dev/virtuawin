@@ -25,7 +25,8 @@ setup_expert=6005
 configuration_files=7000
 custom_icons=8000
 hiding_desktops=9000
-wintype_dialog=10000
+control_menu=11000
+window_menu=12000
 
 [WINDOWS]
 Main="VirtuaWin",(278,188,419,620),27904,(r14876671),(r12632256),f3
