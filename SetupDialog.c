@@ -1207,7 +1207,7 @@ createSetupDialog(HINSTANCE theHinst, HWND theHwndOwner)
     psh.hwndParent = theHwndOwner;
     psh.hInstance = theHinst;
     psh.pszIcon = NULL;
-    psh.pszCaption = _T("VirtuaWin - Properties") ;
+    psh.pszCaption = _T("VirtuaWin - Setup") ;
     psh.nPages = vwPROPSHEET_PAGE_COUNT ;
     psh.ppsp = (LPCPROPSHEETPAGE) &psp;
     psh.nStartPage = 0;
