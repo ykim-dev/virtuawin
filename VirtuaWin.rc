@@ -216,8 +216,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 4,0,0,16
- PRODUCTVERSION 4,0,0,16
+ FILEVERSION 4,0,0,17
+ PRODUCTVERSION 4,0,0,17
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -235,12 +235,12 @@ BEGIN
             VALUE "Comments", vwVIRTUAWIN_WEBSITE "\0"
             VALUE "CompanyName", vwVIRTUAWIN_NAME "\0"
             VALUE "FileDescription", vwVIRTUAWIN_NAME_VERSION "\0"
-            VALUE "FileVersion", "4.0.0.16\0"
+            VALUE "FileVersion", "4.0.0.17\0"
             VALUE "InternalName", vwVIRTUAWIN_NAME "\0"
             VALUE "LegalCopyright", "Copyright © 1999-2008\0"
             VALUE "OriginalFilename", vwVIRTUAWIN_NAME ".exe\0"
             VALUE "ProductName", vwVIRTUAWIN_NAME "\0"
-            VALUE "FileVersion", "4.0.0.16\0"
+            VALUE "FileVersion", "4.0.0.17\0"
         END
     END
     BLOCK "VarFileInfo"

@@ -1,6 +1,16 @@
 ***   VirtuaWin Revision History   ***
 --------------------------------------
 
+Ver 4.0 beta3 2008/03/06
+
+1906377 Fixed maximized tricky window hiding problem.
+1905771 Move the hidden VW off-screen if it moves on screen.
+1906222 Added get modules button to setup dialog.
+1905474 Fixed VW_SETSTICKY module message.
+
+
+----------------------------
+
 Ver 4.0 beta3 2008/02/28
 
 * Change the term 'Window Type' to 'Window Rule'
