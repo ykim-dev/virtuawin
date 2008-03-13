@@ -12,6 +12,7 @@ BackColor=clLime
 SolidCompression=yes
 Compression=bzip/9
 LicenseFile=COPYING.TXT
+PrivilegesRequired=none
 
 [Languages]
 Name: en; MessagesFile: VirtuaWin5.0.ISL
