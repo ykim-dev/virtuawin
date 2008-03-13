@@ -1,19 +1,26 @@
 ***   VirtuaWin Revision History   ***
 --------------------------------------
 
-Ver 4.0 beta3 2008/03/06
+Ver 4.0 2008/03/13
 
-1906377 Fixed maximized tricky window hiding problem.
-1905771 Move the hidden VW off-screen if it moves on screen.
-1906222 Added get modules button to setup dialog.
-1905474 Fixed VW_SETSTICKY module message.
-
-
-----------------------------
-
-Ver 4.0 beta3 2008/02/28
-
-* Change the term 'Window Type' to 'Window Rule'
+* Creation of a new Window Rule dialog to manage userlist.cfg, tricky.cfg,
+  sticky.cfg & assignment.cfg via a UI - no more hacking!
+* 1819203 1810156 Window type identification can now be any combination of
+  class, window or program name.
+* 1798648 1796170 1627782 Changed window management to store some info about
+  all non-child  windows, allows VirtuaWin to not manage some window types and
+  to manage others.
+* Removed upper limit on the number of windows that VW can manage 
+* 1844268 Added window type option to keep a window's taskbar button visible.
+* 1843300 Rewritten main Setup hotkey configuration to allow many more
+  different hotkeys to be created.
+* 1820531 Added MRU window list menu as a hotkey binding
+* 1873636 Fixed exit deadlock issue
+* 1843056 1843056 Fixed VW & WinList taskbar detection issues.
+* 1840887 Fixed setup option change issues.
+* 1873639 Added program version info to the exe resource.
+* 1911706 Removed the need for admin privileges for installer.
+* 1906222 Added get modules button to setup dialog.
 * 1901183 Changed window flags and changed GETWINDESK to WINGETINFO with
   enhanced functionality
 * 1873544 1897011 Added new 'Group App' window rule and Gather option in
@@ -23,38 +30,8 @@ Ver 4.0 beta3 2008/02/28
 * 1896830 Reimplemented main window hide/show function to improve performance
   and fix minimize window hiding method
 * 1877491 1737872 Resolved long standing pop-up window event issues.
-
-
-----------------------------
-
-Ver 4.0 beta2 2008/02/07
-
 * 1886979 Fixed flag problem which left windows being 'sticky'.
 * 1887127 Automatically change window-list menu to compact.
-* 1843056 WinList: Removed error dialog if taskbar not found.
-
-
-----------------------------
-
-Ver 4.0 beta1 2008/01/31
-
-* Creation  of a new Window  Type dialog to manage  userlist.cfg,  tricky.cfg,
-  sticky.cfg & assignment.cfg via a UI - no more hacking!
-* 1819203  1810156 Window type  identification  can now be any  combination of
-  class, window or program name.
-* 1798648  1796170 1627782 Changed window  management to store some info about
-  all non-child  windows, allows VirtuaWin to not manage some window types and
-  to manage others.
-* Removed  upper limit on the number of windows  that VW can manage  (although
-  the window list menu is still limited to 255 windows) 
-* 1844268 Added window type option to keep a window's taskbar button visible.
-* 1843300 Rewritten  main  Setup  hotkey  configuration  to  allow  many  more
-  different hotkeys to be created.
-* 1820531 Added MRU window list menu as a hotkey binding
-* 1873636 Fixed exit deadlock issue
-* 1843056 Fixed taskbar detection issues.
-* 1840887 Fixed setup option change issues.
-* 1873639 Added program version info to the exe resource.
 
 
 ----------------------------
