@@ -3543,7 +3543,7 @@ popupWinListMenu(HWND aHWnd, int wlFlags)
     HMENU hpopup ;
     POINT pt ;
     HWND fgWin ;
-    int scDir=1, wlcFlags, retItem, ii ;
+    int scDir=1, wlcFlags, retItem, ii, jj ;
     
     if(dialogOpen)
     {
@@ -3565,12 +3565,17 @@ popupWinListMenu(HWND aHWnd, int wlFlags)
         setForegroundWin(NULL,0) ;
     SetForegroundWindow(aHWnd);
     singleColumn >>= 1 ;
-    for(;;)
+    for(jj=0 ;;)
     {
         retItem = 0 ;
         if(wlcFlags & vwPMENU_COMPACT)
         {
             do {
+                if(jj == 4)
+                    wlcFlags = wlcFlags ^ (vwPMENU_ACCESS|vwPMENU_ASSIGN|vwPMENU_SHOW|vwPMENU_STICKY) ;
+                else if(jj == 8)
+                    wlcFlags |= (vwPMENU_ACCESS|vwPMENU_ASSIGN|vwPMENU_SHOW|vwPMENU_STICKY) ;
+                jj++ ;
                 singleColumn = (scDir < 0) ? (singleColumn >> 1) : (singleColumn << 1) ;
                 if((singleColumn & vwPMENU_COL_MASK) == 0)
                     singleColumn = (scDir < 0) ? vwPMENU_STICKY:vwPMENU_ACCESS ;
