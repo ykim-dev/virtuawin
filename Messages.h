@@ -63,8 +63,11 @@
 #define VW_DESKX        (WM_USER + 21)
 /* Message, retuns desktop height */
 #define VW_DESKY        (WM_USER + 22)
-/* Message, request the window list from VirtuaWin. List will be returned via a WM_COPYDATA
- * message, set wParam to the HWND which is to receive the WM_COPYDATA message */
+/* Message, request the window list from VirtuaWin - RETIRED.
+ * This message was too dependent on the Window data structure, creating modules which
+ * are very version dependent. As to v4.0 support for this message has been removed,
+ * Module writers are encouraged to use the VW_WINGETINFO message instead see SF bug
+ * 1915723 for more information */
 #define VW_WINLIST      (WM_USER + 23)
 /* Message, returns the current desktop number */
 #define VW_CURDESK      (WM_USER + 24)
