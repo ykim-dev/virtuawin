@@ -40,67 +40,67 @@
  *************************************************************************/
 
 /* Message, switch to a specified desktop, sent with following lParam or 1..vwDESKTOP_MAX */
-#define VW_CHANGEDESK  (WM_USER + 10) 
-#define VW_STEPPREV    (WM_USER +  1)
-#define VW_STEPNEXT    (WM_USER +  2)
-#define VW_STEPLEFT    (WM_USER + 11)
-#define VW_STEPRIGHT   (WM_USER + 12)
-#define VW_STEPUP      (WM_USER + 13)
-#define VW_STEPDOWN    (WM_USER + 14)
+#define VW_CHANGEDESK   (WM_USER + 10) 
+#define VW_STEPPREV     (WM_USER +  1)
+#define VW_STEPNEXT     (WM_USER +  2)
+#define VW_STEPLEFT     (WM_USER + 11)
+#define VW_STEPRIGHT    (WM_USER + 12)
+#define VW_STEPUP       (WM_USER + 13)
+#define VW_STEPDOWN     (WM_USER + 14)
 /* Message, close VirtuaWin */
-#define VW_CLOSE       (WM_USER + 15) 
+#define VW_CLOSE        (WM_USER + 15) 
 /* Message, display setup dialog */
-#define VW_SETUP       (WM_USER + 16) 
+#define VW_SETUP        (WM_USER + 16) 
 /* Message, remove the systray icon */
-#define VW_DELICON     (WM_USER + 17) 
+#define VW_DELICON      (WM_USER + 17) 
 /* Message, displays the systray icon */
-#define VW_SHOWICON    (WM_USER + 18) 
+#define VW_SHOWICON     (WM_USER + 18) 
 /* Message, bring up the help */ 
-#define VW_HELP        (WM_USER + 19) 
+#define VW_HELP         (WM_USER + 19) 
 /* Message, gather all windows */
-#define VW_GATHER      (WM_USER + 20) 
+#define VW_GATHER       (WM_USER + 20) 
 /* Message, retuns desktop width */
-#define VW_DESKX       (WM_USER + 21)
+#define VW_DESKX        (WM_USER + 21)
 /* Message, retuns desktop height */
-#define VW_DESKY       (WM_USER + 22)
+#define VW_DESKY        (WM_USER + 22)
 /* Message, request the window list from VirtuaWin. List will be returned via a WM_COPYDATA
  * message, set wParam to the HWND which is to receive the WM_COPYDATA message */
-#define VW_WINLIST     (WM_USER + 23)
+#define VW_WINLIST      (WM_USER + 23)
 /* Message, returns the current desktop number */
-#define VW_CURDESK     (WM_USER + 24)
+#define VW_CURDESK      (WM_USER + 24)
 /* Message, assign a window to the specified desktop wParam is the window
  * handle (HWND, 0 for foreground window) and lParam is either VW_STEP* (see
  * 6 defines above) or the desktop number. If desk is -ve window is assigned
  * to desk (-lParam) and Vw change to the desk. Returns 0 if window was not
  * found (i.e. not managed by VW), non-zero otherwise */
-#define VW_ASSIGNWIN   (WM_USER + 25)
+#define VW_ASSIGNWIN    (WM_USER + 25)
 /* Message, set the sticky state of a window. wParam is the window handle
  * (HWND, 0 for foreground window) and lParam should be -1 for toggle, 0 for
  * unset and 1 for set sticky state. */
-#define VW_SETSTICKY   (WM_USER + 26)
+#define VW_SETSTICKY    (WM_USER + 26)
 /* Message, make a window the foreground, only if visible 
    wParam is the window handle (HWND) */
-#define VW_FOREGDWIN   (WM_USER + 27)
+#define VW_FOREGDWIN    (WM_USER + 27)
 /* Message, return VirtuaWin's installation path. The path will be returned via a WM_COPYDATA
  * message, set wParam to the HWND which is to receive the WM_COPYDATA message */
-#define VW_INSTALLPATH (WM_USER + 28)
+#define VW_INSTALLPATH  (WM_USER + 28)
 /* Message, return VirtuaWin's user application data path. The path will be returned via a 
  * WM_COPYDATA message, set wParam to the HWND which is to receive the WM_COPYDATA message */
-#define VW_USERAPPPATH (WM_USER + 29)
+#define VW_USERAPPPATH  (WM_USER + 29)
 /* Message, access a window, wParam is the window handle (HWND) and lParam is the method:
             0 - Use user's 'On hidden window activation' preference (ignore -> move)
             1 - Move window to this desk
             2 - Show window to this disk
             3 - Change to window's desk
    Returns 0 if window was not found (i.e. not managed by VW), non-zero otherwise */
-#define VW_ACCESSWIN   (WM_USER + 39)
+#define VW_ACCESSWIN    (WM_USER + 39)
 /* Message, return the information VW has on the window given via wParam. 0 is returned if the
  * window is not found, otherwise use the 2 macros to extract the window flags (see vwWINFLAGS_*
  * defines in Defines.h, the hide method flags are not given) and the windows desk. To check
  * if a window is hung do:
  *    if(((vwGetWindowInfoFlags(ii) & vwWINFLAGS_SHOWN) == 0) ^ ((vwGetWindowInfoFlags(ii) & vwWINFLAGS_SHOW) == 0))
  */ 
-#define VW_WINGETINFO  (WM_USER + 40)
+#define VW_WINGETINFO   (WM_USER + 40)
 #define vwWindowGetInfoFlags(ii)  ((ii) & 0x00ffffff)
 #define vwWindowGetInfoDesk(ii)   (((ii) >> 24) & 0x00ff)
 /* Message, Desk image generation message, the action of the message depends on the
@@ -130,7 +130,9 @@
  * quickly obtain the maximum size of any desk based array, i.e. guaranteed to be greater
  * than the current desktop. Note the this is not true of (DESKX * DESKY) due to hidden desktops. */
 #define VW_DESKTOP_SIZE (WM_USER + 44)
-
+/* Message, set whether a window is managed by VW. wParam is the window handle
+ * (HWND, 0 for foreground window) and lParam should be 0 for not managed  and 1 for managed. */
+#define VW_WINMANAGE    (WM_USER + 45)
 
 /* Message, sent by VirtuaWin after a switch. lParam will contain current desktop number 
    if wParam isn't one of the following, then wParam will also contain current desktop.
@@ -138,20 +140,20 @@
    "over the edge". The first one will have a MOD_STEP* parameter, and the second
    will have current desktop in both parameters.
 */
-#define MOD_CHANGEDESK (WM_USER + 30) 
-#define MOD_STEPLEFT   (WM_USER + 31)
-#define MOD_STEPRIGHT  (WM_USER + 32)
-#define MOD_STEPUP     (WM_USER + 33)
-#define MOD_STEPDOWN   (WM_USER + 34)
+#define MOD_CHANGEDESK  (WM_USER + 30) 
+#define MOD_STEPLEFT    (WM_USER + 31)
+#define MOD_STEPRIGHT   (WM_USER + 32)
+#define MOD_STEPUP      (WM_USER + 33)
+#define MOD_STEPDOWN    (WM_USER + 34)
 
 /* Message, sent just after the module is started. wParam will contain VirtuaWin hWnd */ 
-#define MOD_INIT       (WM_USER + 35)
+#define MOD_INIT        (WM_USER + 35)
 /* Message, sent when VirtuaWin quits or reloads its modules */
-#define MOD_QUIT       (WM_USER + 36)
+#define MOD_QUIT        (WM_USER + 36)
 /* Message, sent by VirtuaWin when setup button is pressed in "module tab",
  * wParam set to the HWND of the 'parent' window or 0 */
-#define MOD_SETUP      (WM_USER + 37)
+#define MOD_SETUP       (WM_USER + 37)
 /* Message, sent by VirtuaWin when the configuration has been updated */
-#define MOD_CFGCHANGE  (WM_USER + 38)
+#define MOD_CFGCHANGE   (WM_USER + 38)
 
 #endif

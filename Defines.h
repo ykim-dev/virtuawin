@@ -101,6 +101,7 @@ typedef struct vwWindowRule {
 #define vwWINFLAGS_SHOW            0x00000200
 #define vwWINFLAGS_NO_TASKBAR_BUT  0x00000400
 #define vwWINFLAGS_RM_TASKBAR_BUT  0x00000800
+#define vwWINFLAGS_FORCE_NOT_MNGD  vwWTFLAGS_STICKY        
 #define vwWINFLAGS_STICKY          vwWTFLAGS_STICKY        
 #define vwWINFLAGS_MOVE            vwWTFLAGS_MOVE          
 #define vwWINFLAGS_MOVE_IMMEDIATE  vwWTFLAGS_MOVE_IMMEDIATE

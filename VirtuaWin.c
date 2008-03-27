@@ -1527,24 +1527,26 @@ enumWindowsProc(HWND hwnd, LPARAM lParam)
          * the taskbar so VW will manage toolwin windows if they are not popups or have owners
          */
         if(hwnd == hWnd)
-            flags = 1 ;
+            flags = vwWINFLAGS_FOUND ;
         else if((wt != NULL) && (wt->flags & vwWTFLAGS_MANAGE))
             flags = 0 ;
         else if((wt != NULL) && (wt->flags & vwWTFLAGS_DONT_MANAGE))
-            flags = 1 ;
+            flags = vwWINFLAGS_FOUND|vwWINFLAGS_FORCE_NOT_MNGD ;
         else if((exstyle & WS_EX_TOOLWINDOW) && ((style & WS_POPUP) || (GetWindow(hwnd,GW_OWNER) != NULL)))
-            flags = 1 ;
-        else
-            flags = (((phwnd=GetParent(hwnd)) != NULL) && (phwnd != desktopHWnd) &&
-                     ((pwb=vwWindowBaseFind(phwnd)) != NULL) &&
-                     ((vwWindowIsManaged(pwb) && vwWindowIsNotHideByMove(pwb)) ||
-                      (vwWindowIsNotManaged(pwb) && ((phwnd=GetParent(phwnd)) != NULL) &&
-                       ((pwb=vwWindowBaseFind(phwnd)) != NULL) && 
-                       vwWindowIsManaged(pwb) && vwWindowIsNotHideByMove(pwb)))) ;
-        if(flags)
-            // dont manage this window
+            flags = vwWINFLAGS_FOUND ;
+        else if(((phwnd=GetParent(hwnd)) == NULL) || (phwnd == desktopHWnd) || ((pwb=vwWindowBaseFind(phwnd)) == NULL))
+            flags = 0 ;
+        else if(vwWindowIsManaged(pwb))
+            flags = (vwWindowIsHideByMove(pwb)) ? 0:vwWINFLAGS_FOUND ;
+        else if(((pwb)->flags & vwWINFLAGS_FORCE_NOT_MNGD) != 0)
+            flags = vwWINFLAGS_FOUND|vwWINFLAGS_FORCE_NOT_MNGD ;
+        else if(((phwnd=GetParent(phwnd)) != NULL) && ((pwb=vwWindowBaseFind(phwnd)) != NULL) && 
+                vwWindowIsManaged(pwb) && vwWindowIsNotHideByMove(pwb))
             flags = vwWINFLAGS_FOUND ;
         else
+            flags = 0 ;
+            
+        if(flags == 0)
         {
             if(style & WS_VISIBLE)
                 // manage this window
@@ -2981,6 +2983,78 @@ windowSetSticky(HWND theWin, int state)
 }
 
 /************************************************
+ * Changes whether a window is managed or not
+ * Used by the module message VW_WINMANAGE
+ */
+static int
+windowSetManage(HWND theWin, int state)
+{
+    vwWindowBase *wb ;
+    vwWindow *win ;
+    int style, ret ;
+    vwLogBasic((_T("Manage window: %x %d\n"),(int) theWin,state)) ;
+    
+    if((theWin == NULL) && ((theWin = GetForegroundWindow()) == NULL))
+        return 0 ;
+    
+    ret = 1 ;
+    vwMutexLock();
+    windowListUpdate() ;
+    wb = vwWindowBaseFind(theWin) ;
+    if(state)
+    {
+        if((wb == NULL) || !vwWindowIsManaged(wb))
+        {
+            vwUInt flags = vwWINFLAGS_FOUND | vwWINFLAGS_VISIBLE | vwWINFLAGS_WINDOW | vwWINFLAGS_MANAGED | vwWINFLAGS_SHOWN | vwWINFLAGS_SHOW ;
+            style = GetWindowLong(theWin,GWL_STYLE) ;
+            if(style & WS_MINIMIZE)
+                flags |= vwWINFLAGS_MINIMIZED ;
+            if(style & WS_MAXIMIZE)
+                flags |= vwWINFLAGS_MAXIMIZED ;
+            if(wb != NULL)
+                vwWindowBaseDelete(wb)  ;
+            if((win = (vwWindow *) vwWindowBaseCreate(flags,theWin)) == NULL)
+                ret = 0 ;
+            else
+            {
+                win->exStyle = GetWindowLong(theWin,GWL_EXSTYLE) ;
+                vwLogBasic((_T("Manually started managing window %8x Proc %d Flg %x %x (%08x)\n"),
+                            (int)win->handle,(int)win->processId,(int)win->flags,(int) win->exStyle,(int)style)) ;
+                /* Complete the initialization */
+                windowListUpdate() ;
+            }
+        }
+    }
+    else if((wb == NULL) || vwWindowIsWindow(wb))
+    {
+        if(wb != NULL)
+        {
+            win = (vwWindow *) wb ;
+            if(win->desk != currentDesk)
+            {
+                if(win->desk > nDesks)
+                    return 0 ;
+                vwWindowSetDesk(win,currentDesk,1,FALSE) ;
+            }
+            vwWindowBaseDelete(wb)  ;
+        }
+        vwLogBasic((_T("Manually stopped managing window %8x\n"),theWin)) ;
+        if(vwWindowBaseCreate((vwWINFLAGS_FOUND|vwWINFLAGS_FORCE_NOT_MNGD),theWin) == NULL)
+            ret = 0 ;
+        else
+            /* Complete the initialization */
+            windowListUpdate() ;
+        vwLogBasic((_T("Manually stopped managing window %8x complete\n"),theWin)) ;
+    }
+    else
+        wb->flags |= vwWINFLAGS_FORCE_NOT_MNGD ;
+    
+    vwMutexRelease();
+    vwLogBasic((_T("manage window %8x complete %d\n"),theWin,ret)) ;
+    return ret ;
+}
+
+/************************************************
  * Gather all windows created by the current window's process
  */
 static int
@@ -3170,14 +3244,17 @@ WindowInfoDialogFunc(HWND hwndDlg, UINT msg, WPARAM wParam, LPARAM lParam)
                 
                 vwMutexLock();
                 windowListUpdate() ;
-                if((win = vwWindowFind(theWin)) != NULL)
+                win = (vwWindow *) vwWindowBaseFind(theWin) ;
+                if(win == NULL)
+                    _tcscpy(ss,_T("not managed\r\n")) ;
+                else if(vwWindowIsManaged(win))
                     _stprintf(ss,_T("being managed\r\n\tProc:\t%x\r\n\tLink:\t%x\r\n\tFlags:\t%08x\r\n\tExStyle:\t%08x\r\n\tDesk:\t%d\r\n\tHandling:\t%s, %s\r\n"),
                               (int)((win->processNext == NULL) ? 0:win->processNext->handle),(int)((win->linkedNext == NULL) ? 0:win->linkedNext->handle),
                               (int)win->flags,(int)win->exStyle,(int)win->desk,
                               winHandle[(win->flags & vwWTFLAGS_HIDEWIN_MASK) >> vwWTFLAGS_HIDEWIN_BITROT],
                               tbbHandle[(win->flags & vwWTFLAGS_HIDETSK_MASK) >> vwWTFLAGS_HIDETSK_BITROT]) ;
                 else
-                    _tcscpy(ss,_T("not managed\r\n")) ;
+                    _stprintf(ss,_T("not managed\r\n\tFlags:\t%08x\r\n"),(int)win->flags) ;
                 vwMutexRelease();
             }
             else
@@ -3236,6 +3313,7 @@ popupWindowMenu(HWND theWin, int wmFlags)
     if((win = vwWindowFind(theWin)) != NULL)
     {
         /* currently managed window */
+        AppendMenu(hpopup,MF_STRING,ID_WM_MANAGE,_T("Stop &Managing"));
         Sticky = vwWindowIsSticky(win) ;
         AppendMenu(hpopup,(Sticky) ? (MF_STRING|MF_CHECKED):MF_STRING,ID_WM_STICKY,_T("&Always Show"));
         AppendMenu(hpopup,(win->processNext == NULL) ? (MF_STRING|MF_GRAYED):MF_STRING,ID_WM_GATHER,_T("&Gather"));
@@ -3319,27 +3397,7 @@ popupWindowMenu(HWND theWin, int wmFlags)
         windowGather(theWin) ;
         break ;
     case ID_WM_MANAGE:
-        vwMutexLock();
-        windowListUpdate() ;
-        if(vwWindowFind(theWin) == NULL)
-        {
-            vwUInt flags = vwWINFLAGS_FOUND | vwWINFLAGS_VISIBLE | vwWINFLAGS_WINDOW | vwWINFLAGS_MANAGED | vwWINFLAGS_SHOWN | vwWINFLAGS_SHOW ;
-            style = GetWindowLong(theWin,GWL_STYLE) ;
-            if(style & WS_MINIMIZE)
-                flags |= vwWINFLAGS_MINIMIZED ;
-            if(style & WS_MAXIMIZE)
-                flags |= vwWINFLAGS_MAXIMIZED ;
-            if((win = (vwWindow *) vwWindowBaseFind(theWin)) != NULL)
-                vwWindowBaseDelete((vwWindowBase *) win)  ;
-            if((win = (vwWindow *) vwWindowBaseCreate(flags,theWin)) == NULL)
-                return ;
-            win->exStyle = GetWindowLong(theWin,GWL_EXSTYLE) ;
-            vwLogBasic((_T("Manually started managing window %8x Proc %d Flg %x %x (%08x)\n"),
-                        (int)win->handle,(int)win->processId,(int)win->flags,(int) win->exStyle,(int)style)) ;
-            /* Complete the initialization */
-            windowListUpdate() ;
-        }
-        vwMutexRelease();
+        windowSetManage(theWin,(win == NULL)) ;
         break;
     default:
         if(ii == ID_WM_NEXT)
@@ -4110,6 +4168,9 @@ wndProc(HWND aHWnd, UINT message, WPARAM wParam, LPARAM lParam)
         
     case VW_DESKTOP_SIZE:
         return vwDESKTOP_SIZE;
+        
+    case VW_WINMANAGE:
+        return windowSetManage((HWND)wParam,(int) lParam);
         
         // End plugin messages
         
