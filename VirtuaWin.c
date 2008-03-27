@@ -2081,8 +2081,9 @@ changeDesk(int newDesk, WPARAM msgWParam)
     if(isDragging || (checkMouseState(1) == 1))
     {
         /* move the app we are dragging to the new desktop, must handle linked windows */
-        if((((activeHWnd = dragHWnd) != 0) ||
-            ((dragHWnd = activeHWnd = GetForegroundWindow()) != 0)) &&
+        /* keep isDragging == 1 if using a mouse to drag */
+        isDragging = (dragHWnd == 0) ;
+        if(((dragHWnd != 0) || ((dragHWnd = GetForegroundWindow()) != 0)) &&
            ((win = vwWindowFind(dragHWnd)) != NULL))
         {
             bwn = (win->linkedNext == NULL) ? NULL:win ;
@@ -2091,14 +2092,21 @@ changeDesk(int newDesk, WPARAM msgWParam)
                 win->zOrder[newDesk] = win->zOrder[currentDesk] ;
             } while((win = win->linkedNext) != bwn) ;
             activeZOrder = 0xffffffff ;
+            activeHWnd = dragHWnd ;
         }
-        isDragging = FALSE ;
+        else
+            isDragging = 0 ;
+        dragHWnd = NULL ;
     }
     if(dialogOpen)
         storeDesktopProperties() ;
     
-    /* must lose the current focus and regain at the end to get things right */
-    setForegroundWin(NULL,0) ;
+    /* must lose the current focus and regain at the end to get things right, however this must be
+     * compromised if using the mouse to drag a window as this window must not lose focus or it
+     * will be dropped */
+    if(!isDragging)
+        setForegroundWin(NULL,0) ;
+    isDragging = 0 ;
     
     currentDesk = newDesk;
     /* Calculations for getting the x and y positions */
@@ -2913,7 +2921,7 @@ assignWindow(HWND theWin, int theDesk, vwUByte follow, vwUByte force, vwUByte se
         
     if((win != NULL) && follow)
     {
-        isDragging = TRUE ;
+        isDragging = 1 ;
         dragHWnd = theWin ;
         ret = (changeDesk(theDesk,MOD_CHANGEDESK) > 0) ;
     }
@@ -4054,31 +4062,12 @@ wndProc(HWND aHWnd, UINT message, WPARAM wParam, LPARAM lParam)
         }
     
     case VW_WINLIST:
-        {
-            // Send over the window list with WM_COPYDATA
-#if 0
-            // TODO
-            COPYDATASTRUCT cds;         
-            DWORD ret ;
-            vwMutexLock();
-            windowListUpdate() ;
-            cds.dwData = windowCount;
-            cds.cbData = sizeof(winList);
-            cds.lpData = (void*)winList;
-            if(wParam == 0)
-            {
-                sendModuleMessage(WM_COPYDATA, (WPARAM) aHWnd, (LPARAM)&cds); 
-                ret = TRUE ;
-            }
-            else if(!SendMessageTimeout((HWND)wParam,WM_COPYDATA,(WPARAM) aHWnd,(LPARAM) &cds,SMTO_ABORTIFHUNG|SMTO_BLOCK,10000,&ret))
-                ret = 0 ;
-            vwMutexRelease();
-            vwLogVerbose((_T("Sent winlist to %d, returning %d\n"),(int) wParam, ret)) ;
-            return ret ;
-#else
-            return 0 ;
-#endif
-        }
+        /* Send over the window list with WM_COPYDATA - retired
+         * This message was too dependent on the Window data structure, creating modules which
+         * are very version dependent. As to v4.0 support for this message has been removed,
+         * Module writers are encouraged to use the VW_WINGETINFO message instead see SF bug
+         * 1915723 for more information */
+        return 0 ;
         
     case VW_INSTALLPATH:
     case VW_USERAPPPATH:
