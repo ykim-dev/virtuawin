@@ -4182,8 +4182,8 @@ wndProc(HWND aHWnd, UINT message, WPARAM wParam, LPARAM lParam)
         
     case WM_MOVE:
         /* ensure the VW window remains hidden */
-        if((((short) LOWORD(lParam)) > -30000) || (((short) HIWORD(lParam)) > -30000))
-            SetWindowPos(aHWnd,0,-31000,-31000,0,0,(SWP_FRAMECHANGED | SWP_DEFERERASE | SWP_NOZORDER | SWP_NOSIZE | SWP_NOACTIVATE | SWP_NOSENDCHANGING)) ; 
+        if(((short) HIWORD(lParam)) > -30000)
+            SetWindowPos(aHWnd,0,10,-31000,0,0,(SWP_FRAMECHANGED | SWP_DEFERERASE | SWP_NOZORDER | SWP_NOSIZE | SWP_NOACTIVATE | SWP_NOSENDCHANGING)) ; 
         return 0 ;
         
     case WM_ENDSESSION:
@@ -4358,7 +4358,7 @@ VirtuaWinInit(HINSTANCE hInstance, LPSTR cmdLine)
     
     /* Create window. Note that WS_VISIBLE is not used, and window is never shown. */
     if((hWnd = CreateWindowEx(WS_EX_TOOLWINDOW, vwVIRTUAWIN_CLASSNAME, vwVIRTUAWIN_CLASSNAME, WS_VISIBLE,
-                              -31000, -31000, 10, 10, NULL, NULL, hInstance, NULL)) == NULL)
+                              10, -31000, 10, 10, NULL, NULL, hInstance, NULL)) == NULL)
     {
         MessageBox(NULL,_T("Failed to create window!"),vwVIRTUAWIN_NAME _T(" Error"), MB_ICONWARNING);
         exit(2) ;
