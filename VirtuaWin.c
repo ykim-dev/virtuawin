@@ -625,7 +625,7 @@ vwIconLoad(void)
  * Registering all hotkeys
  */
 void
-vwHotkeyRegister(void)
+vwHotkeyRegister(int warnAll)
 {
     if(!hotkeyRegistered)
     {
@@ -642,7 +642,8 @@ vwHotkeyRegister(void)
             }
             if(hotkeyList[ii].atom == 0)
                 MessageBox(hWnd,_T("Failed to create global atom"),vwVIRTUAWIN_NAME _T(" Error"), MB_ICONWARNING);
-            else if(RegisterHotKey(hWnd,hotkeyList[ii].atom,(hotkeyList[ii].modifier & ~vwHOTKEY_EXT),hotkeyList[ii].key) == FALSE)
+            else if((RegisterHotKey(hWnd,hotkeyList[ii].atom,(hotkeyList[ii].modifier & ~vwHOTKEY_EXT),hotkeyList[ii].key) == FALSE) &&
+                    (warnAll || (hotkeyList[ii].command != vwCMD_UI_ENABLESTATE)))
             {
                 _stprintf(buff,_T("Failed to register hotkey %d, check hotkeys."),ii+1) ;
                 MessageBox(hWnd,buff,vwVIRTUAWIN_NAME _T(" Error"), MB_ICONWARNING);
@@ -655,7 +656,7 @@ vwHotkeyRegister(void)
  * Unregistering all hotkeys
  */
 void
-vwHotkeyUnregister(void)
+vwHotkeyUnregister(int unregAll)
 {
     if(hotkeyRegistered)
     {
@@ -663,7 +664,7 @@ vwHotkeyUnregister(void)
         ii = hotkeyRegistered ;
         hotkeyRegistered = 0 ;
         while(--ii >= 0)
-            if(hotkeyList[ii].atom)
+            if((hotkeyList[ii].atom) && (unregAll || (hotkeyList[ii].command != vwCMD_UI_ENABLESTATE)))
                 UnregisterHotKey(hWnd,hotkeyList[ii].atom) ;
     }
 }
@@ -1979,7 +1980,7 @@ shutDown(void)
 {
     KillTimer(hWnd, 0x29a);                // Remove the timer
     postModuleMessage(MOD_QUIT, 0, 0);     // Tell all modules to quit
-    vwHotkeyUnregister();
+    vwHotkeyUnregister(1);
     vwWindowShowAll(0) ;                   // gather all windows quickly
     Shell_NotifyIcon(NIM_DELETE, &nIconD); // This removes the icon
     vwWindowShowAll(vwWINSH_FLAGS_TRYHARD);// try harder to gather remaining ones before exiting
@@ -2842,12 +2843,12 @@ vwToggleEnabled(void)
         _tcscpy(nIconD.szTip,vwVIRTUAWIN_NAME _T(" - Disabled")); //Tooltip
         vwIconSet(0,0);
         enableMouse(FALSE);
-        vwHotkeyUnregister();
+        vwHotkeyUnregister(0);
         vwEnabled = FALSE;
     }
     else
     {   // Enable VirtuaWin
-        vwHotkeyRegister();
+        vwHotkeyRegister(0);
         enableMouse(mouseEnable);
         vwIconSet(currentDesk,0);
         vwEnabled = TRUE;
@@ -3874,8 +3875,6 @@ wndProc(HWND aHWnd, UINT message, WPARAM wParam, LPARAM lParam)
         return TRUE;
         
     case WM_HOTKEY:				// A hot key was pressed
-        if(!vwEnabled)
-            return FALSE ;
         ii = hotkeyCount ;
         while(--ii >= 0)
             if(hotkeyList[ii].atom == wParam)
@@ -3958,6 +3957,26 @@ wndProc(HWND aHWnd, UINT message, WPARAM wParam, LPARAM lParam)
             return popupControlMenu(aHWnd) ;
         case vwCMD_WIN_GATHER:
             windowGather(NULL);
+            break ;
+        case vwCMD_WIN_MOVE_LEFT:
+        case vwCMD_WIN_MOVE_LEFT_FOL:
+            assignWindow(NULL,VW_STEPLEFT,(vwUByte) (hotkeyList[ii].command & 0x01),TRUE,FALSE);
+            break ;
+        case vwCMD_WIN_MOVE_RIGHT:
+        case vwCMD_WIN_MOVE_RIGHT_FOL:
+            assignWindow(NULL,VW_STEPRIGHT,(vwUByte) (hotkeyList[ii].command & 0x01),TRUE,FALSE);
+            break ;
+        case vwCMD_WIN_MOVE_UP:
+        case vwCMD_WIN_MOVE_UP_FOL:
+        case vwCMD_WIN_MOVE_DOWN:
+        case vwCMD_WIN_MOVE_DOWN_FOL:
+            if((hotkeyList[ii].command >= vwCMD_WIN_MOVE_DOWN) ^ (invertY == 0))
+                assignWindow(NULL,VW_STEPUP,(vwUByte) (hotkeyList[ii].command & 0x01),TRUE,FALSE);
+            else
+                assignWindow(NULL,VW_STEPDOWN,(vwUByte) (hotkeyList[ii].command & 0x01),TRUE,FALSE);
+            break ;
+        case vwCMD_UI_ENABLESTATE:
+            vwToggleEnabled() ;
             break ;
         }
         return TRUE;
@@ -4388,7 +4407,7 @@ VirtuaWinInit(HINSTANCE hInstance, LPSTR cmdLine)
         loadWindowConfig();
     
     vwIconLoad();
-    vwHotkeyRegister();
+    vwHotkeyRegister(1);
     enableMouse(mouseEnable);
     
     /* always move windows immediately on startup */

@@ -77,9 +77,9 @@ vwSetupApply(HWND hDlg, int curPageMask)
         {
             // All pages have now got any changes from the GUI, save them and apply
             saveVirtuawinConfig();
-            vwHotkeyUnregister();
+            vwHotkeyUnregister(1);
             vwIconLoad();              
-            vwHotkeyRegister();
+            vwHotkeyRegister(1);
             enableMouse(mouseEnable);
             // Tell modules about the config change
             postModuleMessage(MOD_CFGCHANGE, 0, 0);
