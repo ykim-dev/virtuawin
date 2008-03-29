@@ -2740,15 +2740,15 @@ vwWindowShowHide(vwWindow* aWindow, vwUInt flags)
         {
             vwLogVerbose((_T("vwWindowShow %8x %x %x %x %d %d\n"),(int) aWindow->handle,flags,(int)aWindow->flags,(int)aWindow->exStyle,aWindow->desk,currentDesk)) ;
             aWindow->flags |= (vwWINFLAGS_SHOWN|vwWINFLAGS_SHOW) ;
-            if((aWindow->flags & (vwWINFLAGS_HIDETSK_MASK|vwWINFLAGS_NO_TASKBAR_BUT)) == vwWINFLAGS_HIDETSK_TOOLWN)
-            {
-                // Restore the window mode & notify taskbar of the change
-                SetWindowLong(aWindow->handle, GWL_EXSTYLE, aWindow->exStyle) ;  
-                if(taskHWnd != NULL)
-                    PostMessage(taskHWnd, RM_Shellhook, HSHELL_WINDOWCREATED, (LPARAM) aWindow->handle) ;
-            }
             if(vwWindowIsHideByHide(aWindow))
             {
+                if((aWindow->flags & (vwWINFLAGS_HIDETSK_MASK|vwWINFLAGS_NO_TASKBAR_BUT)) == vwWINFLAGS_HIDETSK_TOOLWN)
+                {
+                    // Restore the window mode & notify taskbar of the change
+                    SetWindowLong(aWindow->handle, GWL_EXSTYLE, aWindow->exStyle) ;  
+                    if(taskHWnd != NULL)
+                        PostMessage(taskHWnd, RM_Shellhook, HSHELL_WINDOWCREATED, (LPARAM) aWindow->handle) ;
+                }
                 SetWindowPos(aWindow->handle,0,0,0,0,0,(SWP_SHOWWINDOW | SWP_NOZORDER | SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE)) ;
                 /* if minimized dont show popups */
                 if(vwWindowIsNotMinimized(aWindow))
@@ -2760,52 +2760,66 @@ vwWindowShowHide(vwWindow* aWindow, vwUInt flags)
                     PostMessage(taskHWnd, RM_Shellhook, HSHELL_WINDOWDESTROYED, (LPARAM) aWindow->handle);
                 }
             }
-            else if(vwWindowIsNotMinimized(aWindow))
+            else
             {
-                if(vwWindowIsNotHideByMinim(aWindow))
+                // Restore the window mode & notify taskbar of the change
+                SetWindowLong(aWindow->handle, GWL_EXSTYLE, aWindow->exStyle) ;  
+                if(((aWindow->flags & (vwWINFLAGS_HIDETSK_MASK|vwWINFLAGS_NO_TASKBAR_BUT)) == vwWINFLAGS_HIDETSK_TOOLWN) && (taskHWnd != NULL))
+                    PostMessage(taskHWnd, RM_Shellhook, HSHELL_WINDOWCREATED, (LPARAM) aWindow->handle) ;
+                if(vwWindowIsNotMinimized(aWindow))
                 {
-                    // show/hide the window by moving it off screen
-                    GetWindowRect(aWindow->handle,&pos) ;
-                    if((pos.top < -5000) && (pos.top > -30000))
-                        // Move the window back onto visible area
-                        SetWindowPos(aWindow->handle,0,pos.left,pos.top + 25000,0,0,(SWP_FRAMECHANGED | SWP_DEFERERASE | SWP_NOZORDER | SWP_NOSIZE | SWP_NOACTIVATE | SWP_NOSENDCHANGING)) ; 
+                    if(vwWindowIsNotHideByMinim(aWindow))
+                    {
+                        // show/hide the window by moving it off screen
+                        GetWindowRect(aWindow->handle,&pos) ;
+                        if((pos.top < -5000) && (pos.top > -30000))
+                            // Move the window back onto visible area
+                            SetWindowPos(aWindow->handle,0,pos.left,pos.top + 25000,0,0,(SWP_FRAMECHANGED | SWP_DEFERERASE | SWP_NOZORDER | SWP_NOSIZE | SWP_NOACTIVATE | SWP_NOSENDCHANGING)) ; 
+                    }
+                    else if(vwWindowIsMaximized(aWindow))
+                        ShowWindow(aWindow->handle,SW_MAXIMIZE) ;
+                    else
+                        ShowWindow(aWindow->handle,SW_RESTORE) ;
                 }
-                else if(vwWindowIsMaximized(aWindow))
-                    ShowWindow(aWindow->handle,SW_MAXIMIZE) ;
-                else
-                    ShowWindow(aWindow->handle,SW_RESTORE) ;
             }
         }
         else
         {
             vwLogVerbose((_T("vwWindowHide %8x %x %x %x %d %d\n"),(int) aWindow->handle,flags,(int)aWindow->flags,(int)aWindow->exStyle,aWindow->desk,currentDesk)) ;
             aWindow->flags &= ~(vwWINFLAGS_SHOWN|vwWINFLAGS_SHOW) ;
-            if((aWindow->flags & (vwWINFLAGS_HIDETSK_MASK|vwWINFLAGS_NO_TASKBAR_BUT)) == vwWINFLAGS_HIDETSK_TOOLWN)
-            {
-                // This removes window from taskbar and alt+tab list, must notify taskbar of the change
-                SetWindowLong(aWindow->handle, GWL_EXSTYLE,(aWindow->exStyle & (~WS_EX_APPWINDOW)) | WS_EX_TOOLWINDOW);
-                if(taskHWnd != NULL)
-                    PostMessage(taskHWnd, RM_Shellhook, HSHELL_WINDOWDESTROYED, (LPARAM) aWindow->handle);
-            }
             if(vwWindowIsHideByHide(aWindow))
             {
+                if((aWindow->flags & (vwWINFLAGS_HIDETSK_MASK|vwWINFLAGS_NO_TASKBAR_BUT)) == vwWINFLAGS_HIDETSK_TOOLWN)
+                {
+                    // This removes window from taskbar and alt+tab list, must notify taskbar of the change
+                    SetWindowLong(aWindow->handle, GWL_EXSTYLE,(aWindow->exStyle & (~WS_EX_APPWINDOW)) | WS_EX_TOOLWINDOW);
+                    if(taskHWnd != NULL)
+                        PostMessage(taskHWnd, RM_Shellhook, HSHELL_WINDOWDESTROYED, (LPARAM) aWindow->handle);
+                }
                 SetWindowPos(aWindow->handle,0,0,0,0,0,(SWP_HIDEWINDOW | SWP_NOZORDER | SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE)) ;
                 /* if minimized dont show popups */
                 if(vwWindowIsNotMinimized(aWindow))
                     ShowOwnedPopups(aWindow->handle,FALSE) ;
             }
-            else if(vwWindowIsNotMinimized(aWindow))
+            else
             {
-                if(vwWindowIsNotHideByMinim(aWindow))
+                // This removes window from taskbar and alt+tab list, must notify taskbar of the change
+                SetWindowLong(aWindow->handle, GWL_EXSTYLE,(aWindow->exStyle & (~WS_EX_APPWINDOW)) | WS_EX_TOOLWINDOW);
+                if(((aWindow->flags & (vwWINFLAGS_HIDETSK_MASK|vwWINFLAGS_NO_TASKBAR_BUT)) == vwWINFLAGS_HIDETSK_TOOLWN) && (taskHWnd != NULL))
+                    PostMessage(taskHWnd, RM_Shellhook, HSHELL_WINDOWDESTROYED, (LPARAM) aWindow->handle);
+                if(vwWindowIsNotMinimized(aWindow))
                 {
-                    // show/hide the window by moving it off screen
-                    GetWindowRect(aWindow->handle,&pos) ;
-                    if((pos.top > -5000) && (pos.top < 20000))
-                        // Move the window off visible area
-                        SetWindowPos(aWindow->handle,0,pos.left,pos.top - 25000,0,0,(SWP_FRAMECHANGED | SWP_DEFERERASE | SWP_NOZORDER | SWP_NOSIZE | SWP_NOACTIVATE | SWP_NOSENDCHANGING)) ; 
+                    if(vwWindowIsNotHideByMinim(aWindow))
+                    {
+                        // show/hide the window by moving it off screen
+                        GetWindowRect(aWindow->handle,&pos) ;
+                        if((pos.top > -5000) && (pos.top < 20000))
+                            // Move the window off visible area
+                            SetWindowPos(aWindow->handle,0,pos.left,pos.top - 25000,0,0,(SWP_FRAMECHANGED | SWP_DEFERERASE | SWP_NOZORDER | SWP_NOSIZE | SWP_NOACTIVATE | SWP_NOSENDCHANGING)) ; 
+                    }
+                    else
+                        CloseWindow(aWindow->handle) ;
                 }
-                else
-                    CloseWindow(aWindow->handle) ;
             }
         }
     }
