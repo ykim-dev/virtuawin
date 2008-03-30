@@ -4220,6 +4220,11 @@ wndProc(HWND aHWnd, UINT message, WPARAM wParam, LPARAM lParam)
         if(wParam)
             shutDown();
         return TRUE;
+    
+    case WM_CLOSE:
+        if(MessageBox(aHWnd,_T("Really exit ") vwVIRTUAWIN_NAME _T("?"),vwVIRTUAWIN_NAME, MB_ICONQUESTION | MB_YESNO | MB_DEFBUTTON2) != IDYES)
+            return FALSE ;
+        return TRUE;
         
     case WM_DESTROY:	  // when application is closed
         shutDown();            
