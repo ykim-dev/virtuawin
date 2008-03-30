@@ -2485,12 +2485,15 @@ winListCreateItemList(int flags, vwMenuItem **items,int *numitems)
             ww = win ;
         else if((win->flags & vwWINFLAGS_NO_TASKBAR_BUT) && ((ww = win->linkedNext) != NULL))
         {
-            while(ww->flags & vwWINFLAGS_NO_TASKBAR_BUT)
+            while((ww->desk != win->desk) || ((ww->flags & (vwWINFLAGS_NO_TASKBAR_BUT|vwWINFLAGS_MANAGED)) != vwWINFLAGS_MANAGED))
+                  
+            {
                 if((ww = ww->linkedNext) == win)
                 {
                     ww = NULL ;
                     break ;
                 }
+            }
         }
         else
             ww = NULL ;
