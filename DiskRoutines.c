@@ -38,8 +38,10 @@
 #endif
 #define VIRTUAWIN_SUBDIR vwVIRTUAWIN_NAME
 
-#define vwWindowRuleDefaultCount 5
+#define vwWindowRuleDefaultCount 7
 static TCHAR *vwWindowRuleDefault0Names[vwWindowRuleDefaultCount]={
+    _T("XLMAIN"),
+    _T("AdobeAcrobat"),
     _T("WindowsForms10."),
     _T("ExploreWClass"),
     _T("IEFrame"),
@@ -47,6 +49,8 @@ static TCHAR *vwWindowRuleDefault0Names[vwWindowRuleDefaultCount]={
     _T("BaseBar")
 } ;
 static vwUInt vwWindowRuleDefaultFlags[vwWindowRuleDefaultCount]={
+    (vwWTFLAGS_ENABLED|vwWTFLAGS_MAIN_WIN),
+    (vwWTFLAGS_ENABLED|vwWTFLAGS_MAIN_WIN),
     (vwWTFLAGS_ENABLED|vwWTFLAGS_HIDEWIN_MOVE|vwWTFLAGS_HIDETSK_TOOLWN|vwWTFLAGS_CN_EVAR),
     (vwWTFLAGS_ENABLED|vwWTFLAGS_HIDEWIN_MOVE|vwWTFLAGS_HIDETSK_TOOLWN),
     (vwWTFLAGS_ENABLED|vwWTFLAGS_HIDEWIN_MOVE|vwWTFLAGS_HIDETSK_TOOLWN),
