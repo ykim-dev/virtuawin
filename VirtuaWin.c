@@ -1877,7 +1877,9 @@ windowListUpdate(void)
     // order of events is fairly random. The problem for us is that if
     // windows selects a hidden app (i.e. on another desktop) it is very
     // difficult to differentiate between this and a genuine pop-up event.
-    if(((activeHWnd = GetForegroundWindow()) == lastFGHWnd) || (activeHWnd == hWnd))
+    if(((activeHWnd = GetForegroundWindow()) == NULL) || (activeHWnd == hWnd))
+        lastFGHWnd = activeHWnd = NULL ;
+    else if((activeHWnd = GetForegroundWindow()) == lastFGHWnd)
         activeHWnd = NULL ;
     wb = windowBaseList ;
     while(wb != NULL)
@@ -1903,8 +1905,13 @@ windowListUpdate(void)
             if((win->desk != currentDesk) && ((activateAction == 0) || (win->desk > nDesks)))
             {
                 j = win->desk ;
+                /* remove any link as we need to push this window back in isolation */
+                nw = win->linkedNext ;
+                win->linkedNext = NULL ;
+                /* must officially bring it to this desktop first to restore flags etc, then push it back */
                 vwWindowSetDesk(win,currentDesk,2,FALSE) ;
                 vwWindowSetDesk(win,j,1,FALSE) ;
+                win->linkedNext = nw ;
                 if(win->handle == activeHWnd)
                     activeHWnd = NULL ;
             }
