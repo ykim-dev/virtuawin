@@ -1,7 +1,7 @@
 # VirtuaWin (virtuawin.sourceforge.net)
 # win32v6.mak - VirtuaWin make file for Microsoft MSVC v6.0
 #
-# Copyright (c) 2006-2007 VirtuaWin (VirtuaWin@home.se)
+# Copyright (c) 2006-2008 VirtuaWin (VirtuaWin@home.se)
 #
 # This program is free software; you can redistribute it and/or modify it
 # under the terms of the GNU General Public License as published by the Free

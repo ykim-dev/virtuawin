@@ -2,7 +2,7 @@
 rem VirtuaWin (virtuawin.sourceforge.net)
 rem build - VirtuaWin build script for Microsoft cmd.
 rem
-rem Copyright (c) 2006-2007 VirtuaWin (VirtuaWin@home.se)
+rem Copyright (c) 2006-2008 VirtuaWin (VirtuaWin@home.se)
 rem
 rem See the file VirtuaWin.c for copying and conditions.
 rem
