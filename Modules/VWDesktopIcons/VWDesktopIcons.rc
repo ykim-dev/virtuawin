@@ -2,20 +2,23 @@
 #include "Resource.h"
 
 
-IDD_MAINDIALOG DIALOG 79, 25, 292, 226
+IDD_MAINDIALOG DIALOG 79, 25, 292, 246
 STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "VirtuaWin Desktop Icons v1.1"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT           "", ID_LABEL, 6, 6, 200, 11
+    LTEXT           "", ID_LABEL, 6, 6, 114, 11
+    AUTOCHECKBOX    "Show new icons on this desktop", ID_SHOW_NEW_ICN, 140, 6, 125, 10
     LISTBOX         ID_HIDE_LIST, 6, 20, 114, 186, WS_VSCROLL | WS_HSCROLL | WS_TABSTOP
     LISTBOX         ID_SHOW_LIST, 172, 20, 114, 186, WS_VSCROLL | WS_HSCROLL | WS_TABSTOP
     PUSHBUTTON      "< Hide",  ID_HIDE_ICON, 126, 100, 40, 14
     PUSHBUTTON      "Show >",  ID_SHOW_ICON, 126, 120, 40, 14
-    PUSHBUTTON      "Restore", ID_RESTORE,6,   206, 40, 14
-    PUSHBUTTON      "Copy",    ID_COPY,   52,  206, 40, 14
-    PUSHBUTTON      "Paste",   ID_PASTE,  98,  206, 40, 14
-    PUSHBUTTON      "OK",      ID_OK,     154, 206, 40, 14
-    DEFPUSHBUTTON   "Cancel",  IDCANCEL,  200, 206, 40, 14
-    PUSHBUTTON      "Apply",   ID_APPLY,  246, 206, 40, 14
+    PUSHBUTTON      "Store",   ID_STORE,    6, 206, 40, 14
+    PUSHBUTTON      "Reset",   ID_RESET,   52, 206, 40, 14
+    AUTOCHECKBOX    "Auto-up-date this desktop", ID_AUTO_UPDATE, 140, 208, 125, 10
+    PUSHBUTTON      "Copy",    ID_COPY,     6, 226, 40, 14
+    PUSHBUTTON      "Paste",   ID_PASTE,   52, 226, 40, 14
+    PUSHBUTTON      "OK",      ID_OK,     154, 226, 40, 14
+    DEFPUSHBUTTON   "Cancel",  IDCANCEL,  200, 226, 40, 14
+    PUSHBUTTON      "Apply",   ID_APPLY,  246, 226, 40, 14
 END

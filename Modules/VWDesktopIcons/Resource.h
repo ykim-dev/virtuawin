@@ -4,8 +4,11 @@
 #define	ID_SHOW_LIST	103
 #define	ID_HIDE_ICON	104
 #define	ID_SHOW_ICON	105
-#define	ID_RESTORE 	106
-#define	ID_COPY		107
-#define	ID_PASTE	108
-#define	ID_OK		109
-#define	ID_APPLY	110
+#define	ID_SHOW_NEW_ICN	106
+#define	ID_AUTO_UPDATE 	107
+#define	ID_STORE 	108
+#define	ID_RESET 	109
+#define	ID_COPY		110
+#define	ID_PASTE	111
+#define	ID_OK		112
+#define	ID_APPLY	113
