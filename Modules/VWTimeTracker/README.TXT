@@ -45,7 +45,7 @@ Copyright:
 VWTimeTracker  is a freely  distributed  program and is licensed under the GNU
 General Public License.
 
-Copyright (c) 2007 VirtuaWin (virtuawin@home.se)
+Copyright (c) 2007-2008 VirtuaWin (virtuawin@home.se)
 
 History:
 
