@@ -25,6 +25,7 @@ setup_expert=6005
 configuration_files=7000
 custom_icons=8000
 hiding_desktops=9000
+win_rule_dialog=10000
 control_menu=11000
 window_menu=12000
 
