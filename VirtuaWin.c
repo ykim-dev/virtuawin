@@ -98,7 +98,7 @@ enum {
 HWND hWnd;                                   // handle to VirtuaWin
 HANDLE hMutex;
 FILE *vwLogFile ;
-vwUByte vwEnabled=TRUE;	                     // if VirtuaWin enabled or not
+vwUByte vwEnabled=1;	                     // if VirtuaWin enabled or not
 
 int taskbarEdge;
 int desktopWorkArea[2][4] ;
@@ -527,7 +527,9 @@ vwIconSet(int deskNumber, int hungCount)
         ll = 0 ;
         if(hungCount)
             ll = _stprintf(nIconD.szTip,_T("%d window%s not responding\n"),hungCount,(hungCount==1) ? _T(""):_T("s")) ;
-        if(desktopName[deskNumber] != NULL)
+        if(!vwEnabled)
+            _tcscpy(nIconD.szTip,vwVIRTUAWIN_NAME _T(" - Disabled")); /* Tooltip */
+        else if(desktopName[deskNumber] != NULL)
         {
             _tcsncpy(nIconD.szTip+ll,desktopName[deskNumber],64-ll) ;
             nIconD.szTip[63] = '\0' ;
@@ -2734,7 +2736,7 @@ winListCreateMenu(int flags, int itemCount, vwMenuItem **items)
 static int
 vwWindowShowHide(vwWindow* aWindow, vwUInt flags)
 {
-    // Do nothing if we are dragging a window or the show hide state is right
+    /* Do nothing if we are dragging a window or the show hide state is right */
     vwLogVerbose((_T("vwWindowShowHide %8x %x %x %x %d %d\n"),(int) aWindow->handle,flags,(int)aWindow->flags,(int)aWindow->exStyle,aWindow->desk,currentDesk)) ;
     if(((flags & vwWINSH_FLAGS_SHOW) != 0) ^ vwWindowIsShown(aWindow))
     {
@@ -2755,7 +2757,7 @@ vwWindowShowHide(vwWindow* aWindow, vwUInt flags)
             {
                 if((aWindow->flags & (vwWINFLAGS_HIDETSK_MASK|vwWINFLAGS_NO_TASKBAR_BUT)) == vwWINFLAGS_HIDETSK_TOOLWN)
                 {
-                    // Restore the window mode & notify taskbar of the change
+                    /* Restore the window mode & notify taskbar of the change */
                     SetWindowLong(aWindow->handle, GWL_EXSTYLE, aWindow->exStyle) ;  
                     if(taskHWnd != NULL)
                         PostMessage(taskHWnd, RM_Shellhook, HSHELL_WINDOWCREATED, (LPARAM) aWindow->handle) ;
@@ -2771,26 +2773,40 @@ vwWindowShowHide(vwWindow* aWindow, vwUInt flags)
                     PostMessage(taskHWnd, RM_Shellhook, HSHELL_WINDOWDESTROYED, (LPARAM) aWindow->handle);
                 }
             }
+            else if(vwWindowIsHideByMinim(aWindow))
+            {
+                /* Restore the window mode & notify taskbar of the change */
+                if((aWindow->flags & vwWINFLAGS_HIDETSK_MASK) == vwWINFLAGS_HIDETSK_TOOLWN)
+                {
+                    SetWindowLong(aWindow->handle, GWL_EXSTYLE, aWindow->exStyle) ;  
+                    if((taskHWnd != NULL) && ((aWindow->flags & vwWINFLAGS_NO_TASKBAR_BUT) == 0))
+                        PostMessage(taskHWnd, RM_Shellhook, HSHELL_WINDOWCREATED, (LPARAM) aWindow->handle) ;
+                }
+                if(vwWindowIsMaximized(aWindow))
+                    ShowWindow(aWindow->handle,SW_MAXIMIZE) ;
+                else if(vwWindowIsNotMinimized(aWindow))
+                    ShowWindow(aWindow->handle,SW_RESTORE) ;
+            }
             else
             {
-                // Restore the window mode & notify taskbar of the change
-                SetWindowLong(aWindow->handle, GWL_EXSTYLE, aWindow->exStyle) ;  
-                if(((aWindow->flags & (vwWINFLAGS_HIDETSK_MASK|vwWINFLAGS_NO_TASKBAR_BUT)) == vwWINFLAGS_HIDETSK_TOOLWN) && (taskHWnd != NULL))
-                    PostMessage(taskHWnd, RM_Shellhook, HSHELL_WINDOWCREATED, (LPARAM) aWindow->handle) ;
+                if((aWindow->flags & vwWINFLAGS_HIDETSK_MASK) == vwWINFLAGS_HIDETSK_TOOLWN)
+                {
+                    /* Restore the window mode & notify taskbar of the change */
+                    SetWindowLong(aWindow->handle, GWL_EXSTYLE, aWindow->exStyle) ;  
+                    if((taskHWnd != NULL) && ((aWindow->flags & vwWINFLAGS_NO_TASKBAR_BUT) == 0))
+                        PostMessage(taskHWnd, RM_Shellhook, HSHELL_WINDOWCREATED, (LPARAM) aWindow->handle) ;
+                }
                 if(vwWindowIsNotMinimized(aWindow))
                 {
-                    if(vwWindowIsNotHideByMinim(aWindow))
-                    {
-                        // show/hide the window by moving it off screen
-                        GetWindowRect(aWindow->handle,&pos) ;
-                        if((pos.top < -5000) && (pos.top > -30000))
-                            // Move the window back onto visible area
-                            SetWindowPos(aWindow->handle,0,pos.left,pos.top + 25000,0,0,(SWP_FRAMECHANGED | SWP_DEFERERASE | SWP_NOZORDER | SWP_NOSIZE | SWP_NOACTIVATE | SWP_NOSENDCHANGING)) ; 
-                    }
-                    else if(vwWindowIsMaximized(aWindow))
+                    /* show/hide the window by moving it off screen */
+                    GetWindowRect(aWindow->handle,&pos) ;
+                    if((pos.top < -5000) && (pos.top > -30000))
+                        /* Move the window back onto visible area */
+                        SetWindowPos(aWindow->handle,0,pos.left,pos.top + 25000,0,0,(SWP_FRAMECHANGED | SWP_DEFERERASE | SWP_NOZORDER | SWP_NOSIZE | SWP_NOACTIVATE | SWP_NOSENDCHANGING)) ; 
+                    if(vwWindowIsMaximized(aWindow) && ((aWindow->flags & vwWINFLAGS_HIDETSK_MASK) != vwWINFLAGS_HIDETSK_TOOLWN))
+                        /* we needed to restore (un-maximize) the window to hide it, we must move it back to its original position
+                         * first before re-maximizing otherwise when the user restores the window it will vanish */
                         ShowWindow(aWindow->handle,SW_MAXIMIZE) ;
-                    else
-                        ShowWindow(aWindow->handle,SW_RESTORE) ;
                 }
             }
         }
@@ -2802,7 +2818,7 @@ vwWindowShowHide(vwWindow* aWindow, vwUInt flags)
             {
                 if((aWindow->flags & (vwWINFLAGS_HIDETSK_MASK|vwWINFLAGS_NO_TASKBAR_BUT)) == vwWINFLAGS_HIDETSK_TOOLWN)
                 {
-                    // This removes window from taskbar and alt+tab list, must notify taskbar of the change
+                    /* This removes window from taskbar and alt+tab list, must notify taskbar of the change */
                     SetWindowLong(aWindow->handle, GWL_EXSTYLE,(aWindow->exStyle & (~WS_EX_APPWINDOW)) | WS_EX_TOOLWINDOW);
                     if(taskHWnd != NULL)
                         PostMessage(taskHWnd, RM_Shellhook, HSHELL_WINDOWDESTROYED, (LPARAM) aWindow->handle);
@@ -2812,24 +2828,37 @@ vwWindowShowHide(vwWindow* aWindow, vwUInt flags)
                 if(vwWindowIsNotMinimized(aWindow))
                     ShowOwnedPopups(aWindow->handle,FALSE) ;
             }
+            else if(vwWindowIsHideByMinim(aWindow))
+            {
+                if(vwWindowIsNotMinimized(aWindow))
+                    CloseWindow(aWindow->handle) ;
+                /* This removes window from taskbar and alt+tab list, must notify taskbar of the change */
+                if((aWindow->flags & vwWINFLAGS_HIDETSK_MASK) == vwWINFLAGS_HIDETSK_TOOLWN)
+                {
+                    SetWindowLong(aWindow->handle, GWL_EXSTYLE,(aWindow->exStyle & (~WS_EX_APPWINDOW)) | WS_EX_TOOLWINDOW);
+                    if((taskHWnd != NULL) && ((aWindow->flags & vwWINFLAGS_NO_TASKBAR_BUT) == 0))
+                        PostMessage(taskHWnd, RM_Shellhook, HSHELL_WINDOWDESTROYED, (LPARAM) aWindow->handle);
+                }
+            }
             else
             {
-                // This removes window from taskbar and alt+tab list, must notify taskbar of the change
-                SetWindowLong(aWindow->handle, GWL_EXSTYLE,(aWindow->exStyle & (~WS_EX_APPWINDOW)) | WS_EX_TOOLWINDOW);
-                if(((aWindow->flags & (vwWINFLAGS_HIDETSK_MASK|vwWINFLAGS_NO_TASKBAR_BUT)) == vwWINFLAGS_HIDETSK_TOOLWN) && (taskHWnd != NULL))
-                    PostMessage(taskHWnd, RM_Shellhook, HSHELL_WINDOWDESTROYED, (LPARAM) aWindow->handle);
+                if((aWindow->flags & vwWINFLAGS_HIDETSK_MASK) == vwWINFLAGS_HIDETSK_TOOLWN)
+                {
+                    /* This removes window from taskbar and alt+tab list, must notify taskbar of the change */
+                    SetWindowLong(aWindow->handle, GWL_EXSTYLE,(aWindow->exStyle & (~WS_EX_APPWINDOW)) | WS_EX_TOOLWINDOW);
+                    if((taskHWnd != NULL) && ((aWindow->flags & vwWINFLAGS_NO_TASKBAR_BUT) == 0))
+                        PostMessage(taskHWnd, RM_Shellhook, HSHELL_WINDOWDESTROYED, (LPARAM) aWindow->handle);
+                }
+                else if(vwWindowIsMaximized(aWindow))
+                    /* must restore (un-maximize) the window other the window move doesn't work */ 
+                    ShowWindow(aWindow->handle,SW_RESTORE) ;
                 if(vwWindowIsNotMinimized(aWindow))
                 {
-                    if(vwWindowIsNotHideByMinim(aWindow))
-                    {
-                        // show/hide the window by moving it off screen
-                        GetWindowRect(aWindow->handle,&pos) ;
-                        if((pos.top > -5000) && (pos.top < 20000))
-                            // Move the window off visible area
-                            SetWindowPos(aWindow->handle,0,pos.left,pos.top - 25000,0,0,(SWP_FRAMECHANGED | SWP_DEFERERASE | SWP_NOZORDER | SWP_NOSIZE | SWP_NOACTIVATE | SWP_NOSENDCHANGING)) ; 
-                    }
-                    else
-                        CloseWindow(aWindow->handle) ;
+                    /* show/hide the window by moving it off screen */
+                    GetWindowRect(aWindow->handle,&pos) ;
+                    if((pos.top > -5000) && (pos.top < 20000))
+                        /* Move the window off visible area */
+                        SetWindowPos(aWindow->handle,0,pos.left,pos.top - 25000,0,0,(SWP_FRAMECHANGED | SWP_DEFERERASE | SWP_NOZORDER | SWP_NOSIZE | SWP_NOACTIVATE | SWP_NOSENDCHANGING)) ; 
                 }
             }
         }
@@ -2847,22 +2876,20 @@ vwWindowShowHide(vwWindow* aWindow, vwUInt flags)
 static void
 vwToggleEnabled(void)
 {
+    vwEnabled ^= 1;
     if(vwEnabled)
-    {   // disable VirtuaWin
-        KillTimer(hWnd, 0x29a);
-        _tcscpy(nIconD.szTip,vwVIRTUAWIN_NAME _T(" - Disabled")); //Tooltip
-        vwIconSet(0,0);
-        enableMouse(FALSE);
-        vwHotkeyUnregister(0);
-        vwEnabled = FALSE;
-    }
-    else
-    {   // Enable VirtuaWin
+    {   /* Enable VirtuaWin */
         vwHotkeyRegister(0);
         enableMouse(mouseEnable);
         vwIconSet(currentDesk,0);
-        vwEnabled = TRUE;
         SetTimer(hWnd, 0x29a, 250, monitorTimerProc);
+    }
+    else
+    {   /* Disable VirtuaWin */
+        KillTimer(hWnd, 0x29a);
+        vwIconSet(0,0);
+        enableMouse(FALSE);
+        vwHotkeyUnregister(0);
     }
 }
 
