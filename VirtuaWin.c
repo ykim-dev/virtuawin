@@ -4275,7 +4275,7 @@ wndProc(HWND aHWnd, UINT message, WPARAM wParam, LPARAM lParam)
         {
         case WM_LBUTTONDOWN:               // Show the window list
             if(vwEnabled)
-                popupWinListMenu(aHWnd,(HIWORD(GetKeyState(VK_CONTROL))) ? 2:winListCompact) ;
+                popupWinListMenu(aHWnd,(HIWORD(GetKeyState(VK_CONTROL))) ? 2:(HIWORD(GetKeyState(VK_SHIFT))) ? (winListCompact ^ 1):winListCompact) ;
             break;
         
         case WM_LBUTTONDBLCLK:             // double click on icon
