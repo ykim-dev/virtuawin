@@ -903,14 +903,20 @@ enableDeskImage(int height)
  * Show the VirtuaWin help pages
  */
 void
-showHelp(HWND aHWnd, UINT context)
+showHelp(HWND aHWnd, TCHAR *topic)
 {
-    TCHAR buff[MAX_PATH];
-    GetFilename(vwVIRTUAWIN_HLP,0,buff);
-    if(context)
-        WinHelp(aHWnd, buff, HELP_CONTEXT, context) ;
-    else
-        WinHelp(aHWnd, buff, HELP_CONTENTS, 0) ;
+    TCHAR buff[MAX_PATH+64] ;
+    HINSTANCE h ;
+    _tcscpy(buff,_T("mk:@MSITStore:")) ;
+    GetFilename(vwVIRTUAWIN_HLP,0,buff+14);
+    if(topic != NULL)
+    {
+        _tcscat(buff,_T("::/VirtuaWin_")) ;
+        _tcscat(buff,topic) ;
+    }
+    h = ShellExecute(NULL,_T("open"),_T("hh"),buff,NULL,SW_SHOWNORMAL);
+    if((UINT)h < 33)
+        MessageBox(aHWnd,_T("Error opening on-line help."),vwVIRTUAWIN_NAME _T(" Error"),MB_ICONWARNING);
 }
 
 static void
@@ -3804,7 +3810,7 @@ popupControlMenu(HWND aHWnd)
         vwWindowShowAll(0);
         break;
     case ID_HELP:		// show help
-        showHelp(aHWnd,0);
+        showHelp(aHWnd,NULL) ;
         break;
     case ID_DISABLE:	// Disable VirtuaWin
         vwToggleEnabled() ;
@@ -4062,7 +4068,7 @@ wndProc(HWND aHWnd, UINT message, WPARAM wParam, LPARAM lParam)
         return TRUE;
         
     case VW_HELP:
-        showHelp(aHWnd,0);
+        showHelp(aHWnd,NULL) ;
         return TRUE;
         
     case VW_GATHER:
