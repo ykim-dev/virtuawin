@@ -3,7 +3,7 @@
 #
 # Preconditions:
 # - shell already configured to run gcc with MinGW and CVS (i.e. CVSROOT and CVS_RSH set)
-# - A helpfile compiler (set HELPCOMPILER)
+# - HTML Help compiler (set HELPCOMPILER)
 # - Inno Setup (set SETUPCOMPILER if not in standard install location)
 # - emacs (or set EDITOR to another good text editor)
 # - zip (set ZIP) or winzip with commandline extension
@@ -12,36 +12,40 @@
 # Variables
 # MSYS need windows style /? arguments to be double slashes, i.e. //? use a varable to handle this.
 SLASH="/"
+CDRIVE="/cygdrive/c"
 if [ `uname | sed -e "s/^MINGW.*/MINGW/"` == 'MINGW' ] ; then
     SLASH="//"
+    CDRIVE="/c"
 fi
 if [ -z "$EDITOR" ] ; then
     EDITOR=emacs
 fi
 if [ -z "$HELPCOMPILER" ] ; then
-    HELPCOMPILER="/cygdrive/c/helpcompiler/HCW"
+    HELPCOMPILER="${CDRIVE}/Program Files/HTML Help Workshop/hhc"
 fi
 if [ -z "$SETUPCOMPILER" ] ; then
-    SETUPCOMPILER="/cygdrive/c/Program Files/Inno Setup 5/Compil32"
+    SETUPCOMPILER="${CDRIVE}/Program Files/Inno Setup 5/Compil32"
 fi
 if [ -z "$WINZIP" ] ; then
-    WINZIP="/cygdrive/c/Program\ Files/WinZip/wzzip"
+    WINZIP="${CDRIVE}/Program Files/WinZip/wzzip"
 fi
 
 if [ -z "$1" ] ; then
-    echo "Usage: createPackage <version> [<label>]"
+    echo "Usage: createPackage [-TEST] <version> [<label>]"
     echo "E.g.:"
     echo "      createPackage 3.2.0.0 beta1"
     echo "      createPackage 3.2 beta2"
     echo "      createPackage 3.2"
     exit -1
 fi
-if [ -n "$TEST_PACKAGE" ] ; then
+if [ "$1" == "-TEST" ] ; then
     if [ ! -r VirtuaWin.c ] ; then
         echo "Test Usage Error: must run script from the source directory"
         exit -1
     fi
     echo "Testing packaging"
+    shift
+    TEST_PACKAGE=1
 fi
 
 ver_mjr=`echo $1 | awk -F"." '{ print $1+0 }'`
@@ -85,8 +89,8 @@ cat VirtuaWin.rc.tmp | sed -c -e "s/^ PRODUCTVERSION .*/ PRODUCTVERSION ${ver_mj
 cat VirtuaWin.rc | sed -c -e "s/ VALUE \"FileVersion\", \"[.0-9]*\\\\0\"/ VALUE \"FileVersion\", \"${ver_mjr}.${ver_mnr}.${ver_rev}.${ver_bno}\\\\0\"/" > VirtuaWin.rc.tmp
 cat VirtuaWin.rc.tmp | sed -c -e "s/ VALUE \"ProductVersion\", \"[.0-9]*\\\\0\"/ VALUE \"FileVersion\", \"${ver_mjr}.${ver_mnr}.${ver_rev}.${ver_bno}\\\\0\"/" > VirtuaWin.rc
 rm VirtuaWin.rc.tmp
-cat Help/virtuawin.rtf | sed -c -e "s/ VirtuaWin v[.0-9]* Help/ VirtuaWin v${ver_mjr}.${ver_mnr} Help/" > Help/virtuawin.rtf.tmp
-mv Help/virtuawin.rtf.tmp Help/virtuawin.rtf
+cat Help/VirtuaWin_Overview.htm | sed -c -e "s/VirtuaWin v[.0-9]* Help/VirtuaWin v${ver_mjr}.${ver_mnr} Help/" > Help/VirtuaWin_Overview.htm.tmp
+mv Help/VirtuaWin_Overview.htm.tmp Help/VirtuaWin_Overview.htm
 cat WinList/winlist.rc | sed -c -e "s/^CAPTION \"WinList v.*\"/CAPTION \"WinList v$version\"/" > WinList/winlist.rc.tmp
 mv WinList/winlist.rc.tmp WinList/winlist.rc
 cat scripts/virtuawin.iss | sed -c -e "s/^AppVerName=VirtuaWin v.*/AppVerName=VirtuaWin v$version/" > scripts/virtuawin.iss.tmp
@@ -98,7 +102,7 @@ echo
 if [ $REPLY == 'y' ] ; then
     echo compiling helpfile
     cd Help
-    "$HELPCOMPILER" -C -E virtuawin.hpj
+    "$HELPCOMPILER" virtuawin.hhp
     cd ..
     echo building standard
     ./build -S
@@ -115,7 +119,7 @@ if [ $REPLY == 'y' ] ; then
     cp ./READMEII.TXT ./tmp/standard/README.TXT
     cp ./HISTORY.TXT ./tmp/standard/
     cp ./COPYING.TXT ./tmp/standard/
-    cp ./Help/VirtuaWin.hlp ./tmp/standard/VirtuaWin.hlp
+    cp ./Help/VirtuaWin.chm ./tmp/standard/VirtuaWin.chm
     cp ./scripts/VirtuaWin5.0.ISL ./tmp/standard/
     cp ./scripts/virtuawin.iss ./tmp/standard/
     echo done standard
@@ -134,7 +138,7 @@ if [ $REPLY == 'y' ] ; then
     cp ./READMEII.TXT ./tmp/unicode/README.TXT
     cp ./HISTORY.TXT ./tmp/unicode/
     cp ./COPYING.TXT ./tmp/unicode/
-    cp ./Help/VirtuaWin.hlp ./tmp/unicode/VirtuaWin.hlp
+    cp ./Help/VirtuaWin.chm ./tmp/unicode/VirtuaWin.chm
     cp ./scripts/VirtuaWin5.0.ISL ./tmp/unicode/
     cat ./scripts/virtuawin.iss | sed -e "s/^AppVerName=VirtuaWin/AppVerName=VirtuaWin Unicode/" > ./tmp/unicode/virtuawin.iss
     echo done unicode
@@ -166,7 +170,7 @@ if [ $REPLY == 'y' ] ; then
     echo Creating source package
     rm -f VirtuaWin_source_$file_ver.zip
     if [ -z "$ZIP" ] ; then
-        $WINZIP VirtuaWin_source_$file_ver.zip -P @./scripts/filelist
+        "$WINZIP" VirtuaWin_source_$file_ver.zip -P @./scripts/filelist
     else        
         $ZIP -9 -@ < ./scripts/filelist
         mv zip.zip VirtuaWin_source_$file_ver.zip
@@ -181,7 +185,7 @@ if [ $REPLY == 'y' ] ; then
     rm -f VirtuaWin_SDK_$file_ver.zip
     cd Module
     if [ -z "$ZIP" ] ; then
-        $WINZIP ../VirtuaWin_SDK_$file_ver.zip -P @../scripts/SDK_filelist
+        "$WINZIP" ../VirtuaWin_SDK_$file_ver.zip -P @../scripts/SDK_filelist
     else        
         $ZIP -9 -@ < ../scripts/SDK_filelist
         mv zip.zip ../VirtuaWin_SDK_$file_ver.zip

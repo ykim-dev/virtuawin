@@ -27,7 +27,7 @@ Name: {app}\modules; Flags: uninsalwaysuninstall
 
 [Files]
 Source: VirtuaWin.exe; DestDir: {app}
-Source: VirtuaWin.hlp; DestDir: {app}
+Source: VirtuaWin.chm; DestDir: {app}
 Source: 10.ico; DestDir: {app}\icons\
 Source: 11.ico; DestDir: {app}\icons\
 Source: 12.ico; DestDir: {app}\icons\
@@ -47,7 +47,7 @@ Source: README.TXT; DestDir: {app}; Flags: isreadme
 [Icons]
 Name: {commonstartup}\VirtuaWin; Filename: {app}\VirtuaWin.exe; Tasks: autostart
 Name: {group}\VirtuaWin; Filename: {app}\VirtuaWin.exe
-Name: {group}\Help; Filename: {app}\VirtuaWin.hlp
+Name: {group}\Help; Filename: {app}\VirtuaWin.chm
 Name: {group}\Readme; Filename: {app}\README.TXT
 Name: {group}\History; Filename: {app}\HISTORY.TXT
 Name: {group}\Uninstall; Filename: {uninstallexe}
