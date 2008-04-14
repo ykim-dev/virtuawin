@@ -400,7 +400,7 @@ SetupHideCurrentIcon(HWND hDlg)
         int i;
         int *id_buff = GlobalAlloc(GPTR, sizeof(int) * count);
         SendDlgItemMessage(hDlg, ID_SHOW_LIST, LB_GETSELITEMS, (WPARAM)count, (LPARAM)id_buff);
-        /*here*/
+        
         for(i = count - 1; i >= 0; i--)
         {
             if (SendDlgItemMessage(hDlg,ID_SHOW_LIST,LB_GETTEXT, (WPARAM)id_buff[i],(LPARAM) lbl_buff) > 0)
