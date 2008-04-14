@@ -1,0 +1,25 @@
+[OPTIONS]
+Compatibility=1.1 or later
+Compiled file=VirtuaWin.chm
+Contents file=VirtuaWin.hhc
+Default topic=VirtuaWin_Overview.htm
+Display compile progress=No
+Language=0x409 English (United States)
+Title=VirtuaWin Help
+
+
+[FILES]
+VirtuaWin_Overview.htm
+VirtuaWin_Install.htm
+VirtuaWin_Functions.htm
+VirtuaWin_ControlMenu.htm
+VirtuaWin_WindowMenu.htm
+VirtuaWin_SetupDialog.htm
+VirtuaWin_WindowRulesDialog.htm
+VirtuaWin_HidingDesktops.htm
+VirtuaWin_WinListModule.htm
+VirtuaWin_ConfigurationFiles.htm
+VirtuaWin_CustomIcons.htm
+
+[INFOTYPES]
+
