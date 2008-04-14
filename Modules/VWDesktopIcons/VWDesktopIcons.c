@@ -355,23 +355,35 @@ static void
 SetupShowCurrentIcon(HWND hDlg)
 {
     vwIcon *ci ;
-    TCHAR buff[1024] ;
-    int curSel ;
+    TCHAR lbl_buff[1024] ;
     
-    if(((curSel= SendDlgItemMessage(hDlg,ID_HIDE_LIST,LB_GETCURSEL,0,0)) != LB_ERR) &&
-       (SendDlgItemMessage(hDlg,ID_HIDE_LIST,LB_GETTEXT,curSel,(LPARAM) buff) > 0))
+    int count = SendDlgItemMessage(hDlg, ID_HIDE_LIST, LB_GETSELCOUNT, 0, 0);
+    
+    if (count != LB_ERR && count != 0)
     {
-        ci = iconHead ;
-        while(ci != NULL)
+        int i;
+        int *id_buff = GlobalAlloc(GPTR, sizeof(int) * count);
+        SendDlgItemMessage(hDlg, ID_HIDE_LIST, LB_GETSELITEMS, (WPARAM)count, (LPARAM)id_buff);
+        
+        for(i = count - 1; i >= 0; i--)
         {
-            if(!_tcscmp(ci->name,buff))
+            if (SendDlgItemMessage(hDlg,ID_HIDE_LIST,LB_GETTEXT, (WPARAM)id_buff[i],(LPARAM) lbl_buff) > 0)
             {
-                ci->show[deskCrrnt] = 1 ;
-                ci->point[deskCrrnt] = ci->point[0] ; 
-                break ;
+                ci = iconHead;
+                while (ci != NULL)
+                {
+                    if (!_tcscmp(ci->name, lbl_buff))
+                    {
+                        ci->show[deskCrrnt] = 1;
+                        ci->point[deskCrrnt] = ci->point[0] ; 
+                        break;
+                    }
+                    ci = ci->next;
+                }				
             }
-            ci = ci->next ;
+            
         }
+        
     }
 }
 
@@ -379,22 +391,34 @@ static void
 SetupHideCurrentIcon(HWND hDlg)
 {
     vwIcon *ci ;
-    TCHAR buff[1024] ;
-    int curSel ;
+    TCHAR lbl_buff[1024] ;
     
-    if(((curSel= SendDlgItemMessage(hDlg,ID_SHOW_LIST,LB_GETCURSEL,0,0)) != LB_ERR) &&
-       (SendDlgItemMessage(hDlg,ID_SHOW_LIST,LB_GETTEXT,curSel,(LPARAM) buff) > 0))
+    int count = SendDlgItemMessage(hDlg, ID_SHOW_LIST, LB_GETSELCOUNT, 0, 0);
+    
+    if (count != LB_ERR && count != 0)
     {
-        ci = iconHead ;
-        while(ci != NULL)
+        int i;
+        int *id_buff = GlobalAlloc(GPTR, sizeof(int) * count);
+        SendDlgItemMessage(hDlg, ID_SHOW_LIST, LB_GETSELITEMS, (WPARAM)count, (LPARAM)id_buff);
+        /*here*/
+        for(i = count - 1; i >= 0; i--)
         {
-            if(!_tcscmp(ci->name,buff))
+            if (SendDlgItemMessage(hDlg,ID_SHOW_LIST,LB_GETTEXT, (WPARAM)id_buff[i],(LPARAM) lbl_buff) > 0)
             {
-                ci->show[deskCrrnt] = 0 ;
-                break ;
+                ci = iconHead;
+                while (ci != NULL)
+                {
+                    if (!_tcscmp(ci->name, lbl_buff))
+                    {
+                        ci->show[deskCrrnt] = 0;
+                        break;
+                    }
+                    ci = ci->next;
+                }				
             }
-            ci = ci->next ;
+            
         }
+        
     }
 }
 
