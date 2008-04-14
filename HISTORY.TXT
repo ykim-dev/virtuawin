@@ -1,6 +1,34 @@
 ***   VirtuaWin Revision History   ***
 --------------------------------------
 
+Ver 4.0.1 beta1 2008/04/14
+
+* 1924256 Moved the on-line help over to MS HTML help (chm).
+* 1938548 Fixed systray icon tooltip when VW is disabled.
+* 1936226 Up-dated Setup About copyright to 2008
+* 1926893 Fixed ignore activation event flashing all linked windows.
+* 1930012 Fixed hidden explorer activation issue.
+* 1928095 Added WM_CLOSE message handler prompting user if they want VW to
+  exit
+* 1926902 Fixed link window logic bug in window list menu.
+* 1923412 Added hotkeys for moving windows Left right up down and added enable
+  toggle hotkey command.
+* 1917996 Fixed hiding of FeedReader when maximized
+* 1915723 Documented retirement of VW_WINLIST module message
+* 1919023 Changed compact window list column cycling so all columns can be
+  accessed
+* 1921289 Changed the location of hidden VW window to avoid problem with
+  Multimon
+* 1926160 Stored flag for forced unmanaged windows and made its children
+  unmanaged.
+* 1926899 Added new VW_WINMANAGE module message to allow modules to force VW
+  to (not) manage a window
+* Added default window rules for Excel & AdobeAcrobat to address their main
+  window taskbar button behaviour.
+
+
+----------------------------
+
 Ver 4.0 2008/03/13
 
 * Creation of a new Window Rule dialog to manage userlist.cfg, tricky.cfg,
