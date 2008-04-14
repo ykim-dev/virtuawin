@@ -74,7 +74,7 @@ int  windowListUpdate(void) ;
 void vwWindowRuleReapply(void) ;
 int  assignWindow(HWND theWin, int theDesk, vwUByte follow, vwUByte force, vwUByte setActive);
 int  gotoDesk(int theDesk, vwUByte force);
-void showHelp(HWND aHWnd, UINT context);
+void showHelp(HWND aHWnd, TCHAR *topic);
 
 /* Prototypes from SetupDialog.c */
 void createSetupDialog(HINSTANCE theHinst, HWND theHwndOwner) ;
