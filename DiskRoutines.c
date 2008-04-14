@@ -158,7 +158,7 @@ void
 GetFilename(eFileNames filetype, int location, TCHAR *outStr)
 {
     static TCHAR *subPath[vwFILE_COUNT] = {
-        _T("modules\\*.exe"), _T("virtuawin"), _T("virtuawin.cfg"), _T("window.cfg"), _T("module.cfg")
+        _T("modules\\*.exe"), _T("virtuawin.chm"), _T("virtuawin.cfg"), _T("window.cfg"), _T("module.cfg")
     };
     DWORD len ;
 
