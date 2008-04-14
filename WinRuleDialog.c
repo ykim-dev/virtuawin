@@ -560,7 +560,7 @@ windowRuleDialogFunc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
             break ;
             
         case IDC_WTYPE_HELP:
-            showHelp(hDlg,10000);
+            showHelp(hDlg,_T("WindowRulesDialog.htm")) ;
             break ;
         }
         break ;

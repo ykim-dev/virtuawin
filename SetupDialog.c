@@ -271,7 +271,7 @@ setupGeneral(HWND hDlg, UINT message, UINT wParam, LONG lParam)
             SetWindowLong(hDlg, DWL_MSGRESULT, FALSE);
             break;
         case PSN_HELP:
-            showHelp(hDlg,6001);
+            showHelp(hDlg,_T("SetupDialog.htm#General")) ;
             break;
         }
         break;
@@ -640,7 +640,7 @@ BOOL APIENTRY setupHotkeys(HWND hDlg, UINT message, UINT wParam, LONG lParam)
             SetWindowLong(hDlg, DWL_MSGRESULT, FALSE);
             break;
         case PSN_HELP:
-            showHelp(hDlg,6002);
+            showHelp(hDlg,_T("SetupDialog.htm#Hotkeys")) ;
             break;
         }
         break;
@@ -781,7 +781,7 @@ setupMouse(HWND hDlg, UINT message, UINT wParam, LONG lParam)
             SetWindowLong(hDlg, DWL_MSGRESULT, FALSE);
             break;
         case PSN_HELP:
-            showHelp(hDlg,6003);
+            showHelp(hDlg,_T("SetupDialog.htm#Mouse")) ;
             break;
         }
         break;
@@ -855,7 +855,7 @@ setupModules(HWND hDlg, UINT message, UINT wParam, LONG lParam)
             SetWindowLong(hDlg, DWL_MSGRESULT, FALSE);
             break;
         case PSN_HELP:
-            showHelp(hDlg,6004);
+            showHelp(hDlg,_T("SetupDialog.htm#Modules")) ;
             break;
         }
         break;
@@ -979,7 +979,7 @@ setupExpert(HWND hDlg, UINT message, UINT wParam, LONG lParam)
             SetWindowLong(hDlg, DWL_MSGRESULT, FALSE);
             break;
         case PSN_HELP:
-            showHelp(hDlg,6005);
+            showHelp(hDlg,_T("SetupDialog.htm#Expert")) ;
             break;
         }
         break;
@@ -1091,7 +1091,7 @@ setupAbout(HWND hDlg, UINT message, UINT wParam, LONG lParam)
         switch (((NMHDR FAR *) lParam)->code)
         {
         case PSN_HELP:
-            showHelp(hDlg,0);
+            showHelp(hDlg,_T("SetupDialog.htm")) ;
             break;
         }
         break;
@@ -1107,7 +1107,7 @@ setupAbout(HWND hDlg, UINT message, UINT wParam, LONG lParam)
         {
             HINSTANCE h = ShellExecute(NULL,_T("open"),vwVIRTUAWIN_WEBSITE,NULL,NULL,SW_SHOWNORMAL);
             if((UINT)h < 33)
-                MessageBox(hDlg,_T("Error opennig website link."),vwVIRTUAWIN_NAME _T(" Error"),MB_ICONWARNING);
+                MessageBox(hDlg,_T("Error opening website link."),vwVIRTUAWIN_NAME _T(" Error"),MB_ICONWARNING);
         }
         return TRUE;
     }
