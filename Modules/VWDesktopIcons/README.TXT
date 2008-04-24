@@ -57,6 +57,7 @@ Ver 1.2 - ???
 * Changed cfg file format and file name
 * Added Show new icons and Auto-up-date desktop options
 * Changed Restore to Reset and added Store button.
+* Added multi-select support in icon lists.
 
 Ver 1.1 - 2007/08/01
 
