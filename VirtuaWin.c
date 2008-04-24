@@ -3906,7 +3906,7 @@ wndProc(HWND aHWnd, UINT message, WPARAM wParam, LPARAM lParam)
             
             case 4:
                 /* window list */
-                popupWinListMenu(aHWnd,winListCompact | 4) ;
+                popupWinListMenu(aHWnd,(HIWORD(GetKeyState(VK_CONTROL))) ? 6:(HIWORD(GetKeyState(VK_SHIFT))) ? (winListCompact ^ 5):(winListCompact | 4)) ;
                 break;
             
             case 5:
