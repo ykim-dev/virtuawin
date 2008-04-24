@@ -56,10 +56,10 @@ BEGIN
 
     GROUPBOX        "User Interface", IDC_STATIC,   4, 157, 202, 69
     LTEXT           "Available window list actions:", IDC_STATIC, 10, 168, 120, 10
-    AUTOCHECKBOX    "Access",      IDC_MENUACCESS, 22, 179, 40, 10
-    AUTOCHECKBOX    "Move Here",   IDC_MENUMOVE,   67, 179, 55, 10
-    AUTOCHECKBOX    "Show",        IDC_MENUSHOW,   22, 190, 40, 10
-    AUTOCHECKBOX    "Always Show", IDC_MENUSTICKY, 67, 190, 55, 10
+    AUTOCHECKBOX    "Switch To",   IDC_MENUACCESS, 22, 179, 50, 10
+    AUTOCHECKBOX    "Move Here",   IDC_MENUMOVE,   77, 179, 55, 10
+    AUTOCHECKBOX    "Show",        IDC_MENUSHOW,   22, 190, 50, 10
+    AUTOCHECKBOX    "Always Show", IDC_MENUSTICKY, 77, 190, 55, 10
     AUTOCHECKBOX    "Mouse opens compact window list", IDC_COMPACTWLIST, 10, 201, 130, 10
     AUTOCHECKBOX    "Mouse opens compact window menu", IDC_COMPACTWMENU, 10, 212, 130, 10
 END
