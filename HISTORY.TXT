@@ -1,7 +1,7 @@
 ***   VirtuaWin Revision History   ***
 --------------------------------------
 
-Ver 4.0.1 beta1 2008/04/14
+Ver 4.0.1 2008/04/24
 
 * 1924256 Moved the on-line help over to MS HTML help (chm).
 * 1938548 Fixed systray icon tooltip when VW is disabled.
@@ -23,6 +23,7 @@ Ver 4.0.1 beta1 2008/04/14
   unmanaged.
 * 1926899 Added new VW_WINMANAGE module message to allow modules to force VW
   to (not) manage a window
+* 1944158 1901457 Documented external interface & window list menus
 * Added default window rules for Excel & AdobeAcrobat to address their main
   window taskbar button behaviour.
 
