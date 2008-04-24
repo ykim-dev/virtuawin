@@ -30,6 +30,24 @@
 		<param name="Local" value="VirtuaWin_WindowMenu.htm">
 		</OBJECT>
 	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="Window Lists">
+		<param name="Local" value="VirtuaWin_WindowLists.htm">
+		</OBJECT>
+	<UL>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Standard Window List">
+			<param name="Local" value="VirtuaWin_WindowLists.htm#WL_SWL">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Compact Window List">
+			<param name="Local" value="VirtuaWin_WindowLists.htm#WL_CWL">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="MRU Window List">
+			<param name="Local" value="VirtuaWin_WindowLists.htm#WL_MRUWL">
+			</OBJECT>
+	</UL>
+	<LI> <OBJECT type="text/sitemap">
 		<param name="Name" value="Setup Dialog">
 		<param name="Local" value="VirtuaWin_SetupDialog.htm">
 		</OBJECT>
@@ -72,6 +90,10 @@
 	<LI> <OBJECT type="text/sitemap">
 		<param name="Name" value="Locking or Hiding Desktops">
 		<param name="Local" value="VirtuaWin_HidingDesktops.htm">
+		</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="External Interface">
+		<param name="Local" value="VirtuaWin_ExternalInterface.htm">
 		</OBJECT>
 	<LI> <OBJECT type="text/sitemap">
 		<param name="Name" value="WinList Module">
