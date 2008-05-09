@@ -66,7 +66,7 @@ fi
 echo Creating VirtuaWin package: $version - $file_ver
 
 if [ -z "$TEST_PACKAGE" ] ; then
-    mkdir ./$file_ver
+    mkdir -p ./$file_ver
     cd ./$file_ver
 
     cvs checkout README.TXT
@@ -78,9 +78,13 @@ if [ -z "$ver_bno" ] ; then
 fi
 echo Build: $ver_bno
 
-mkdir tmp
-mkdir tmp/standard
-mkdir tmp/unicode
+mkdir -p tmp
+mkdir -p tmp/standard
+mkdir -p tmp/portable
+mkdir -p tmp/portable/config
+mkdir -p tmp/portable/modules
+mkdir -p tmp/portable/icons
+mkdir -p tmp/unicode
 
 cat Defines.h | sed -c -e "s/vwVIRTUAWIN_NAME_VERSION _T(\"VirtuaWin v.*\")/vwVIRTUAWIN_NAME_VERSION _T(\"VirtuaWin v$version\")/" > Defines.h.tmp
 mv Defines.h.tmp Defines.h
@@ -123,6 +127,17 @@ if [ $REPLY == 'y' ] ; then
     cp ./scripts/VirtuaWin5.0.ISL ./tmp/standard/
     cp ./scripts/virtuawin.iss ./tmp/standard/
     echo done standard
+    echo copying portable
+    cp ./VirtuaWin.exe ./tmp/portable/
+    cp ./Icons/1[0-9].ico ./tmp/portable/icons/
+    cp ./Icons/20.ico ./tmp/portable/icons/
+    cp ./WinList/WinList.exe ./tmp/portable/modules/
+    cp ./READMEII.TXT ./tmp/portable/README.TXT
+    cp ./HISTORY.TXT ./tmp/portable/
+    cp ./COPYING.TXT ./tmp/portable/
+    cp ./Help/VirtuaWin.chm ./tmp/portable/VirtuaWin.chm
+    cp ./scripts/portable_userpath.cfg ./tmp/portable/userpath.cfg
+    echo done portable
     echo building unicode
     ./build -S
     ./build -u
@@ -144,29 +159,29 @@ if [ $REPLY == 'y' ] ; then
     echo done unicode
 fi
 
-cd ./tmp/standard
-
-read -p "Compile standard setup package? [y/n] " -n 1
+read -p "Create packages? [y/n] " -n 1
 echo
 if [ $REPLY == 'y' ] ; then
+    echo Creating standard package
+    cd ./tmp/standard
     "$SETUPCOMPILER" ${SLASH}cc virtuawin.iss
-    echo done!
-fi
 
-cd ../unicode
+    echo Creating portable package
+    cd ../portable
+    rm -f VirtuaWin_portable_$file_ver.zip
+    if [ -z "$ZIP" ] ; then
+        "$WINZIP" VirtuaWin_portable_$file_ver.zip -P @./scripts/portable_filelist
+    else        
+        $ZIP -9 -r -@ < ../../scripts/portable_filelist
+        mv zip.zip VirtuaWin_portable_$file_ver.zip
+    fi
 
-read -p "Compile unicode setup package? [y/n] " -n 1
-echo
-if [ $REPLY == 'y' ] ; then
+    echo Creating unicode package
+    cd ../unicode
     "$SETUPCOMPILER" ${SLASH}cc virtuawin.iss
-    echo done!
-fi
 
-cd ../..
+    cd ../..
 
-read -p "Assemble source package? [y/n] " -n 1
-echo
-if [ $REPLY == 'y' ] ; then
     echo Creating source package
     rm -f VirtuaWin_source_$file_ver.zip
     if [ -z "$ZIP" ] ; then
@@ -175,12 +190,7 @@ if [ $REPLY == 'y' ] ; then
         $ZIP -9 -@ < ./scripts/filelist
         mv zip.zip VirtuaWin_source_$file_ver.zip
     fi
-    echo Done!
-fi
 
-read -p "Assemble SDK package? [y/n] " -n 1
-echo
-if [ $REPLY == 'y' ] ; then
     echo Creating SDK package
     rm -f VirtuaWin_SDK_$file_ver.zip
     cd Module
@@ -191,6 +201,7 @@ if [ $REPLY == 'y' ] ; then
         mv zip.zip ../VirtuaWin_SDK_$file_ver.zip
     fi
     cd ..
+
     echo Done!
 fi
 if [ -n "$TEST_PACKAGE" ] ; then
@@ -201,8 +212,9 @@ fi
 read -p "Move packages? [y/n] " -n 1
 echo
 if [ $REPLY == 'y' ] ; then
-    mkdir ../Distribution >& /dev/null
+    mkdir -p ../Distribution
     mv ./tmp/standard/output/setup.exe ../Distribution/VirtuaWin_setup_$file_ver.exe
+    mv ./tmp/portable/VirtuaWin_portable_$file_ver.zip ../Distribution/
     mv ./tmp/unicode/output/setup.exe ../Distribution/VirtuaWin_unicode_setup_$file_ver.exe
     mv ./VirtuaWin_source_$file_ver.zip ../Distribution/
     mv ./VirtuaWin_SDK_$file_ver.zip ../Distribution/
