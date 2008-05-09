@@ -84,6 +84,10 @@ mkdir -p tmp/portable
 mkdir -p tmp/portable/config
 mkdir -p tmp/portable/modules
 mkdir -p tmp/portable/icons
+mkdir -p tmp/portable_unicode
+mkdir -p tmp/portable_unicode/config
+mkdir -p tmp/portable_unicode/modules
+mkdir -p tmp/portable_unicode/icons
 mkdir -p tmp/unicode
 
 cat Defines.h | sed -c -e "s/vwVIRTUAWIN_NAME_VERSION _T(\"VirtuaWin v.*\")/vwVIRTUAWIN_NAME_VERSION _T(\"VirtuaWin v$version\")/" > Defines.h.tmp
@@ -157,6 +161,17 @@ if [ $REPLY == 'y' ] ; then
     cp ./scripts/VirtuaWin5.0.ISL ./tmp/unicode/
     cat ./scripts/virtuawin.iss | sed -e "s/^AppVerName=VirtuaWin/AppVerName=VirtuaWin Unicode/" > ./tmp/unicode/virtuawin.iss
     echo done unicode
+    echo copying portable_unicode
+    cp ./VirtuaWin.exe ./tmp/portable_unicode/
+    cp ./Icons/1[0-9].ico ./tmp/portable_unicode/icons/
+    cp ./Icons/20.ico ./tmp/portable_unicode/icons/
+    cp ./WinList/WinList.exe ./tmp/portable_unicode/modules/
+    cp ./READMEII.TXT ./tmp/portable_unicode/README.TXT
+    cp ./HISTORY.TXT ./tmp/portable_unicode/
+    cp ./COPYING.TXT ./tmp/portable_unicode/
+    cp ./Help/VirtuaWin.chm ./tmp/portable_unicode/VirtuaWin.chm
+    cp ./scripts/portable_userpath.cfg ./tmp/portable_unicode/userpath.cfg
+    echo done portable_unicode
 fi
 
 read -p "Create packages? [y/n] " -n 1
@@ -179,6 +194,16 @@ if [ $REPLY == 'y' ] ; then
     echo Creating unicode package
     cd ../unicode
     "$SETUPCOMPILER" ${SLASH}cc virtuawin.iss
+
+    echo Creating portable_unicode package
+    cd ../portable_unicode
+    rm -f VirtuaWin_portable_unicode_$file_ver.zip
+    if [ -z "$ZIP" ] ; then
+        "$WINZIP" VirtuaWin_portable_unicode_$file_ver.zip -P @./scripts/portable_filelist
+    else        
+        $ZIP -9 -r -@ < ../../scripts/portable_filelist
+        mv zip.zip VirtuaWin_portable_unicode_$file_ver.zip
+    fi
 
     cd ../..
 
@@ -216,6 +241,7 @@ if [ $REPLY == 'y' ] ; then
     mv ./tmp/standard/output/setup.exe ../Distribution/VirtuaWin_setup_$file_ver.exe
     mv ./tmp/portable/VirtuaWin_portable_$file_ver.zip ../Distribution/
     mv ./tmp/unicode/output/setup.exe ../Distribution/VirtuaWin_unicode_setup_$file_ver.exe
+    mv ./tmp/portable_unicode/VirtuaWin_portable_$file_ver.zip ../Distribution/
     mv ./VirtuaWin_source_$file_ver.zip ../Distribution/
     mv ./VirtuaWin_SDK_$file_ver.zip ../Distribution/
 fi
@@ -239,7 +265,9 @@ read -p "Upload to SourceForge? [y/n] " -n 1
 echo
 if [ $REPLY == 'y' ] ; then
     ncftpput -d ./ftpsession.log -u anonymous -p virtuawin@home.se upload.sourceforge.net /incoming ../Distribution/VirtuaWin_setup_$file_ver.exe
+    ncftpput -d ./ftpsession.log -u anonymous -p virtuawin@home.se upload.sourceforge.net /incoming ../Distribution/VirtuaWin_portable_$file_ver.exe
     ncftpput -d ./ftpsession.log -u anonymous -p virtuawin@home.se upload.sourceforge.net /incoming ../Distribution/VirtuaWin_unicode_setup_$file_ver.exe
+    ncftpput -d ./ftpsession.log -u anonymous -p virtuawin@home.se upload.sourceforge.net /incoming ../Distribution/VirtuaWin_portable_unicode_$file_ver.exe
     ncftpput -d ./ftpsession.log -u anonymous -p virtuawin@home.se upload.sourceforge.net /incoming ../Distribution/VirtuaWin_source_$file_ver.zip
     ncftpput -d ./ftpsession.log -u anonymous -p virtuawin@home.se upload.sourceforge.net /incoming ../Distribution/VirtuaWin_SDK_$file_ver.zip
     echo Done! Go to SourceForge and click Admin-Edit/Release Files-Add Release and then type $version and follow the instructions.
