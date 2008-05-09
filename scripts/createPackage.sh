@@ -9,12 +9,20 @@
 # - zip (set ZIP) or winzip with commandline extension
 # - ncftp (if uploading to SF)
 #
+# Note: The CVS program must be windows so line termination will be Windows format (i.e. \r\n) otherwise
+#       the source package will be wrong and the README files will not be very readable in notepad.
+#       This means that Cygwin's cvs cannot be used!!
+#
 # Variables
 # MSYS need windows style /? arguments to be double slashes, i.e. //? use a varable to handle this.
+# sed is used to set the version, but it must not change the line termination to unix style, use option -b
+# for cygwin's sed and -c for msys.
 SLASH="/"
+SED="sed -b"
 CDRIVE="/cygdrive/c"
 if [ `uname | sed -e "s/^MINGW.*/MINGW/"` == 'MINGW' ] ; then
     SLASH="//"
+    SED="sed -c"
     CDRIVE="/c"
 fi
 if [ -z "$EDITOR" ] ; then
@@ -90,18 +98,18 @@ mkdir -p tmp/portable_unicode/modules
 mkdir -p tmp/portable_unicode/icons
 mkdir -p tmp/unicode
 
-cat Defines.h | sed -c -e "s/vwVIRTUAWIN_NAME_VERSION _T(\"VirtuaWin v.*\")/vwVIRTUAWIN_NAME_VERSION _T(\"VirtuaWin v$version\")/" > Defines.h.tmp
+cat Defines.h | ${SED} -e "s/vwVIRTUAWIN_NAME_VERSION _T(\"VirtuaWin v.*\")/vwVIRTUAWIN_NAME_VERSION _T(\"VirtuaWin v$version\")/" > Defines.h.tmp
 mv Defines.h.tmp Defines.h
-cat VirtuaWin.rc | sed -c -e "s/^ FILEVERSION .*/ FILEVERSION ${ver_mjr},${ver_mnr},${ver_rev},${ver_bno}/" > VirtuaWin.rc.tmp
-cat VirtuaWin.rc.tmp | sed -c -e "s/^ PRODUCTVERSION .*/ PRODUCTVERSION ${ver_mjr},${ver_mnr},${ver_rev},${ver_bno}/" > VirtuaWin.rc
-cat VirtuaWin.rc | sed -c -e "s/ VALUE \"FileVersion\", \"[.0-9]*\\\\0\"/ VALUE \"FileVersion\", \"${ver_mjr}.${ver_mnr}.${ver_rev}.${ver_bno}\\\\0\"/" > VirtuaWin.rc.tmp
-cat VirtuaWin.rc.tmp | sed -c -e "s/ VALUE \"ProductVersion\", \"[.0-9]*\\\\0\"/ VALUE \"FileVersion\", \"${ver_mjr}.${ver_mnr}.${ver_rev}.${ver_bno}\\\\0\"/" > VirtuaWin.rc
+cat VirtuaWin.rc | ${SED} -e "s/^ FILEVERSION .*/ FILEVERSION ${ver_mjr},${ver_mnr},${ver_rev},${ver_bno}/" > VirtuaWin.rc.tmp
+cat VirtuaWin.rc.tmp | ${SED} -e "s/^ PRODUCTVERSION .*/ PRODUCTVERSION ${ver_mjr},${ver_mnr},${ver_rev},${ver_bno}/" > VirtuaWin.rc
+cat VirtuaWin.rc | ${SED} -e "s/ VALUE \"FileVersion\", \"[.0-9]*\\\\0\"/ VALUE \"FileVersion\", \"${ver_mjr}.${ver_mnr}.${ver_rev}.${ver_bno}\\\\0\"/" > VirtuaWin.rc.tmp
+cat VirtuaWin.rc.tmp | ${SED} -e "s/ VALUE \"ProductVersion\", \"[.0-9]*\\\\0\"/ VALUE \"FileVersion\", \"${ver_mjr}.${ver_mnr}.${ver_rev}.${ver_bno}\\\\0\"/" > VirtuaWin.rc
 rm VirtuaWin.rc.tmp
-cat Help/VirtuaWin_Overview.htm | sed -c -e "s/VirtuaWin v[.0-9]* Help/VirtuaWin v${ver_mjr}.${ver_mnr} Help/" > Help/VirtuaWin_Overview.htm.tmp
+cat Help/VirtuaWin_Overview.htm | ${SED} -e "s/VirtuaWin v[.0-9]* Help/VirtuaWin v${ver_mjr}.${ver_mnr} Help/" > Help/VirtuaWin_Overview.htm.tmp
 mv Help/VirtuaWin_Overview.htm.tmp Help/VirtuaWin_Overview.htm
-cat WinList/winlist.rc | sed -c -e "s/^CAPTION \"WinList v.*\"/CAPTION \"WinList v$version\"/" > WinList/winlist.rc.tmp
+cat WinList/winlist.rc | ${SED} -e "s/^CAPTION \"WinList v.*\"/CAPTION \"WinList v$version\"/" > WinList/winlist.rc.tmp
 mv WinList/winlist.rc.tmp WinList/winlist.rc
-cat scripts/virtuawin.iss | sed -c -e "s/^AppVerName=VirtuaWin v.*/AppVerName=VirtuaWin v$version/" > scripts/virtuawin.iss.tmp
+cat scripts/virtuawin.iss | ${SED} -e "s/^AppVerName=VirtuaWin v.*/AppVerName=VirtuaWin v$version/" > scripts/virtuawin.iss.tmp
 mv scripts/virtuawin.iss.tmp scripts/virtuawin.iss
 $EDITOR HISTORY.TXT
 cp Defines.h Messages.h Module/
@@ -113,11 +121,11 @@ if [ $REPLY == 'y' ] ; then
     "$HELPCOMPILER" virtuawin.hhp
     cd ..
     echo building standard
-    ./build -S
-    ./build
+    make -f Makefile spotless
+    make -f Makefile
     cd WinList
-    ./build -S
-    ./build
+    make -f Makefile spotless
+    make -f Makefile
     cd ..
     echo copying standard
     cp ./VirtuaWin.exe ./tmp/standard/
@@ -143,11 +151,11 @@ if [ $REPLY == 'y' ] ; then
     cp ./scripts/portable_userpath.cfg ./tmp/portable/userpath.cfg
     echo done portable
     echo building unicode
-    ./build -S
-    ./build -u
+    make -f Makefile spotless
+    make -f Makefile vwUNICODE=1
     cd WinList
-    ./build -S
-    ./build -u
+    make -f Makefile spotless
+    make -f Makefile vwUNICODE=1
     cd ..
     echo copying unicode
     cp ./VirtuaWin.exe ./tmp/unicode/
@@ -186,7 +194,7 @@ if [ $REPLY == 'y' ] ; then
     rm -f VirtuaWin_portable_$file_ver.zip
     if [ -z "$ZIP" ] ; then
         "$WINZIP" VirtuaWin_portable_$file_ver.zip -P @./scripts/portable_filelist
-    else        
+    else
         $ZIP -9 -r -@ < ../../scripts/portable_filelist
         mv zip.zip VirtuaWin_portable_$file_ver.zip
     fi
@@ -200,7 +208,7 @@ if [ $REPLY == 'y' ] ; then
     rm -f VirtuaWin_portable_unicode_$file_ver.zip
     if [ -z "$ZIP" ] ; then
         "$WINZIP" VirtuaWin_portable_unicode_$file_ver.zip -P @./scripts/portable_filelist
-    else        
+    else
         $ZIP -9 -r -@ < ../../scripts/portable_filelist
         mv zip.zip VirtuaWin_portable_unicode_$file_ver.zip
     fi
@@ -211,7 +219,7 @@ if [ $REPLY == 'y' ] ; then
     rm -f VirtuaWin_source_$file_ver.zip
     if [ -z "$ZIP" ] ; then
         "$WINZIP" VirtuaWin_source_$file_ver.zip -P @./scripts/filelist
-    else        
+    else
         $ZIP -9 -@ < ./scripts/filelist
         mv zip.zip VirtuaWin_source_$file_ver.zip
     fi
@@ -221,7 +229,7 @@ if [ $REPLY == 'y' ] ; then
     cd Module
     if [ -z "$ZIP" ] ; then
         "$WINZIP" ../VirtuaWin_SDK_$file_ver.zip -P @../scripts/SDK_filelist
-    else        
+    else
         $ZIP -9 -@ < ../scripts/SDK_filelist
         mv zip.zip ../VirtuaWin_SDK_$file_ver.zip
     fi
@@ -290,4 +298,3 @@ if [ $REPLY == 'y' ] ; then
 fi
 
 echo Packages created in "Distribution"!
-
