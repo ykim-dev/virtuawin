@@ -1150,12 +1150,15 @@ vwWindowFind(HWND hwnd)
     return NULL ;
 }
 
+typedef int (*vwIFuncSST)(const TCHAR *, const TCHAR *, size_t);
+static vwIFuncSST nameCompFunc[vwWTNAME_COUNT] = { _tcsncmp, _tcsncmp, _tcsnicmp } ;
+
 static vwWindowRule *
 vwWindowRuleFind(HWND hwnd, vwWindowRule *owt)
 {
     TCHAR name[vwWTNAME_COUNT][MAX_PATH] ;
     vwWindowRule *wt ;
-    int nameLen[vwWTNAME_COUNT], infoGot=0, ii, bi ;
+    int nameLen[vwWTNAME_COUNT], infoGot=0, ii, jj, bi ;
     
     if(owt != NULL)
     {
@@ -1222,19 +1225,25 @@ vwWindowRuleFind(HWND hwnd, vwWindowRule *owt)
                     {
                     case 0:
                         /* "<NAME>" */
-                        bi = _tcscmp(name[ii],wt->name[ii]) ;
+                        if(nameLen[ii] != ((int) wt->nameLen[ii]))
+                            bi = 1 ;
+                        else
+                            bi = nameCompFunc[ii](name[ii],wt->name[ii],wt->nameLen[ii]) ;
                         break ;
                     case 1:
                         /* "*<NAME>" */
-                        bi = _tcscmp(name[ii] + nameLen[ii] - wt->nameLen[ii],wt->name[ii]) ;
+                        bi = nameCompFunc[ii](name[ii] + nameLen[ii] - wt->nameLen[ii],wt->name[ii],wt->nameLen[ii]) ;
                         break ;
                     case 2:
                         /* "<NAME>*" */
-                        bi = _tcsncmp(name[ii],wt->name[ii],wt->nameLen[ii]) ;
+                        bi = nameCompFunc[ii](name[ii],wt->name[ii],wt->nameLen[ii]) ;
                         break ;
                     case 3:
                         /* "*<NAME>*" */
-                        bi = (_tcsstr(name[ii],wt->name[ii]) == NULL) ;
+                        jj = nameLen[ii] - ((int) wt->nameLen[ii]) ;
+                        while(--jj >= 0)
+                            if((bi=nameCompFunc[ii](name[ii]+jj,wt->name[ii],wt->nameLen[ii])) == 0)
+                                break ;
                         break ;
                     }
                     if(bi)
