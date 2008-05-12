@@ -1934,9 +1934,16 @@ windowListUpdate(void)
             }
             else
             {
+                vwUInt flags=win->flags ; 
                 if((activateAction == 3) && (newDesk == 0))
                     newDesk = win->desk ;
                 vwWindowSetDesk(win,currentDesk,activateAction,FALSE) ;
+                if((flags & (vwWINFLAGS_SHOWN|vwWINFLAGS_HIDETSK_MASK)) == vwWINFLAGS_HIDETSK_TOOLWN)
+                {
+                    /* VW's setting of the Toolwin flag means the frame will have been drawn wrong, force a redraw */
+                    vwLogBasic((_T("Redrawing window %x (%x %x)\n"),(int) win->handle,flags,win->flags)) ;
+                    RedrawWindow(win->handle,NULL,NULL,RDW_FRAME|RDW_INVALIDATE) ;
+                }
             }
         }
         if(win->handle == activeHWnd)
