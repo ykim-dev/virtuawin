@@ -145,6 +145,7 @@ int moduleCount = 0;
 int currentDeskX = 1;
 int currentDeskY = 1;
 int currentDesk = 1; 
+int lastDesk = 1; 
 int nDesks = 4;     
 int nDesksX = 2;     
 int nDesksY = 2;     
@@ -2109,6 +2110,7 @@ changeDesk(int newDesk, WPARAM msgWParam)
     if(newDesk == currentDesk)
         // Nothing to do
         return 0;
+    lastDesk = currentDesk ;
     
     /* don't bother generating an image unless the user has been on the
      * desk for at least a second */
@@ -4048,6 +4050,9 @@ wndProc(HWND aHWnd, UINT message, WPARAM wParam, LPARAM lParam)
             break ;
         case vwCMD_UI_ENABLESTATE:
             vwToggleEnabled() ;
+            break ;
+        case vwCMD_NAV_MOVE_LAST:
+            gotoDesk(lastDesk,FALSE);
             break ;
         }
         return TRUE;
