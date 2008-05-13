@@ -96,6 +96,7 @@ enum {
 
 // Variables
 HWND hWnd;                                   // handle to VirtuaWin
+DWORD vwThread;                              // ID of main VW thread
 HANDLE hMutex;
 FILE *vwLogFile ;
 vwUByte vwEnabled=1;	                     // if VirtuaWin enabled or not
@@ -119,6 +120,7 @@ HINSTANCE hInst;		// current instance
 HWND taskHWnd;                  // handle to taskbar
 HWND desktopHWnd;		// handle to the desktop window
 HWND deskIconHWnd;		// handle to the desktop window holding the icons
+DWORD deskThread;               // thread ID of desktop handler (exploerer)
 HWND lastFGHWnd;		// handle to the last foreground window
 HWND dialogHWnd;       		// handle to the setup dialog, NULL if not open
 vwUByte dialogOpen;         
@@ -733,6 +735,12 @@ getWorkArea(void)
 static void
 goGetTheTaskbarHandle(void)
 {
+    /* set the window to give focus to when releasing focus on switch also used to refresh */
+    desktopHWnd = GetDesktopWindow();
+    deskIconHWnd = FindWindow(_T("Progman"), _T("Program Manager")) ;
+    deskIconHWnd = FindWindowEx(deskIconHWnd, NULL, _T("SHELLDLL_DefView"),NULL) ;
+    deskIconHWnd = FindWindowEx(deskIconHWnd, NULL, _T("SysListView32"), _T("FolderView")) ;
+    deskThread = GetWindowThreadProcessId(deskIconHWnd,NULL) ;
     if(!noTaskbarCheck)
     {
         HWND hwndTray = FindWindowEx(NULL, NULL,_T("Shell_TrayWnd"), NULL);
@@ -1266,69 +1274,75 @@ vwWindowRuleFind(HWND hwnd, vwWindowRule *owt)
 static void
 setForegroundWin(HWND theWin, int makeTop)
 {
+    HWND cwHwnd, setHwnd=theWin ;
     vwWindow *win ;
     DWORD ThreadID1;
     DWORD ThreadID2;
-    HWND cwHwnd ;
-    int ii, err ;
+    int ii, err1, err2 ;
     
-    vwLogBasic((_T("setForegroundWin: %x %d (%x)\n"),(int) theWin,makeTop,(int) hWnd)) ;
+    vwLogBasic((_T("setForegroundWin: %x %d (%x %x)\n"),(int) theWin,makeTop,(int) hWnd,(int) desktopHWnd)) ;
     if(theWin == NULL)
     {
         /* releasing the focus, the current foreground window MUST be
          * released otherwise VW can think its a popup. Assigning the focus
          * to a window when no window has the focus is prone to failure so
          * give the focus to VW's hidden window rather than to the Desktop */
-        theWin = hWnd ;
+        setHwnd = desktopHWnd ;
+        ThreadID2 = deskThread ;
         makeTop = 0 ;
     }
+    else if((theWin == hWnd) || (theWin == dialogHWnd))
+        ThreadID2 = vwThread ;
     else if(((win = vwWindowFind(theWin)) == NULL) || vwWindowIsNotShow(win) || vwWindowIsNotShown(win) ||
             (windowIsHung(theWin,50) && (Sleep(1),windowIsHung(theWin,100))))
     {
         /* don't make the foreground a hidden or non-managed or hung window */
         vwLogBasic((_T("SetForground: %8x - %d %x or HUNG\n"),(int) theWin,(win == NULL),(win == NULL) ? 0:win->flags)) ;
         return ;
-    }    
+    }
+    else
+        ThreadID2 = GetWindowThreadProcessId(theWin,NULL) ;
+    
     ii = 2 ;
     for(;;)
     {
         /* do not bother making it the foreground if it already is */
         if((cwHwnd = GetForegroundWindow()) == theWin)
             break ;
-        if(cwHwnd != hWnd)
+        /* get the Id of the current foreground process */
+        if(cwHwnd != NULL)
+            ThreadID1 = GetWindowThreadProcessId(cwHwnd,NULL) ;
+        else
+            ThreadID1 = deskThread ;
+        if(ThreadID1 == ThreadID2)
         {
-            /* To get the required permission to make theWin the active window, VW must become the active window.
-             * To get the required permissions to do that VW must attatch to the thread of the current active window.
-             * But don't do this if the current process hung */
-            if((cwHwnd != NULL) && windowIsNotHung(cwHwnd,100))
+            SetForegroundWindow(setHwnd) ; 
+            vwLogBasic((_T("Two windows owned by same thread: %x - %x (%d %d %d)\n"),(int) cwHwnd,(int) GetForegroundWindow(),ThreadID1,ThreadID2,vwThread)) ;
+        }
+        else
+        {
+            /* get foreground window ownership first */
+            if((ThreadID1 != 0) && (ThreadID1 != vwThread))
             {
-                /* Get the thread responsible for VirtuaWin,
-                   and the thread for the foreground window */
-                ThreadID1 = GetWindowThreadProcessId(cwHwnd, NULL);
-                ThreadID2 = GetWindowThreadProcessId(hWnd, NULL);
-                /* By sharing input state, threads share their concept of
-                   the active window */
-                if(ThreadID1 != ThreadID2)
-                {
-                    AttachThreadInput(ThreadID1, ThreadID2, TRUE);
-                    err = SetForegroundWindow(hWnd) ; 
-                    // Set VirtuaWin active. Don't no why, but it seems to work
-                    AttachThreadInput(ThreadID1, ThreadID2, FALSE);
-                    vwLogVerbose((_T("Attached to foreground Window: %x - %x\n"),(int) cwHwnd,(int) GetForegroundWindow())) ;
-                }
-                else
-                {
-                    SetForegroundWindow(hWnd) ; 
-                    vwLogVerbose((_T("VW owns foreground Window: %x - %x\n"),(int) cwHwnd,(int) GetForegroundWindow())) ;
-                }
+                err1 = AttachThreadInput(ThreadID1,vwThread,TRUE);
+                err2 = SetForegroundWindow(hWnd) ;
+                AttachThreadInput(ThreadID1,vwThread,FALSE);
+                vwLogBasic((_T("Attached to get foreground: %x - %x (%d %d %d) %d %d\n"),(int) cwHwnd,(int) GetForegroundWindow(),ThreadID1,ThreadID2,vwThread,err1,err2)) ;
             }
-            else
+            if((ThreadID2 != 0) && (ThreadID2 != vwThread))
             {
-                SetForegroundWindow(hWnd) ; 
+                err1 = AttachThreadInput(vwThread,ThreadID2,TRUE);
+                err2 = SetForegroundWindow(setHwnd) ; 
+                AttachThreadInput(vwThread,ThreadID2,FALSE);
+                vwLogBasic((_T("Attached to set foreground: %x - %x (%d %d %d) %d %d\n"),(int) theWin,(int) GetForegroundWindow(),ThreadID1,ThreadID2,vwThread,err1,err2)) ;
+            }
+            else if(setHwnd != hWnd)
+            {
+                SetForegroundWindow(setHwnd) ; 
                 vwLogVerbose((_T("No foreground Window or hung: %x - %x\n"),(int) cwHwnd,(int) GetForegroundWindow())) ;
+                vwLogBasic((_T("Set foreground Window: %x - %x (%d %d %d) %d %d\n"),(int) theWin,(int) GetForegroundWindow(),ThreadID1,ThreadID2,vwThread,err1,err2)) ;
             }
         }
-        SetForegroundWindow(theWin) ;
         /* SetForegroundWindow can return success (non-zero) but not succeed (GetForegroundWindow != theWin)
          * Getting the foreground window right is really important because if the existing foreground window
          * is left as the foreground window but hidden (common when moving the app or desk) VW will confuse
@@ -1363,8 +1377,7 @@ showSetup(void)
     else if((dialogHWnd != NULL) && (GetForegroundWindow() != dialogHWnd))
     {
         // setup dialog has probably been lost under the windows raise it.
-        setForegroundWin(NULL,0);
-        SetForegroundWindow(dialogHWnd) ;
+        setForegroundWin(dialogHWnd,0);
         SetWindowPos(dialogHWnd,HWND_NOTOPMOST,0,0,0,0,
                      SWP_DEFERERASE | SWP_NOSIZE | SWP_NOACTIVATE | SWP_NOSENDCHANGING | SWP_NOMOVE) ;
     }
@@ -1398,8 +1411,7 @@ showWindowRule(HWND theWin, int add)
     else if((dialogHWnd != NULL) && (GetForegroundWindow() != dialogHWnd))
     {
         // setup dialog has probably been lost under the windows raise it.
-        setForegroundWin(NULL,0);
-        SetForegroundWindow(dialogHWnd) ;
+        setForegroundWin(dialogHWnd,0);
         SetWindowPos(dialogHWnd,HWND_NOTOPMOST,0,0,0,0,
                      SWP_DEFERERASE | SWP_NOSIZE | SWP_NOACTIVATE | SWP_NOSENDCHANGING | SWP_NOMOVE) ;
     }
@@ -2137,7 +2149,7 @@ changeDesk(int newDesk, WPARAM msgWParam)
      * compromised if using the mouse to drag a window as this window must not lose focus or it
      * will be dropped */
     if(!isDragging)
-        setForegroundWin(NULL,0) ;
+        setForegroundWin(hWnd,0) ;
     isDragging = 0 ;
     
     currentDesk = newDesk;
@@ -3442,8 +3454,7 @@ popupWindowMenu(HWND theWin, int wmFlags)
     GetCursorPos(&pt);
     /* Call setForegroundWin to remove the window focus otherwise the menu does
      * not automatically close if the user changes focus */
-    setForegroundWin(NULL,0);
-    SetForegroundWindow(hWnd);
+    setForegroundWin(hWnd,0);
     ii = TrackPopupMenu(hpopup,TPM_RETURNCMD | TPM_RIGHTBUTTON | TPM_NONOTIFY,pt.x,pt.y,0,hWnd,NULL) ;
     PostMessage(hWnd, 0, 0, 0);	
     DestroyMenu(hpopup) ;
@@ -3496,7 +3507,7 @@ popupWindowMenu(HWND theWin, int wmFlags)
         assignWindow(theWin,ii,FALSE,FALSE,TRUE) ;
         return ;
     }
-    SetForegroundWindow(theWin);
+    setForegroundWin(theWin,0) ;
 }
 
 /*************************************************
@@ -3644,8 +3655,9 @@ popupWinListMenu(HWND aHWnd, int wlFlags)
      * not automatically close if the user changes focus, unfortunately this breaks
      * double clicking on the systray icon so not done in this case */
     if(wlFlags & 0x04)
-        setForegroundWin(NULL,0) ;
-    SetForegroundWindow(aHWnd);
+        setForegroundWin(aHWnd,0) ;
+    else
+        SetForegroundWindow(aHWnd);
     singleColumn >>= 1 ;
     for(jj=0 ;;)
     {
@@ -3723,7 +3735,7 @@ popupWinListMenu(HWND aHWnd, int wlFlags)
         }
     }
     else if(fgWin != NULL)
-        SetForegroundWindow(fgWin) ;
+        setForegroundWin(fgWin,0) ;
     
     // delete vwMenuItem list
     for (ii=0 ; ii<itemCount ; ii++)
@@ -4436,11 +4448,6 @@ VirtuaWinInit(HINSTANCE hInstance, LPSTR cmdLine)
         vwLogBasic((vwVIRTUAWIN_NAME_VERSION _T("\n"))) ;
     }
     
-    /* set the window to give focus to when releasing focus on switch also used to refresh */
-    desktopHWnd = GetDesktopWindow();
-    deskIconHWnd = FindWindow(_T("Progman"), _T("Program Manager")) ;
-    deskIconHWnd = FindWindowEx(deskIconHWnd, NULL, _T("SHELLDLL_DefView"),NULL) ;
-    deskIconHWnd = FindWindowEx(deskIconHWnd, NULL, _T("SysListView32"), _T("FolderView")) ;
     /* Fix some things for the alternate hide method */
     RM_Shellhook = RegisterWindowMessage(_T("SHELLHOOK"));
     goGetTheTaskbarHandle();
@@ -4454,6 +4461,7 @@ VirtuaWinInit(HINSTANCE hInstance, LPSTR cmdLine)
         MessageBox(NULL,_T("Failed to create window!"),vwVIRTUAWIN_NAME _T(" Error"), MB_ICONWARNING);
         exit(2) ;
     }
+    vwThread = GetCurrentThreadId() ;
     
     /* Create the thread responsible for mouse monitoring */   
     mouseThread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE) vwMouseProc, NULL, 0, &threadID); 	
