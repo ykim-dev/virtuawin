@@ -1311,10 +1311,12 @@ setForegroundWin(HWND theWin, int makeTop)
         if((cwHwnd = GetForegroundWindow()) == theWin)
             break ;
         /* get the Id of the current foreground process */
-        if(cwHwnd != NULL)
-            ThreadID1 = GetWindowThreadProcessId(cwHwnd,NULL) ;
-        else
+        if(cwHwnd == NULL)
             ThreadID1 = deskThread ;
+        else if(windowIsHung(cwHwnd,50) && (Sleep(1),windowIsHung(cwHwnd,100)))
+            ThreadID1 = 0 ;
+        else
+            ThreadID1 = GetWindowThreadProcessId(cwHwnd,NULL) ;
         if(ThreadID1 == ThreadID2)
         {
             SetForegroundWindow(setHwnd) ; 
