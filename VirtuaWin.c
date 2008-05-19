@@ -40,6 +40,7 @@ enum {
 #include <string.h>
 #include <stdarg.h>
 #include <commctrl.h>
+#include <signal.h>
 
 /*#define _WIN32_MEMORY_DEBUG*/
 #ifdef _WIN32_MEMORY_DEBUG
@@ -915,16 +916,24 @@ void
 showHelp(HWND aHWnd, TCHAR *topic)
 {
     TCHAR buff[MAX_PATH+64] ;
-    HINSTANCE h ;
-    _tcscpy(buff,_T("mk:@MSITStore:")) ;
-    GetFilename(vwVIRTUAWIN_HLP,0,buff+14);
+    STARTUPINFO si;
+    PROCESS_INFORMATION pi;  
+
+    _tcscpy(buff,_T("\"hh\" mk:@MSITStore:")) ;
+    GetFilename(vwVIRTUAWIN_HLP,0,buff+19);
     if(topic != NULL)
     {
         _tcscat(buff,_T("::/VirtuaWin_")) ;
         _tcscat(buff,topic) ;
     }
-    h = ShellExecute(NULL,_T("open"),_T("hh"),buff,NULL,SW_SHOWNORMAL);
-    if((UINT)h < 33)
+    memset(&si, 0, sizeof(si)); 
+    si.cb = sizeof(si); 
+    if(CreateProcess(NULL,buff,NULL,NULL,FALSE,CREATE_NEW_CONSOLE,NULL,NULL,&si,&pi))
+    {
+        CloseHandle(pi.hThread) ;
+        CloseHandle(pi.hProcess) ;
+    }
+    else
         MessageBox(aHWnd,_T("Error opening on-line help."),vwVIRTUAWIN_NAME _T(" Error"),MB_ICONWARNING);
 }
 
@@ -1341,9 +1350,8 @@ setForegroundWin(HWND theWin, int makeTop)
             }
             else if(setHwnd != hWnd)
             {
-                SetForegroundWindow(setHwnd) ; 
-                vwLogVerbose((_T("No foreground Window or hung: %x - %x\n"),(int) cwHwnd,(int) GetForegroundWindow())) ;
-                vwLogBasic((_T("Set foreground Window: %x - %x (%d %d %d) %d %d\n"),(int) theWin,(int) GetForegroundWindow(),ThreadID1,ThreadID2,vwThread,err1,err2)) ;
+                err2 = SetForegroundWindow(setHwnd) ; 
+                vwLogBasic((_T("Set foreground Window: %x - %x (%d %d %d) %d\n"),(int) theWin,(int) GetForegroundWindow(),ThreadID1,ThreadID2,vwThread,err2)) ;
             }
         }
         /* SetForegroundWindow can return success (non-zero) but not succeed (GetForegroundWindow != theWin)
@@ -3518,7 +3526,8 @@ popupWindowMenu(HWND theWin, int wmFlags)
  * Retrieves the system menu font
  */
 
-static HFONT getMenuFont()
+static HFONT
+getMenuFont(void)
 {
     NONCLIENTMETRICS metrics;
     HFONT menufont;
@@ -3536,7 +3545,8 @@ static HFONT getMenuFont()
  * Returns the bounding rect for each menu item
  * response to WM_MEASUREITEM
  */
-static void measureMenuItem(HWND hwnd,MEASUREITEMSTRUCT* mitem)
+static void
+measureMenuItem(HWND hwnd,MEASUREITEMSTRUCT* mitem)
 {
     HDC testdc;
     HFONT menufont,oldfont;
@@ -3570,7 +3580,8 @@ static void measureMenuItem(HWND hwnd,MEASUREITEMSTRUCT* mitem)
  * response to WM_DRAWIEM
  */
 
-static void renderMenuItem(DRAWITEMSTRUCT* ditem)
+static void
+renderMenuItem(DRAWITEMSTRUCT* ditem)
 {
     vwMenuItem* item;
     HFONT menufont,oldfont;
@@ -4361,6 +4372,20 @@ wndProc(HWND aHWnd, UINT message, WPARAM wParam, LPARAM lParam)
     return DefWindowProc(aHWnd, message, wParam, lParam);
 }
 
+static void 
+vwCrashHandler(int sig)
+{
+    static vwUByte count=0 ;
+    if(!count)
+    {
+        /* only attempt this once, the window list could be corrupt */
+        count = 1 ;
+        vwWindowShowAll(vwWINSH_FLAGS_TRYHARD) ;
+        vwLogBasic((_T("Received signal %d, terminating\n"),sig)) ;
+        exit(-1) ;
+    }
+}
+
 static void
 VirtuaWinInit(HINSTANCE hInstance, LPSTR cmdLine)
 {
@@ -4469,6 +4494,13 @@ VirtuaWinInit(HINSTANCE hInstance, LPSTR cmdLine)
         exit(2) ;
     }
     vwThread = GetCurrentThreadId() ;
+    
+    /* install a crash handler to avoid loosing windows whenever possible */
+    signal(SIGINT,vwCrashHandler);
+    signal(SIGTERM,vwCrashHandler);
+    signal(SIGILL,vwCrashHandler);
+    signal(SIGABRT,vwCrashHandler);
+    signal(SIGSEGV,vwCrashHandler);
     
     /* Create the thread responsible for mouse monitoring */   
     mouseThread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE) vwMouseProc, NULL, 0, &threadID); 	
