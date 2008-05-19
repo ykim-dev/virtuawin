@@ -96,8 +96,10 @@ static void addModule(TCHAR *moduleName, TCHAR *path)
                 MessageBox(hWnd,errMsg,vwVIRTUAWIN_NAME _T(" Error"),MB_ICONWARNING);
                 return;
             }
-            // Wait max 20 sec for the module to initialize itself
+            CloseHandle(pi.hThread) ;
+            // Wait max 20 sec for the module to initialize itself then close the process handle
             retVal = WaitForInputIdle( pi.hProcess, 20000); 
+            CloseHandle(pi.hProcess) ;
             
             // Find the module with classname 
             myModule = FindWindow(moduleName, NULL);
