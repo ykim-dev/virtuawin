@@ -78,6 +78,8 @@ vwSetupApply(HWND hDlg, int curPageMask)
             // All pages have now got any changes from the GUI, save them and apply
             saveVirtuawinConfig();
             vwHotkeyUnregister(1);
+            /* Need to get the taskbar again in case the order has changed to dynamic taskbar */
+            vwTaskbarHandleGet();
             vwIconLoad();              
             vwHotkeyRegister(1);
             enableMouse(mouseEnable);
@@ -926,9 +928,11 @@ setupExpert(HWND hDlg, UINT message, UINT wParam, LONG lParam)
     switch (message)
     {
     case WM_INITDIALOG:
-        SendDlgItemMessage(hDlg, IDC_PRESORDER, CB_ADDSTRING, 0, (LONG) _T("Taskbar order"));
+        SendDlgItemMessage(hDlg, IDC_PRESORDER, CB_ADDSTRING, 0, (LONG) _T("Static taskbar order"));
         SendDlgItemMessage(hDlg, IDC_PRESORDER, CB_ADDSTRING, 0, (LONG) _T("Z order"));
-        SendDlgItemMessage(hDlg, IDC_PRESORDER, CB_ADDSTRING, 0, (LONG) _T("Taskbar & Z order"));
+        SendDlgItemMessage(hDlg, IDC_PRESORDER, CB_ADDSTRING, 0, (LONG) _T("Static taskbar & Z order"));
+        SendDlgItemMessage(hDlg, IDC_PRESORDER, CB_ADDSTRING, 0, (LONG) _T("Dynamic taskbar order"));
+        SendDlgItemMessage(hDlg, IDC_PRESORDER, CB_ADDSTRING, 0, (LONG) _T("Dynamic taskbar & Z order"));
         SendDlgItemMessage(hDlg, IDC_PRESORDER, CB_SETCURSEL, preserveZOrder, 0) ;
         if(!releaseFocus)
             SendDlgItemMessage(hDlg, IDC_FOCUS, BM_SETCHECK, 1,0);

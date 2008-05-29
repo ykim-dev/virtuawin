@@ -151,7 +151,6 @@ int nDesks = 4;
 int nDesksX = 2;     
 int nDesksY = 2;     
 vwUByte mouseKnock = 2 ;
-vwUByte preserveZOrder = 2 ;      
 vwUByte hiddenWindowAct = 2 ;
 vwUByte taskButtonAct = 2 ;		
 vwUByte vwLogFlag = 0 ;
@@ -167,6 +166,19 @@ vwUByte taskbarIconShown = 0 ;
 vwUByte noTaskbarCheck = 0 ;
 vwUByte useWindowRules = 1 ;
 vwUByte taskbarFixRequired = 0 ;
+vwUByte preserveZOrder = 2 ;      
+vwUByte taskbarBCType;          // taskbar button container type - one of vwTASKBAR_BC_*
+HWND    taskbarBCHWnd;
+HANDLE  taskbarProcHdl;
+LPVOID  taskbarShrdMem;
+HWND   *taskbarButtonList = NULL ;
+int     taskbarButtonListSize = 0 ;     
+
+#define vwTASKBAR_BC_NONE       0    // None - no dynamic update
+#define vwTASKBAR_BC_TABCONTROL 1    // Win 2000
+#define vwTASKBAR_BC_TOOLBAR    2    // Win XP
+// Undocumented flag for 9x/ME
+#define VA_SHARED 0x8000000
 
 HANDLE mouseThread;                          // Handle to the mouse thread
 vwUByte mouseEnabled = 1 ;                   // Status of the mouse thread, always running at startup 
@@ -734,8 +746,8 @@ getWorkArea(void)
 /************************************************
  * Tries to locate the handle to the taskbar
  */
-static void
-goGetTheTaskbarHandle(void)
+void
+vwTaskbarHandleGet(void)
 {
     /* set the window to give focus to when releasing focus on switch also used to refresh */
     desktopHWnd = GetDesktopWindow();
@@ -743,6 +755,7 @@ goGetTheTaskbarHandle(void)
     deskIconHWnd = FindWindowEx(deskIconHWnd, NULL, _T("SHELLDLL_DefView"),NULL) ;
     deskIconHWnd = FindWindowEx(deskIconHWnd, NULL, _T("SysListView32"), _T("FolderView")) ;
     deskThread = GetWindowThreadProcessId(deskIconHWnd,NULL) ;
+    taskbarBCType = vwTASKBAR_BC_NONE ;
     if(!noTaskbarCheck)
     {
         HWND hwndTray = FindWindowEx(NULL, NULL,_T("Shell_TrayWnd"), NULL);
@@ -756,6 +769,52 @@ goGetTheTaskbarHandle(void)
         
         if(taskHWnd == NULL)
             MessageBox(hWnd,_T("Could not locate handle to the taskbar.\n This will disable the ability to hide troublesome windows correctly."),vwVIRTUAWIN_NAME _T(" Error"), 0); 
+        else if(preserveZOrder > 2)
+        {
+            if((hwndBar = FindWindowEx(taskHWnd,0,_T("SysTabControl32"),0)) != NULL)
+            {
+                taskbarBCHWnd = hwndBar ;
+                taskbarBCType = vwTASKBAR_BC_TABCONTROL;
+            }
+            else if((hwndBar = FindWindowEx(taskHWnd,0,_T("ToolbarWindow32"),0)) != NULL)
+            {
+                taskbarBCHWnd = hwndBar ;
+                taskbarBCType = vwTASKBAR_BC_TOOLBAR;
+            }
+            else
+                MessageBox(hWnd,_T("Failed to identify taskbar button container - dynamic taskbar order disabled."),vwVIRTUAWIN_NAME _T(" Error"),0) ;
+            if(taskbarBCType)
+            {
+                DWORD procId ;
+                
+                if(taskbarShrdMem)
+                {
+                    if(osVersion <= OSVERSION_9X)
+                        VirtualFree(taskbarShrdMem,0,MEM_RELEASE) ;
+                    else
+                        VirtualFreeEx(taskbarProcHdl,taskbarShrdMem,0,MEM_RELEASE);
+                    taskbarShrdMem = NULL;
+                }
+                if(taskbarProcHdl == NULL)
+                {
+                    CloseHandle(taskbarProcHdl);
+                    taskbarProcHdl = NULL;
+                }
+                if((GetWindowThreadProcessId(taskbarBCHWnd,&procId) != 0) && (procId != 0) &&
+                   ((taskbarProcHdl = OpenProcess(PROCESS_VM_OPERATION | PROCESS_VM_READ | PROCESS_VM_WRITE, FALSE, procId)) != NULL))
+                {
+                    if(osVersion <= OSVERSION_9X)
+                        taskbarShrdMem = VirtualAlloc(NULL,sizeof(TBBUTTON) + sizeof(TCITEM),MEM_COMMIT | VA_SHARED, PAGE_READWRITE) ;
+                    else
+                        taskbarShrdMem = VirtualAllocEx(taskbarProcHdl,NULL,sizeof(TBBUTTON) + sizeof(TCITEM),MEM_COMMIT,PAGE_READWRITE) ;
+                }
+                if(taskbarShrdMem == NULL)
+                {
+                    MessageBox(hWnd,_T("Failed to create taskbar button transfer memory - dynamic taskbar order disabled."),vwVIRTUAWIN_NAME _T(" Error"),0) ;
+                    taskbarBCType = vwTASKBAR_BC_NONE ;
+                }
+            }
+        }
     }
     // if on win9x the tricky windows need to be continually hidden
     taskbarFixRequired = ((osVersion <= OSVERSION_9X) && (taskHWnd != NULL)) ;
@@ -2042,6 +2101,58 @@ shutDown(void)
     PostQuitMessage(0);
 }
 
+static int
+vwTaskbarButtonListUpdate(void)
+{
+    int ii, tbCount=0, itemCount ;
+    TCITEM tcItem;
+    TBBUTTON tbItem;
+    HWND tbHWnd;
+    
+    if(taskbarBCType == vwTASKBAR_BC_TABCONTROL)
+        itemCount = TabCtrl_GetItemCount(taskbarBCHWnd) ;
+    else
+        itemCount = SendMessage(taskbarBCHWnd,TB_BUTTONCOUNT,0,0) ;
+    if(itemCount <= 0)
+        return 0 ;
+    if(itemCount >= taskbarButtonListSize)
+    {
+        if(taskbarButtonList != NULL)
+            free(taskbarButtonList) ;
+        taskbarButtonListSize = itemCount + 0x10 ;
+        taskbarButtonList = malloc(taskbarButtonListSize * sizeof(HWND)) ;
+        if(taskbarButtonList == NULL)
+        {
+            taskbarButtonListSize = 0 ;
+            return 0 ;
+        }
+    }
+    if(taskbarBCType == vwTASKBAR_BC_TABCONTROL)
+    {
+        for(ii = 0 ; ii < itemCount ; ++ii)
+        {
+            tcItem.mask = TCIF_PARAM;
+            if(WriteProcessMemory(taskbarProcHdl,taskbarShrdMem,&tcItem,sizeof(TCITEM),NULL) &&
+               TabCtrl_GetItem(taskbarBCHWnd,ii,taskbarShrdMem) &&
+               ReadProcessMemory(taskbarProcHdl,taskbarShrdMem,&tcItem,sizeof(TCITEM),NULL) &&
+               (tcItem.lParam != 0))
+                taskbarButtonList[tbCount++] = (HWND) tcItem.lParam ;
+        }
+    }
+    else
+    {
+        for(ii = 0 ; ii < itemCount ; ++ii)
+        {
+            if(SendMessage(taskbarBCHWnd,TB_GETBUTTON,ii,(LPARAM)taskbarShrdMem) &&
+               ReadProcessMemory(taskbarProcHdl,taskbarShrdMem,&tbItem,sizeof(TBBUTTON),NULL) &&
+               ReadProcessMemory(taskbarProcHdl,(LPCVOID) tbItem.dwData,&tbHWnd,sizeof(HWND),NULL) &&
+               (tbHWnd != NULL))
+                taskbarButtonList[tbCount++] = tbHWnd ;
+        }
+    }
+    taskbarButtonList[tbCount] = NULL ;
+    return tbCount ;
+}
 /************************************************
  * Callback for new window assignment and taskbar fix (removes bogus reappearances of tasks on win9x).
  */
@@ -2054,6 +2165,29 @@ monitorTimerProc(HWND hwnd, UINT uMsg, UINT idEvent, DWORD dwTime)
     
     vwMutexLock();
     timerCounter++ ;
+    if((timerCounter == 2) && taskbarBCType && (taskHWnd != NULL))
+    {
+        /* check the taskbar buttons in the taskbar are correct */
+        int tbCount ;
+        tbCount = vwTaskbarButtonListUpdate() ;
+#ifdef vwLOG_VERBOSE
+        if(vwLogEnabled())
+        {
+            vwLogBasic((_T("Timer Taskbar-Buttons %d:"),tbCount)) ;
+            for(ii = 0 ; ii<tbCount ; ii++)
+                _ftprintf(vwLogFile,_T(" %x"),taskbarButtonList[ii]) ;
+            _ftprintf(vwLogFile,_T("\n")) ;
+            fflush(vwLogFile) ;
+        }
+#endif
+        for(ii = 0 ; ii<tbCount ; ii++)
+        {
+            if(((win = vwWindowFind(taskbarButtonList[ii])) != NULL) &&
+               ((win->flags & (vwWINFLAGS_NO_TASKBAR_BUT|vwWINFLAGS_RM_TASKBAR_BUT)) == (vwWINFLAGS_NO_TASKBAR_BUT|vwWINFLAGS_RM_TASKBAR_BUT)) &&
+               vwWindowIsShownNotHung(win))
+                PostMessage(taskHWnd,RM_Shellhook,HSHELL_WINDOWDESTROYED,(LPARAM) win->handle) ;
+        }
+    }
     hungCount = windowListUpdate() ;
     if((ii = (hungCount >> 16)) > 0)
     {
@@ -2129,9 +2263,81 @@ changeDesk(int newDesk, WPARAM msgWParam)
     
     vwLogBasic((_T("Step Desk Start: %d -> %d (%d,%x)\n"),currentDesk,newDesk,isDragging,(int)dragHWnd)) ;
     
-    timerCounter = 0 ;
     vwMutexLock();
     windowListUpdate() ;
+    if(taskbarBCType && (timerCounter >= 4))
+    {
+        vwWindow *nwin, *pwin ;
+        int ii, jj, tbCount ;
+        tbCount = vwTaskbarButtonListUpdate() ;
+#ifdef vwLOG_VERBOSE
+        if(vwLogEnabled())
+        {
+            vwLogBasic((_T("Step Desk Taskbar-Buttons %d:"),tbCount)) ;
+            for(ii = 0 ; ii<tbCount ; ii++)
+                _ftprintf(vwLogFile,_T(" %x"),taskbarButtonList[ii]) ;
+            _ftprintf(vwLogFile,_T("\n")) ;
+            fflush(vwLogFile) ;
+        }
+#endif
+        ii = 0 ;
+        win = windowList ;
+        while(win != NULL)
+        {
+            nwin = vwWindowGetNext(win) ;
+            if(vwWindowIsShownNotHung(win))
+            {
+                if(win->handle == taskbarButtonList[ii])
+                {
+                    win->flags &= ~vwWINFLAGS_NO_TASKBAR_BUT ;
+                    ii++ ;
+                }
+                else
+                {
+                    jj = tbCount ;
+                    while((--jj >= 0) && (taskbarButtonList[jj] != win->handle))
+                        ;
+                    if(jj < 0)
+                        win->flags |= vwWINFLAGS_NO_TASKBAR_BUT ;
+                    else
+                    {
+                        win->flags &= ~vwWINFLAGS_NO_TASKBAR_BUT ;
+                        if(((jj == 0) ||
+                            ((pwin = vwWindowFind(taskbarButtonList[jj-1])) == NULL)) &&
+                           ((jj+1) < tbCount) &&
+                           ((bwn = vwWindowFind(taskbarButtonList[jj+1])) != NULL))
+                        {
+                            if(bwn == windowList)
+                                pwin = (vwWindow *) windowBaseList ;
+                            else
+                                pwin = windowList ;
+                            while(pwin->next != bwn)
+                                pwin = pwin->next ;
+                        }
+                        if((pwin != NULL) && (pwin != win) && (pwin->next != win)) 
+                        {
+                            if(win == windowList)
+                            {
+                                windowList = win->next ;
+                                bwn = (vwWindow *) windowBaseList ;
+                            }
+                            else
+                                bwn = windowList ;
+                            while(bwn->next != win)
+                                bwn = bwn->next ;
+                            bwn->next = win->next ;
+                            win->next = pwin->next ;
+                            pwin->next = win ;
+                            if(win->next == windowList)
+                                windowList = win ;
+                        }
+                    }
+                }
+            }
+            win = nwin ;
+        }
+    }
+    timerCounter = 0 ;
     
     activeHWnd = NULL;
     if(isDragging || (checkMouseState(1) == 1))
@@ -2274,7 +2480,7 @@ changeDesk(int newDesk, WPARAM msgWParam)
                 vwWindowShowHide(win,vwWINSH_FLAGS_HIDE) ;
             win = vwWindowGetNext(win) ;
         }
-        if(preserveZOrder)
+        if((preserveZOrder == 2) || (preserveZOrder == 4))
         {
             // very small sleep to allow system to catch up
             Sleep(1);
@@ -4364,7 +4570,7 @@ wndProc(HWND aHWnd, UINT message, WPARAM wParam, LPARAM lParam)
         if(message == taskbarRestart)
         {
             taskbarIconShown &= ~0x01 ;
-            goGetTheTaskbarHandle();
+            vwTaskbarHandleGet();
             vwIconSet(currentDesk,0) ;
         }
         break;
@@ -4482,7 +4688,7 @@ VirtuaWinInit(HINSTANCE hInstance, LPSTR cmdLine)
     
     /* Fix some things for the alternate hide method */
     RM_Shellhook = RegisterWindowMessage(_T("SHELLHOOK"));
-    goGetTheTaskbarHandle();
+    vwTaskbarHandleGet();
     getScreenSize();
     getWorkArea();
     

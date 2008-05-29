@@ -129,7 +129,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX        "Advanced Options", IDC_STATIC, 4, 5, 202, 73
     LTEXT           "On desktop change preserve:", IDC_STATIC,  10, 16, 120, 10
-    COMBOBOX        IDC_PRESORDER, 22, 26, 130, 45, CBS_AUTOHSCROLL | CBS_DROPDOWNLIST | WS_TABSTOP
+    COMBOBOX        IDC_PRESORDER, 22, 26, 130, 75, CBS_AUTOHSCROLL | CBS_DROPDOWNLIST | WS_TABSTOP
     AUTOCHECKBOX    "Restore focus on desktop change", IDC_FOCUS,                10,  41, 125, 10
     AUTOCHECKBOX    "Invert Up/Down", IDC_INVERTY,                               10,  52,  70, 10
     AUTOCHECKBOX    "Hide system tray icon", IDC_DISPLAYICON,                    10,  63,  80, 10
