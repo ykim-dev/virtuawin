@@ -3,7 +3,7 @@
 
 IDD_MAINDIALOG DIALOG 83, 36, 101, 66
 STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION
-CAPTION "AutoSwitcher 1.0"
+CAPTION "AutoSwitcher 1.1"
 FONT 8, "Helv"
 BEGIN
     LTEXT           "Cycle interval", 9, 8, 10, 55, 12
