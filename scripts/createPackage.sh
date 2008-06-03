@@ -249,7 +249,7 @@ if [ $REPLY == 'y' ] ; then
     mv ./tmp/standard/output/setup.exe ../Distribution/VirtuaWin_setup_$file_ver.exe
     mv ./tmp/portable/VirtuaWin_portable_$file_ver.zip ../Distribution/
     mv ./tmp/unicode/output/setup.exe ../Distribution/VirtuaWin_unicode_setup_$file_ver.exe
-    mv ./tmp/portable_unicode/VirtuaWin_portable_$file_ver.zip ../Distribution/
+    mv ./tmp/portable_unicode/VirtuaWin_portable_unicode_$file_ver.zip ../Distribution/
     mv ./VirtuaWin_source_$file_ver.zip ../Distribution/
     mv ./VirtuaWin_SDK_$file_ver.zip ../Distribution/
 fi
