@@ -97,21 +97,26 @@ CheckDesktopSettings(void)
 static void
 LoadConfigFile(void)
 {
+    char buff[1024], *ss ;
+#ifdef _UNICODE
+    TCHAR buffW[1024], *ssT ;
+#else
+    char *ssT ;
+#endif
     vwIcon *ci=NULL ;
-    TCHAR buff[1024], *ss ;
     int len, rr, ia[4] ;
     FILE *fp ;
     memset(showNewIcons,1,vwDESKTOP_SIZE) ;
     memset(autoUpdate,1,vwDESKTOP_SIZE) ;
     memset(autoGrid,0,vwDESKTOP_SIZE) ;
     
-    ss = userAppPath + _tcslen(userAppPath) ;
-    _tcscpy(ss,_T("desktopicons.cfg")) ;
+    ssT = userAppPath + _tcslen(userAppPath) ;
+    _tcscpy(ssT,_T("desktopicons.cfg")) ;
     fp = _tfopen(userAppPath,_T("r")) ;
-    *ss = '\0' ;
+    *ssT = '\0' ;
     if(fp != NULL)
     {
-        while(_fgetts(buff,1024,fp) != NULL)
+        while(fgets(buff,1024,fp) != NULL)
         {
             if(buff[0] == 'A')
             {
@@ -152,15 +157,21 @@ LoadConfigFile(void)
                 ss = buff+1 ;
                 if(*ss == ' ')
                     ss++ ;
-                if(((len = _tcslen(ss)-1) >= 0) && (ss[len] == '\n'))
+                if(((len = strlen(ss)-1) >= 0) && (ss[len] == '\n'))
                     ss[len] = '\0' ;
                 if(*ss == '\0')
                     ci = NULL ;
                 else
                 {
+#ifdef _UNICODE
+                    MultiByteToWideChar(CP_UTF8,0,ss,-1,buffW,1024) ;
+                    ssT = buffW ;
+#else
+                    ssT = ss ;
+#endif
                     rr = 1 ;
                     ci = iconHead ;
-                    while((ci != NULL) && ((rr=_tcscmp(ci->name,ss)) < 0))
+                    while((ci != NULL) && ((rr=_tcscmp(ci->name,ssT)) < 0))
                         ci = ci->next ;
                     if(rr != 0)
                         ci = NULL ;
@@ -204,7 +215,7 @@ SaveConfigFile(void)
         while(ci != NULL)
         {
 #ifdef _UNICODE
-            WideCharToMultiByte(CP_ACP,0,ci->name,-1,name,1024, 0, 0) ;
+            WideCharToMultiByte(CP_UTF8,0,ci->name,-1,name,1024, 0, 0) ;
 #else
             name = ci->name ;
 #endif
