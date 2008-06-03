@@ -1,6 +1,24 @@
 ***   VirtuaWin Revision History   ***
 --------------------------------------
 
+Ver 4.1.0 beta1 2008/06/03
+
+* 1869917 Added new dynamic taskbar order feature to support Taskbar shuffle.
+* Added dynamic taskbar button removal option as a better fix to long
+  standing issue.
+* 1979116 Re-implement taskbar activation option to be a window rule option.
+* 1964565 Added crash handler and reimplemented showHelp to avoid rare crash
+* 1967494 Close spawned module process handles.
+* 1919024 Implemented NAV: Return to last desktop hotkey command.
+* 1933182 Improved SetForegroundWindow so focus can be given back to desktop.
+* 1930005 Force redraw of activated window hidden using toolwin flag.
+* 1953231 Fixed handling of close message so it does exit VW if requested.
+* 1950577 Made process name string comparisions case insensitive.
+* 1956478 Added portable unicode package creation
+
+
+----------------------------
+
 Ver 4.0.1 2008/04/24
 
 * 1924256 Moved the on-line help over to MS HTML help (chm).

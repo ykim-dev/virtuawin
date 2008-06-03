@@ -30,7 +30,7 @@
 #define vwVIRTUAWIN_NAME         _T("VirtuaWin")
 #define vwVIRTUAWIN_CLASSNAME    _T("VirtuaWinMainClass")
 #define vwVIRTUAWIN_EMAIL        _T("VirtuaWin@home.se")
-#define vwVIRTUAWIN_NAME_VERSION _T("VirtuaWin v4.0.1")
+#define vwVIRTUAWIN_NAME_VERSION _T("VirtuaWin v4.1 beta1")
 #define vwVIRTUAWIN_WEBSITE      _T("http://virtuawin.sourceforge.net/")
 #define vwVIRTUAWIN_MODULES_URL  vwVIRTUAWIN_WEBSITE _T("modules.php")
 
@@ -69,6 +69,8 @@ typedef unsigned char  vwUByte ;
 #define vwWTFLAGS_MOVE_IMMEDIATE   0x00004000
 #define vwWTFLAGS_MAIN_WIN         0x00008000
 #define vwWTFLAGS_GROUP_APP        0x00010000
+#define vwWTFLAGS_HWACT_MASK       0x000e0000
+#define vwWTFLAGS_HWACT_BITROT     17
 #define vwWTFLAGS_HIDEWIN_MASK     0x0f000000
 #define vwWTFLAGS_HIDEWIN_BITROT   24
 #define vwWTFLAGS_HIDEWIN_HIDE     0x00000000
@@ -107,6 +109,8 @@ typedef struct vwWindowRule {
 #define vwWINFLAGS_MOVE_IMMEDIATE  vwWTFLAGS_MOVE_IMMEDIATE
 #define vwWINFLAGS_MAIN_WIN        vwWTFLAGS_MAIN_WIN
 #define vwWINFLAGS_GROUP_APP       vwWTFLAGS_GROUP_APP
+#define vwWINFLAGS_HWACT_MASK      vwWTFLAGS_HWACT_MASK
+#define vwWINFLAGS_HWACT_BITROT    vwWTFLAGS_HWACT_BITROT
 #define vwWINFLAGS_HIDEWIN_MASK    vwWTFLAGS_HIDEWIN_MASK  
 #define vwWINFLAGS_HIDEWIN_HIDE    vwWTFLAGS_HIDEWIN_HIDE  
 #define vwWINFLAGS_HIDEWIN_MOVE    vwWTFLAGS_HIDEWIN_MOVE  
