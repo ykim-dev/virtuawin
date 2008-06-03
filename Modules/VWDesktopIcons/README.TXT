@@ -57,12 +57,13 @@ Copyright (c) 2007-2008 VirtuaWin (virtuawin@home.se)
 
 HISTORY
 
-Ver 1.2 - ???
+Ver 1.2 - 2008/06/03
 
 * Changed cfg file format and file name
 * Added Show new icons and Auto-up-date desktop options
 * Changed Restore to Reset and added Store button.
 * Added multi-select support in icon lists.
+* Added Align to Grid feature.
 
 Ver 1.1 - 2007/08/01
 
