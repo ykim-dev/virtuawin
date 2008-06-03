@@ -9,16 +9,20 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT           "", ID_LABEL, 6, 6, 114, 11
     AUTOCHECKBOX    "Show new icons on this desktop", ID_SHOW_NEW_ICN, 140, 6, 125, 10
-    LISTBOX         ID_HIDE_LIST, 6, 20, 114, 186, LBS_EXTENDEDSEL | WS_VSCROLL | WS_HSCROLL | WS_TABSTOP
-    LISTBOX         ID_SHOW_LIST, 172, 20, 114, 186, LBS_EXTENDEDSEL | WS_VSCROLL | WS_HSCROLL | WS_TABSTOP
-    PUSHBUTTON      "< Hide",  ID_HIDE_ICON, 126, 100, 40, 14
-    PUSHBUTTON      "Show >",  ID_SHOW_ICON, 126, 120, 40, 14
-    PUSHBUTTON      "Store",   ID_STORE,    6, 206, 40, 14
-    PUSHBUTTON      "Reset",   ID_RESET,   52, 206, 40, 14
-    AUTOCHECKBOX    "Auto-up-date this desktop", ID_AUTO_UPDATE, 140, 208, 125, 10
-    PUSHBUTTON      "Copy",    ID_COPY,     6, 226, 40, 14
-    PUSHBUTTON      "Paste",   ID_PASTE,   52, 226, 40, 14
-    PUSHBUTTON      "OK",      ID_OK,     154, 226, 40, 14
-    DEFPUSHBUTTON   "Cancel",  IDCANCEL,  200, 226, 40, 14
-    PUSHBUTTON      "Apply",   ID_APPLY,  246, 226, 40, 14
+    LISTBOX         ID_HIDE_LIST, 6, 20, 114, 166, LBS_EXTENDEDSEL | WS_VSCROLL | WS_HSCROLL | WS_TABSTOP
+    LISTBOX         ID_SHOW_LIST, 172, 20, 114, 166, LBS_EXTENDEDSEL | WS_VSCROLL | WS_HSCROLL | WS_TABSTOP
+    PUSHBUTTON      "< Hide",  ID_HIDE_ICON, 126, 90, 40, 14
+    PUSHBUTTON      "Show >",  ID_SHOW_ICON, 126, 110, 40, 14
+    PUSHBUTTON      "Align to Grid", ID_GRID,  6, 186, 48, 14
+    LTEXT           "Size",    IDC_STATIC,    60, 189, 18, 8
+    EDITTEXT                   ID_GRID_SIZE,  78, 187, 30, 12, ES_LEFT | ES_AUTOHSCROLL
+    PUSHBUTTON      "Store",   ID_STORE,       6, 206, 48, 14
+    PUSHBUTTON      "Reset",   ID_RESET,      60, 206, 48, 14
+    AUTOCHECKBOX    "Auto-align to grid this desktop", ID_AUTO_GRID, 130, 188, 125, 10
+    AUTOCHECKBOX    "Auto-up-date this desktop", ID_AUTO_UPDATE, 130, 208, 125, 10
+    PUSHBUTTON      "Copy",    ID_COPY,        6, 226, 48, 14
+    PUSHBUTTON      "Paste",   ID_PASTE,      60, 226, 48, 14
+    PUSHBUTTON      "OK",      ID_OK,        130, 226, 48, 14
+    DEFPUSHBUTTON   "Cancel",  IDCANCEL,     184, 226, 48, 14
+    PUSHBUTTON      "Apply",   ID_APPLY,     238, 226, 48, 14
 END

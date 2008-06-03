@@ -1,3 +1,4 @@
+#define IDC_STATIC      -1
 #define	IDD_MAINDIALOG	100
 #define	ID_LABEL	101
 #define	ID_HIDE_LIST	102
@@ -12,3 +13,6 @@
 #define	ID_PASTE	111
 #define	ID_OK		112
 #define	ID_APPLY	113
+#define ID_GRID         114
+#define ID_AUTO_GRID    115
+#define ID_GRID_SIZE    116

@@ -46,6 +46,9 @@ typedef struct vwIcon {
 } vwIcon ;
 
 #define diItemSize (sizeof(LVITEM) + sizeof(POINT) + (sizeof(TCHAR) * MAX_PATH))
+#define vwGRID_OFFSET_Y  2
+#define gridXPos(x) (((((x) + (gridSize >> 1) - gridXOffset) / gridSize) * gridSize) + gridXOffset)
+#define gridYPos(y) (((((y) + (gridSize >> 1) - vwGRID_OFFSET_Y) / gridSize) * gridSize) + vwGRID_OFFSET_Y)
 
 HINSTANCE hInst;                 /* Instance handle */
 HWND    wHnd;                    /* DesktopIcons Handle */
@@ -62,9 +65,12 @@ POINT  *diItemPos ;
 int     deskCrrnt ;
 int     deskCopy ;
 vwIcon *iconHead ;
+int     gridSize = 75 ;
+int     gridXOffset = 21 ;
 int     setupChanged ;
 unsigned char initialised ;
 unsigned char shuttingDown ;
+unsigned char autoGrid[vwDESKTOP_SIZE] ;
 unsigned char autoUpdate[vwDESKTOP_SIZE] ;
 unsigned char saveDesktop[vwDESKTOP_SIZE] ;
 unsigned char showNewIcons[vwDESKTOP_SIZE] ;
@@ -91,13 +97,13 @@ CheckDesktopSettings(void)
 static void
 LoadConfigFile(void)
 {
-    vwIcon *ci ;
+    vwIcon *ci=NULL ;
     TCHAR buff[1024], *ss ;
     int len, rr, ia[4] ;
     FILE *fp ;
-    
     memset(showNewIcons,1,vwDESKTOP_SIZE) ;
     memset(autoUpdate,1,vwDESKTOP_SIZE) ;
+    memset(autoGrid,0,vwDESKTOP_SIZE) ;
     
     ss = userAppPath + _tcslen(userAppPath) ;
     _tcscpy(ss,_T("desktopicons.cfg")) ;
@@ -117,6 +123,11 @@ LoadConfigFile(void)
                 if((sscanf(buff+1,"%d %d",ia,ia+1) == 2) && (ia[0] > 0) && (ia[0] < vwDESKTOP_SIZE))
                     autoUpdate[ia[0]] = ia[1] ;
             }
+            else if(buff[0] == 'C')
+            {
+                if((sscanf(buff+1,"%d %d",ia,ia+1) == 2) && (ia[0] > 0) && (ia[0] < vwDESKTOP_SIZE))
+                    autoGrid[ia[0]] = ia[1] ;
+            }
             else if(buff[0] == 'D')
             {
                 if((ci != NULL) && (sscanf(buff+1,"%d %d %d %d",ia,ia+1,ia+2,ia+3) == 4) &&
@@ -126,6 +137,14 @@ LoadConfigFile(void)
                     ci->show[ia[0]] = ia[1] ;
                     ci->point[ia[0]].x = ia[2] ;
                     ci->point[ia[0]].y = ia[3] ;
+                }
+            }
+            else if(buff[0] == 'G')
+            {
+                if((sscanf(buff+1,"%d",ia) == 1) && (ia[0] > 0))
+                {
+                    gridSize = ia[0] ;
+                    gridXOffset = (gridSize * 7) / 24 ;
                 }
             }
             else if(buff[0] == 'I')
@@ -171,12 +190,15 @@ SaveConfigFile(void)
     *ss = '\0' ;
     if(fp != NULL)
     {
+        fprintf(fp,"G %d\n",gridSize) ;
         for(ii=1 ; ii< vwDESKTOP_SIZE ; ii++)
         {
             if(showNewIcons[ii] != 1)
                 fprintf(fp,"A %d %d\n",ii,(int) showNewIcons[ii]) ;
             if(autoUpdate[ii] != 1)
                 fprintf(fp,"B %d %d\n",ii,(int) autoUpdate[ii]) ;
+            if(autoGrid[ii] != 0)
+                fprintf(fp,"C %d %d\n",ii,(int) autoGrid[ii]) ;
         }
         ci = iconHead ;
         while(ci != NULL)
@@ -246,10 +268,23 @@ UpdateDesktopIcons(int fdesk, int tdesk, int flags)
             ti->next = ci ;
             ci = ti ;
         }
-        else if((fdesk > 0) && (ci->show[fdesk] != 0))
+        else if(fdesk > 0)
         {
-            ci->point[fdesk].x = diItemPos->x ;
-            ci->point[fdesk].y = diItemPos->y ;
+            if((ci->show[fdesk] != 0) ||
+               ((flags & 0x01) && (diItemPos->y > -5000)))
+            {
+                ci->show[fdesk] = 1 ;
+                if(autoGrid[fdesk])
+                {
+                    ci->point[fdesk].x = gridXPos(diItemPos->x) ;
+                    ci->point[fdesk].y = gridYPos(diItemPos->y) ;
+                }
+                else
+                {
+                    ci->point[fdesk].x = diItemPos->x ;
+                    ci->point[fdesk].y = diItemPos->y ;
+                }
+            }
         }
         if(tdesk >= 0)
         {
@@ -261,7 +296,7 @@ UpdateDesktopIcons(int fdesk, int tdesk, int flags)
             else
             {
                 xx = ci->point[0].x ;
-                yy = ci->point[0].y - 2000 ;
+                yy = ci->point[0].y - 20000 ;
             }
             if((xx != diItemPos->x) || (yy != diItemPos->y))
                ListView_SetItemPosition(diHandle,ii,xx,yy) ;
@@ -270,7 +305,7 @@ UpdateDesktopIcons(int fdesk, int tdesk, int flags)
     return 0 ;
 }
 
-static int
+static void
 SetDesktopIcons(int tdesk)
 {
     DWORD dwNumberOfBytes;
@@ -299,8 +334,26 @@ SetDesktopIcons(int tdesk)
             ci = ci->next ;
         }
     }
-    return 0 ;
 }
+
+static void
+AlignDesktopIconsToGrid(int tdesk)
+{
+    vwIcon *ci ;
+    
+    UpdateDesktopIcons(tdesk,tdesk,1) ;
+    ci = iconHead ;
+    while(ci != NULL)
+    {
+        if(ci->show[tdesk] != 0)
+        {
+            ci->point[tdesk].x = gridXPos(ci->point[tdesk].x) ;
+            ci->point[tdesk].y = gridYPos(ci->point[tdesk].y) ;
+        }
+        ci = ci->next ;
+    }
+}
+
 
 static void
 GenerateDesktopIconList(HWND hDlg)
@@ -337,6 +390,11 @@ initDialog(HWND hwndDlg, BOOL enableApply)
     GenerateDesktopIconList(hwndDlg);
     SendDlgItemMessage(hwndDlg, ID_SHOW_NEW_ICN, BM_SETCHECK, showNewIcons[deskCrrnt], 0);
     SendDlgItemMessage(hwndDlg, ID_AUTO_UPDATE, BM_SETCHECK, autoUpdate[deskCrrnt], 0);
+    SendDlgItemMessage(hwndDlg, ID_AUTO_GRID, BM_SETCHECK, autoGrid[deskCrrnt], 0);
+    _stprintf(buff,_T("%d"),gridSize) ;
+    SetDlgItemText(hwndDlg, ID_GRID_SIZE,buff) ;
+    if((hBtn=GetDlgItem(hwndDlg,ID_AUTO_GRID)) != NULL)
+        EnableWindow(hBtn,autoUpdate[deskCrrnt]) ;
     if((hBtn=GetDlgItem(hwndDlg,ID_APPLY)) != NULL)
         EnableWindow(hBtn,enableApply) ;
     if((hBtn=GetDlgItem(hwndDlg,ID_SHOW_ICON)) != NULL)
@@ -356,15 +414,12 @@ SetupShowCurrentIcon(HWND hDlg)
 {
     vwIcon *ci ;
     TCHAR lbl_buff[1024] ;
+    int i, count, *id_buff ;
     
-    int count = SendDlgItemMessage(hDlg, ID_HIDE_LIST, LB_GETSELCOUNT, 0, 0);
-    
-    if (count != LB_ERR && count != 0)
+    if(((count = SendDlgItemMessage(hDlg, ID_HIDE_LIST, LB_GETSELCOUNT, 0, 0)) != LB_ERR) && (count > 0) &&
+       ((id_buff = GlobalAlloc(GPTR, sizeof(int) * count)) != NULL))
     {
-        int i;
-        int *id_buff = GlobalAlloc(GPTR, sizeof(int) * count);
         SendDlgItemMessage(hDlg, ID_HIDE_LIST, LB_GETSELITEMS, (WPARAM)count, (LPARAM)id_buff);
-        
         for(i = count - 1; i >= 0; i--)
         {
             if (SendDlgItemMessage(hDlg,ID_HIDE_LIST,LB_GETTEXT, (WPARAM)id_buff[i],(LPARAM) lbl_buff) > 0)
@@ -383,7 +438,7 @@ SetupShowCurrentIcon(HWND hDlg)
             }
             
         }
-        
+        GlobalFree(id_buff) ;
     }
 }
 
@@ -392,15 +447,12 @@ SetupHideCurrentIcon(HWND hDlg)
 {
     vwIcon *ci ;
     TCHAR lbl_buff[1024] ;
+    int i, count, *id_buff ;
     
-    int count = SendDlgItemMessage(hDlg, ID_SHOW_LIST, LB_GETSELCOUNT, 0, 0);
-    
-    if (count != LB_ERR && count != 0)
+    if(((count = SendDlgItemMessage(hDlg, ID_SHOW_LIST, LB_GETSELCOUNT, 0, 0)) != LB_ERR) && (count > 0) &&
+       ((id_buff = GlobalAlloc(GPTR, sizeof(int) * count)) != NULL))
     {
-        int i;
-        int *id_buff = GlobalAlloc(GPTR, sizeof(int) * count);
         SendDlgItemMessage(hDlg, ID_SHOW_LIST, LB_GETSELITEMS, (WPARAM)count, (LPARAM)id_buff);
-        
         for(i = count - 1; i >= 0; i--)
         {
             if (SendDlgItemMessage(hDlg,ID_SHOW_LIST,LB_GETTEXT, (WPARAM)id_buff[i],(LPARAM) lbl_buff) > 0)
@@ -418,7 +470,7 @@ SetupHideCurrentIcon(HWND hDlg)
             }
             
         }
-        
+        GlobalFree(id_buff) ;
     }
 }
 
@@ -427,8 +479,15 @@ StoreDesktopConfig(HWND hDlg)
 {
     if(hDlg != NULL)
     {
+        TCHAR buff[16] ;
         showNewIcons[deskCrrnt] = (SendDlgItemMessage(hDlg, ID_SHOW_NEW_ICN, BM_GETCHECK, 0, 0) == BST_CHECKED) ;
         autoUpdate[deskCrrnt] = (SendDlgItemMessage(hDlg, ID_AUTO_UPDATE, BM_GETCHECK, 0, 0) == BST_CHECKED) ;
+        autoGrid[deskCrrnt] = (SendDlgItemMessage(hDlg, ID_AUTO_GRID, BM_GETCHECK, 0, 0) == BST_CHECKED) ;
+        GetDlgItemText(hDlg,ID_GRID_SIZE,buff,16) ;
+        gridSize = _ttoi(buff) ;
+        if(gridSize <= 0)
+            gridSize = 75 ;
+        gridXOffset = (gridSize * 7) / 24 ;
     }
     SetDesktopIcons(deskCrrnt) ;
     SaveConfigFile() ;
@@ -474,6 +533,16 @@ DialogFunc(HWND hwndDlg, UINT msg, WPARAM wParam, LPARAM lParam)
                 initDialog(hwndDlg,FALSE) ;
             return 1;
             
+        case ID_GRID:
+            AlignDesktopIconsToGrid(deskCrrnt) ;
+            if(!setupChanged)
+            {
+                if((hBtn=GetDlgItem(hwndDlg,ID_APPLY)) != NULL)
+                    EnableWindow(hBtn,TRUE) ;
+                setupChanged = -1 ;
+            }
+            return 1;
+        
         case ID_STORE:
             UpdateDesktopIcons(deskCrrnt,deskCrrnt,1) ;
             initDialog(hwndDlg,FALSE) ;
@@ -495,12 +564,20 @@ DialogFunc(HWND hwndDlg, UINT msg, WPARAM wParam, LPARAM lParam)
             }
             return 1;
         
-        case ID_SHOW_NEW_ICN:
         case ID_AUTO_UPDATE:
-            if((hBtn=GetDlgItem(hwndDlg,ID_APPLY)) != NULL)
-                EnableWindow(hBtn,TRUE) ;
+            lParam = (SendDlgItemMessage(hwndDlg,ID_AUTO_UPDATE,BM_GETCHECK,0,0) == BST_CHECKED) ;
+            if((hBtn=GetDlgItem(hwndDlg,ID_AUTO_GRID)) != NULL)
+                EnableWindow(hBtn,lParam) ;
+            /* no break */
+        case ID_SHOW_NEW_ICN:
+        case ID_AUTO_GRID:
+        case ID_GRID_SIZE:
             if(!setupChanged)
+            {
+                if((hBtn=GetDlgItem(hwndDlg,ID_APPLY)) != NULL)
+                    EnableWindow(hBtn,TRUE) ;
                 setupChanged = -1 ;
+            }
             return 1;
             
         case ID_COPY:
@@ -569,6 +646,8 @@ MainWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
         vwHandle = (HWND) wParam;
         if((deskCrrnt = SendMessage(vwHandle,VW_CURDESK,0,0)) >= vwDESKTOP_SIZE)
             deskCrrnt = 0 ;
+        else if(deskCrrnt > 0)
+            saveDesktop[deskCrrnt] = 1 ;
         // If not yet initialized get the user path and initialize.
         if(!initialised)
         {
@@ -613,7 +692,7 @@ MainWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
                 return TRUE ;
             }
             setupChanged = lParam ;
-            if(MessageBox(setupWHnd,_T("Apply changes main to current desktop?"),_T("VWDesktopIcons"),
+            if(MessageBox(setupWHnd,_T("Apply changes made to desktop?"),_T("VWDesktopIcons"),
                           MB_ICONQUESTION | MB_YESNO) == IDYES)
                 StoreDesktopConfig(setupWHnd) ;
             else
