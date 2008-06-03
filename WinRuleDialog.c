@@ -160,6 +160,7 @@ windowRuleDialogInitItem(HWND hDlg)
             EnableWindow(GetDlgItem(hDlg,IDC_WTYPE_AMDSK),ii) ;
             EnableWindow(GetDlgItem(hDlg,IDC_WTYPE_AMIMM),ii) ;
             SendDlgItemMessage(hDlg,IDC_WTYPE_AMIMM,BM_SETCHECK,((wt->flags & vwWTFLAGS_MOVE_IMMEDIATE) != 0), 0);
+            SendDlgItemMessage(hDlg,IDC_WTYPE_HWACT,CB_SETCURSEL,((wt->flags & vwWTFLAGS_HWACT_MASK) >> vwWTFLAGS_HWACT_BITROT), 0) ;
             SendDlgItemMessage(hDlg,IDC_WTYPE_WHIDE,CB_SETCURSEL,((wt->flags & vwWTFLAGS_HIDEWIN_MASK) >> vwWTFLAGS_HIDEWIN_BITROT), 0) ;
             SendDlgItemMessage(hDlg,IDC_WTYPE_THIDE,CB_SETCURSEL,((wt->flags & vwWTFLAGS_HIDETSK_MASK) >> vwWTFLAGS_HIDETSK_BITROT), 0) ;
             
@@ -187,6 +188,11 @@ windowRuleDialogInit(HWND hDlg, int firstTime)
     
     if(firstTime)
     {
+        SendDlgItemMessage(hDlg, IDC_WTYPE_HWACT, CB_ADDSTRING, 0, (LONG) _T("Default - configured in main Setup"));
+        SendDlgItemMessage(hDlg, IDC_WTYPE_HWACT, CB_ADDSTRING, 0, (LONG) _T("Ignore the event"));
+        SendDlgItemMessage(hDlg, IDC_WTYPE_HWACT, CB_ADDSTRING, 0, (LONG) _T("Move window to current desktop"));
+        SendDlgItemMessage(hDlg, IDC_WTYPE_HWACT, CB_ADDSTRING, 0, (LONG) _T("Show window on current desktop"));
+        SendDlgItemMessage(hDlg, IDC_WTYPE_HWACT, CB_ADDSTRING, 0, (LONG) _T("Change to window's desktop"));
         SendDlgItemMessage(hDlg, IDC_WTYPE_WHIDE, CB_ADDSTRING, 0, (LONG) _T("Hide using standard method"));
         SendDlgItemMessage(hDlg, IDC_WTYPE_WHIDE, CB_ADDSTRING, 0, (LONG) _T("Hide by move window"));
         SendDlgItemMessage(hDlg, IDC_WTYPE_WHIDE, CB_ADDSTRING, 0, (LONG) _T("Hide by minimizing window"));
@@ -195,6 +201,7 @@ windowRuleDialogInit(HWND hDlg, int firstTime)
         SendDlgItemMessage(hDlg, IDC_WTYPE_THIDE, CB_ADDSTRING, 0, (LONG) _T("Hide by using toolwin flag"));
         SendDlgItemMessage(hDlg, IDC_WTYPE_ENABLE,BM_SETCHECK,1,0);
         SendDlgItemMessage(hDlg, IDC_WTYPE_VMANAGE,BM_SETCHECK,1,0);
+        SendDlgItemMessage(hDlg, IDC_WTYPE_HWACT, CB_SETCURSEL, 0, 0) ;
         SendDlgItemMessage(hDlg, IDC_WTYPE_WHIDE, CB_SETCURSEL, 0, 0) ;
         SendDlgItemMessage(hDlg, IDC_WTYPE_THIDE, CB_SETCURSEL, 0, 0) ;
         EnableWindow(GetDlgItem(hDlg,IDC_WTYPE_AMDSK),FALSE) ;
@@ -433,6 +440,8 @@ windowRuleDialogAddMod(HWND hDlg, int add)
         if(SendDlgItemMessage(hDlg,IDC_WTYPE_AMIMM,BM_GETCHECK,0,0) == BST_CHECKED)
             flags |= vwWTFLAGS_MOVE_IMMEDIATE ;
         
+        if((ii=SendDlgItemMessage(hDlg,IDC_WTYPE_HWACT,CB_GETCURSEL,0,0)) != CB_ERR)
+            flags |= ii << vwWTFLAGS_HWACT_BITROT ;
         if((ii=SendDlgItemMessage(hDlg,IDC_WTYPE_WHIDE,CB_GETCURSEL,0,0)) != CB_ERR)
             flags |= ii << vwWTFLAGS_HIDEWIN_BITROT ;
         if((ii=SendDlgItemMessage(hDlg,IDC_WTYPE_THIDE,CB_GETCURSEL,0,0)) != CB_ERR)

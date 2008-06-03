@@ -152,7 +152,7 @@ int nDesksX = 2;
 int nDesksY = 2;     
 vwUByte mouseKnock = 2 ;
 vwUByte hiddenWindowAct = 2 ;
-vwUByte taskButtonAct = 2 ;		
+vwUByte taskButtonAct = 0 ;		
 vwUByte vwLogFlag = 0 ;
 vwUByte releaseFocus = 0 ;	
 vwUByte refreshOnWarp = 0 ;     
@@ -165,6 +165,7 @@ vwUByte displayTaskbarIcon = 1 ;
 vwUByte taskbarIconShown = 0 ;
 vwUByte noTaskbarCheck = 0 ;
 vwUByte useWindowRules = 1 ;
+vwUByte useDynButtonRm = 0 ;
 vwUByte taskbarFixRequired = 0 ;
 vwUByte preserveZOrder = 2 ;      
 vwUByte taskbarBCType;          // taskbar button container type - one of vwTASKBAR_BC_*
@@ -1814,7 +1815,7 @@ windowListUpdate(void)
             win->zOrder[currentDesk] = 1;
             if(wt != NULL)
             {
-                win->flags |= (wt->flags & (vwWTFLAGS_HIDEWIN_MASK|vwWTFLAGS_HIDETSK_MASK|vwWTFLAGS_STICKY|vwWTFLAGS_MAIN_WIN|vwWTFLAGS_GROUP_APP)) ;
+                win->flags |= (wt->flags & (vwWTFLAGS_HIDEWIN_MASK|vwWTFLAGS_HIDETSK_MASK|vwWTFLAGS_STICKY|vwWTFLAGS_MAIN_WIN|vwWTFLAGS_GROUP_APP|vwWTFLAGS_HWACT_MASK)) ;
                 if(vwWindowIsNotSticky(win) && (wt->flags & vwWTFLAGS_MOVE) && (desktopUsed[wt->desk] != 0))
                 {
                     win->flags |= (wt->flags & vwWINFLAGS_MOVE_IMMEDIATE) ;
@@ -1999,7 +2000,11 @@ windowListUpdate(void)
     {
         if(win->flags & vwWINFLAGS_ACTIVATED)
         {
-            vwUByte activateAction = (vwWindowDontHideTaskButton(win)) ? taskButtonAct:hiddenWindowAct ;
+            vwUByte activateAction ;
+            if((j = (win->flags & vwWINFLAGS_HWACT_MASK)) == 0)
+                activateAction = hiddenWindowAct ;
+            else
+                activateAction = (j >> vwWINFLAGS_HWACT_BITROT) - 1 ;
             win->flags &= ~vwWINFLAGS_ACTIVATED ;
             if((win->desk != currentDesk) && ((activateAction == 0) || (win->desk > nDesks)))
             {
@@ -2030,7 +2035,11 @@ windowListUpdate(void)
         }
         if(win->handle == activeHWnd)
         {
-            vwUByte activateAction = (vwWindowDontHideTaskButton(win)) ? taskButtonAct:hiddenWindowAct ;
+            vwUByte activateAction ;
+            if((j = (win->flags & vwWINFLAGS_HWACT_MASK)) == 0)
+                activateAction = hiddenWindowAct ;
+            else
+                activateAction = (j >> vwWINFLAGS_HWACT_BITROT) - 1 ;
             
             if((win->desk != currentDesk) && ((activateAction == 0) || (win->desk > nDesks)))
             {
@@ -2075,7 +2084,7 @@ vwWindowShowAll(vwUShort shwFlags)
     while(win != NULL)
     {
         // still ignore windows on a private desktop unless exiting (vwWINSH_FLAGS_TRYHARD)
-        if((win->desk <= nDesks) || (shwFlags & vwWINSH_FLAGS_TRYHARD))
+        if((win->desk <= nDesks) || ((shwFlags & 0x09) == vwWINSH_FLAGS_TRYHARD))
         {
             win->desk = currentDesk ;
             vwWindowShowHide(win,shwFlags|vwWINSH_FLAGS_SHOW);
@@ -2091,13 +2100,17 @@ vwWindowShowAll(vwUShort shwFlags)
 static void
 shutDown(void)
 {
-    KillTimer(hWnd, 0x29a);                // Remove the timer
-    postModuleMessage(MOD_QUIT, 0, 0);     // Tell all modules to quit
+    // Remove the timer & tell all modules to quit
+    KillTimer(hWnd, 0x29a);
+    postModuleMessage(MOD_QUIT, 0, 0);
     vwHotkeyUnregister(1);
-    vwWindowShowAll(0) ;                   // gather all windows quickly
-    Shell_NotifyIcon(NIM_DELETE, &nIconD); // This removes the icon
-    vwWindowShowAll(vwWINSH_FLAGS_TRYHARD);// try harder to gather remaining ones before exiting
-    DeleteObject(checkIcon);               // Delete loaded icon resource
+    // gather all windows quickly & remove icon
+    vwWindowShowAll(0) ;
+    Shell_NotifyIcon(NIM_DELETE, &nIconD);
+    // try harder to gather remaining ones before exiting
+    vwWindowShowAll((vwUShort) (taskButtonAct|vwWINSH_FLAGS_TRYHARD)) ;
+    // Delete loaded icon resource
+    DeleteObject(checkIcon);
     PostQuitMessage(0);
 }
 
@@ -2165,7 +2178,7 @@ monitorTimerProc(HWND hwnd, UINT uMsg, UINT idEvent, DWORD dwTime)
     
     vwMutexLock();
     timerCounter++ ;
-    if((timerCounter == 2) && taskbarBCType && (taskHWnd != NULL))
+    if((timerCounter == 2) && taskbarBCType && useDynButtonRm)
     {
         /* check the taskbar buttons in the taskbar are correct */
         int tbCount ;
@@ -4586,7 +4599,7 @@ vwCrashHandler(int sig)
     {
         /* only attempt this once, the window list could be corrupt */
         count = 1 ;
-        vwWindowShowAll(vwWINSH_FLAGS_TRYHARD) ;
+        vwWindowShowAll((vwUShort) (taskButtonAct|vwWINSH_FLAGS_TRYHARD)) ;
         vwLogBasic((_T("Received signal %d, terminating\n"),sig)) ;
         exit(-1) ;
     }

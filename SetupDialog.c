@@ -178,15 +178,6 @@ setupGeneral(HWND hDlg, UINT message, UINT wParam, LONG lParam)
             SendMessage(GetDlgItem(hDlg, IDC_SLIDERX), UDM_SETPOS, 0L, MAKELONG(nDesksX, 0));
             SendMessage(GetDlgItem(hDlg, IDC_SLIDERY), UDM_SETPOS, 0L, MAKELONG(nDesksY, 0));
             
-            SendDlgItemMessage(hDlg, IDC_HIDWINACT, CB_ADDSTRING, 0, (LONG) _T("Ignore the event"));
-            SendDlgItemMessage(hDlg, IDC_HIDWINACT, CB_ADDSTRING, 0, (LONG) _T("Move window to current desktop"));
-            SendDlgItemMessage(hDlg, IDC_HIDWINACT, CB_ADDSTRING, 0, (LONG) _T("Show window on current desktop"));
-            SendDlgItemMessage(hDlg, IDC_HIDWINACT, CB_ADDSTRING, 0, (LONG) _T("Change to window's desktop"));
-            SendDlgItemMessage(hDlg, IDC_HIDWINACT, CB_SETCURSEL, hiddenWindowAct, 0) ;
-            SendDlgItemMessage(hDlg, IDC_TSKBUTACT, CB_ADDSTRING, 0, (LONG) _T("Move window to current desktop"));
-            SendDlgItemMessage(hDlg, IDC_TSKBUTACT, CB_ADDSTRING, 0, (LONG) _T("Show window on current desktop"));
-            SendDlgItemMessage(hDlg, IDC_TSKBUTACT, CB_ADDSTRING, 0, (LONG) _T("Change to window's desktop"));
-            SendDlgItemMessage(hDlg, IDC_TSKBUTACT, CB_SETCURSEL, taskButtonAct-1, 0) ;
             if(deskWrap)
                 SendDlgItemMessage(hDlg, IDC_DESKCYCLE, BM_SETCHECK, 1, 0);
             if(winListCompact)
@@ -247,8 +238,6 @@ setupGeneral(HWND hDlg, UINT message, UINT wParam, LONG lParam)
             nDesks = maxDesk ;
             
             deskWrap = (SendDlgItemMessage(hDlg, IDC_DESKCYCLE, BM_GETCHECK, 0, 0) == BST_CHECKED) ;
-            hiddenWindowAct = (vwUByte) SendDlgItemMessage(hDlg, IDC_HIDWINACT, CB_GETCURSEL, 0, 0) ;
-            taskButtonAct = (vwUByte) SendDlgItemMessage(hDlg, IDC_TSKBUTACT, CB_GETCURSEL, 0, 0) + 1 ;
             winListCompact = (SendDlgItemMessage(hDlg, IDC_COMPACTWLIST, BM_GETCHECK, 0, 0) == BST_CHECKED) ;
             winMenuCompact = (SendDlgItemMessage(hDlg, IDC_COMPACTWMENU, BM_GETCHECK, 0, 0) == BST_CHECKED) ;
             winListContent = 0 ;
@@ -313,9 +302,7 @@ setupGeneral(HWND hDlg, UINT message, UINT wParam, LONG lParam)
                  (wPar == IDC_MENUMOVE)    || (wPar == IDC_COMPACTWMENU) ||
                  (wPar == IDC_MENUSHOW)    || (wPar == IDC_MENUSTICKY)   ||
                  (wPar == IDC_MENUACCESS)  ||
-                 (wPar == IDC_HIDWINACT   && HIWORD(wParam) == CBN_SELCHANGE) ||
-                 (wPar == IDC_TSKBUTACT   && HIWORD(wParam) == CBN_SELCHANGE) ||
-                 (wPar == IDC_DESKTOPNAME && HIWORD(wParam) == EN_CHANGE)))
+                 (wPar == IDC_DESKTOPNAME  && HIWORD(wParam) == EN_CHANGE)))
         {
             pageChangeMask |= 0x01 ;
             SendMessage(GetParent(hDlg), PSM_CHANGED, (WPARAM)hDlg, 0L); // Enable apply button
@@ -934,6 +921,11 @@ setupExpert(HWND hDlg, UINT message, UINT wParam, LONG lParam)
         SendDlgItemMessage(hDlg, IDC_PRESORDER, CB_ADDSTRING, 0, (LONG) _T("Dynamic taskbar order"));
         SendDlgItemMessage(hDlg, IDC_PRESORDER, CB_ADDSTRING, 0, (LONG) _T("Dynamic taskbar & Z order"));
         SendDlgItemMessage(hDlg, IDC_PRESORDER, CB_SETCURSEL, preserveZOrder, 0) ;
+        SendDlgItemMessage(hDlg, IDC_HIDWINACT, CB_ADDSTRING, 0, (LONG) _T("Ignore the event"));
+        SendDlgItemMessage(hDlg, IDC_HIDWINACT, CB_ADDSTRING, 0, (LONG) _T("Move window to current desktop"));
+        SendDlgItemMessage(hDlg, IDC_HIDWINACT, CB_ADDSTRING, 0, (LONG) _T("Show window on current desktop"));
+        SendDlgItemMessage(hDlg, IDC_HIDWINACT, CB_ADDSTRING, 0, (LONG) _T("Change to window's desktop"));
+        SendDlgItemMessage(hDlg, IDC_HIDWINACT, CB_SETCURSEL, hiddenWindowAct, 0) ;
         if(!releaseFocus)
             SendDlgItemMessage(hDlg, IDC_FOCUS, BM_SETCHECK, 1,0);
         if(refreshOnWarp)
@@ -946,6 +938,8 @@ setupExpert(HWND hDlg, UINT message, UINT wParam, LONG lParam)
             SendDlgItemMessage(hDlg, IDC_TASKBARDETECT, BM_SETCHECK, 1,0);
         if(useWindowRules)
             SendDlgItemMessage(hDlg, IDC_USEWINRULES, BM_SETCHECK, 1,0);
+        if(useDynButtonRm)
+            SendDlgItemMessage(hDlg, IDC_DYNBUTTONRM, BM_SETCHECK, 1,0);
         if(vwLogFlag)
             SendDlgItemMessage(hDlg, IDC_DEBUGLOGGING, BM_SETCHECK, 1,0);
         return TRUE;
@@ -959,11 +953,13 @@ setupExpert(HWND hDlg, UINT message, UINT wParam, LONG lParam)
         case PSN_APPLY:
             oldLogFlag = vwLogFlag ;
             preserveZOrder = (vwUByte) SendDlgItemMessage(hDlg, IDC_PRESORDER, CB_GETCURSEL, 0, 0) ;
+            hiddenWindowAct = (vwUByte) SendDlgItemMessage(hDlg, IDC_HIDWINACT, CB_GETCURSEL, 0, 0) ;
             releaseFocus = (SendDlgItemMessage(hDlg, IDC_FOCUS, BM_GETCHECK, 0, 0) != BST_CHECKED) ;
             refreshOnWarp = (SendDlgItemMessage(hDlg, IDC_REFRESH, BM_GETCHECK, 0, 0) == BST_CHECKED) ;
             invertY = (SendDlgItemMessage(hDlg, IDC_INVERTY, BM_GETCHECK, 0, 0) == BST_CHECKED) ;
             noTaskbarCheck = (SendDlgItemMessage(hDlg, IDC_TASKBARDETECT, BM_GETCHECK, 0, 0) != BST_CHECKED) ;
             useWindowRules = (SendDlgItemMessage(hDlg, IDC_USEWINRULES, BM_GETCHECK, 0, 0) == BST_CHECKED) ;
+            useDynButtonRm = (SendDlgItemMessage(hDlg, IDC_DYNBUTTONRM, BM_GETCHECK, 0, 0) == BST_CHECKED) ;
             vwLogFlag = (SendDlgItemMessage(hDlg,IDC_DEBUGLOGGING,BM_GETCHECK, 0, 0) == BST_CHECKED) ;
             displayTaskbarIcon = (SendDlgItemMessage(hDlg, IDC_DISPLAYICON, BM_GETCHECK, 0, 0) != BST_CHECKED) ;
             
@@ -1056,8 +1052,9 @@ setupExpert(HWND hDlg, UINT message, UINT wParam, LONG lParam)
         else if(LOWORD(wParam) == IDC_FOCUS       || LOWORD(wParam) == IDC_USEWINRULES ||
                 LOWORD(wParam) == IDC_DISPLAYICON || LOWORD(wParam) == IDC_DEBUGLOGGING ||
                 LOWORD(wParam) == IDC_INVERTY     || LOWORD(wParam) == IDC_TASKBARDETECT ||
-                LOWORD(wParam) == IDC_REFRESH     || 
-                (LOWORD(wParam) == IDC_PRESORDER && HIWORD(wParam) == CBN_SELCHANGE) )
+                LOWORD(wParam) == IDC_REFRESH     || LOWORD(wParam) == IDC_DYNBUTTONRM ||
+                (LOWORD(wParam) == IDC_HIDWINACT  && HIWORD(wParam) == CBN_SELCHANGE) ||
+                (LOWORD(wParam) == IDC_PRESORDER  && HIWORD(wParam) == CBN_SELCHANGE) )
         {
             pageChangeMask |= 0x08 ;
             SendMessage(GetParent(hDlg), PSM_CHANGED, (WPARAM)hDlg, 0L);

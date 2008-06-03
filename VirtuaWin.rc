@@ -48,20 +48,14 @@ BEGIN
     EDITTEXT        IDC_DESKTOPNAME, 22,68, 130, 12, ES_LEFT | ES_AUTOHSCROLL
     GROUPBOX        "Desktop Configuration", IDC_STATIC, 4, 5, 202, 81
 
-    GROUPBOX        "Window Configuration", IDC_STATIC,    4, 89, 202, 65
-    LTEXT           "On hidden window activation:", IDC_STATIC, 10, 99, 120, 10
-    COMBOBOX        IDC_HIDWINACT, 22, 109, 130, 56, CBS_AUTOHSCROLL | CBS_DROPDOWNLIST | WS_TABSTOP
-    LTEXT           "On taskbar button activation:", IDC_STATIC, 10, 124, 120, 10
-    COMBOBOX        IDC_TSKBUTACT, 22, 134, 130, 56, CBS_AUTOHSCROLL | CBS_DROPDOWNLIST | WS_TABSTOP
-
-    GROUPBOX        "User Interface", IDC_STATIC,   4, 157, 202, 69
-    LTEXT           "Available window list actions:", IDC_STATIC, 10, 168, 120, 10
-    AUTOCHECKBOX    "Switch To",   IDC_MENUACCESS, 22, 179, 50, 10
-    AUTOCHECKBOX    "Move Here",   IDC_MENUMOVE,   77, 179, 55, 10
-    AUTOCHECKBOX    "Show",        IDC_MENUSHOW,   22, 190, 50, 10
-    AUTOCHECKBOX    "Always Show", IDC_MENUSTICKY, 77, 190, 55, 10
-    AUTOCHECKBOX    "Mouse opens compact window list", IDC_COMPACTWLIST, 10, 201, 130, 10
-    AUTOCHECKBOX    "Mouse opens compact window menu", IDC_COMPACTWMENU, 10, 212, 130, 10
+    GROUPBOX        "User Interface", IDC_STATIC,   4, 89, 202, 69
+    LTEXT           "Available window list actions:", IDC_STATIC, 10, 100, 120, 10
+    AUTOCHECKBOX    "Switch To",   IDC_MENUACCESS, 22, 111, 50, 10
+    AUTOCHECKBOX    "Move Here",   IDC_MENUMOVE,   77, 111, 55, 10
+    AUTOCHECKBOX    "Show",        IDC_MENUSHOW,   22, 122, 50, 10
+    AUTOCHECKBOX    "Always Show", IDC_MENUSTICKY, 77, 122, 55, 10
+    AUTOCHECKBOX    "Mouse opens compact window list", IDC_COMPACTWLIST, 10, 133, 130, 10
+    AUTOCHECKBOX    "Mouse opens compact window menu", IDC_COMPACTWMENU, 10, 144, 130, 10
 END
 
 IDD_PROPPAGE_HOTKEYS DIALOG 0, 0, 210, 250
@@ -127,18 +121,21 @@ IDD_PROPPAGE_EXPERT DIALOG 0, 0, 210, 250
 STYLE DS_3DLOOK | WS_CHILD | WS_DISABLED | WS_BORDER
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX        "Advanced Options", IDC_STATIC, 4, 5, 202, 73
+    GROUPBOX        "Advanced Options", IDC_STATIC, 4, 5, 202, 98
     LTEXT           "On desktop change preserve:", IDC_STATIC,  10, 16, 120, 10
     COMBOBOX        IDC_PRESORDER, 22, 26, 130, 75, CBS_AUTOHSCROLL | CBS_DROPDOWNLIST | WS_TABSTOP
-    AUTOCHECKBOX    "Restore focus on desktop change", IDC_FOCUS,                10,  41, 125, 10
-    AUTOCHECKBOX    "Invert Up/Down", IDC_INVERTY,                               10,  52,  70, 10
-    AUTOCHECKBOX    "Hide system tray icon", IDC_DISPLAYICON,                    10,  63,  80, 10
+    LTEXT           "On hidden window activation:", IDC_STATIC, 10, 41, 120, 10
+    COMBOBOX        IDC_HIDWINACT, 22, 51, 130, 56, CBS_AUTOHSCROLL | CBS_DROPDOWNLIST | WS_TABSTOP
+    AUTOCHECKBOX    "Restore focus on desktop change", IDC_FOCUS,                10,  66, 125, 10
+    AUTOCHECKBOX    "Invert Up/Down", IDC_INVERTY,                               10,  77,  70, 10
+    AUTOCHECKBOX    "Hide system tray icon", IDC_DISPLAYICON,                    10,  88,  80, 10
 
-    GROUPBOX        "Workarounds", IDC_STATIC, 4, 81, 202, 58
-    AUTOCHECKBOX    "Enable taskbar detection", IDC_TASKBARDETECT,               10,  92, 100, 10
-    AUTOCHECKBOX    "Enable window specific configuration", IDC_USEWINRULES,     10, 103, 150, 10
-    AUTOCHECKBOX    "Force refresh after desktop change", IDC_REFRESH,           10, 114, 130, 10
-    AUTOCHECKBOX    "Write events to virtuawin.log", IDC_DEBUGLOGGING,           10, 125, 130, 10
+    GROUPBOX        "Workarounds", IDC_STATIC, 4, 106, 202, 69
+    AUTOCHECKBOX    "Enable taskbar detection", IDC_TASKBARDETECT,               10, 117, 100, 10
+    AUTOCHECKBOX    "Enable window specific configuration", IDC_USEWINRULES,     10, 128, 150, 10
+    AUTOCHECKBOX    "Enable dynamic taskbar button removal", IDC_DYNBUTTONRM,    10, 139, 150, 10
+    AUTOCHECKBOX    "Force refresh after desktop change", IDC_REFRESH,           10, 150, 130, 10
+    AUTOCHECKBOX    "Write events to virtuawin.log", IDC_DEBUGLOGGING,           10, 161, 130, 10
 
     PUSHBUTTON      "Log Windows",     IDC_LOGWINDOWS,   70, 230, 60, 14
     PUSHBUTTON      "Explore Config",  IDC_EXPLORECNFG, 140, 230, 60, 14
@@ -169,44 +166,46 @@ BEGIN
     DEFPUSHBUTTON   "OK", IDCANCEL,  105, 190, 40, 14
 END
 
-IDD_WINDOWRULEDIALOG DIALOG 79, 25, 292, 337
+IDD_WINDOWRULEDIALOG DIALOG 79, 25, 292, 340
 STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "VirtuaWin - Window Rules"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LISTBOX         IDC_WTYPE_LIST, 6, 6, 280, 112, WS_VSCROLL | WS_HSCROLL | WS_TABSTOP | LBS_USETABSTOPS
-    PUSHBUTTON      "Up",      IDC_WTYPE_UP,       6, 120, 40, 14
-    PUSHBUTTON      "Down",    IDC_WTYPE_DOWN,    51, 120, 40, 14
-    PUSHBUTTON      "Add",     IDC_WTYPE_ADD,    156, 120, 40, 14
-    PUSHBUTTON      "Modify",  IDC_WTYPE_MOD,    201, 120, 40, 14
-    PUSHBUTTON      "Delete",  IDC_WTYPE_DEL,    246, 120, 40, 14
+    LISTBOX         IDC_WTYPE_LIST, 6, 6, 280, 102, WS_VSCROLL | WS_HSCROLL | WS_TABSTOP | LBS_USETABSTOPS
+    PUSHBUTTON      "Up",      IDC_WTYPE_UP,       6, 110, 40, 14
+    PUSHBUTTON      "Down",    IDC_WTYPE_DOWN,    51, 110, 40, 14
+    PUSHBUTTON      "Add",     IDC_WTYPE_ADD,    156, 110, 40, 14
+    PUSHBUTTON      "Modify",  IDC_WTYPE_MOD,    201, 110, 40, 14
+    PUSHBUTTON      "Delete",  IDC_WTYPE_DEL,    246, 110, 40, 14
 
-    LTEXT           "Class name:", IDC_STATIC,     6, 142, 50, 8, 0
-    EDITTEXT        IDC_WTYPE_CNAME,              60, 140, 135, 12, ES_LEFT | ES_AUTOHSCROLL
-    LTEXT           "Window name:", IDC_STATIC,    6, 156, 50, 8, 0
-    EDITTEXT        IDC_WTYPE_WNAME,              60, 154, 135, 12, ES_LEFT | ES_AUTOHSCROLL
-    LTEXT           "Process name:", IDC_STATIC,   6, 170, 50, 8, 0
-    EDITTEXT        IDC_WTYPE_PNAME,              60, 168, 135, 12, ES_LEFT | ES_AUTOHSCROLL
+    LTEXT           "Class name:", IDC_STATIC,     6, 132, 50, 8, 0
+    EDITTEXT        IDC_WTYPE_CNAME,              60, 130, 135, 12, ES_LEFT | ES_AUTOHSCROLL
+    LTEXT           "Window name:", IDC_STATIC,    6, 146, 50, 8, 0
+    EDITTEXT        IDC_WTYPE_WNAME,              60, 144, 135, 12, ES_LEFT | ES_AUTOHSCROLL
+    LTEXT           "Process name:", IDC_STATIC,   6, 160, 50, 8, 0
+    EDITTEXT        IDC_WTYPE_PNAME,              60, 158, 135, 12, ES_LEFT | ES_AUTOHSCROLL
 
-    AUTOCHECKBOX    "Window rule enabled", IDC_WTYPE_ENABLE,  6, 182, 100, 10
-    AUTORADIOBUTTON "Never manage windows of this type", IDC_WTYPE_NMANAGE, 18, 193, 130, 10
-    AUTORADIOBUTTON "Always manage windows of this type", IDC_WTYPE_AMANAGE, 18, 204, 140, 10
-    AUTORADIOBUTTON "Let VirtuaWin decide whether to manage windows", IDC_WTYPE_VMANAGE, 18, 215, 170, 10
-    AUTOCHECKBOX    "Main window of multiple taskbar buttons", IDC_WTYPE_MAINWIN,  18, 226, 160, 10
-    AUTOCHECKBOX    "Show windows of this type on all desktops", IDC_WTYPE_STICKY,  18, 237, 160, 10
-    AUTOCHECKBOX    "Keep all windows of this application together", IDC_WTYPE_GRPAPP,  18, 248, 160, 10
-    AUTOCHECKBOX    "Automatically move windows of this type to Desktop:", IDC_WTYPE_AMOVE, 18, 261, 180, 10
-    COMBOBOX        IDC_WTYPE_AMDSK, 200, 259, 40, 200, CBS_AUTOHSCROLL | CBS_DROPDOWNLIST | WS_TABSTOP
-    AUTOCHECKBOX    "Move windows immediately", IDC_WTYPE_AMIMM, 30, 273, 100, 10
-    LTEXT           "Method for hiding the window:", IDC_STATIC,  18, 286, 110, 10
-    COMBOBOX        IDC_WTYPE_WHIDE, 130, 284, 130, 150, WS_VSCROLL | CBS_DROPDOWNLIST | WS_TABSTOP
-    LTEXT           "Method for hiding taskbar button:", IDC_STATIC,  18, 300, 110, 10
-    COMBOBOX        IDC_WTYPE_THIDE, 130, 298, 130, 150, WS_VSCROLL | CBS_DROPDOWNLIST | WS_TABSTOP
+    AUTOCHECKBOX    "Window rule enabled", IDC_WTYPE_ENABLE,  6, 172, 100, 10
+    AUTORADIOBUTTON "Never manage windows of this type", IDC_WTYPE_NMANAGE, 18, 183, 130, 10
+    AUTORADIOBUTTON "Always manage windows of this type", IDC_WTYPE_AMANAGE, 18, 194, 140, 10
+    AUTORADIOBUTTON "Let VirtuaWin decide whether to manage windows", IDC_WTYPE_VMANAGE, 18, 205, 170, 10
+    AUTOCHECKBOX    "Main window of multiple taskbar buttons", IDC_WTYPE_MAINWIN,  18, 216, 160, 10
+    AUTOCHECKBOX    "Show windows of this type on all desktops", IDC_WTYPE_STICKY,  18, 227, 160, 10
+    AUTOCHECKBOX    "Keep all windows of this application together", IDC_WTYPE_GRPAPP,  18, 238, 160, 10
+    AUTOCHECKBOX    "Automatically move windows of this type to Desktop:", IDC_WTYPE_AMOVE, 18, 251, 180, 10
+    COMBOBOX        IDC_WTYPE_AMDSK, 200, 249, 40, 200, CBS_AUTOHSCROLL | CBS_DROPDOWNLIST | WS_TABSTOP
+    AUTOCHECKBOX    "Move windows immediately", IDC_WTYPE_AMIMM, 30, 263, 100, 10
+    LTEXT           "On hidden window activation:", IDC_STATIC,   18, 276, 110, 10
+    COMBOBOX        IDC_WTYPE_HWACT, 130, 274, 130, 56, CBS_AUTOHSCROLL | CBS_DROPDOWNLIST | WS_TABSTOP
+    LTEXT           "Method for hiding the window:", IDC_STATIC,  18, 290, 110, 10
+    COMBOBOX        IDC_WTYPE_WHIDE, 130, 288, 130, 150, WS_VSCROLL | CBS_DROPDOWNLIST | WS_TABSTOP
+    LTEXT           "Method for hiding taskbar button:", IDC_STATIC,  18, 304, 110, 10
+    COMBOBOX        IDC_WTYPE_THIDE, 130, 302, 130, 150, WS_VSCROLL | CBS_DROPDOWNLIST | WS_TABSTOP
 
-    PUSHBUTTON      "OK",      IDC_WTYPE_OK,     111, 317, 40, 14
-    DEFPUSHBUTTON   "Cancel",  IDCANCEL,         156, 317, 40, 14
-    PUSHBUTTON      "Apply",   IDC_WTYPE_APPLY,  201, 317, 40, 14
-    PUSHBUTTON      "Help",    IDC_WTYPE_HELP,   246, 317, 40, 14
+    PUSHBUTTON      "OK",      IDC_WTYPE_OK,     111, 320, 40, 14
+    DEFPUSHBUTTON   "Cancel",  IDCANCEL,         156, 320, 40, 14
+    PUSHBUTTON      "Apply",   IDC_WTYPE_APPLY,  201, 320, 40, 14
+    PUSHBUTTON      "Help",    IDC_WTYPE_HELP,   246, 320, 40, 14
 END
 
 #ifndef _MAC
