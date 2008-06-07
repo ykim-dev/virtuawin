@@ -193,7 +193,7 @@ int mouseDelay = 20;
 int mouseJumpLength = 60;
 
 int curDisabledMod = 0; 
-vwUInt vwZOrder=0 ;
+vwUInt vwZOrder=1 ;
 vwUInt timerCounter=0 ;
 
 /* desk image generation variables */
@@ -1947,8 +1947,19 @@ windowListUpdate(void)
                 {
                     vwUByte moveImmediately = ((initialized == 0) || (win->flags & vwWINFLAGS_MOVE_IMMEDIATE)) ;
                     vwWindowSetDesk(win,j,moveImmediately,FALSE) ;
-                    if(moveImmediately && (hiddenWindowAct == 3) && (newDesk == 0))
-                        newDesk = j ;
+                    if(moveImmediately)
+                    {
+                        // set this window's zorder on the new desktop so it will be top
+                        if(newDesk == 0)
+                        {
+                            win->zOrder[j] = ++vwZOrder ;
+                            if((((win->flags & vwWINFLAGS_HWACT_MASK) == 0) && (hiddenWindowAct == 3)) ||
+                               ((win->flags & vwWINFLAGS_HWACT_MASK) == ((3+1) << vwWINFLAGS_HWACT_BITROT)))
+                                newDesk = j ;
+                        }
+                        else
+                            win->zOrder[j] = vwZOrder-1 ;
+                    }
                 }
             }
             win = vwWindowGetNext(win) ;
@@ -2001,10 +2012,10 @@ windowListUpdate(void)
         if(win->flags & vwWINFLAGS_ACTIVATED)
         {
             vwUByte activateAction ;
-            if((j = (win->flags & vwWINFLAGS_HWACT_MASK)) == 0)
+            if((win->flags & vwWINFLAGS_HWACT_MASK) == 0)
                 activateAction = hiddenWindowAct ;
             else
-                activateAction = (j >> vwWINFLAGS_HWACT_BITROT) - 1 ;
+                activateAction = ((win->flags & vwWINFLAGS_HWACT_MASK) >> vwWINFLAGS_HWACT_BITROT) - 1 ;
             win->flags &= ~vwWINFLAGS_ACTIVATED ;
             if((win->desk != currentDesk) && ((activateAction == 0) || (win->desk > nDesks)))
             {
@@ -4393,7 +4404,7 @@ wndProc(HWND aHWnd, UINT message, WPARAM wParam, LPARAM lParam)
                     lParam = currentDesk ;
                 if((lParam == currentDesk) && vwWindowIsShown(win))
                     setForegroundWin((HWND)wParam,0);
-                win->zOrder[lParam] = vwZOrder ;
+                win->zOrder[lParam] = ++vwZOrder ;
                 ii = 1 ;
             }
             else
