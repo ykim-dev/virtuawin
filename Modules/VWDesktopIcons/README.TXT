@@ -9,11 +9,15 @@ VirtuaWin version 3.0 or above.
 
 Installation:
 
-In the 'Arrange Icons By' desktop  sub-menu, disable 'Auto Arrange' and 'Align
-to Grid'.
+NOTE: This  module  cannot be used with  Windows  'Auto  Arrange' or 'Align to
+Grid' desktop icon options,  these options must be disabled  first. To disable
+them right  click on the  desktop  and in the context  menu that opens  select
+'Arrange Icons By' to access the sub-menu containing these options.
 
-Copy  VWDesktopIcons.exe  or  VWDesktopIcons_unicode.exe  into  the  VirtuaWin
-modules directory.
+Copy VWDesktopIcons.exe into the VirtuaWin modules directory.
+
+To use the unicode version instead, copy  VWDesktopIcons_unicode.exe  into the
+modules directory and rename the program to VWDesktopIcons.exe
 
 
 Configuration:
