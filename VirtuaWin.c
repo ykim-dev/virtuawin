@@ -124,6 +124,7 @@ HWND deskIconHWnd;		// handle to the desktop window holding the icons
 DWORD deskThread;               // thread ID of desktop handler (exploerer)
 HWND lastFGHWnd;		// handle to the last foreground window
 HWND dialogHWnd;       		// handle to the setup dialog, NULL if not open
+int dialogPos[2];
 vwUByte dialogOpen;         
 vwUByte initialized;
 
@@ -158,6 +159,7 @@ vwUByte releaseFocus = 0 ;
 vwUByte refreshOnWarp = 0 ;     
 vwUByte deskWrap = 0 ;          
 vwUByte invertY = 0 ;           
+vwUByte hotkeyMenuLoc = 0 ;
 vwUByte winListContent = (vwWINLIST_ACCESS | vwWINLIST_ASSIGN | vwWINLIST_STICKY) ;
 vwUByte winListCompact = 0 ;
 vwUByte winMenuCompact = 1 ;
@@ -695,12 +697,14 @@ vwHotkeyUnregister(int unregAll)
 static void
 getScreenSize(void)
 {
+    RECT r;
+    GetClientRect(desktopHWnd,&r) ;
+    dialogPos[0] = ((r.left + r.right) - 440) >> 1 ;
+    dialogPos[1] = ((r.top + r.bottom) - 550) >> 1 ;
     if((desktopWorkArea[0][2] = GetSystemMetrics(SM_CXVIRTUALSCREEN)) <= 0)
     {
         /* The virtual screen size system matrix values are not supported on
          * this OS (Win95 & NT), use the desktop window size */
-        RECT r;
-        GetClientRect(desktopHWnd, &r);
         desktopWorkArea[0][0] = r.left;
         desktopWorkArea[0][1] = r.top;
         desktopWorkArea[0][2] = r.right - 1 ;
@@ -3611,9 +3615,11 @@ WindowInfoDialogFunc(HWND hwndDlg, UINT msg, WPARAM wParam, LPARAM lParam)
     return FALSE;
 }
 
-/************************************************
- * Dismisses the current window by either moving it
- * back to its assigned desk or minimizing.
+/*****************************************************************************
+ * Dismisses the current window by either moving it back to its assigned desk
+ * or minimizing. wmFlags is a bitmask:
+ *   0x01 : Create a compact menu
+ *   0x10 : Opened via a hotkey
  */
 static void
 popupWindowMenu(HWND theWin, int wmFlags)
@@ -3693,7 +3699,15 @@ popupWindowMenu(HWND theWin, int wmFlags)
     AppendMenu(hpopup,MF_STRING,ID_WM_INFO,_T("&Info"));
     vwMutexRelease();
     
-    GetCursorPos(&pt);
+    if((wmFlags & 0x010) && hotkeyMenuLoc)
+    {
+        RECT pos ;
+        GetWindowRect(theWin,&pos) ;
+        pt.x = pos.left + 20 ;
+        pt.y = pos.top + 20 ;
+    }
+    else
+        GetCursorPos(&pt);
     /* Call setForegroundWin to remove the window focus otherwise the menu does
      * not automatically close if the user changes focus */
     setForegroundWin(hWnd,0);
@@ -3871,6 +3885,7 @@ renderMenuItem(DRAWITEMSTRUCT* ditem)
  *   0x01 : Create a compact menu
  *   0x02 : Create the most recently used window list
  *   0x04 : force focus change
+ *   0x10 : Opened via a hotkey
  */
 static void
 popupWinListMenu(HWND aHWnd, int wlFlags)
@@ -3894,7 +3909,13 @@ popupWinListMenu(HWND aHWnd, int wlFlags)
     fgWin = GetForegroundWindow() ;
     if((wlcFlags = winListCreateItemList(wlFlags,items,&itemCount)) == 0)
         return ;
-    GetCursorPos(&pt);
+    if((wlFlags & 0x010) && hotkeyMenuLoc)
+    {
+        pt.x = dialogPos[0] ;
+        pt.y = dialogPos[1] ;
+    }
+    else
+        GetCursorPos(&pt);
     
     /* Call setForegroundWin to remove the window focus otherwise the menu does
      * not automatically close if the user changes focus, unfortunately this breaks
@@ -4018,11 +4039,12 @@ vwWindowRuleReapply(void)
     vwMutexRelease() ;
 }
 
-/*************************************************
- * Pops up and handles the control menu
+/*****************************************************************************
+ * Pops up and handles the control menu. cmFlags is a bitmask:
+ *   0x10 : Opened via a hotkey
  */
 static LRESULT
-popupControlMenu(HWND aHWnd)
+popupControlMenu(HWND aHWnd, int cmFlags)
 {
     HMENU hpopup;
     POINT pt;
@@ -4065,7 +4087,13 @@ popupControlMenu(HWND aHWnd)
         AppendMenu(hpopup,(deskWrap || (currentDesk < nDesks)) ? MF_STRING:(MF_STRING|MF_GRAYED),ID_FORWARD,_T("&Next"));
         AppendMenu(hpopup,(deskWrap || (currentDesk > 1)) ? MF_STRING:(MF_STRING|MF_GRAYED),ID_BACKWARD,_T("&Previous"));
     }
-    GetCursorPos(&pt);
+    if((cmFlags & 0x010) && hotkeyMenuLoc)
+    {
+        pt.x = dialogPos[0] ;
+        pt.y = dialogPos[1] ;
+    }
+    else
+        GetCursorPos(&pt);
     SetForegroundWindow(aHWnd);
     switch(TrackPopupMenu(hpopup, TPM_RETURNCMD | TPM_RIGHTBUTTON,
                           pt.x, pt.y, 0, aHWnd, NULL))
@@ -4240,19 +4268,19 @@ wndProc(HWND aHWnd, UINT message, WPARAM wParam, LPARAM lParam)
             assignWindow(NULL,VW_STEPNEXT,(vwUByte) (hotkeyList[ii].command == vwCMD_WIN_MOVE_NEXT_FOL),TRUE,FALSE);
             break ;
         case vwCMD_UI_WINMENU_STD:
-            popupWindowMenu(GetForegroundWindow(),0);
+            popupWindowMenu(GetForegroundWindow(),0x10);
             break ;
         case vwCMD_UI_WINMENU_CMP:
-            popupWindowMenu(GetForegroundWindow(),1);
+            popupWindowMenu(GetForegroundWindow(),0x11);
             break ;
         case vwCMD_UI_WINLIST_STD:
-            popupWinListMenu(aHWnd,4) ;
+            popupWinListMenu(aHWnd,0x14) ;
             break ;
         case vwCMD_UI_WINLIST_CMP:
-            popupWinListMenu(aHWnd,5) ;
+            popupWinListMenu(aHWnd,0x15) ;
             break ;
         case vwCMD_UI_WINLIST_MRU:
-            popupWinListMenu(aHWnd,6) ;
+            popupWinListMenu(aHWnd,0x16) ;
             break ;
         case vwCMD_UI_SETUP:
             showSetup();
@@ -4270,7 +4298,7 @@ wndProc(HWND aHWnd, UINT message, WPARAM wParam, LPARAM lParam)
             showWindowRule(NULL,0) ;
             break ;
         case vwCMD_UI_CONTROLMENU:
-            return popupControlMenu(aHWnd) ;
+            return popupControlMenu(aHWnd,0x10) ;
         case vwCMD_WIN_GATHER:
             windowGather(NULL);
             break ;
@@ -4565,7 +4593,7 @@ wndProc(HWND aHWnd, UINT message, WPARAM wParam, LPARAM lParam)
             break;
             
         case WM_RBUTTONUP:		   // Open the control menu
-            return popupControlMenu(aHWnd) ;
+            return popupControlMenu(aHWnd,0) ;
         }
         return TRUE;
         

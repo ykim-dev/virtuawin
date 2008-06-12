@@ -726,6 +726,7 @@ loadVirtuawinConfig(void)
         vwConfigReadInt(fp,buff,ii,vwLogFlag);
         vwConfigReadInt(fp,buff,ii,winMenuCompact);
         vwConfigReadInt(fp,buff,ii,useDynButtonRm);
+        vwConfigReadInt(fp,buff,ii,hotkeyMenuLoc);
     }
     else
     {
@@ -789,6 +790,7 @@ saveVirtuawinConfig(void)
         fprintf(fp, "logFlag# %d\n", vwLogFlag);
         fprintf(fp, "winMenuCompact# %d\n", winMenuCompact);
         fprintf(fp, "useDynButtonRm# %d\n", useDynButtonRm);
+        fprintf(fp, "hotkeyMenuLoc# %d\n", hotkeyMenuLoc);
         fclose(fp);
     }
 }
