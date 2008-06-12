@@ -498,6 +498,7 @@ windowRuleDialogFunc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
     {
     case WM_INITDIALOG:
         dialogHWnd = hDlg ;
+        SetWindowPos(hDlg, 0, dialogPos[0], dialogPos[1], 0, 0, SWP_NOZORDER | SWP_NOSIZE | SWP_NOACTIVATE);
         windowRuleDialogInit(hDlg,1) ;
         return TRUE;
         

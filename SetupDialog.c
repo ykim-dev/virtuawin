@@ -146,7 +146,6 @@ setupGeneral(HWND hDlg, UINT message, UINT wParam, LONG lParam)
 {
     static int tmpDesksY;
     static int tmpDesksX;
-    RECT config_dlg_rect;
     WORD wPar;
     int maxDesk ;
     
@@ -158,11 +157,7 @@ setupGeneral(HWND hDlg, UINT message, UINT wParam, LONG lParam)
             setupKeysHWnd = hDlg ;
             pageChangeMask = 0 ;
             pageApplyMask = 0 ;
-            /* the setup dialog will be automatically positioned top left of the primary, move this 40 pixels in */
-            GetWindowRect(dialogHWnd, &config_dlg_rect);
-            config_dlg_rect.left += 40 ;
-            config_dlg_rect.top  += 40 ;
-            SetWindowPos(dialogHWnd, 0, config_dlg_rect.left, config_dlg_rect.top, 0, 0, SWP_NOZORDER | SWP_NOSIZE | SWP_NOACTIVATE);
+            SetWindowPos(dialogHWnd, 0, dialogPos[0], dialogPos[1], 0, 0, SWP_NOZORDER | SWP_NOSIZE | SWP_NOACTIVATE);
             
             SetDlgItemInt(hDlg, IDC_DESKY, nDesksY, FALSE);
             SetDlgItemInt(hDlg, IDC_DESKX, nDesksX, FALSE);
@@ -180,6 +175,8 @@ setupGeneral(HWND hDlg, UINT message, UINT wParam, LONG lParam)
             
             if(deskWrap)
                 SendDlgItemMessage(hDlg, IDC_DESKCYCLE, BM_SETCHECK, 1, 0);
+            if(hotkeyMenuLoc)
+                SendDlgItemMessage(hDlg, IDC_HOTKEYMENULOC, BM_SETCHECK, 1, 0);
             if(winListCompact)
                 SendDlgItemMessage(hDlg, IDC_COMPACTWLIST, BM_SETCHECK, 1, 0);
             if(winMenuCompact)
@@ -238,6 +235,7 @@ setupGeneral(HWND hDlg, UINT message, UINT wParam, LONG lParam)
             nDesks = maxDesk ;
             
             deskWrap = (SendDlgItemMessage(hDlg, IDC_DESKCYCLE, BM_GETCHECK, 0, 0) == BST_CHECKED) ;
+            hotkeyMenuLoc = (SendDlgItemMessage(hDlg, IDC_HOTKEYMENULOC, BM_GETCHECK, 0, 0) == BST_CHECKED) ;
             winListCompact = (SendDlgItemMessage(hDlg, IDC_COMPACTWLIST, BM_GETCHECK, 0, 0) == BST_CHECKED) ;
             winMenuCompact = (SendDlgItemMessage(hDlg, IDC_COMPACTWMENU, BM_GETCHECK, 0, 0) == BST_CHECKED) ;
             winListContent = 0 ;
@@ -298,10 +296,10 @@ setupGeneral(HWND hDlg, UINT message, UINT wParam, LONG lParam)
             SetFocus(hDlg) ;
         }
         else if((pageChangeMask >= 0) &&
-                ((wPar == IDC_DESKCYCLE)   || (wPar == IDC_COMPACTWLIST) ||
-                 (wPar == IDC_MENUMOVE)    || (wPar == IDC_COMPACTWMENU) ||
-                 (wPar == IDC_MENUSHOW)    || (wPar == IDC_MENUSTICKY)   ||
-                 (wPar == IDC_MENUACCESS)  ||
+                ((wPar == IDC_DESKCYCLE)   || (wPar == IDC_COMPACTWLIST)  ||
+                 (wPar == IDC_MENUMOVE)    || (wPar == IDC_COMPACTWMENU)  ||
+                 (wPar == IDC_MENUSHOW)    || (wPar == IDC_MENUSTICKY)    ||
+                 (wPar == IDC_MENUACCESS)  || (wPar == IDC_HOTKEYMENULOC) ||
                  (wPar == IDC_DESKTOPNAME  && HIWORD(wParam) == EN_CHANGE)))
         {
             pageChangeMask |= 0x01 ;
