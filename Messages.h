@@ -74,7 +74,7 @@
 /* Message, assign a window to the specified desktop wParam is the window
  * handle (HWND, 0 for foreground window) and lParam is either VW_STEP* (see
  * 6 defines above) or the desktop number. If desk is -ve window is assigned
- * to desk (-lParam) and Vw change to the desk. Returns 0 if window was not
+ * to desk (-lParam) and VW changes to the desk. Returns 0 if window was not
  * found (i.e. not managed by VW), non-zero otherwise */
 #define VW_ASSIGNWIN    (WM_USER + 25)
 /* Message, set the sticky state of a window. wParam is the window handle
@@ -95,6 +95,7 @@
             1 - Move window to this desk
             2 - Show window to this disk
             3 - Change to window's desk
+           -1 - Use window's 'On hidden window activation' setting (if set to ignore nothing will happen)
    Returns 0 if window was not found (i.e. not managed by VW), non-zero otherwise */
 #define VW_ACCESSWIN    (WM_USER + 39)
 /* Message, return the information VW has on the window given via wParam. 0 is returned if the
