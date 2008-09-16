@@ -92,8 +92,8 @@ enum {
 
 #define vwWindowDontHideTaskButton(win)   (((win)->flags & vwWINFLAGS_HIDETSK_MASK) == vwWINFLAGS_HIDETSK_DONT)
 
-#define windowIsHung(inhHWnd,waitTime)    (SendMessageTimeout(inhHWnd,(int)NULL,0,0,SMTO_ABORTIFHUNG|SMTO_BLOCK,waitTime,NULL) == 0)
-#define windowIsNotHung(inhHWnd,waitTime) (SendMessageTimeout(inhHWnd,(int)NULL,0,0,SMTO_ABORTIFHUNG|SMTO_BLOCK,waitTime,NULL))
+#define windowIsHung(inhHWnd,waitTime)    (SendMessageTimeout(inhHWnd,WM_NULL,0x51842145,0x5e7bdeba,SMTO_ABORTIFHUNG|SMTO_BLOCK,waitTime,NULL) == 0)
+#define windowIsNotHung(inhHWnd,waitTime) (SendMessageTimeout(inhHWnd,WM_NULL,0x51842145,0x5e7bdeba,SMTO_ABORTIFHUNG|SMTO_BLOCK,waitTime,NULL))
 
 // Variables
 HWND hWnd;                                   // handle to VirtuaWin
@@ -216,6 +216,15 @@ int osVersion ;
 
 typedef DWORD (WINAPI *vwGETMODULEFILENAMEEX)(HANDLE,HMODULE,LPTSTR,DWORD) ;
 vwGETMODULEFILENAMEEX vwGetModuleFileNameEx ;
+
+vwUByte vwHookUse ;
+vwUByte vwHookInstalled ;
+typedef void (*vwHOOKSETUP)(HWND,int) ;
+vwHOOKSETUP vwHookSetupFunc ;
+typedef int (*vwHOOKINSTALL)(void) ;
+vwHOOKINSTALL vwHookInstallFunc ;
+typedef void (*vwHOOKUNINSTALL)(void) ;
+vwHOOKUNINSTALL vwHookUninstallFunc ;
 
 #define vwWINSH_FLAGS_TRYHARD   0x01
 #define vwWINSH_FLAGS_HIDE      0x00
@@ -511,7 +520,8 @@ vwMouseProc(LPVOID lpParameter)
  * Turns on/off the mouse thread. Makes sure that the the thread functions
  * only is called if needed.
  */
-void enableMouse(int turnOn)
+void
+enableMouse(int turnOn)
 {
     // Try to turn on thread if not already running
     if(turnOn && !mouseEnabled)
@@ -641,6 +651,51 @@ vwIconLoad(void)
     vwIconSet(currentDesk,0) ;
 }
 
+
+/************************************************
+ * Setup vwHook - used to fix winodw activation issues
+ */
+void
+vwHookSetup(void)
+{
+    if(vwHookUse != vwHookInstalled)
+    {
+        if(vwHookUse)
+        {
+            if(vwHookSetupFunc == NULL)
+            {
+                HINSTANCE libHandle ; 
+                
+                if(((libHandle = LoadLibrary(_T("vwHook"))) != NULL) &&
+                   ((vwHookUninstallFunc = (vwHOOKUNINSTALL) GetProcAddress(libHandle,"vwHookUninstall")) != NULL) &&
+                   ((vwHookInstallFunc = (vwHOOKINSTALL) GetProcAddress(libHandle,"vwHookInstall")) != NULL))
+                    vwHookSetupFunc = (vwHOOKSETUP) GetProcAddress(libHandle,"vwHookSetup") ;
+            }
+            if(vwHookSetupFunc != NULL)
+            {
+                vwHookSetupFunc(hWnd,1) ;
+                if(vwHookInstallFunc() != 0)
+                    MessageBox(NULL,_T("Failed to install vwHook"),vwVIRTUAWIN_NAME _T(" Error"), MB_ICONWARNING);
+                else
+                {
+                    vwLogBasic((_T("Installed vwHook\n"))) ;
+                    vwHookInstalled = 1 ;
+                }
+            }
+            else
+                MessageBox(NULL,_T("Failed to load vwHook"),vwVIRTUAWIN_NAME _T(" Error"), MB_ICONWARNING);
+        }
+        else
+        {
+            if(vwHookSetupFunc != NULL)
+            {
+                vwHookUninstallFunc() ;
+                vwLogBasic((_T("Uninstalled vwHook\n"))) ;
+            }
+            vwHookInstalled = 0 ;
+        }
+    }
+}
 
 /************************************************
  * Registering all hotkeys
@@ -1618,7 +1673,7 @@ enumWindowsProc(HWND hwnd, LPARAM lParam)
     
     if((style = GetWindowLong(hwnd, GWL_STYLE)) & WS_CHILD)
         // Ignore all windows with child flag set
-            return TRUE;
+        return TRUE;
     if((wb=vwWindowBaseFind(hwnd)) == NULL)
     {
         if(hwnd == dialogHWnd)
@@ -1670,8 +1725,8 @@ enumWindowsProc(HWND hwnd, LPARAM lParam)
             win->exStyle = exstyle ;
             win->zOrder[0] = (vwUInt) wt ;
             if((style & WS_VISIBLE) == 0)
-                vwLogBasic((_T("Got new unmanaged window %8x Proc %d Flg %x %x (%08x)\n"),
-                            (int)win->handle,(int)win->processId,(int)win->flags,(int) exstyle,(int)style)) ;
+                vwLogBasic((_T("Got new unmanaged window %8x Proc %d Flg %x %x (%08x) %x\n"),
+                            (int)win->handle,(int)win->processId,(int)win->flags,(int) exstyle,(int)style,win->zOrder[0])) ;
         }
         return TRUE;
     }
@@ -1694,8 +1749,8 @@ enumWindowsProc(HWND hwnd, LPARAM lParam)
         memset(&(win->zOrder[1]),0,(vwDESKTOP_SIZE-1)*sizeof(vwUInt)) ;
         win->zOrder[0] = (vwUInt) vwWindowRuleFind(hwnd,(vwWindowRule *) win->zOrder[0]) ;
         win->menuId = 0 ;
-        vwLogBasic((_T("Started managing window %8x Proc %d Flg %x %x (%08x)\n"),
-                    (int)win->handle,(int)win->processId,(int)win->flags,(int)win->exStyle,(int)style)) ;
+        vwLogBasic((_T("Started managing window %8x Proc %d Flg %x %x (%08x) %x\n"),
+                    (int)win->handle,(int)win->processId,(int)win->flags,(int)win->exStyle,(int)style,win->zOrder[0])) ;
         vwWindowBaseLink(wb) ;
         return TRUE ;
     }
@@ -2117,6 +2172,8 @@ shutDown(void)
 {
     // Remove the timer & tell all modules to quit
     KillTimer(hWnd, 0x29a);
+    if(vwHookInstalled)
+        vwHookUninstallFunc() ;
     postModuleMessage(MOD_QUIT, 0, 0);
     vwHotkeyUnregister(1);
     // gather all windows quickly & remove icon
@@ -2282,13 +2339,16 @@ changeDesk(int newDesk, WPARAM msgWParam)
     if(newDesk == currentDesk)
         // Nothing to do
         return 0;
-    lastDesk = currentDesk ;
     
-    /* don't bother generating an image unless the user has been on the
-     * desk for at least a second */
-    if((deskImageCount > 0) && (timerCounter >= 4))
-        createDeskImage(currentDesk,0) ;
-    
+    /* don't bother updating last desktop or generating an image unless the
+     * user has been on the desk for at least a second */
+    if(timerCounter >= 4)
+    {
+        if(lastDesk != currentDesk)
+            lastDesk = currentDesk ;
+        if(deskImageCount > 0)
+            createDeskImage(currentDesk,0) ;
+    }
     vwLogBasic((_T("Step Desk Start: %d -> %d (%d,%x)\n"),currentDesk,newDesk,isDragging,(int)dragHWnd)) ;
     
     vwMutexLock();
@@ -2330,6 +2390,8 @@ changeDesk(int newDesk, WPARAM msgWParam)
                     else
                     {
                         win->flags &= ~vwWINFLAGS_NO_TASKBAR_BUT ;
+                        
+                        pwin = NULL ;
                         if(((jj == 0) ||
                             ((pwin = vwWindowFind(taskbarButtonList[jj-1])) == NULL)) &&
                            ((jj+1) < tbCount) &&
@@ -3262,11 +3324,13 @@ assignWindow(HWND theWin, int theDesk, vwUByte follow, vwUByte force, vwUByte se
 
 /************************************************
  * Access a window where method:
- *   0 = use config setting, 1 = move, 2 = show, 3 = change desk
+ *   -1 = use window setting
+ *    0 = use config setting (0 (ignore) -> 2)
+ *    1 = move, 2 = show, 3 = change desk
  * Used by the module message VW_ACCESSWIN
  */
 static int
-accessWindow(HWND theWin, vwUByte method, vwUByte force)
+accessWindow(HWND theWin, int method, vwUByte force)
 {
     vwWindow *win ;
     int ret ;
@@ -3275,18 +3339,30 @@ accessWindow(HWND theWin, vwUByte method, vwUByte force)
     
     if((theWin == NULL) || (theWin == hWnd))
         return 0 ;
-    if((method == 0) && ((method=hiddenWindowAct) == 0))
-        method = 1 ;
         
     vwMutexLock();
     windowListUpdate() ;
     if(((win = vwWindowFind(theWin)) == NULL) || ((win->desk > nDesks) && !force))
         ret = 0 ;
-    else if(method != 3)
-        ret = vwWindowSetDesk(win,currentDesk,method,FALSE) ;
     else
-        ret = win->desk ;
-        
+    {
+        if(method == -1)
+        {
+            if((win->flags & vwWINFLAGS_HWACT_MASK) == 0)
+                method = hiddenWindowAct ;
+            else
+                method = ((win->flags & vwWINFLAGS_HWACT_MASK) >> vwWINFLAGS_HWACT_BITROT) - 1 ;
+        }            
+        else if((method == 0) && ((method=hiddenWindowAct) == 0))
+            method = 2 ;
+
+        if(method == 0)
+            ret = 1 ;
+        else if(method != 3)
+            ret = vwWindowSetDesk(win,currentDesk,(vwUByte) method,FALSE) ;
+        else
+            ret = win->desk ;
+    }
     vwMutexRelease();
     
     if(ret && (method == 3))
@@ -4398,7 +4474,7 @@ wndProc(HWND aHWnd, UINT message, WPARAM wParam, LPARAM lParam)
     case VW_ACCESSWIN:
         if(!vwEnabled)
             return FALSE ;
-        return accessWindow((HWND)wParam,(vwUByte) lParam,FALSE);
+        return accessWindow((HWND)wParam,(int) lParam,FALSE);
         
     case VW_SETSTICKY:
         if(!vwEnabled)
@@ -4659,10 +4735,7 @@ VirtuaWinInit(HINSTANCE hInstance, LPSTR cmdLine)
                     _CRTDBG_LEAK_CHECK_DF|_CRTDBG_DELAY_FREE_MEM_DF);
 #endif
     /* Is this call to VirtuaWin just to send a message to an already ruinning VW? */
-    if(strncmp(cmdLine,"-msg",4))
-        cmdLine = NULL ;
-    else
-        cmdLine += 4 ;
+    cmdLine = strstr(cmdLine,"-msg") ;
     
     /* Only one instance may be started */
     hMutex = CreateMutex(NULL, FALSE, vwVIRTUAWIN_NAME _T("PreventSecond"));
@@ -4677,7 +4750,7 @@ VirtuaWinInit(HINSTANCE hInstance, LPSTR cmdLine)
         
         /* get the message from the command-line, default is to display configuration window... */
         if(cmdLine != NULL)
-            sscanf(cmdLine,"%i %i %li",&message,&wParam,&lParam) ;
+            sscanf(cmdLine+4,"%i %i %li",&message,&wParam,&lParam) ;
         /* post message and quit */
         exit(SendMessage(hWnd,message,wParam,lParam)) ;
     }
@@ -4775,6 +4848,7 @@ VirtuaWinInit(HINSTANCE hInstance, LPSTR cmdLine)
     if(useWindowRules)
         loadWindowConfig();
     
+    vwHookSetup();
     vwIconLoad();
     vwHotkeyRegister(1);
     enableMouse(mouseEnable);
