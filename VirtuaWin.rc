@@ -131,12 +131,13 @@ BEGIN
     AUTOCHECKBOX    "Invert Up/Down", IDC_INVERTY,                               10,  77,  70, 10
     AUTOCHECKBOX    "Hide system tray icon", IDC_DISPLAYICON,                    10,  88,  80, 10
 
-    GROUPBOX        "Workarounds", IDC_STATIC, 4, 106, 202, 69
+    GROUPBOX        "Workarounds", IDC_STATIC, 4, 106, 202, 80
     AUTOCHECKBOX    "Enable taskbar detection", IDC_TASKBARDETECT,               10, 117, 100, 10
-    AUTOCHECKBOX    "Enable window specific configuration", IDC_USEWINRULES,     10, 128, 150, 10
-    AUTOCHECKBOX    "Enable dynamic taskbar button removal", IDC_DYNBUTTONRM,    10, 139, 150, 10
-    AUTOCHECKBOX    "Force refresh after desktop change", IDC_REFRESH,           10, 150, 130, 10
-    AUTOCHECKBOX    "Write events to virtuawin.log", IDC_DEBUGLOGGING,           10, 161, 130, 10
+    AUTOCHECKBOX    "Enable Windows hook", IDC_USEVWHOOK,                        10, 128, 100, 10
+    AUTOCHECKBOX    "Enable window specific configuration", IDC_USEWINRULES,     10, 139, 150, 10
+    AUTOCHECKBOX    "Enable dynamic taskbar button removal", IDC_DYNBUTTONRM,    10, 150, 150, 10
+    AUTOCHECKBOX    "Force refresh after desktop change", IDC_REFRESH,           10, 161, 130, 10
+    AUTOCHECKBOX    "Write events to virtuawin.log", IDC_DEBUGLOGGING,           10, 172, 130, 10
 
     PUSHBUTTON      "Log Windows",     IDC_LOGWINDOWS,   70, 230, 60, 14
     PUSHBUTTON      "Explore Config",  IDC_EXPLORECNFG, 140, 230, 60, 14

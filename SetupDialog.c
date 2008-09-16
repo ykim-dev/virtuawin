@@ -80,7 +80,8 @@ vwSetupApply(HWND hDlg, int curPageMask)
             vwHotkeyUnregister(1);
             /* Need to get the taskbar again in case the order has changed to dynamic taskbar */
             vwTaskbarHandleGet();
-            vwIconLoad();              
+            vwHookSetup();
+            vwIconLoad();
             vwHotkeyRegister(1);
             enableMouse(mouseEnable);
             // Tell modules about the config change
@@ -934,6 +935,8 @@ setupExpert(HWND hDlg, UINT message, UINT wParam, LONG lParam)
             SendDlgItemMessage(hDlg, IDC_DISPLAYICON, BM_SETCHECK, 1,0);
         if(!noTaskbarCheck)
             SendDlgItemMessage(hDlg, IDC_TASKBARDETECT, BM_SETCHECK, 1,0);
+        if(vwHookUse)
+            SendDlgItemMessage(hDlg, IDC_USEVWHOOK, BM_SETCHECK, 1,0);
         if(useWindowRules)
             SendDlgItemMessage(hDlg, IDC_USEWINRULES, BM_SETCHECK, 1,0);
         if(useDynButtonRm)
@@ -956,6 +959,7 @@ setupExpert(HWND hDlg, UINT message, UINT wParam, LONG lParam)
             refreshOnWarp = (SendDlgItemMessage(hDlg, IDC_REFRESH, BM_GETCHECK, 0, 0) == BST_CHECKED) ;
             invertY = (SendDlgItemMessage(hDlg, IDC_INVERTY, BM_GETCHECK, 0, 0) == BST_CHECKED) ;
             noTaskbarCheck = (SendDlgItemMessage(hDlg, IDC_TASKBARDETECT, BM_GETCHECK, 0, 0) != BST_CHECKED) ;
+            vwHookUse = (SendDlgItemMessage(hDlg, IDC_USEVWHOOK, BM_GETCHECK, 0, 0) == BST_CHECKED) ;
             useWindowRules = (SendDlgItemMessage(hDlg, IDC_USEWINRULES, BM_GETCHECK, 0, 0) == BST_CHECKED) ;
             useDynButtonRm = (SendDlgItemMessage(hDlg, IDC_DYNBUTTONRM, BM_GETCHECK, 0, 0) == BST_CHECKED) ;
             vwLogFlag = (SendDlgItemMessage(hDlg,IDC_DEBUGLOGGING,BM_GETCHECK, 0, 0) == BST_CHECKED) ;
@@ -1051,6 +1055,7 @@ setupExpert(HWND hDlg, UINT message, UINT wParam, LONG lParam)
                 LOWORD(wParam) == IDC_DISPLAYICON || LOWORD(wParam) == IDC_DEBUGLOGGING ||
                 LOWORD(wParam) == IDC_INVERTY     || LOWORD(wParam) == IDC_TASKBARDETECT ||
                 LOWORD(wParam) == IDC_REFRESH     || LOWORD(wParam) == IDC_DYNBUTTONRM ||
+                LOWORD(wParam) == IDC_USEVWHOOK   ||
                 (LOWORD(wParam) == IDC_HIDWINACT  && HIWORD(wParam) == CBN_SELCHANGE) ||
                 (LOWORD(wParam) == IDC_PRESORDER  && HIWORD(wParam) == CBN_SELCHANGE) )
         {

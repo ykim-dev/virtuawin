@@ -27,6 +27,7 @@ CFLAGS	= -mno-cygwin -Wall -O2 -DNDEBUG
 CFLAGSD = -mno-cygwin -Wall -g
 LDFLAGS	= -mwindows -mno-cygwin -O2
 LDFLAGSD= -mwindows -mno-cygwin -g
+DLLFLAGS= -mwindows -mno-cygwin -O2 -shared
 RC      = windres 
 STRIP	= strip
 endif
@@ -37,6 +38,7 @@ CFLAGS	= -Wall -O2 -DNDEBUG
 CFLAGSD = -Wall -g
 LDFLAGS	= -mwindows -O2
 LDFLAGSD= -mwindows -g
+DLLFLAGS= -mwindows -O2 -shared
 RC      = windres 
 STRIP	= strip
 endif
@@ -47,6 +49,7 @@ CFLAGS  = -Wall -O2 -DNDEBUG
 CFLAGSD = -Wall -g
 LDFLAGS = -mwindows -O2
 LDFLAGSD= -mwindows -g
+DLLFLAGS= -mwindows -O2 -shared
 RC	= i586-mingw32msvc-windres
 STRIP	= strip
 endif
@@ -71,11 +74,19 @@ OBJS    = $(SRC:.c=.o)
 TARGETD	= VirtuaWinD.exe
 OBJSD   = $(SRC:.c=.od)
 
+HOOKTGT = vwHook.dll
+HOOKSRC = vwHook.c
+HOOKOBJ = $(HOOKSRC:.c=.o)
+
 .SUFFIXES: .rc .res .coff .c .o .od
 .c.o:
 	$(CC) $(CFLAGS) $(CVDDEFS) $(CUCDEFS) -c -o $@ $<
 .c.od:
 	$(CC) $(CFLAGSD) $(CVDDEFS) $(CUCDEFS) -c -o $@ $<
+
+all:    $(TARGET) $(HOOKTGT)
+
+alld:   $(TARGETD) $(HOOKTGT)
 
 $(TARGET): $(OBJS) $(COFFS)
 	$(CC) $(LDFLAGS) -o $(TARGET) $(OBJS) $(COFFS) $(LIBS)
@@ -87,15 +98,20 @@ $(TARGETD): $(OBJSD) $(COFFS)
 VirtuaWin.coff: VirtuaWin.rc
 	$(RC) $(CUCDEFS) --input-format rc --output-format coff -o $@ -i $<
 
-all:    clean $(TARGET)
-
-alld:   clean $(TARGETD)
+$(HOOKTGT): $(HOOKOBJ)
+	$(CC) $(DLLFLAGS) -o $(HOOKTGT) $(HOOKOBJ) $(LIBS)
+	$(STRIP) $(HOOKTGT)
 
 clean: 
-	rm -f $(OBJS) $(OBJSD) $(COFFS)
+	rm -f $(OBJS) $(OBJSD) $(COFFS) $(HOOKOBJ)
+
+all_clean:   clean all
+
+alld_clean:  clean alld
+
 
 spotless: clean 
-	rm -f $(TARGET) $(TARGETD) $(OBJRES) vc60.pch
+	rm -f $(TARGET) $(TARGETD) $(OBJRES) $(HOOKTGT) vc60.pch
 
 # Dependancies
 $(OBJS):  $(HEADERS)

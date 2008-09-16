@@ -65,6 +65,7 @@ void vwMutexLock(void) ;
 void vwMutexRelease(void) ;
 void enableMouse(int turnOn) ;
 void setMouseKey(void) ;
+void vwHookSetup(void) ;
 void vwIconLoad(void) ;
 void vwIconShow(void) ;
 void vwTaskbarHandleGet(void) ;

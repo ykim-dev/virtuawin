@@ -39,7 +39,7 @@ do
     elif [ $1 = "-C" ] ; then
         TARGET=clean
     elif [ $1 = "-d" ] ; then
-        DTARGET=VirtuaWinD.exe
+        DTARGET=alld
     elif [ $1 = "-l" ] ; then
         shift
         LOGFILE="$1"

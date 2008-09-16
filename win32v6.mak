@@ -48,6 +48,10 @@ OBJS    = $(SRC:.c=.o)
 TARGETD	= VirtuaWinD.exe
 OBJSD   = $(SRC:.c=.od)
 
+HOOKTGT = vwHook.dll
+HOOKSRC = vwHook.c
+HOOKOBJ = $(HOOKSRC:.c=.o)
+
 .SUFFIXES: .rc .res .coff .c .o .od
 .c.o:
 	$(CC) $(CFLAGS) $(CVDDEFS) $(CUCDEFS) -c $< -Fo$@
@@ -56,6 +60,9 @@ OBJSD   = $(SRC:.c=.od)
 .rc.res:	
 	$(RC) -v $(CUCDEFS) -i "$(TOOLSDIR)\include" -i "$(TOOLSDIR)\mfc\include" -fo $@ $*.rc 
 
+all:    $(TARGET) $(HOOKTGT)
+
+alld:   $(TARGETD) $(HOOKTGT)
 
 $(TARGET): $(OBJS) $(OBJRES)
 	$(LD) $(LDFLAGS) /out:$@ $(OBJS) $(OBJRES) $(LIBS)
@@ -63,17 +70,21 @@ $(TARGET): $(OBJS) $(OBJRES)
 $(TARGETD): $(OBJSD) $(OBJRES)
 	$(LD) $(LDFLAGSD) /out:$@ $(OBJSD) $(OBJRES) $(LIBS)
 
-all:    clean $(TARGET)
-
-alld:   clean $(TARGETD)
+$(HOOKTGT): $(HOOKOBJ)
+	$(LD) $(LDFLAGS) /dll /out:$@ $(HOOKOBJ) $(LIBS)
 
 clean: 
-	- erase $(OBJS) $(OBJSD) $(OBJRES) vc60.pch
+	- erase $(OBJS) $(OBJSD) $(OBJRES) vc60.pch $(HOOKOBJ)
+
+all_clean:   clean all
+
+alld_clean:  clean alld
 
 spotless: clean
-	- erase $(TARGET) $(TARGETD) $(COFFS)
+	- erase $(TARGET) $(TARGETD) $(COFFS) $(HOOKTGT)
 
 # Dependancies
 $(OBJS):  $(HEADERS)
 $(OBJSD): $(HEADERS)
 $(OBJRES):$(HEADERS)
+$(HOOKOBJ):$(HEADERS)

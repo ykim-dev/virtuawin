@@ -15,7 +15,7 @@ set MAKEFILE=
 :build_option
 if "%1." == "."    goto build_cont
 if "%1" == "-C"    set  TARGET=clean
-if "%1" == "-d"    set  DTARGET=VirtuaWinD.exe
+if "%1" == "-d"    set  DTARGET=alld
 if "%1" == "-h"    goto build_help
 if "%1" == "-l"    goto build_logf
 if "%1" == "-la"   goto build_logfa
