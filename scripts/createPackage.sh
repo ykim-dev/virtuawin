@@ -129,6 +129,7 @@ if [ $REPLY == 'y' ] ; then
     cd ..
     echo copying standard
     cp ./VirtuaWin.exe ./tmp/standard/
+    cp ./vwHook.dll ./tmp/standard/
     cp ./Icons/1[0-9].ico ./tmp/standard/
     cp ./Icons/20.ico ./tmp/standard/
     cp ./WinList/WinList.exe ./tmp/standard/
@@ -141,6 +142,7 @@ if [ $REPLY == 'y' ] ; then
     echo done standard
     echo copying portable
     cp ./VirtuaWin.exe ./tmp/portable/
+    cp ./vwHook.dll ./tmp/portable/
     cp ./Icons/1[0-9].ico ./tmp/portable/icons/
     cp ./Icons/20.ico ./tmp/portable/icons/
     cp ./WinList/WinList.exe ./tmp/portable/modules/
@@ -159,6 +161,7 @@ if [ $REPLY == 'y' ] ; then
     cd ..
     echo copying unicode
     cp ./VirtuaWin.exe ./tmp/unicode/
+    cp ./vwHook.dll ./tmp/unicode/
     cp ./Icons/1[0-9].ico ./tmp/unicode/
     cp ./Icons/20.ico ./tmp/unicode/
     cp ./WinList/WinList.exe ./tmp/unicode/
@@ -171,6 +174,7 @@ if [ $REPLY == 'y' ] ; then
     echo done unicode
     echo copying portable_unicode
     cp ./VirtuaWin.exe ./tmp/portable_unicode/
+    cp ./vwHook.dll ./tmp/portable_unicode/
     cp ./Icons/1[0-9].ico ./tmp/portable_unicode/icons/
     cp ./Icons/20.ico ./tmp/portable_unicode/icons/
     cp ./WinList/WinList.exe ./tmp/portable_unicode/modules/

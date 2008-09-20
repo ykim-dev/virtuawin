@@ -28,6 +28,7 @@ Name: {app}\modules; Flags: uninsalwaysuninstall
 [Files]
 Source: VirtuaWin.exe; DestDir: {app}
 Source: VirtuaWin.chm; DestDir: {app}
+Source: vwHook.dll; DestDir: {app}
 Source: 10.ico; DestDir: {app}\icons\
 Source: 11.ico; DestDir: {app}\icons\
 Source: 12.ico; DestDir: {app}\icons\
