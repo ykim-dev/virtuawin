@@ -77,6 +77,8 @@
 
 <P><LI><B><I>NAV: Move to desktop #</I></B>: Moves directly to the desktop specified.</P></LI>
 
+<P><LI><B><I>NAV: Return to last desktop</I></B>: Moves to the last desktop. Note the last desktop is defined to be the last one you stayed on for more than a second and isn't the current one.</P></LI>
+
 <P><LI><B><I>WIN: Toggle always show</I></B>: Toggles whether the current window is visible on all desktops or just the current one. </P></LI>
 
 <P><LI><B><I>WIN: Always on top</I></B>: Toggles the Window’s ‘Always on top’ property which keeps the window above other windows. </P></LI>
@@ -133,7 +135,11 @@
 
 <P><LI><B><I>UI: Open control menu</I></B>: Opens VirtuaWin’s <A HREF="VirtuaWin_ControlMenu.htm">Control Menu</A>, which can also be opened by right clicking on the system tray icon.</P></LI>
 
-<P><LI><B><I>UI: Toggle enable state</I></B>: Toggles whether VirtuaWin is enabled or not; when VirtuaWin is disabled this hotkey command is the only one which remains bound.</P></LI></UL>
+<P><LI><B><I>UI: Toggle enable state</I></B>: Toggles whether VirtuaWin is enabled or not; when VirtuaWin is disabled this hotkey command is the only one which remains bound.</P></LI>
+
+<P><LI><B><I>UI: Toggle display of system tray icon</I></B>: Toggles the display of the VirtuaWin icon in the taskbar system tray.</P></LI>
+
+<P><LI><B><I>UI: Exit VirtuaWin</I></B>: Exits VirtuaWin.</P></LI></UL>
 
 <P><H4>Hotkeys</H4></P>
 
@@ -211,7 +217,11 @@
 
 <P><UL><LI><B><I>Enable taskbar detection</I></B>: During startup, VirtuaWin will try to locate the taskbar to be able to improve mouse based navigation and alternative Move window hiding. If you use an alternative shell, e.g. LiteStep, then you wont have a taskbar and probably want to disable this. If this option is disabled <A HREF="#SD_ODCP">Dynamic taskbar order</A> will not be available. </P></LI>
 
-<P><LI><B><I>Enable window rules</I></B>: If enabled, window specific rules created via the <A HREF="VirtuaWin_WindowRulesDialog.htm">Window Rules Dialog</A> will be applied, see help about the <A HREF="VirtuaWin_WindowRulesDialog.htm">Window Rules Dialog</A> for more information. This option should be enabled, if not some windows, most notably Explorer windows, may disappear.</P></LI>
+<P><LI><B><I>Enable Windows hook</I></B>: If enabled, VirtuaWin installs a system shell hook which monitors activity events (such as flashing taskbar buttons) of all windows to ensure none are missed.</P>
+
+<P><B>Note:</B> If using this option before up-grading VirtuaWin it is recommended you exit VirtuaWin 10 minutes or more before up-grading, this will reduce the likelihood of having to reboot your system.</P></LI>
+
+<P><LI><B><I>Enable window specific rules</I></B>: If enabled, window specific rules created via the <A HREF="VirtuaWin_WindowRulesDialog.htm">Window Rules Dialog</A> will be applied, see help about the <A HREF="VirtuaWin_WindowRulesDialog.htm">Window Rules Dialog</A> for more information. This option should be enabled, if not some windows, most notably Explorer windows, may disappear.</P></LI>
 
 <P><LI><B><I>Enable dynamic taskbar button removal</I></B>: If checked and a <A HREF="#SD_ODCP">Dynamic taskbar order</A> is used VirtuaWin will use the taskbar button order returned by Explorer to remove unwanted buttons, these buttons are sometimes created by programs which create a single main window and taskbar buttons for each viewable file (e.g. Excel &amp; Acrobat).</P></LI>
 
