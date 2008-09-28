@@ -134,7 +134,7 @@ BEGIN
     GROUPBOX        "Workarounds", IDC_STATIC, 4, 106, 202, 80
     AUTOCHECKBOX    "Enable taskbar detection", IDC_TASKBARDETECT,               10, 117, 100, 10
     AUTOCHECKBOX    "Enable Windows hook", IDC_USEVWHOOK,                        10, 128, 100, 10
-    AUTOCHECKBOX    "Enable window specific configuration", IDC_USEWINRULES,     10, 139, 150, 10
+    AUTOCHECKBOX    "Enable window specific rules", IDC_USEWINRULES,             10, 139, 130, 10
     AUTOCHECKBOX    "Enable dynamic taskbar button removal", IDC_DYNBUTTONRM,    10, 150, 150, 10
     AUTOCHECKBOX    "Force refresh after desktop change", IDC_REFRESH,           10, 161, 130, 10
     AUTOCHECKBOX    "Write events to virtuawin.log", IDC_DEBUGLOGGING,           10, 172, 130, 10
