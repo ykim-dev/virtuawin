@@ -4401,6 +4401,13 @@ wndProc(HWND aHWnd, UINT message, WPARAM wParam, LPARAM lParam)
         case vwCMD_NAV_MOVE_LAST:
             gotoDesk(lastDesk,FALSE);
             break ;
+        case vwCMD_UI_SYSTRAYICON:
+            taskbarIconShown ^= 0x02 ;
+            vwIconSet(currentDesk,0) ;
+            break ;
+        case vwCMD_UI_EXIT:
+            shutDown() ;
+            break ;
         }
         return TRUE;
         
