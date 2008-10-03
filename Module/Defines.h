@@ -30,12 +30,12 @@
 #define vwVIRTUAWIN_NAME         _T("VirtuaWin")
 #define vwVIRTUAWIN_CLASSNAME    _T("VirtuaWinMainClass")
 #define vwVIRTUAWIN_EMAIL        _T("VirtuaWin@home.se")
-#define vwVIRTUAWIN_NAME_VERSION _T("VirtuaWin v4.1 beta1")
+#define vwVIRTUAWIN_NAME_VERSION _T("VirtuaWin v4.1 beta2")
 #define vwVIRTUAWIN_WEBSITE      _T("http://virtuawin.sourceforge.net/")
 #define vwVIRTUAWIN_MODULES_URL  vwVIRTUAWIN_WEBSITE _T("modules.php")
 
 /* Various defines used on several places */
-#define vwHOTKEY_MAX      40       /* max number of hotkeys */
+#define vwHOTKEY_MAX      80       /* max number of hotkeys */
 #define vwWINHASH_SIZE   509       /* size of the window hash table */
 #define vwDESKTOP_MAX     20       /* max number of desktops */
 #define vwDESKTOP_SIZE    (vwDESKTOP_MAX + 2)

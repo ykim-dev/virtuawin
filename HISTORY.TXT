@@ -1,10 +1,16 @@
 ***   VirtuaWin Revision History   ***
 --------------------------------------
 
-Ver 4.1 2008/????
+Ver 4.1 beta2 2008/10/03
 
+* 1842145 Implemented global system hook to detect window activations -
+  new config expert setting
+* 1971856 Added option to open menus at fix locations when hotkey is used
+  and improved the location of the dialog - central in the primary monitor
 * 1983857 Added copyright confirmation notice to icon submission.
 * 1942881 Fixed Z-Order of windows assigned immediately to another desktop.
+* 2036553 2036555 Implemented systray icon toggle and exit hotkey commands.
+* 2089761 Increased the max number of hotkeys to 80
 
 Ver 4.1 beta1 2008/06/03
 
