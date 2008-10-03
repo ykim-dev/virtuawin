@@ -75,6 +75,7 @@ vwHookCallWndProc(int nCode, WPARAM wParam, LPARAM lParam)
     if((nCode == HC_ACTION) && vwHookUse)
     {
         CWPSTRUCT *cwp = (CWPSTRUCT *) lParam ;
+        HWND vwh = vwHWnd ;
         clock_t cc ;
 
 #if vwHOOK_TEST
@@ -88,8 +89,11 @@ vwHookCallWndProc(int nCode, WPARAM wParam, LPARAM lParam)
             fflush(logfp) ;
         }
 #endif
-        if((cwp->message == WM_ACTIVATE) && (LOWORD(cwp->wParam) != WA_INACTIVE) &&
-           (((cc=clock()) - vwShowHideTime) > vwCHANGE_STATE_TIME))
+        if(cwp->hwnd == vwh)
+            /* dont report any VW window events back to VW */
+            ;
+        else if((cwp->message == WM_ACTIVATE) && (LOWORD(cwp->wParam) != WA_INACTIVE) &&
+                (((cc=clock()) - vwShowHideTime) > vwCHANGE_STATE_TIME))
         {
 #if vwHOOK_TEST
             fprintf(logfp,"     Activate: %d %d\n",vwShowHideTime,cc) ;
@@ -97,7 +101,7 @@ vwHookCallWndProc(int nCode, WPARAM wParam, LPARAM lParam)
 #endif
             /* set time to this time to avoid sending more than one message at a time */
             vwShowHideTime = cc ;
-            PostMessage(vwHWnd,VW_ACCESSWIN,(WPARAM) cwp->hwnd,-1) ;
+            PostMessage(vwh,VW_ACCESSWIN,(WPARAM) cwp->hwnd,-1) ;
         }
         else if((cwp->message == WM_NULL) && (cwp->wParam == 0x51842145) && (cwp->lParam == 0x5e7bdeba))
             vwShowHideTime = clock() ;
