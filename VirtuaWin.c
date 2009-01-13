@@ -2511,7 +2511,7 @@ changeDesk(int newDesk, WPARAM msgWParam)
             }
             else
                 vwLogBasic((_T("ZOrder: %8x - HUNG\n"),(int) bwn->handle)) ;
-            if((activeHWnd == NULL) && vwWindowIsVisible(bwn) && vwWindowIsNotMinimized(bwn))
+            if((activeHWnd == NULL) && ((bwn->flags & (vwWINFLAGS_SHOWN|vwWINFLAGS_SHOW|vwWINFLAGS_MINIMIZED)) == (vwWINFLAGS_SHOWN|vwWINFLAGS_SHOW)))
             {
                 activeHWnd = bwn->handle;
                 activeZOrder = bwn->zOrder[currentDesk];
