@@ -798,9 +798,13 @@ getWorkArea(void)
         desktopWorkArea[1][2] = desktopWorkArea[0][2] ;
         desktopWorkArea[1][3] = desktopWorkArea[0][3] ;
     }
-    vwLogBasic((_T("Got work area (%d %d): %d %d -> %d %d  &  %d %d -> %d %d\n"),noTaskbarCheck,taskbarEdge,
+    GetWindowRect(hWnd,&r) ;
+    vwLogBasic((_T("Got work area (%d %d): %d %d -> %d %d  &  %d %d -> %d %d (%d,%d)\n"),noTaskbarCheck,taskbarEdge,
                 desktopWorkArea[0][0],desktopWorkArea[0][1],desktopWorkArea[0][2],desktopWorkArea[0][3],
-                desktopWorkArea[1][0],desktopWorkArea[1][1],desktopWorkArea[1][2],desktopWorkArea[1][3])) ;
+                desktopWorkArea[1][0],desktopWorkArea[1][1],desktopWorkArea[1][2],desktopWorkArea[1][3],r.left,r.top)) ;
+    /* make sure the VW window is still hidden */
+    if(r.top > -30000)
+        SetWindowPos(hWnd,0,10,-31000,0,0,(SWP_FRAMECHANGED | SWP_DEFERERASE | SWP_NOZORDER | SWP_NOSIZE | SWP_NOACTIVATE | SWP_NOSENDCHANGING)) ; 
 }
 
 /************************************************
@@ -878,6 +882,8 @@ vwTaskbarHandleGet(void)
     }
     // if on win9x the tricky windows need to be continually hidden
     taskbarFixRequired = ((osVersion <= OSVERSION_9X) && (taskHWnd != NULL)) ;
+    vwLogBasic((_T("Got desktopWin %x, iconWin %x thread %d, taskbar win %x, type %d, fix %d\n"),
+                (int) desktopHWnd,(int) deskIconHWnd,(int) deskThread,(int) taskHWnd,taskbarBCType,taskbarFixRequired)) ;
 }
 
 /************************************************
@@ -4764,6 +4770,9 @@ VirtuaWinInit(HINSTANCE hInstance, LPSTR cmdLine)
     if(cmdLine != NULL)
         /* VW not running, can't post message, return error */
         exit(-1) ;
+    
+    vwThread = GetCurrentThreadId() ;
+    
     os.dwOSVersionInfoSize = sizeof(os);
     GetVersionEx(&os);
     if(os.dwPlatformId == VER_PLATFORM_WIN32s)
@@ -4807,6 +4816,13 @@ VirtuaWinInit(HINSTANCE hInstance, LPSTR cmdLine)
         MessageBox(hWnd,_T("Failed to register class!"),vwVIRTUAWIN_NAME _T(" Error"), MB_ICONWARNING);
         exit(1) ;
     }
+    /* Create window. Note that the window is visible to solve pop-up issues, but is placed off sceen */
+    if((hWnd = CreateWindowEx(WS_EX_TOOLWINDOW, vwVIRTUAWIN_CLASSNAME, vwVIRTUAWIN_CLASSNAME, WS_VISIBLE,
+                              10, -31000, 10, 10, NULL, NULL, hInstance, NULL)) == NULL)
+    {
+        MessageBox(NULL,_T("Failed to create window!"),vwVIRTUAWIN_NAME _T(" Error"), MB_ICONWARNING);
+        exit(2) ;
+    }
     
     loadVirtuawinConfig() ;
     if(vwLogFlag)
@@ -4823,15 +4839,6 @@ VirtuaWinInit(HINSTANCE hInstance, LPSTR cmdLine)
     vwTaskbarHandleGet();
     getScreenSize();
     getWorkArea();
-    
-    /* Create window. Note that WS_VISIBLE is not used, and window is never shown. */
-    if((hWnd = CreateWindowEx(WS_EX_TOOLWINDOW, vwVIRTUAWIN_CLASSNAME, vwVIRTUAWIN_CLASSNAME, WS_VISIBLE,
-                              10, -31000, 10, 10, NULL, NULL, hInstance, NULL)) == NULL)
-    {
-        MessageBox(NULL,_T("Failed to create window!"),vwVIRTUAWIN_NAME _T(" Error"), MB_ICONWARNING);
-        exit(2) ;
-    }
-    vwThread = GetCurrentThreadId() ;
     
     /* install a crash handler to avoid loosing windows whenever possible */
     signal(SIGINT,vwCrashHandler);
