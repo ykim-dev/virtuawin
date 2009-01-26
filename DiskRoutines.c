@@ -728,6 +728,7 @@ loadVirtuawinConfig(void)
         vwConfigReadInt(fp,buff,ii,useDynButtonRm);
         vwConfigReadInt(fp,buff,ii,hotkeyMenuLoc);
         vwConfigReadInt(fp,buff,ii,vwHookUse);
+        vwConfigReadInt(fp,buff,ii,useDskChgModRelease);
     }
     else
     {
@@ -793,6 +794,7 @@ saveVirtuawinConfig(void)
         fprintf(fp, "useDynButtonRm# %d\n", useDynButtonRm);
         fprintf(fp, "hotkeyMenuLoc# %d\n", hotkeyMenuLoc);
         fprintf(fp, "vwHookUse# %d\n", vwHookUse);
+        fprintf(fp, "useDskChgModRelease# %d\n", useDskChgModRelease);
         fclose(fp);
     }
 }

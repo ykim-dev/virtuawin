@@ -168,6 +168,7 @@ vwUByte taskbarIconShown = 0 ;
 vwUByte noTaskbarCheck = 0 ;
 vwUByte useWindowRules = 1 ;
 vwUByte useDynButtonRm = 0 ;
+vwUByte useDskChgModRelease = 0 ;
 vwUByte taskbarFixRequired = 0 ;
 vwUByte preserveZOrder = 2 ;      
 vwUByte taskbarBCType;          // taskbar button container type - one of vwTASKBAR_BC_*
@@ -2364,7 +2365,7 @@ changeDesk(int newDesk, WPARAM msgWParam)
         vwWindow *nwin, *pwin ;
         int ii, jj, tbCount ;
         tbCount = vwTaskbarButtonListUpdate() ;
-#ifdef vwLOG_VERBOSE
+#if 0
         if(vwLogEnabled())
         {
             vwLogBasic((_T("Step Desk Taskbar-Buttons %d:"),tbCount)) ;
@@ -2624,6 +2625,30 @@ changeDesk(int newDesk, WPARAM msgWParam)
     /* Take a quick sleep here to give everything a chance to catch up, particularly explorer */
     Sleep(1) ;
     setForegroundWin(activeHWnd,TRUE) ;
+    
+    if(useDskChgModRelease && (activeHWnd != 0))
+    {
+        /* assumes the left key is pressed which could lead to problems */
+        if(HIWORD(GetAsyncKeyState(VK_MENU)))
+        {
+            PostMessage(activeHWnd,WM_KEYUP,VK_MENU,(LPARAM) 0xC0380001) ;
+            PostMessage(activeHWnd,WM_KEYUP,VK_MENU,(LPARAM) 0xC1380001) ;
+        }
+        if(HIWORD(GetAsyncKeyState(VK_CONTROL)))
+        {
+            PostMessage(activeHWnd,WM_KEYUP,VK_CONTROL,(LPARAM) 0xC01D0001) ;
+            PostMessage(activeHWnd,WM_KEYUP,VK_CONTROL,(LPARAM) 0xC11D0001) ;
+        }
+        if(HIWORD(GetAsyncKeyState(VK_SHIFT)))
+        {
+            PostMessage(activeHWnd,WM_KEYUP,VK_SHIFT,(LPARAM) 0xC02A0001) ;
+            PostMessage(activeHWnd,WM_KEYUP,VK_SHIFT,(LPARAM) 0xC0360001) ;
+        }
+        if(HIWORD(GetAsyncKeyState(VK_LWIN)))
+            PostMessage(activeHWnd,WM_KEYUP,VK_LWIN,(LPARAM) 0xC15B0001) ;
+        if(HIWORD(GetAsyncKeyState(VK_RWIN)))
+            PostMessage(activeHWnd,WM_KEYUP,VK_RWIN,(LPARAM) 0xC15C0001) ;
+    }
     
     /* reset the monitor timer to give the system a chance to catch up first */
     SetTimer(hWnd, 0x29a, 250, monitorTimerProc);
@@ -3198,7 +3223,7 @@ vwWindowShowHide(vwWindow* aWindow, vwUInt flags)
                         PostMessage(taskHWnd, RM_Shellhook, HSHELL_WINDOWDESTROYED, (LPARAM) aWindow->handle);
                 }
                 else if(vwWindowIsMaximized(aWindow))
-                    /* must restore (un-maximize) the window other the window move doesn't work */ 
+                    /* must restore (un-maximize) the window otherwize the window move doesn't work */ 
                     ShowWindow(aWindow->handle,SW_RESTORE) ;
                 if(vwWindowIsNotMinimized(aWindow))
                 {
