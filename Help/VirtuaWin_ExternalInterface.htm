@@ -1,391 +1,407 @@
-<HTML>
-<HEAD>
-<TITLE>External Interface</TITLE>
-<META NAME="Author" CONTENT="Steven Phillips">
-<META NAME="Generator" CONTENT="MicroEmacs JST">
-</HEAD>
-<BODY>
-<P>   </P>
+<html>
+<head>
+<title>External Interface</title>
+<meta name="Author" content="Steven Phillips">
+<meta name="Generator" content="MicroEmacs JST">
+</head>
+<body>
+<p>   </p>
 
-<P><H2>External Interface </H2></P>
+<p><h2>External Interface </h2></p>
 
-<P>Most VirtuaWin commands and features can be accessed by sending windows messages to the <SPAN style="font-family: monospace">VirtuaWinMainClass</SPAN> window, this is also known as the Module interface. Any external program can locate this VirtuaWin window and send it commands, or use VirtuaWin's <B>-msg</B> command-line option, the format of this option is as follows:</P>
+<p>Most VirtuaWin commands and features can be accessed by sending windows messages to the <span style="font-family: monospace">VirtuaWinMainClass</span> window, this is also known as the Module interface. Any external program can locate this VirtuaWin window and send it commands, or use VirtuaWin's <b>-msg</b> command-line option, the format of this option is as follows:</p>
 
-<DIR><P><SPAN style="font-family: monospace">VirtuaWin.exe -msg &lt;Msg&gt; &lt;wParam&gt; &lt;lParam&gt;</SPAN></P>
+<dir><p><span style="font-family: monospace">VirtuaWin.exe -msg &lt;Msg&gt; &lt;wParam&gt; &lt;lParam&gt;</span></p>
 
-</DIR><P>Where <SPAN style="font-family: monospace">&lt;Msg&gt;</SPAN>, <SPAN style="font-family: monospace">&lt;wParam&gt;</SPAN> and <SPAN style="font-family: monospace">&lt;lParam&gt;</SPAN> are numbers as per the standard Windows SendMessage function. A complete and up-to-date list of supported messages can be found in Messages.h in the SDK package, the following list may not be fully up-to-date:</P>
+</dir><p>Where <span style="font-family: monospace">&lt;Msg&gt;</span>, <span style="font-family: monospace">&lt;wParam&gt;</span> and <span style="font-family: monospace">&lt;lParam&gt;</span> are numbers as per the standard Windows SendMessage function. A complete and up-to-date list of supported messages can be found in Messages.h in the SDK package, the following list may not be fully up-to-date:</p>
 
-<DIR><TABLE border=1 cellpadding=4 cellspacing=0>
+<dir><table border=1 cellpadding=4 cellspacing=0>
 
-<TR><TD valign=top>
-<P><B>Msg</B></P></TD>
-<TD valign=top>
-<P><B>wParam</B></P></TD>
-<TD valign=top>
-<P><B>lParam</B></P></TD>
-<TD valign=top>
-<P><B>Description</B></P></TD></TR>
-<TR><TD valign=top>
-<P>1034</P></TD>
-<TD valign=top>
-<P>#</P></TD>
-<TD valign=top>
-<P>-</P></TD>
-<TD valign=top>
-<P>Change to desktop #.</P></TD></TR>
-<TR><TD valign=top>
-<P>1034</P></TD>
-<TD valign=top>
-<P>1025</P></TD>
-<TD valign=top>
-<P>-</P></TD>
-<TD valign=top>
-<P>Change to previous desktop.</P></TD></TR>
-<TR><TD valign=top>
-<P>1034</P></TD>
-<TD valign=top>
-<P>1026</P></TD>
-<TD valign=top>
-<P>-</P></TD>
-<TD valign=top>
-<P>Change to next desktop.</P></TD></TR>
-<TR><TD valign=top>
-<P>1034</P></TD>
-<TD valign=top>
-<P>1035</P></TD>
-<TD valign=top>
-<P>-</P></TD>
-<TD valign=top>
-<P>Change to next desktop to the left.</P></TD></TR>
-<TR><TD valign=top>
-<P>1034</P></TD>
-<TD valign=top>
-<P>1036</P></TD>
-<TD valign=top>
-<P>-</P></TD>
-<TD valign=top>
-<P>Change to next desktop to the right.</P></TD></TR>
-<TR><TD valign=top>
-<P>1034</P></TD>
-<TD valign=top>
-<P>1037</P></TD>
-<TD valign=top>
-<P>-</P></TD>
-<TD valign=top>
-<P>Change to next desktop above.</P></TD></TR>
-<TR><TD valign=top>
-<P>1034</P></TD>
-<TD valign=top>
-<P>1038</P></TD>
-<TD valign=top>
-<P>-</P></TD>
-<TD valign=top>
-<P>Change to next desktop below.</P></TD></TR>
-<TR><TD valign=top>
-<P>1039</P></TD>
-<TD valign=top>
-<P>-</P></TD>
-<TD valign=top>
-<P>-</P></TD>
-<TD valign=top>
-<P>Exit VirtuaWin.</P></TD></TR>
-<TR><TD valign=top>
-<P>1040</P></TD>
-<TD valign=top>
-<P>-</P></TD>
-<TD valign=top>
-<P>-</P></TD>
-<TD valign=top>
-<P>Open Setup dialog.</P></TD></TR>
-<TR><TD valign=top>
-<P>1041</P></TD>
-<TD valign=top>
-<P>-</P></TD>
-<TD valign=top>
-<P>-</P></TD>
-<TD valign=top>
-<P>Remove VirtuaWin's systray icon. </P></TD></TR>
-<TR><TD valign=top>
-<P>1042</P></TD>
-<TD valign=top>
-<P>-</P></TD>
-<TD valign=top>
-<P>-</P></TD>
-<TD valign=top>
-<P>Show VirtuaWin's systray icon. </P></TD></TR>
-<TR><TD valign=top>
-<P>1043</P></TD>
-<TD valign=top>
-<P>-</P></TD>
-<TD valign=top>
-<P>-</P></TD>
-<TD valign=top>
-<P>Open VirtuaWin's on-line help. </P></TD></TR>
-<TR><TD valign=top>
-<P>1044</P></TD>
-<TD valign=top>
-<P>-</P></TD>
-<TD valign=top>
-<P>-</P></TD>
-<TD valign=top>
-<P>Gather all windows onto the current desktop.</P></TD></TR>
-<TR><TD valign=top>
-<P>1045</P></TD>
-<TD valign=top>
-<P>-</P></TD>
-<TD valign=top>
-<P>-</P></TD>
-<TD valign=top>
-<P>Returns the width of the current layout, i.e. how many desktops wide.</P></TD></TR>
-<TR><TD valign=top>
-<P>1046</P></TD>
-<TD valign=top>
-<P>-</P></TD>
-<TD valign=top>
-<P>-</P></TD>
-<TD valign=top>
-<P>Returns the depth of the current layout, i.e. how many desktops deep.</P></TD></TR>
-<TR><TD valign=top>
-<P>1048</P></TD>
-<TD valign=top>
-<P>-</P></TD>
-<TD valign=top>
-<P>-</P></TD>
-<TD valign=top>
-<P>Returns the current desktop number.</P></TD></TR>
-<TR><TD valign=top>
-<P>1049</P></TD>
-<TD valign=top>
-<P>hWnd or 0</P></TD>
-<TD valign=top>
-<P>#</P></TD>
-<TD valign=top>
-<P>Move window to desktop #.</P></TD></TR>
-<TR><TD valign=top>
-<P>1049</P></TD>
-<TD valign=top>
-<P>hWnd or 0</P></TD>
-<TD valign=top>
-<P>1025</P></TD>
-<TD valign=top>
-<P>Move window to previous desktop.</P></TD></TR>
-<TR><TD valign=top>
-<P>1049</P></TD>
-<TD valign=top>
-<P>hWnd or 0</P></TD>
-<TD valign=top>
-<P>1026</P></TD>
-<TD valign=top>
-<P>Move window to next desktop.</P></TD></TR>
-<TR><TD valign=top>
-<P>1049</P></TD>
-<TD valign=top>
-<P>hWnd or 0</P></TD>
-<TD valign=top>
-<P>1035</P></TD>
-<TD valign=top>
-<P>Move window to next desktop to the left.</P></TD></TR>
-<TR><TD valign=top>
-<P>1049</P></TD>
-<TD valign=top>
-<P>hWnd or 0</P></TD>
-<TD valign=top>
-<P>1036</P></TD>
-<TD valign=top>
-<P>Move window to next desktop to the right.</P></TD></TR>
-<TR><TD valign=top>
-<P>1049</P></TD>
-<TD valign=top>
-<P>hWnd or 0</P></TD>
-<TD valign=top>
-<P>1037</P></TD>
-<TD valign=top>
-<P>Move window to next desktop above.</P></TD></TR>
-<TR><TD valign=top>
-<P>1049</P></TD>
-<TD valign=top>
-<P>hWnd or 0</P></TD>
-<TD valign=top>
-<P>1038</P></TD>
-<TD valign=top>
-<P>Move window to next desktop below.</P></TD></TR>
-<TR><TD valign=top>
-<P>1049</P></TD>
-<TD valign=top>
-<P>hWnd or 0</P></TD>
-<TD valign=top>
-<P>-#, -1025, ...</P></TD>
-<TD valign=top>
-<P>As with positive lParam values only VirtuaWin changes desktops as well, i.e. moves window and follows.</P></TD></TR>
-<TR><TD valign=top>
-<P>1050</P></TD>
-<TD valign=top>
-<P>hWnd or 0</P></TD>
-<TD valign=top>
-<P>-1</P></TD>
-<TD valign=top>
-<P>Toggle whether the window is shown on all desktops.</P></TD></TR>
-<TR><TD valign=top>
-<P>1050</P></TD>
-<TD valign=top>
-<P>hWnd or 0</P></TD>
-<TD valign=top>
-<P>0</P></TD>
-<TD valign=top>
-<P>Do not show window on all desktops.</P></TD></TR>
-<TR><TD valign=top>
-<P>1050</P></TD>
-<TD valign=top>
-<P>hWnd or 0</P></TD>
-<TD valign=top>
-<P>1</P></TD>
-<TD valign=top>
-<P>Show window on all desktops.</P></TD></TR>
-<TR><TD valign=top>
-<P>1051</P></TD>
-<TD valign=top>
-<P>hWnd</P></TD>
-<TD valign=top>
-<P>-</P></TD>
-<TD valign=top>
-<P>Give the window the focus, i.e. make it the foreground window.</P></TD></TR>
-<TR><TD valign=top>
-<P>1052</P></TD>
-<TD valign=top>
-<P>hWnd</P></TD>
-<TD valign=top>
-<P>-</P></TD>
-<TD valign=top>
-<P>Send the VirtuaWin installation path to <SPAN style="font-family: monospace">hWnd</SPAN> via a WM_COPYDATA message.</P></TD></TR>
-<TR><TD valign=top>
-<P>1053</P></TD>
-<TD valign=top>
-<P>hWnd</P></TD>
-<TD valign=top>
-<P>-</P></TD>
-<TD valign=top>
-<P>Send the VirtuaWin user configuration path to <SPAN style="font-family: monospace">hWnd</SPAN> via a WM_COPYDATA message.</P></TD></TR>
-<TR><TD valign=top>
-<P>1063</P></TD>
-<TD valign=top>
-<P>hWnd</P></TD>
-<TD valign=top>
-<P>0</P></TD>
-<TD valign=top>
-<P>Access window - use method defined by 'On hidden window activation' setting.</P></TD></TR>
-<TR><TD valign=top>
-<P>1063</P></TD>
-<TD valign=top>
-<P>hWnd</P></TD>
-<TD valign=top>
-<P>1</P></TD>
-<TD valign=top>
-<P>Access window - move to the current desktop.</P></TD></TR>
-<TR><TD valign=top>
-<P>1063</P></TD>
-<TD valign=top>
-<P>hWnd</P></TD>
-<TD valign=top>
-<P>2</P></TD>
-<TD valign=top>
-<P>Access window - shown on the current desktop.</P></TD></TR>
-<TR><TD valign=top>
-<P>1063</P></TD>
-<TD valign=top>
-<P>hWnd</P></TD>
-<TD valign=top>
-<P>3</P></TD>
-<TD valign=top>
-<P>Access window - change to the window's desktop.</P></TD></TR>
-<TR><TD valign=top>
-<P>1064</P></TD>
-<TD valign=top>
-<P>hWnd</P></TD>
-<TD valign=top>
-<P>-</P></TD>
-<TD valign=top>
-<P>Returns information about the window, see Messages.h for more information.</P></TD></TR>
-<TR><TD valign=top>
-<P>1065</P></TD>
-<TD valign=top>
-<P>?</P></TD>
-<TD valign=top>
-<P>?</P></TD>
-<TD valign=top>
-<P>Controls desktop thumbnail image generation, see Messages.h for more information.</P></TD></TR>
-<TR><TD valign=top>
-<P>1066</P></TD>
-<TD valign=top>
-<P>0</P></TD>
-<TD valign=top>
-<P>-</P></TD>
-<TD valign=top>
-<P>Returns the current VirtuaWin running state (0 = disabled, 1 = enabled).</P></TD></TR>
-<TR><TD valign=top>
-<P>1066</P></TD>
-<TD valign=top>
-<P>1</P></TD>
-<TD valign=top>
-<P>-</P></TD>
-<TD valign=top>
-<P>Toggles the current VirtuaWin running state, returns the previous state.</P></TD></TR>
-<TR><TD valign=top>
-<P>1066</P></TD>
-<TD valign=top>
-<P>2</P></TD>
-<TD valign=top>
-<P>-</P></TD>
-<TD valign=top>
-<P>Disables VirtuaWin, returns the previous running state.</P></TD></TR>
-<TR><TD valign=top>
-<P>1066</P></TD>
-<TD valign=top>
-<P>3</P></TD>
-<TD valign=top>
-<P>-</P></TD>
-<TD valign=top>
-<P>Enables VirtuaWin, returns the previous running state.</P></TD></TR>
-<TR><TD valign=top>
-<P>1067</P></TD>
-<TD valign=top>
-<P>hWnd</P></TD>
-<TD valign=top>
-<P>#</P></TD>
-<TD valign=top>
-<P>Send the name of desktop # (or current desktop if # = 0) to <SPAN style="font-family: monospace">hWnd</SPAN> via a WM_COPYDATA message.</P></TD></TR>
-<TR><TD valign=top>
-<P>1068</P></TD>
-<TD valign=top>
-<P>-</P></TD>
-<TD valign=top>
-<P>-</P></TD>
-<TD valign=top>
-<P>Returns the largest possible desktop number.</P></TD></TR>
-<TR><TD valign=top>
-<P>1069</P></TD>
-<TD valign=top>
-<P>hWnd or 0</P></TD>
-<TD valign=top>
-<P>-</P></TD>
-<TD valign=top>
-<P>Change to next desktop below.</P></TD></TR></TABLE>
+<tr><td valign="top">
+<p><b>Msg</b></p></td>
+<td valign="top">
+<p><b>wParam</b></p></td>
+<td valign="top">
+<p><b>lParam</b></p></td>
+<td valign="top">
+<p><b>Description</b></p></td></tr>
+<tr><td valign="top">
+<p>1034</p></td>
+<td valign="top">
+<p>#</p></td>
+<td valign="top">
+<p>-</p></td>
+<td valign="top">
+<p>Change to desktop #.</p></td></tr>
+<tr><td valign="top">
+<p>1034</p></td>
+<td valign="top">
+<p>1025</p></td>
+<td valign="top">
+<p>-</p></td>
+<td valign="top">
+<p>Change to previous desktop.</p></td></tr>
+<tr><td valign="top">
+<p>1034</p></td>
+<td valign="top">
+<p>1026</p></td>
+<td valign="top">
+<p>-</p></td>
+<td valign="top">
+<p>Change to next desktop.</p></td></tr>
+<tr><td valign="top">
+<p>1034</p></td>
+<td valign="top">
+<p>1035</p></td>
+<td valign="top">
+<p>-</p></td>
+<td valign="top">
+<p>Change to next desktop to the left.</p></td></tr>
+<tr><td valign="top">
+<p>1034</p></td>
+<td valign="top">
+<p>1036</p></td>
+<td valign="top">
+<p>-</p></td>
+<td valign="top">
+<p>Change to next desktop to the right.</p></td></tr>
+<tr><td valign="top">
+<p>1034</p></td>
+<td valign="top">
+<p>1037</p></td>
+<td valign="top">
+<p>-</p></td>
+<td valign="top">
+<p>Change to next desktop above.</p></td></tr>
+<tr><td valign="top">
+<p>1034</p></td>
+<td valign="top">
+<p>1038</p></td>
+<td valign="top">
+<p>-</p></td>
+<td valign="top">
+<p>Change to next desktop below.</p></td></tr>
+<tr><td valign="top">
+<p>1039</p></td>
+<td valign="top">
+<p>-</p></td>
+<td valign="top">
+<p>-</p></td>
+<td valign="top">
+<p>Exit VirtuaWin.</p></td></tr>
+<tr><td valign="top">
+<p>1040</p></td>
+<td valign="top">
+<p>-</p></td>
+<td valign="top">
+<p>-</p></td>
+<td valign="top">
+<p>Open Setup dialog.</p></td></tr>
+<tr><td valign="top">
+<p>1041</p></td>
+<td valign="top">
+<p>-</p></td>
+<td valign="top">
+<p>-</p></td>
+<td valign="top">
+<p>Remove VirtuaWin's systray icon. </p></td></tr>
+<tr><td valign="top">
+<p>1042</p></td>
+<td valign="top">
+<p>-</p></td>
+<td valign="top">
+<p>-</p></td>
+<td valign="top">
+<p>Show VirtuaWin's systray icon. </p></td></tr>
+<tr><td valign="top">
+<p>1043</p></td>
+<td valign="top">
+<p>-</p></td>
+<td valign="top">
+<p>-</p></td>
+<td valign="top">
+<p>Open VirtuaWin's on-line help. </p></td></tr>
+<tr><td valign="top">
+<p>1044</p></td>
+<td valign="top">
+<p>-</p></td>
+<td valign="top">
+<p>-</p></td>
+<td valign="top">
+<p>Gather all windows onto the current desktop.</p></td></tr>
+<tr><td valign="top">
+<p>1045</p></td>
+<td valign="top">
+<p>-</p></td>
+<td valign="top">
+<p>-</p></td>
+<td valign="top">
+<p>Returns the width of the current layout, i.e. how many desktops wide.</p></td></tr>
+<tr><td valign="top">
+<p>1046</p></td>
+<td valign="top">
+<p>-</p></td>
+<td valign="top">
+<p>-</p></td>
+<td valign="top">
+<p>Returns the depth of the current layout, i.e. how many desktops deep.</p></td></tr>
+<tr><td valign="top">
+<p>1048</p></td>
+<td valign="top">
+<p>-</p></td>
+<td valign="top">
+<p>-</p></td>
+<td valign="top">
+<p>Returns the current desktop number.</p></td></tr>
+<tr><td valign="top">
+<p>1049</p></td>
+<td valign="top">
+<p>hWnd or 0</p></td>
+<td valign="top">
+<p>#</p></td>
+<td valign="top">
+<p>Move window to desktop #.</p></td></tr>
+<tr><td valign="top">
+<p>1049</p></td>
+<td valign="top">
+<p>hWnd or 0</p></td>
+<td valign="top">
+<p>1025</p></td>
+<td valign="top">
+<p>Move window to previous desktop.</p></td></tr>
+<tr><td valign="top">
+<p>1049</p></td>
+<td valign="top">
+<p>hWnd or 0</p></td>
+<td valign="top">
+<p>1026</p></td>
+<td valign="top">
+<p>Move window to next desktop.</p></td></tr>
+<tr><td valign="top">
+<p>1049</p></td>
+<td valign="top">
+<p>hWnd or 0</p></td>
+<td valign="top">
+<p>1035</p></td>
+<td valign="top">
+<p>Move window to next desktop to the left.</p></td></tr>
+<tr><td valign="top">
+<p>1049</p></td>
+<td valign="top">
+<p>hWnd or 0</p></td>
+<td valign="top">
+<p>1036</p></td>
+<td valign="top">
+<p>Move window to next desktop to the right.</p></td></tr>
+<tr><td valign="top">
+<p>1049</p></td>
+<td valign="top">
+<p>hWnd or 0</p></td>
+<td valign="top">
+<p>1037</p></td>
+<td valign="top">
+<p>Move window to next desktop above.</p></td></tr>
+<tr><td valign="top">
+<p>1049</p></td>
+<td valign="top">
+<p>hWnd or 0</p></td>
+<td valign="top">
+<p>1038</p></td>
+<td valign="top">
+<p>Move window to next desktop below.</p></td></tr>
+<tr><td valign="top">
+<p>1049</p></td>
+<td valign="top">
+<p>hWnd or 0</p></td>
+<td valign="top">
+<p>-#, -1025, ...</p></td>
+<td valign="top">
+<p>As with positive lParam values only VirtuaWin changes desktops as well, i.e. moves window and follows.</p></td></tr>
+<tr><td valign="top">
+<p>1050</p></td>
+<td valign="top">
+<p>hWnd or 0</p></td>
+<td valign="top">
+<p>-1</p></td>
+<td valign="top">
+<p>Toggle whether the window is shown on all desktops.</p></td></tr>
+<tr><td valign="top">
+<p>1050</p></td>
+<td valign="top">
+<p>hWnd or 0</p></td>
+<td valign="top">
+<p>0</p></td>
+<td valign="top">
+<p>Do not show window on all desktops.</p></td></tr>
+<tr><td valign="top">
+<p>1050</p></td>
+<td valign="top">
+<p>hWnd or 0</p></td>
+<td valign="top">
+<p>1</p></td>
+<td valign="top">
+<p>Show window on all desktops.</p></td></tr>
+<tr><td valign="top">
+<p>1051</p></td>
+<td valign="top">
+<p>hWnd</p></td>
+<td valign="top">
+<p>-</p></td>
+<td valign="top">
+<p>Give the window the focus, i.e. make it the foreground window.</p></td></tr>
+<tr><td valign="top">
+<p>1052</p></td>
+<td valign="top">
+<p>hWnd</p></td>
+<td valign="top">
+<p>-</p></td>
+<td valign="top">
+<p>Send the VirtuaWin installation path to <span style="font-family: monospace">hWnd</span> via a WM_COPYDATA message.</p></td></tr>
+<tr><td valign="top">
+<p>1053</p></td>
+<td valign="top">
+<p>hWnd</p></td>
+<td valign="top">
+<p>-</p></td>
+<td valign="top">
+<p>Send the VirtuaWin user configuration path to <span style="font-family: monospace">hWnd</span> via a WM_COPYDATA message.</p></td></tr>
+<tr><td valign="top">
+<p>1063</p></td>
+<td valign="top">
+<p>hWnd</p></td>
+<td valign="top">
+<p>0</p></td>
+<td valign="top">
+<p>Access window - use method defined by 'On hidden window activation' setting.</p></td></tr>
+<tr><td valign="top">
+<p>1063</p></td>
+<td valign="top">
+<p>hWnd</p></td>
+<td valign="top">
+<p>1</p></td>
+<td valign="top">
+<p>Access window - move to the current desktop.</p></td></tr>
+<tr><td valign="top">
+<p>1063</p></td>
+<td valign="top">
+<p>hWnd</p></td>
+<td valign="top">
+<p>2</p></td>
+<td valign="top">
+<p>Access window - shown on the current desktop.</p></td></tr>
+<tr><td valign="top">
+<p>1063</p></td>
+<td valign="top">
+<p>hWnd</p></td>
+<td valign="top">
+<p>3</p></td>
+<td valign="top">
+<p>Access window - change to the window's desktop.</p></td></tr>
+<tr><td valign="top">
+<p>1063</p></td>
+<td valign="top">
+<p>hWnd</p></td>
+<td valign="top">
+<p>-1</p></td>
+<td valign="top">
+<p>Use window's 'On hidden window activation' setting (if set to ignore nothing will happen).</p></td></tr>
+<tr><td valign="top">
+<p>1064</p></td>
+<td valign="top">
+<p>hWnd</p></td>
+<td valign="top">
+<p>-</p></td>
+<td valign="top">
+<p>Returns information about the window, see Messages.h for more information.</p></td></tr>
+<tr><td valign="top">
+<p>1065</p></td>
+<td valign="top">
+<p>?</p></td>
+<td valign="top">
+<p>?</p></td>
+<td valign="top">
+<p>Controls desktop thumbnail image generation, see Messages.h for more information.</p></td></tr>
+<tr><td valign="top">
+<p>1066</p></td>
+<td valign="top">
+<p>0</p></td>
+<td valign="top">
+<p>-</p></td>
+<td valign="top">
+<p>Returns the current VirtuaWin running state (0 = disabled, 1 = enabled).</p></td></tr>
+<tr><td valign="top">
+<p>1066</p></td>
+<td valign="top">
+<p>1</p></td>
+<td valign="top">
+<p>-</p></td>
+<td valign="top">
+<p>Toggles the current VirtuaWin running state, returns the previous state.</p></td></tr>
+<tr><td valign="top">
+<p>1066</p></td>
+<td valign="top">
+<p>2</p></td>
+<td valign="top">
+<p>-</p></td>
+<td valign="top">
+<p>Disables VirtuaWin, returns the previous running state.</p></td></tr>
+<tr><td valign="top">
+<p>1066</p></td>
+<td valign="top">
+<p>3</p></td>
+<td valign="top">
+<p>-</p></td>
+<td valign="top">
+<p>Enables VirtuaWin, returns the previous running state.</p></td></tr>
+<tr><td valign="top">
+<p>1067</p></td>
+<td valign="top">
+<p>hWnd</p></td>
+<td valign="top">
+<p>#</p></td>
+<td valign="top">
+<p>Send the name of desktop # (or current desktop if # = 0) to <span style="font-family: monospace">hWnd</span> via a WM_COPYDATA message.</p></td></tr>
+<tr><td valign="top">
+<p>1068</p></td>
+<td valign="top">
+<p>-</p></td>
+<td valign="top">
+<p>-</p></td>
+<td valign="top">
+<p>Returns the largest possible desktop number.</p></td></tr>
+<tr><td valign="top">
+<p>1069</p></td>
+<td valign="top">
+<p>hWnd or 0</p></td>
+<td valign="top">
+<p>0</p></td>
+<td valign="top">
+<p>Force VirtuaWin to NOT manage the given window. <b>Note</b>: VirtuaWin will remember this setting for the lifespan of the window, only a 'manage window' message (see below) can change this.</p></td></tr>
+<tr><td valign="top">
+<p>1069</p></td>
+<td valign="top">
+<p>hWnd or 0</p></td>
+<td valign="top">
+<p>1</p></td>
+<td valign="top">
+<p>Force VirtuaWin to manage the given window.</p></td></tr></table>
 
-</DIR><P><B>Where:</B></P>
+</dir><p><b>Where:</b></p>
 
-<DIR><TABLE border=0 cellpadding=6 cellspacing=0>
+<dir><table border=0 cellpadding=6 cellspacing=0>
 
-<TR><TD valign=top>
-<P>-</P></TD>
-<TD valign=top>
-<P>means not used (use a 0).</P></TD></TR>
-<TR><TD valign=top>
-<P>hWnd</P></TD>
-<TD valign=top>
-<P>Numeric handle to the window required.</P></TD></TR>
-<TR><TD valign=top>
-<P>hWnd or 0</P></TD>
-<TD valign=top>
-<P>Numeric handle to the window required or 0 for the window which currently has the focus.</P></TD></TR></TABLE>
-</DIR></DIR>
-</BODY>
-</HTML>
+<tr><td valign="top">
+<p>-</p></td>
+<td valign="top">
+<p>means not used (use a 0).</p></td></tr>
+<tr><td valign="top">
+<p>hWnd</p></td>
+<td valign="top">
+<p>Numeric handle to the window required.</p></td></tr>
+<tr><td valign="top">
+<p>hWnd or 0</p></td>
+<td valign="top">
+<p>Numeric handle to the window required or 0 for the window which currently has the focus.</p></td></tr></table>
+</dir></dir>
+</body>
+</html>

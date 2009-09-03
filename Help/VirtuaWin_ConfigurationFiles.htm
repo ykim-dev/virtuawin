@@ -1,39 +1,39 @@
-<HTML>
-<HEAD>
-<TITLE>Configuration Files</TITLE>
-<META NAME="Author" CONTENT="Steven Phillips">
-<META NAME="Generator" CONTENT="MicroEmacs JST">
-</HEAD>
-<BODY>
-<P>   </P>
+<html>
+<head>
+<title>Configuration Files</title>
+<meta name="Author" content="Steven Phillips">
+<meta name="Generator" content="MicroEmacs JST">
+</head>
+<body>
+<p>   </p>
 
-<P><H2>Configuration Files </H2></P>
+<p><h2>Configuration Files </h2></p>
 
-<P>With the exception of <B>userpath.cfg</B> all configuration files are located in the user’s '<SPAN style="font-family: monospace">Application Data/VirtuaWin</SPAN>' directory, use the Setup Expert <B><I>Explore Config</I></B> button to locate this directory. When a user runs VirtuaWin for the first time all configuration files located in the VirtuaWin installation directory are copied into the user’s own VirtuaWin directory within their Application Data area. The following configuration files are used by VirtuaWin:</P>
+<p>With the exception of <b>userpath.cfg</b> all configuration files are located in the user’s '<span style="font-family: monospace">Application Data/VirtuaWin</span>' directory, use the Setup Expert <b><i>Explore Config</i></b> button to locate this directory. When a user runs VirtuaWin for the first time all configuration files located in the VirtuaWin installation directory are copied into the user’s own VirtuaWin directory within their Application Data area. The following configuration files are used by VirtuaWin:</p>
 
-<P><H3>userpath.cfg</H3></P>
+<p><h3>userpath.cfg</h3></p>
 
-<P>If present in the installation directory it contains a single line defining the directory containing the user’s configuration files. This file can be used to solve problems caused by user permissions and roaming profiles. The string within the file can user environment variables by using the format '<SPAN style="font-family: monospace">${&lt;variable-name&gt;}</SPAN>' (e.g. <SPAN style="font-family: monospace">${HOMEPATH}</SPAN>) and can use the built in variable <SPAN style="font-family: monospace">${VIRTUAWIN_PATH}</SPAN> to use the VirtuaWin installation directory. For example, the following could be used if a fixed path with the same setup for all users was required:</P>
+<p>If present in the installation directory it contains a single line defining the directory containing the user’s configuration files. This file can be used to solve problems caused by user permissions and roaming profiles. The string within the file can user environment variables by using the format '<span style="font-family: monospace">${&lt;variable-name&gt;}</span>' (e.g. <span style="font-family: monospace">${HOMEPATH}</span>) and can use the built in variable <span style="font-family: monospace">${VIRTUAWIN_PATH}</span> to use the VirtuaWin installation directory. For example, the following could be used if a fixed path with the same setup for all users was required:</p>
 
-<DIR><P><SPAN style="font-family: monospace">c:\VirtuaWin_config\ </SPAN></P>
+<dir><p><span style="font-family: monospace">c:\VirtuaWin_config\ </span></p>
 
-</DIR><P>The following uses a fixed path but allows different configurations per user:</P>
+</dir><p>The following uses a fixed path but allows different configurations per user:</p>
 
-<DIR><P><SPAN style="font-family: monospace">c:\VirtuaWin_conf\${USERNAME}</SPAN></P>
+<dir><p><span style="font-family: monospace">c:\VirtuaWin_conf\${USERNAME}</span></p>
 
-</DIR><P>Note that VirtuaWin will create the directory if it does not already exist.</P>
+</dir><p>Note that VirtuaWin will create the directory if it does not already exist.</p>
 
-<P><H3>virtuawin.cfg</H3></P>
+<p><h3>virtuawin.cfg</h3></p>
 
-<P>Main user configuration file, the Setup Dialog settings are stored in this file.</P>
+<p>Main user configuration file, the Setup Dialog settings are stored in this file.</p>
 
-<P><H3>window.cfg</H3></P>
+<p><h3>window.cfg</h3></p>
 
-<P>Configuration file used to store the specific Window Rule setup.</P>
+<p>Configuration file used to store the specific Window Rule setup.</p>
 
-<P><H3>module.cfg</H3></P>
+<p><h3>module.cfg</h3></p>
 
-<P>Contains the list of currently disabled modules.</P>
-</DIR>
-</BODY>
-</HTML>
+<p>Contains the list of currently disabled modules.</p>
+</dir>
+</body>
+</html>

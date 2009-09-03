@@ -1,75 +1,75 @@
-<HTML>
-<HEAD>
-<TITLE>Window Rules Dialog</TITLE>
-<META NAME="Author" CONTENT="Steven Phillips">
-<META NAME="Generator" CONTENT="MicroEmacs JST">
-</HEAD>
-<BODY>
-<P>   </P>
+<html>
+<head>
+<title>Window Rules Dialog</title>
+<meta name="Author" content="Steven Phillips">
+<meta name="Generator" content="MicroEmacs JST">
+</head>
+<body>
+<p>   </p>
 
-<P><H2>Window Rules Dialog </H2></P>
+<p><h2>Window Rules Dialog </h2></p>
 
-<P>The Window Rules dialog can be opened by:</P>
+<p>The Window Rules dialog can be opened by:</p>
 
-<P><UL><LI>Selecting <B><I>Window Rules</I></B> in the <A HREF="VirtuaWin_ControlMenu.htm">Control Menu</A>.</P></LI>
+<p><ul><li>Selecting <b><i>Window Rules</i></b> in the <a href="VirtuaWin_ControlMenu.htm">Control Menu</a>.</p></li>
 
-<P><LI>Binding the <B><I>UI: Open window rule setup</I></B> command to a Hotkey and pressing this Hotkey.</P></LI>
+<p><li>Binding the <b><i>UI: Open window rule setup</i></b> command to a Hotkey and pressing this Hotkey.</p></li>
 
-<P><LI>Selecting <B><I>Add Window Rule</I></B> or <B><I>Edit Window Rule</I></B> in the <A HREF="VirtuaWin_WindowMenu.htm">Window Menu</A>.</P></LI></UL>
+<p><li>Selecting <b><i>Add Window Rule</i></b> or <b><i>Edit Window Rule</i></b> in the <a href="VirtuaWin_WindowMenu.htm">Window Menu</a>.</p></li></ul>
 
-<P>The window rules dialog is used to improve the way VirtuaWin handles certain types of windows. Each window rule consists of two basic parts, the first part controls the window identification, i.e. determines what windows the configuration is to be applied to, the second part configures the settings to apply to these windows. Each window can have at most one window rule applied.</P>
+<p>The window rules dialog is used to improve the way VirtuaWin handles certain types of windows. Each window rule consists of two basic parts, the first part controls the window identification, i.e. determines what windows the configuration is to be applied to, the second part configures the settings to apply to these windows. Each window can have at most one window rule applied.</p>
 
-<P><UL><LI>The first sub-window on the Window Rules dialog contains a list of all currently defined window rules, the order of the list is very important, as a window can only be assigned one window rule, when a new window is opened VirtuaWin starts at the top of the list trying to find a window rule that matches, it stops at the first match.</P></LI>
+<p><ul><li>The first sub-window on the Window Rules dialog contains a list of all currently defined window rules, the order of the list is very important, as a window can only be assigned one window rule, when a new window is opened VirtuaWin starts at the top of the list trying to find a window rule that matches, it stops at the first match.</p></li>
 
-<P><LI>Press the <B><I>Up</I></B> or <B><I>Down</I></B> button to move the currently selected window rule up or down the list; these buttons simply change the order of items in the list, they do not apply any modifications made to the current window rule.</P></LI>
+<p><li>Press the <b><i>Up</i></b> or <b><i>Down</i></b> button to move the currently selected window rule up or down the list; these buttons simply change the order of items in the list, they do not apply any modifications made to the current window rule.</p></li>
 
-<P><LI>The <B><I>Add</I></B> button creates a new window rule at the top of the list; its window identification and settings will be as per the current dialog state.</P></LI>
+<p><li>The <b><i>Add</i></b> button creates a new window rule at the top of the list; its window identification and settings will be as per the current dialog state.</p></li>
 
-<P><LI>The <B><I>Modify</I></B> button applies any changes made to the current window rule’s identification and settings.</P>
+<p><li>The <b><i>Modify</i></b> button applies any changes made to the current window rule’s identification and settings.</p>
 
-<P><B>Note:</B> Until this button is pressed all changes to the current window rule are ignored; a common mistake is to select a window rule, make some changes and then press Okay or Apply - this has no effect as the selected window rule was not modified!</P></LI>
+<p><b>Note:</b> Until this button is pressed all changes to the current window rule are ignored; a common mistake is to select a window rule, make some changes and then press Okay or Apply - this has no effect as the selected window rule was not modified!</p></li>
 
-<P><LI>The <B><I>Delete</I></B> button removes the currently selected window rule.</P></LI>
+<p><li>The <b><i>Delete</i></b> button removes the currently selected window rule.</p></li>
 
-<P><LI>The <B><I>OK</I></B> and <B><I>Apply</I></B> buttons will save any changes made to the Window Rules configuration (see note for Modify) and re-applies the window rules to all windows on the current desktop.</P></LI></UL>
+<p><li>The <b><i>OK</i></b> and <b><i>Apply</i></b> buttons will save any changes made to the Window Rules configuration (see note for Modify) and re-applies the window rules to all windows on the current desktop.</p></li></ul>
 
-<P><H3><A NAME="Identification">Identification</H3></P>
+<p><h3><a name="Identification">Identification</h3></p>
 
-<P>A combination of three fields is used to identify what windows the window rule is to be applied to:</P>
+<p>A combination of three fields is used to identify what windows the window rule is to be applied to:</p>
 
-<P><UL><LI><B><I>Class Name</I></B>: Defines the name of the window’s class, this can be found in the <A HREF="VirtuaWin_WindowMenu.htm">Window Menu</A>’s Info dialog. A ‘*’ at the beginning and/or at the end can be used for partial string matching (e.g. “*MyClass*” will match any window class containing the string “MyClass”). Leave is field empty if the window rule is not to match on the window’s class.</P></LI>
+<p><ul><li><a name="WRD_CN"><b><i>Class Name</i></b>: Defines the name of the window’s class, this can be found in the <a href="VirtuaWin_WindowMenu.htm">Window Menu</a>’s Info dialog. A ‘*’ at the beginning and/or at the end can be used for partial string matching (e.g. “*MyClass*” will match any window class containing the string “MyClass”). Leave is field empty if the window rule is not to match on the window’s class.</p></li>
 
-<P><LI><B><I>Window Name</I></B>: Defines the title of the window, note that this must be correctly set for when the window is first created (or when the window rules are reapplied). A ‘*’ at the beginning and/or at the end can be used for partial string matching (e.g. “*Mozilla Firefox” will match any window whose title ends in the string “Mozilla Firefox ”). Leave is field empty if the window rule is not to match on the window’s title.</P></LI>
+<p><li><a name="WRD_WN"><b><i>Window Name</i></b>: Defines the title of the window, note that this must be correctly set for when the window is first created (or when the window rules are reapplied). A ‘*’ at the beginning and/or at the end can be used for partial string matching (e.g. “*Mozilla Firefox” will match any window whose title ends in the string “Mozilla Firefox ”). Leave is field empty if the window rule is not to match on the window’s title.</p></li>
 
-<P><LI><B><I>Program Name</I></B>: Defines the full path of the program which created the window, this can be found in the <A HREF="VirtuaWin_WindowMenu.htm">Window Menu</A>’s Info dialog. A ‘*’ at the beginning and/or at the end can be used for partial string matching (e.g. “*\firefox.exe” will match any window created by Firefox). Leave is field empty if the window rule is not to match on the window’s executable.</P>
+<p><li><a name="WRD_PN"><b><i>Program Name</i></b>: Defines the full path of the program which created the window, this can be found in the <a href="VirtuaWin_WindowMenu.htm">Window Menu</a>’s Info dialog. A ‘*’ at the beginning and/or at the end can be used for partial string matching (e.g. “*\firefox.exe” will match any window created by Firefox). Leave is field empty if the window rule is not to match on the window’s executable.</p>
 
-<P><B>Note:</B> The Program Name is not support on early versions of Windows, e.g. Win9x.</P></LI>
+<p><b>Note:</b> The Program Name is not support on early versions of Windows, e.g. Win9x.</p></li>
 
-<P><LI><B><I>Window rule enabled</I></B>: If not checked the window rule is simply ignored, this option can be useful when tracking down problems.</P></LI></UL>
+<p><li><a name="WRD_WRE"><b><i>Window rule enabled</i></b>: If not checked the window rule is simply ignored, this option can be useful when tracking down problems.</p></li></ul>
 
-<P><B>Note:</B> When using the <A HREF="VirtuaWin_WindowMenu.htm">Window Menu</A>’s Add Window Rule feature the three name fields are set to the current window’s details, it is very unlikely that all three fields are required for the identification, particularly the Window Name.</P>
+<p><b>Note:</b> When using the <a href="VirtuaWin_WindowMenu.htm">Window Menu</a>’s Add Window Rule feature the three name fields are set to the current window’s details, it is very unlikely that all three fields are required for the identification, particularly the Window Name.</p>
 
-<P><H3><A NAME="Settings">Settings</H3></P>
+<p><h3><a name="Settings">Settings</h3></p>
 
-<P><B>Note:</B> It is strongly advised that minimal changes made to avoid unwanted side effects; VirtuaWin handles most windows correctly so only change settings which directly address a problem.</P>
+<p><b>Note:</b> It is strongly advised that minimal changes made to avoid unwanted side effects; VirtuaWin handles most windows correctly so only change settings which directly address a problem.</p>
 
-<P><UL><LI><B><I>Manage windows of this type</I></B>: Three radio buttons give the options to Never manage, Always manage or Let VirtuaWin decide (default).</P></LI>
+<p><ul><li><a name="WRD_MWOTT"><b><i>Manage windows of this type</i></b>: Three radio buttons give the options to Never manage, Always manage or Let VirtuaWin decide (default).</p></li>
 
-<P><LI><B><I>Main window of multiple taskbar buttons</I></B>: If checked the window is flagged as the main visible window for an application that uses multiple taskbar buttons to access this window. For example Excel creates a taskbar button for each file opened but has only one main window, clicking on each taskbar button simply changes which file is viewed in the main window. This option enables VirtuaWin to identify these main windows and handle them properly by removing the additional taskbar button for the main window (this button is typically removed by the application). Only use this option if changing desktops leads to the creation of an additional taskbar button.</P></LI>
+<p><li><a name="WRD_MWOMTB"><b><i>Main window of multiple taskbar buttons</i></b>: If checked the window is flagged as the main visible window for an application that uses multiple taskbar buttons to access this window. For example Excel creates a taskbar button for each file opened but has only one main window, clicking on each taskbar button simply changes which file is viewed in the main window. This option enables VirtuaWin to identify these main windows and handle them properly by removing the additional taskbar button for the main window (this button is typically removed by the application). Only use this option if changing desktops leads to the creation of an additional taskbar button.</p></li>
 
-<P><LI><B><I>Show windows of this type on all desktops</I></B>: If checked any window of this type will be automatically shown on all desktops. This differs from the window not being managed in several ways, firstly the window will not appear in the main Window List menu, also when changing desktops VirtuaWin will not give the focus to a non-managed window.</P></LI>
+<p><li><a name="WRD_SWOAD"><b><i>Show windows of this type on all desktops</i></b>: If checked any window of this type will be automatically shown on all desktops. This differs from the window not being managed in several ways, firstly the window will not appear in the main Window List menu, also when changing desktops VirtuaWin will not give the focus to a non-managed window.</p></li>
 
-<P><LI><B><I>Keep all windows of this application together</I></B>: If checked all windows created by the window's application are kept together, i.e. VirtuaWin will move all the application's windows when one of them is moved and if one is flagged as Always Show then all the windows will be.</P></LI>
+<p><li><a name="WRD_KAWT"><b><i>Keep all windows of this application together</i></b>: If checked all windows created by the window's application are kept together, i.e. VirtuaWin will move all the application's windows when one of them is moved and if one is flagged as Always Show then all the windows will be.</p></li>
 
-<P><LI><B><I>Automatically move windows of this type to Desktop</I></B>: If checked the window will be automatically moved to the given desktop. VirtuaWin will move the window immediately on start-up or when window rules are re-applied, when VirtuaWin is already running and a new window is opened it is either moved immediately if Move windows immediately is enabled or when the window is first dismissed (either by using the user dismissing the window or by changing desktops).</P></LI>
+<p><li><a name="WRD_AMWTD"><b><i>Automatically move windows of this type to Desktop</i></b>: If checked the window will be automatically moved to the given desktop. VirtuaWin will move the window immediately on start-up or when window rules are re-applied, when VirtuaWin is already running and a new window is opened it is either moved immediately if <b><i>Move windows immediately</i></b> is enabled or when the window is first dismissed (either by using the user dismissing the window or by changing desktops).</p></li>
 
-<P><LI><A NAME="WRD_OHWA"><B><I>On hidden window activation</I></B>: This is a window specific setting for the main Setup <A HREF="VirtuaWin_SetupDialog.htm#SD_OHWA">On hidden window activation</A> option, see this option for more information. When this option is set to <B>Default - configured in main Setup</B> the main Setup option's setting is used. </P></LI>
+<p><li><a name="WRD_OHWA"><b><i>On hidden window activation</i></b>: This is a window specific setting for the main Setup <a href="VirtuaWin_SetupDialog.htm#SD_OHWA">On hidden window activation</a> option, see this option for more information. When this option is set to <b>Default - configured in main Setup</b> the main Setup option's setting is used. </p></li>
 
-<P><LI><B><I>Method for hiding the window</I></B>: Specifies what method should be used to hide windows of this type, the standard method works well for most windows and is the most efficient, however some windows (most notably Explorer, IExplorer and some .NET dialogs) mysteriously disappear when this method is used. To avoid this problem these windows must be hidden using the move window method. The minimizing window method is the most efficient to use when the taskbar button is to be kept shown.</P>
+<p><li><a name="WRD_MFHW"><b><i>Method for hiding the window</i></b>: Specifies what method should be used to hide windows of this type, the standard method works well for most windows and is the most efficient, however some windows (most notably Explorer, IExplorer and some .NET dialogs) mysteriously disappear when this method is used. To avoid this problem these windows must be hidden using the move window method. The minimizing window method is the most efficient to use when the taskbar button is to be kept shown.</p>
 
-<P><B>Note:</B> The Windows 'Animate windows when minimizing and maximizing' performance option greatly affects the minimizing hiding method; if you need to use this method of hiding it is recommended that you disable this option.</P></LI>
+<p><b>Note:</b> The Windows 'Animate windows when minimizing and maximizing' performance option greatly affects the minimizing hiding method; if you need to use this method of hiding it is recommended that you disable this option.</p></li>
 
-<P><LI><B><I>Method for hiding taskbar button</I></B>: Specifies what method, if any, is used to hide the window’s taskbar button, the standard method is the most efficient but can only be used when the window is hidden using the standard method. If set to <B><I>Show</I></B>, VirtuaWin will not hide the taskbar button, this is useful when the application uses the taskbar button to show events (such as a new message etc), if the taskbar button is hidden the event could be missed - only <B><I>move window</I></B> or <B><I>minimizing window</I></B> hiding methods can be used with this setting. The <B><I>Hide by using toolwin flag</I></B> is an alternative hiding method which must be used when the window’s hiding method is not standard method.</P></LI></UL>
-</DIR>
-</BODY>
-</HTML>
+<p><li><a name="WRD_MFHTB"><b><i>Method for hiding taskbar button</i></b>: Specifies what method, if any, is used to hide the window’s taskbar button, the standard method is the most efficient but can only be used when the window is hidden using the standard method. If set to <b><i>Show</i></b>, VirtuaWin will not hide the taskbar button, this is useful when the application uses the taskbar button to show events (such as a new message etc), if the taskbar button is hidden the event could be missed - only <b><i>move window</i></b> or <b><i>minimizing window</i></b> hiding methods can be used with this setting. The <b><i>Hide by using toolwin flag</i></b> is an alternative hiding method which must be used when the window’s hiding method is not standard method.</p></li></ul>
+</dir>
+</body>
+</html>
