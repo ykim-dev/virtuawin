@@ -29,6 +29,7 @@
  */
 #include <windows.h>
 #include <string.h>
+#include <stdlib.h>
 #include <stdio.h>
 #include <tchar.h>
 #include <commctrl.h>
@@ -45,7 +46,34 @@ typedef struct vwIcon {
     TCHAR          name[1] ;
 } vwIcon ;
 
-#define diItemSize (sizeof(LVITEM) + sizeof(POINT) + (sizeof(TCHAR) * MAX_PATH))
+#if defined(_WIN64)
+
+typedef LVITEM vwLVITEM64 ;
+
+#else
+
+typedef struct { 
+    UINT mask; 
+    int  iItem; 
+    int  iSubItem; 
+    UINT state; 
+    UINT stateMask; 
+    int  pad1 ; 
+    LPTSTR pszText; 
+    int  pszTextUpper ; 
+    int  cchTextMax; 
+    int  iImage; 
+    LPARAM lParam;
+    int  pad3 ; 
+#if (_WIN32_IE >= 0x0300)
+    int iIndent;
+#endif
+    int iGroupId;
+} vwLVITEM64 ;
+
+#endif
+
+#define diItemSize (sizeof(vwLVITEM64) + sizeof(POINT) + (sizeof(TCHAR) * MAX_PATH))
 #define vwGRID_OFFSET_Y  2
 #define gridXPos(x) (((((x) + (gridSize >> 1) - gridXOffset) / gridSize) * gridSize) + gridXOffset)
 #define gridYPos(y) (((((y) + (gridSize >> 1) - vwGRID_OFFSET_Y) / gridSize) * gridSize) + vwGRID_OFFSET_Y)
@@ -74,6 +102,11 @@ unsigned char autoGrid[vwDESKTOP_SIZE] ;
 unsigned char autoUpdate[vwDESKTOP_SIZE] ;
 unsigned char saveDesktop[vwDESKTOP_SIZE] ;
 unsigned char showNewIcons[vwDESKTOP_SIZE] ;
+
+#define vwDI_DEBUG 0
+#if vwDI_DEBUG
+FILE *logfp ;
+#endif
 
 static void
 CheckDesktopSettings(void)
@@ -157,7 +190,7 @@ LoadConfigFile(void)
                 ss = buff+1 ;
                 if(*ss == ' ')
                     ss++ ;
-                if(((len = strlen(ss)-1) >= 0) && (ss[len] == '\n'))
+                if(((len = ((int) strlen(ss)) - 1) >= 0) && (ss[len] == '\n'))
                     ss[len] = '\0' ;
                 if(*ss == '\0')
                     ci = NULL ;
@@ -233,7 +266,7 @@ SaveConfigFile(void)
 static int
 UpdateDesktopIcons(int fdesk, int tdesk, int flags)
 {
-    DWORD dwNumberOfBytes;
+    SIZE_T dwNumberOfBytes;
     int ii, rr, xx, yy, itemCount ;
     vwIcon *ci, *pi, *ti ;
     
@@ -241,16 +274,28 @@ UpdateDesktopIcons(int fdesk, int tdesk, int flags)
         tdesk = -1 ;
     else
         saveDesktop[tdesk] = 1 ;
-
+    
     if((fdesk <= 0) || ((autoUpdate[fdesk] == 0) && ((flags & 0x01) == 0)))
         fdesk = -1 ;
+    
     itemCount = ListView_GetItemCount(diHandle) ;
+
+#if vwDI_DEBUG
+    fprintf(logfp,"UpdateDesktopIcons %d: %d %d %x\n",itemCount,fdesk,tdesk,flags) ;
+#endif
+    
     for(ii=0 ; ii<itemCount ; ii++)
     {
         diLocalItem->iItem = ii;
+#if vwDI_DEBUG
+        fprintf(logfp,"Item %d:",ii) ;
+        for(rr=0 ; rr < 56 ; rr++)
+            fprintf(logfp," %02x",(unsigned int) ((unsigned char *) diLocalItem)[rr]) ;
+        fprintf(logfp,"\n") ;
+#endif
         WriteProcessMemory(diProcess, diShareItem, diLocalItem, diItemSize, &dwNumberOfBytes);
         SendMessage(diHandle, LVM_GETITEM, 0, (LPARAM)diShareItem);
-        ListView_GetItemPosition(diHandle,ii,(POINT *)(diShareItem+sizeof(LVITEM)));
+        ListView_GetItemPosition(diHandle,ii,(POINT *)(diShareItem+sizeof(vwLVITEM64)));
         ReadProcessMemory(diProcess, diShareItem, diLocalItem, diItemSize, &dwNumberOfBytes);
         rr = 1 ;
         pi = NULL ;
@@ -260,6 +305,9 @@ UpdateDesktopIcons(int fdesk, int tdesk, int flags)
             pi = ci ;
             ci = ci->next ;
         }
+#if vwDI_DEBUG
+        fprintf(logfp,"%d: %d %d %d [%s]\n",ii,rr,diItemPos->x,diItemPos->y,diItemName) ;
+#endif
         if(rr != 0)
         {
             if((ti = malloc(sizeof(vwIcon)+(_tcslen(diItemName)*sizeof(TCHAR)))) == NULL)
@@ -319,7 +367,7 @@ UpdateDesktopIcons(int fdesk, int tdesk, int flags)
 static void
 SetDesktopIcons(int tdesk)
 {
-    DWORD dwNumberOfBytes;
+    SIZE_T dwNumberOfBytes;
     int ii, itemCount ;
     vwIcon *ci ;
     
@@ -329,7 +377,7 @@ SetDesktopIcons(int tdesk)
         diLocalItem->iItem = ii;
         WriteProcessMemory(diProcess, diShareItem, diLocalItem, diItemSize, &dwNumberOfBytes);
         SendMessage(diHandle, LVM_GETITEM, 0, (LPARAM)diShareItem);
-        ListView_GetItemPosition(diHandle,ii,(POINT *)(diShareItem+sizeof(LVITEM)));
+        ListView_GetItemPosition(diHandle,ii,(POINT *)(diShareItem+sizeof(vwLVITEM64)));
         ReadProcessMemory(diProcess, diShareItem, diLocalItem, diItemSize, &dwNumberOfBytes);
         ci = iconHead ;
         while(ci != NULL)
@@ -380,11 +428,11 @@ GenerateDesktopIconList(HWND hDlg)
         if(ci->show[deskCrrnt] == 0)
         {
             /* icon is flagged as hidden */
-            SendDlgItemMessage(hDlg,ID_HIDE_LIST,LB_ADDSTRING,0,(LONG) ci->name);
+            SendDlgItemMessage(hDlg,ID_HIDE_LIST,LB_ADDSTRING,0,(LPARAM) ci->name);
         }
         else
         {
-            SendDlgItemMessage(hDlg,ID_SHOW_LIST,LB_ADDSTRING,0,(LONG) ci->name);
+            SendDlgItemMessage(hDlg,ID_SHOW_LIST,LB_ADDSTRING,0,(LPARAM) ci->name);
         }
         ci = ci->next ;
     }
@@ -427,7 +475,7 @@ SetupShowCurrentIcon(HWND hDlg)
     TCHAR lbl_buff[1024] ;
     int i, count, *id_buff ;
     
-    if(((count = SendDlgItemMessage(hDlg, ID_HIDE_LIST, LB_GETSELCOUNT, 0, 0)) != LB_ERR) && (count > 0) &&
+    if(((count = (int) SendDlgItemMessage(hDlg, ID_HIDE_LIST, LB_GETSELCOUNT, 0, 0)) != LB_ERR) && (count > 0) &&
        ((id_buff = GlobalAlloc(GPTR, sizeof(int) * count)) != NULL))
     {
         SendDlgItemMessage(hDlg, ID_HIDE_LIST, LB_GETSELITEMS, (WPARAM)count, (LPARAM)id_buff);
@@ -460,7 +508,7 @@ SetupHideCurrentIcon(HWND hDlg)
     TCHAR lbl_buff[1024] ;
     int i, count, *id_buff ;
     
-    if(((count = SendDlgItemMessage(hDlg, ID_SHOW_LIST, LB_GETSELCOUNT, 0, 0)) != LB_ERR) && (count > 0) &&
+    if(((count = (int) SendDlgItemMessage(hDlg, ID_SHOW_LIST, LB_GETSELCOUNT, 0, 0)) != LB_ERR) && (count > 0) &&
        ((id_buff = GlobalAlloc(GPTR, sizeof(int) * count)) != NULL))
     {
         SendDlgItemMessage(hDlg, ID_SHOW_LIST, LB_GETSELITEMS, (WPARAM)count, (LPARAM)id_buff);
@@ -576,9 +624,11 @@ DialogFunc(HWND hwndDlg, UINT msg, WPARAM wParam, LPARAM lParam)
             return 1;
         
         case ID_AUTO_UPDATE:
-            lParam = (SendDlgItemMessage(hwndDlg,ID_AUTO_UPDATE,BM_GETCHECK,0,0) == BST_CHECKED) ;
-            if((hBtn=GetDlgItem(hwndDlg,ID_AUTO_GRID)) != NULL)
-                EnableWindow(hBtn,lParam) ;
+            {
+                BOOL enable = (SendDlgItemMessage(hwndDlg,ID_AUTO_UPDATE,BM_GETCHECK,0,0) == BST_CHECKED) ;
+                if((hBtn=GetDlgItem(hwndDlg,ID_AUTO_GRID)) != NULL)
+                    EnableWindow(hBtn,enable) ;
+            }
             /* no break */
         case ID_SHOW_NEW_ICN:
         case ID_AUTO_GRID:
@@ -649,13 +699,15 @@ DialogFunc(HWND hwndDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 LRESULT CALLBACK
 MainWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
+    int newDesk ;
+    
     switch (msg)
     {
     case MOD_INIT: 
         /* This must be taken care of in order to get the handle to VirtuaWin. */
         /* The handle to VirtuaWin comes in the wParam */
         vwHandle = (HWND) wParam;
-        if((deskCrrnt = SendMessage(vwHandle,VW_CURDESK,0,0)) >= vwDESKTOP_SIZE)
+        if((deskCrrnt = (int) SendMessage(vwHandle,VW_CURDESK,0,0)) >= vwDESKTOP_SIZE)
             deskCrrnt = 0 ;
         else if(deskCrrnt > 0)
             saveDesktop[deskCrrnt] = 1 ;
@@ -693,28 +745,28 @@ MainWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
         return TRUE ;
         
     case MOD_CHANGEDESK:
-        if(lParam <= 0)
+        if((newDesk = (int) lParam) <= 0)
             return TRUE ;
         if((setupWHnd != NULL) && setupChanged)
         {
             if(setupChanged > 0)
             {
-                setupChanged = lParam ;
+                setupChanged = newDesk ;
                 return TRUE ;
             }
-            setupChanged = lParam ;
+            setupChanged = newDesk ;
             if(MessageBox(setupWHnd,_T("Apply changes made to desktop?"),_T("VWDesktopIcons"),
                           MB_ICONQUESTION | MB_YESNO) == IDYES)
                 StoreDesktopConfig(setupWHnd) ;
             else
                 UpdateDesktopIcons(deskCrrnt,deskCrrnt,1) ;
-            lParam = setupChanged ;
+            newDesk = setupChanged ;
             setupChanged = 0 ;
         }
-        if(lParam >= vwDESKTOP_SIZE)
-            lParam = 0 ;
-        UpdateDesktopIcons(deskCrrnt,lParam,0) ;
-        deskCrrnt = lParam ;
+        if(newDesk >= vwDESKTOP_SIZE)
+            newDesk = 0 ;
+        UpdateDesktopIcons(deskCrrnt,newDesk,0) ;
+        deskCrrnt = newDesk ;
         if(setupWHnd != NULL)
             initDialog(setupWHnd,FALSE);
         return TRUE ;
@@ -755,6 +807,28 @@ MainWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
     return 0;
 }
 
+#define WIN64_KEY "HARDWARE\\DESCRIPTION\\System\\CentralProcessor\\0"
+int
+vwWindowsIs64Bit(void)
+{
+    TCHAR buff[128] ;
+    DWORD size, type;
+    HKEY base_key;
+    int ret=0 ;
+    
+    if(RegOpenKey(HKEY_LOCAL_MACHINE,_T(WIN64_KEY),&base_key) == ERROR_SUCCESS)
+    {
+        size = 128 ;
+        if(RegQueryValueEx(base_key,_T("Identifier"),(LPDWORD) 0,&type,(LPBYTE)&buff,&size) == ERROR_SUCCESS)
+        {
+            if(!_tcsncmp(buff,_T("AMD64"),5) || !_tcsncmp(buff,_T("EM64T"),5) || !_tcsncmp(buff,_T("Intel64"),7))
+                ret = 1 ;
+        }
+        RegCloseKey(base_key);
+    }
+    return ret ;
+}
+
 /*
  * Main startup function
  */
@@ -765,6 +839,9 @@ WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, INT nCmdS
     WNDCLASS wc;
     MSG msg;
     
+#if vwDI_DEBUG
+    logfp = fopen("c:\\VWDesktopIcons.log","w+") ;
+#endif
     hInst = hInstance;
     memset(&wc, 0, sizeof(WNDCLASS));
     wc.style = 0;
@@ -775,7 +852,7 @@ WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, INT nCmdS
     wc.lpszClassName = _T("VWDesktopIcons.exe");
   
     if(!RegisterClass(&wc))
-        return 0;
+        return 1 ;
   
     /* In this example, the window is never shown */
     if((wHnd=CreateWindow(_T("VWDesktopIcons.exe"), 
@@ -789,7 +866,7 @@ WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, INT nCmdS
                           NULL,
                           hInstance,
                           NULL)) == (HWND) 0)
-        return 0;
+        return 1 ;
     
     /* get the SystemList handle holding the deskop icon and allocate required resources */ 
     if((diHandle = FindWindow(_T("Progman"),NULL)) == NULL)
@@ -819,10 +896,20 @@ WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, INT nCmdS
     }
     diLocalItem->mask = LVIF_TEXT|LVIF_PARAM ; 
     diLocalItem->iSubItem = 0; 
-    diLocalItem->pszText = (TCHAR *) (diShareItem + sizeof(LVITEM) + sizeof(POINT)) ; 
-    diLocalItem->cchTextMax = MAX_PATH; 
-    diItemPos = (POINT *) (((char *) diLocalItem) + sizeof(LVITEM)) ;
-    diItemName = (TCHAR *) (((char *) diLocalItem) + sizeof(LVITEM) + sizeof(POINT)) ; 
+    
+    if(vwWindowsIs64Bit())
+    {
+        ((vwLVITEM64 *) diLocalItem)->pszText = (TCHAR *) (diShareItem + sizeof(vwLVITEM64) + sizeof(POINT)) ; 
+        ((vwLVITEM64 *) diLocalItem)->pszTextUpper = 0 ; 
+        ((vwLVITEM64 *) diLocalItem)->cchTextMax = MAX_PATH ; 
+    }
+    else
+    {
+        diLocalItem->pszText = (TCHAR *) (diShareItem + sizeof(vwLVITEM64) + sizeof(POINT)) ; 
+        diLocalItem->cchTextMax = MAX_PATH ;
+    }
+    diItemPos = (POINT *) (((char *) diLocalItem) + sizeof(vwLVITEM64)) ;
+    diItemName = (TCHAR *) (((char *) diLocalItem) + sizeof(vwLVITEM64) + sizeof(POINT)) ; 
     
     /* get icon list */ 
     memset(autoUpdate,1,vwDESKTOP_SIZE) ;
@@ -834,7 +921,7 @@ WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, INT nCmdS
     }
 
     /* main messge loop */
-    while (GetMessage(&msg, NULL, 0, 0))
+    while(GetMessage(&msg, NULL, 0, 0))
     {
         TranslateMessage(&msg);
         DispatchMessage(&msg);
@@ -844,5 +931,5 @@ WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, INT nCmdS
     VirtualFree(diLocalItem, 0, MEM_RELEASE);
     VirtualFreeEx(diProcess, diShareItem, 0, MEM_RELEASE);
     CloseHandle(diProcess);
-    return msg.wParam;
+    return 0 ;
 }
