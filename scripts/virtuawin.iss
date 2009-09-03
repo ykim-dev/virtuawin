@@ -8,9 +8,8 @@ DefaultGroupName=VirtuaWin
 MinVersion=4,4
 Uninstallable=1
 OutputDir=.\output
-BackColor=clLime
 SolidCompression=yes
-Compression=bzip/9
+Compression=lzma/max
 LicenseFile=COPYING.TXT
 PrivilegesRequired=none
 
@@ -18,8 +17,10 @@ PrivilegesRequired=none
 Name: en; MessagesFile: VirtuaWin5.0.ISL
 
 [Tasks]
-Name: autostart; Description: Run automatically on Windows startup
-Name: userpath; Description: Setup the user configuration path for roaming profile or portable app support ; Flags: unchecked
+Name: autostart; Description: "Run automatically on Windows startup"
+Name: autostart\user; Description: "For the current user only"; Flags: exclusive
+Name: autostart\common; Description: "For all users"; Flags: exclusive unchecked
+Name: userpath; Description: "Setup the user configuration path for roaming profile or portable app support" ; Flags: unchecked
 
 [Dirs]
 Name: {app}\icons; Flags: uninsalwaysuninstall
@@ -46,7 +47,8 @@ Source: HISTORY.TXT; DestDir: {app}
 Source: README.TXT; DestDir: {app}; Flags: isreadme
 
 [Icons]
-Name: {commonstartup}\VirtuaWin; Filename: {app}\VirtuaWin.exe; Tasks: autostart
+Name: {commonstartup}\VirtuaWin; Filename: {app}\VirtuaWin.exe; Tasks: autostart\common
+Name: {userstartup}\VirtuaWin; Filename: {app}\VirtuaWin.exe; Tasks: autostart\user
 Name: {group}\VirtuaWin; Filename: {app}\VirtuaWin.exe
 Name: {group}\Help; Filename: {app}\VirtuaWin.chm
 Name: {group}\Readme; Filename: {app}\README.TXT
