@@ -1,6 +1,16 @@
 ***   VirtuaWin Revision History   ***
 --------------------------------------
 
+Ver 4.1 beta3 2009/09/??
+
+* Improved the windows help file, now has index and search enabled.
+* 2682854 Added XP theme support for setup dialog and fixed several rc issues
+* 2448910 Added option to install for current user or for all users.
+* 2789338 improved error messages in case of corrupt or zero byte config file.
+* 2134867 Added "Force release of modifier keys on desktop change" expert option.
+* 2189263 Added improved init and system setup logging and added potential fix.
+* 2306168 Fixed setting of last active window when only preserving the Z-order.
+
 Ver 4.1 beta2 2008/10/03
 
 * 1842145 Implemented global system hook to detect window activations -
