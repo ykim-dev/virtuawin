@@ -4430,7 +4430,12 @@ wndProc(HWND aHWnd, UINT message, WPARAM wParam, LPARAM lParam)
             vwToggleEnabled() ;
             break ;
         case vwCMD_NAV_MOVE_LAST:
-            gotoDesk(lastDesk,FALSE);
+            if(lastDesk != currentDesk)
+            {
+                ii = currentDesk ;
+                gotoDesk(lastDesk,FALSE);
+                lastDesk = ii ;
+            }
             break ;
         case vwCMD_UI_SYSTRAYICON:
             taskbarIconShown ^= 0x02 ;
