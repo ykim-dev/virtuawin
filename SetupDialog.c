@@ -923,7 +923,7 @@ setupExpert(HWND hDlg, UINT message, UINT wParam, LONG lParam)
         SendDlgItemMessage(hDlg, IDC_HIDWINACT, CB_ADDSTRING, 0, (LONG) _T("Ignore the event"));
         SendDlgItemMessage(hDlg, IDC_HIDWINACT, CB_ADDSTRING, 0, (LONG) _T("Move window to current desktop"));
         SendDlgItemMessage(hDlg, IDC_HIDWINACT, CB_ADDSTRING, 0, (LONG) _T("Show window on current desktop"));
-        SendDlgItemMessage(hDlg, IDC_HIDWINACT, CB_ADDSTRING, 0, (LONG) _T("Change to window's desktop"));
+        SendDlgItemMessage(hDlg, IDC_HIDWINACT, CB_ADDSTRING, 0, (LONG) _T("Move to window's desktop"));
         SendDlgItemMessage(hDlg, IDC_HIDWINACT, CB_SETCURSEL, hiddenWindowAct, 0) ;
         if(!releaseFocus)
             SendDlgItemMessage(hDlg, IDC_FOCUS, BM_SETCHECK, 1,0);
