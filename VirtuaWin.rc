@@ -4,28 +4,28 @@
 
 #define _T(x) x
 
-IDI_VIRTUAWIN ICON icons/virtuawin.ico
-IDI_ST_DIS_1  ICON icons/st_dis_1.ico
-IDI_ST_NW_1   ICON icons/st_nw_1.ico
-IDI_ST_NE_1   ICON icons/st_ne_1.ico
-IDI_ST_SW_1   ICON icons/st_sw_1.ico
-IDI_ST_SE_1   ICON icons/st_se_1.ico
-IDI_ST_DIS_2  ICON icons/st_dis_2.ico
-IDI_ST_NW_2   ICON icons/st_nw_2.ico
-IDI_ST_NE_2   ICON icons/st_ne_2.ico
-IDI_ST_SW_2   ICON icons/st_sw_2.ico
-IDI_ST_SE_2   ICON icons/st_se_2.ico
-IDI_ST_0      ICON icons/st_0.ico
-IDI_ST_1      ICON icons/st_1.ico
-IDI_ST_2      ICON icons/st_2.ico
-IDI_ST_3      ICON icons/st_3.ico
-IDI_ST_4      ICON icons/st_4.ico
-IDI_ST_5      ICON icons/st_5.ico
-IDI_ST_6      ICON icons/st_6.ico
-IDI_ST_7      ICON icons/st_7.ico
-IDI_ST_8      ICON icons/st_8.ico
-IDI_ST_9      ICON icons/st_9.ico
-IDI_CHECK     ICON icons/check.ico
+IDI_VIRTUAWIN ICON "Icons/virtuawin.ico"
+IDI_ST_DIS_1  ICON "Icons/st_dis_1.ico"
+IDI_ST_NW_1   ICON "Icons/st_nw_1.ico"
+IDI_ST_NE_1   ICON "Icons/st_ne_1.ico"
+IDI_ST_SW_1   ICON "Icons/st_sw_1.ico"
+IDI_ST_SE_1   ICON "Icons/st_se_1.ico"
+IDI_ST_DIS_2  ICON "Icons/st_dis_2.ico"
+IDI_ST_NW_2   ICON "Icons/st_nw_2.ico"
+IDI_ST_NE_2   ICON "Icons/st_ne_2.ico"
+IDI_ST_SW_2   ICON "Icons/st_sw_2.ico"
+IDI_ST_SE_2   ICON "Icons/st_se_2.ico"
+IDI_ST_0      ICON "Icons/st_0.ico"
+IDI_ST_1      ICON "Icons/st_1.ico"
+IDI_ST_2      ICON "Icons/st_2.ico"
+IDI_ST_3      ICON "Icons/st_3.ico"
+IDI_ST_4      ICON "Icons/st_4.ico"
+IDI_ST_5      ICON "Icons/st_5.ico"
+IDI_ST_6      ICON "Icons/st_6.ico"
+IDI_ST_7      ICON "Icons/st_7.ico"
+IDI_ST_8      ICON "Icons/st_8.ico"
+IDI_ST_9      ICON "Icons/st_9.ico"
+IDI_CHECK     ICON "Icons/check.ico"
 
 IDD_PROPPAGE_GENERAL DIALOG 0, 0, 210, 250
 STYLE DS_3DLOOK | WS_CHILD | WS_DISABLED | WS_BORDER
@@ -252,3 +252,14 @@ BEGIN
 END
 
 #endif    // !_MAC
+
+// Embed a manifest to make the config UI has XP style theme.
+// VC6 does not have these defined by deffault
+#ifndef CREATEPROCESS_MANIFEST_RESOURCE_ID
+#define CREATEPROCESS_MANIFEST_RESOURCE_ID 1
+#endif
+#ifndef RT_MANIFEST
+#define RT_MANIFEST 24
+#endif
+
+CREATEPROCESS_MANIFEST_RESOURCE_ID RT_MANIFEST "VirtuaWin.exe.manifest"
