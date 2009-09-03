@@ -1,0 +1,42 @@
+&[c -!- jst -!-]
+&[c Copyright: 2008 PTC]
+&[c Created:   2008-04-10 21:35:45]
+&[vns author "Steven Phillips"]
+
+== &[vs title "Locking or Hiding Desktops"]     
+
+As applications run independently of VirtuaWin, a 'locked desktop' concept is
+flawed and cannot be made secure. For example, an unwanted guest could use the
+task manager to suspend the VirtuaWin process and then use any window restore
+tool (like WinList) to access the hidden windows. From a security perspective,
+the only thing a locked desktop achieves is to prove you have something to
+hide!
+ 
+A more suitable approach would be 'stealth', what is not seen is unlikely to
+be found. A hidden desktop is no more secure than a locked desktop when
+someone else knows it exists, so don't tell anyone!
+
+ 
+VirtuaWin can be configured to support 1 or more hidden desktops by assigning
+a desktop access hotkey to a desktop that is outside of the main Desktop
+Layout size. For example, if a 2 by 2 layout is used, assigning a hotkey to
+desktop 8 will give you direct access to this desktop yet the desktop and its
+contents will be hidden in every other aspect.
+ 
+To configure a hidden desktop, use the main VirtuaWin Setup to change your
+Desktop Layout so that your required hidden desktop becomes part of the
+layout, e.g. to enable desktop 8 change to a 4 by 2 layout. Change to this new
+desktop and use Setup to assign a hotkey, make sure the hotkey is not
+something you could accidentally type and don't forget it! Last, restore the
+desktop layout so that the hidden desktop is outside this range (i.e. back to
+a 2 by 2 layout) and check you can still access the hidden desktop using your
+assigned hotkey.
+
+ 
+As a hidden desktop will not appear on any VirtuaWin menu, moving a window to
+it must be done by either making the window sticky or by going to the desktop
+and using the Window List menu to Assign the window.
+
+Hiding desktops in VirtuaWin is deliberately low profile, the less this
+feature is known the more secure it is.
+

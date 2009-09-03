@@ -1,0 +1,411 @@
+&[c -!- jst -!-]
+&[c Copyright: 2008 PTC]
+&[c Created:   2008-04-22 19:56:58]
+&[vns author "Steven Phillips"]
+
+== &[vs title "External Interface"]     
+
+Most VirtuaWin commands and features can be accessed by sending windows
+messages to the @@VirtuaWinMainClass@@ window, this is also known as the
+Module interface. Any external program can locate this VirtuaWin window and
+send it commands, or use VirtuaWin's **-msg** command-line option, the format
+of this option is as follows:
+
+    @@VirtuaWin.exe -msg <Msg> <wParam> <lParam>@@
+
+Where @@<Msg>@@, @@<wParam>@@ and @@<lParam>@@ are numbers as per the standard
+Windows SendMessage function. A complete and up-to-date list of supported
+messages can be found in Messages.h in the SDK package, the following list may
+not be fully up-to-date:
+
+    ] 4 ?
+
+    ] **Msg**
+
+    ] **wParam**
+
+    ] **lParam**
+
+    ] **Description**
+
+    ]! 1034
+
+    ] #
+
+    ] -
+
+    ] Change to desktop #.
+
+    ]! 1034
+
+    ] 1025
+
+    ] -
+
+    ] Change to previous desktop.
+
+    ]! 1034
+
+    ] 1026
+
+    ] -
+
+    ] Change to next desktop.
+
+    ]! 1034
+
+    ] 1035
+
+    ] -
+
+    ] Change to next desktop to the left.
+
+    ]! 1034
+
+    ] 1036
+
+    ] -
+
+    ] Change to next desktop to the right.
+
+    ]! 1034
+
+    ] 1037
+
+    ] -
+
+    ] Change to next desktop above.
+
+    ]! 1034
+
+    ] 1038
+
+    ] -
+
+    ] Change to next desktop below.
+
+    ]! 1039
+
+    ] -
+
+    ] -
+
+    ] Exit VirtuaWin.
+
+    ]! 1040
+
+    ] -
+
+    ] -
+
+    ] Open Setup dialog.
+
+    ]! 1041
+
+    ] -
+
+    ] -
+
+    ] Remove VirtuaWin's systray icon. 
+
+    ]! 1042
+
+    ] -
+
+    ] -
+
+    ] Show VirtuaWin's systray icon. 
+
+    ]! 1043
+
+    ] -
+
+    ] -
+
+    ] Open VirtuaWin's on-line help. 
+
+    ]! 1044
+
+    ] -
+
+    ] -
+
+    ] Gather all windows onto the current desktop.
+
+    ]! 1045
+
+    ] -
+
+    ] -
+
+    ] Returns the width of the current layout, i.e. how many desktops wide.
+
+    ]! 1046
+
+    ] -
+
+    ] -
+
+    ] Returns the depth of the current layout, i.e. how many desktops deep.
+
+    ]! 1048
+
+    ] -
+
+    ] -
+
+    ] Returns the current desktop number.
+
+    ]! 1049
+
+    ] hWnd or 0
+    
+    ] #
+
+    ] Move window to desktop #.
+
+    ]! 1049
+
+    ] hWnd or 0
+    
+    ] 1025
+
+    ] Move window to previous desktop.
+
+    ]! 1049
+
+    ] hWnd or 0
+    
+    ] 1026
+
+    ] Move window to next desktop.
+
+    ]! 1049
+
+    ] hWnd or 0
+    
+    ] 1035
+
+    ] Move window to next desktop to the left.
+
+    ]! 1049
+
+    ] hWnd or 0
+    
+    ] 1036
+
+    ] Move window to next desktop to the right.
+
+    ]! 1049
+
+    ] hWnd or 0
+    
+    ] 1037
+
+    ] Move window to next desktop above.
+
+    ]! 1049
+
+    ] hWnd or 0
+    
+    ] 1038
+
+    ] Move window to next desktop below.
+
+    ]! 1049
+
+    ] hWnd or 0
+    
+    ] -#, -1025, ...
+
+    ] As with positive lParam values only VirtuaWin changes desktops as well,
+      i.e. moves window and follows.
+
+    ]! 1050
+
+    ] hWnd or 0
+    
+    ] -1
+
+    ] Toggle whether the window is shown on all desktops.
+
+    ]! 1050
+
+    ] hWnd or 0
+    
+    ] 0
+
+    ] Do not show window on all desktops.
+
+    ]! 1050
+
+    ] hWnd or 0
+    
+    ] 1
+
+    ] Show window on all desktops.
+
+    ]! 1051
+
+    ] hWnd
+    
+    ] -
+
+    ] Give the window the focus, i.e. make it the foreground window.
+
+    ]! 1052
+
+    ] hWnd
+    
+    ] -
+
+    ] Send the VirtuaWin installation path to @@hWnd@@ via a WM_COPYDATA message.
+
+    ]! 1053
+
+    ] hWnd
+    
+    ] -
+
+    ] Send the VirtuaWin user configuration path to @@hWnd@@ via a WM_COPYDATA message.
+
+    ]! 1063
+
+    ] hWnd
+    
+    ] 0
+
+    ] Access window - use method defined by 'On hidden window activation' setting.
+
+    ]! 1063
+
+    ] hWnd
+    
+    ] 1
+
+    ] Access window - move to the current desktop.
+
+    ]! 1063
+
+    ] hWnd
+    
+    ] 2
+
+    ] Access window - shown on the current desktop.
+
+    ]! 1063
+
+    ] hWnd
+    
+    ] 3
+
+    ] Access window - change to the window's desktop.
+
+    ]! 1063
+
+    ] hWnd
+    
+    ] -1
+
+    ] Use window's 'On hidden window activation' setting (if set to ignore
+      nothing will happen).
+
+    ]! 1064
+
+    ] hWnd
+    
+    ] -
+
+    ] Returns information about the window, see Messages.h for more information.
+
+    ]! 1065
+
+    ] ?
+    
+    ] ?
+
+    ] Controls desktop thumbnail image generation, see Messages.h for more information.
+
+    ]! 1066
+
+    ] 0
+    
+    ] -
+
+    ] Returns the current VirtuaWin running state (0 = disabled, 1 = enabled).
+
+    ]! 1066
+
+    ] 1
+    
+    ] -
+
+    ] Toggles the current VirtuaWin running state, returns the previous state.
+
+    ]! 1066
+
+    ] 2
+    
+    ] -
+
+    ] Disables VirtuaWin, returns the previous running state.
+
+    ]! 1066
+
+    ] 3
+    
+    ] -
+
+    ] Enables VirtuaWin, returns the previous running state.
+
+    ]! 1067
+
+    ] hWnd
+    
+    ] #
+
+    ] Send the name of desktop # (or current desktop if # = 0) to @@hWnd@@ via a WM_COPYDATA message.
+
+    ]! 1068
+
+    ] -
+    
+    ] -
+
+    ] Returns the largest possible desktop number.
+
+    ]! 1069
+
+    ] hWnd or 0
+
+    ] 0
+
+    ] Force VirtuaWin to NOT manage the given window. **Note**: VirtuaWin will
+    remember this setting for the lifespan of the window, only a 'manage
+    window' message (see below) can change this.
+
+    ]? 1069
+
+    ] hWnd or 0
+
+    ] 1
+
+    ] Force VirtuaWin to manage the given window.
+
+
+**Where:**
+
+    ]h 2 ?
+
+    ]!  -
+
+    ]   means not used (use a 0).
+
+    ]!  hWnd
+
+    ]   Numeric handle to the window required.
+
+    ]?  hWnd or 0
+
+    ]   Numeric handle to the window required or 0 for the window which currently
+        has the focus.

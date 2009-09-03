@@ -1,0 +1,45 @@
+&[c -!- jst -!-]
+&[c Copyright: 2008 PTC]
+&[c Created:   2008-04-10 21:43:15]
+&[vns author "Steven Phillips"]
+
+== &[vs title "Configuration Files"]     
+
+With the exception of **userpath.cfg** all configuration files are located in the
+user’s '@@Application Data/VirtuaWin@@' directory, use the Setup Expert **//Explore
+Config//** button to locate this directory. When a user runs VirtuaWin for the
+first time all configuration files located in the VirtuaWin installation
+directory are copied into the user’s own VirtuaWin directory within their
+Application Data area. The following configuration files are used by
+VirtuaWin:
+
+=== userpath.cfg
+
+If present in the installation directory it contains a single line defining
+the directory containing the user’s configuration files. This file can be used
+to solve problems caused by user permissions and roaming profiles. The string
+within the file can user environment variables by using the format
+'@@${<variable-name>}@@' (e.g. @@${HOMEPATH}@@) and can use the built in variable
+@@${VIRTUAWIN_PATH}@@ to use the VirtuaWin installation directory. For example,
+the following could be used if a fixed path with the same setup for all users
+was required:
+
+    @@c:\VirtuaWin_config\ @@
+
+The following uses a fixed path but allows different configurations per user:
+
+    @@c:\VirtuaWin_conf\${USERNAME}@@
+
+Note that VirtuaWin will create the directory if it does not already exist.
+
+=== virtuawin.cfg
+
+Main user configuration file, the Setup Dialog settings are stored in this file.
+
+=== window.cfg
+
+Configuration file used to store the specific Window Rule setup.
+
+=== module.cfg
+
+Contains the list of currently disabled modules.

@@ -1,0 +1,75 @@
+&[c -!- jst -!-]
+&[c Copyright: 2008 PTC]
+&[c Created:   2008-04-10 19:37:34]
+&[vns author "Steven Phillips"]
+
+== &[vs title "Window Menu"]     
+
+The Window Menu can be opened by:
+
+*.  Clicking the middle mouse button on the window title bar, see &[l
+    VirtuaWin_SetupDialog.htm]Setup Dialog&[/l]'s Enable middle button window
+    menu activation setting. 
+
+.   Binding the **//UI: Open standard window menu//** command to a Hotkey and pressing
+    this Hotkey while a window has input focus.
+
+.   Binding the **//UI: Open compact window menu//** command to a Hotkey and pressing
+    this Hotkey while a window has input focus.
+
+The window menu is used to control and configure the current window, i.e the
+window currently with the input focus. The menu contains the following items:
+
+
+*.  **//Dismiss Window//**: If the current window is only being temporarily show (for
+    example the window list 'Show' feature was used to display it, also see
+    option On hidden window activation) it will be moved back to its original
+    desktop, otherwise the window will be minimized.
+
+.   **//Push to Bottom//**: Pushes the window to the back of the desktop, i.e. under
+    every other window.
+
+.   **//Always on Top//**: Toggles the Window ‘Always on top’ property which keeps the
+    window above other windows. 
+
+
+.   **//Manage Window//**: Forces VirtuaWin to manage the current window, this item is
+    only available if the window is not currently being managed.
+
+.   **//Stop Managing//**: Forces VirtuaWin to not manage the current window, this
+    item is only available if the window is currently being managed.
+
+.   **//Always Show//**: Toggles whether the current window is visible on all desktops
+    or just the current one. 
+
+.   **//Gather//**: moves all the windows created by the current window's process onto
+    the current desktop.
+
+
+.   **//Move to Next//**: Moves the current window to next desktop; this command will
+    fail if the current desktop is the last desktop and Enable desktop
+    wrapping is disabled.
+
+.   **//Move to Previous//**: Moves the current window to next desktop; this command
+    will fail if the current desktop is the first desktop and Enable desktop
+    wrapping is disabled.
+
+.   **//Move to Desk #//**: Moves the current window to the selected desktop; the
+    compact form of the window menu puts these items into a sub menu.
+
+
+.   **//Edit Window Rule//**: Opens the Window Rule Dialog with the rule being applied
+    to the current window selected, this item is only available if the current
+    window had a rule applied to it.
+
+.   **//Add Window Rule//**: Opens the Window Rule Dialog with the window
+    identification section filled with the current window’s details (i.e.
+    class name etc.), normal only one name is required for identifying the
+    window type so the others should be removed.
+
+    **Note:** The new rule will not be created until you Add the rule. 
+
+
+.   **//Info//**: Opens a dialog giving detailed information about the current window.
+
+    **Note:** The text in this dialog can be copied using standard Windows Control+C key.

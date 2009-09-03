@@ -1,0 +1,484 @@
+&[c -!- jst -!-]
+&[c Copyright: 2008 PTC]
+&[c Created:   2008-04-10 21:56:02]
+&[vns author "Steven Phillips"]
+
+== &[vs title "Setup Dialog"]     
+
+The Setup dialog can be opened by:
+
+*.  Double clicking the left mouse button on the system tray icon.
+
+.   Selecting **//Setup//** in the &[l VirtuaWin_ControlMenu.htm]Control Menu&[/l].
+
+.   Binding the **//UI: Open VirtuaWin setup//** command to a Hotkey and pressing this Hotkey.
+
+.   Running the VirtuaWin program while VirtuaWin is already running.
+
+The setup dialog consists of 5 different setup tabs with keys, mouse, modules
+and other various configuration options under them. It is possible to use the
+**//Apply//** button to try out different settings. If **//Cancel//** is pressed, all changed
+from the last apply will be undone.
+
+
+=== &[a General]General Tab
+
+==== Desktop Configuration
+
+*.  With &[a SD_DL]**//Desktop Layout//** you can configure how many desktops you want and how
+    they shall be positioned. You can have up to 20 desktops. If you for
+    example set this to 8 wide by 1 deep, you will get a horizontal row of
+    eight desktops. The “original” icon will be used if you set 2 by 2,
+    otherwise numbers will be used. See also &[l VirtuaWin_CustomIcons.htm]Custom Icons&[/l]. Please note that if
+    you set the size to fewer desktops any windows on the removed desktops
+    will be automatically moved to desktop 1.
+
+.   &[a SD_EDW]**//Enable desktop wrapping//**: If checked, it will be possible to cycle through
+    all desktops in both directions, meaning that from the last desktop in any
+    direction, it’s possible to go to the first again by continuing in the
+    same direction.
+
+.   &[a SD_NOD]**//Name of desktop #//** defines the name of the current desktop, this is used in
+    the tooltip given when the mouse is moved over the system tray icon. If no
+    name is give the name used will be ‘Desktop #’ where # is the current
+    desktop number.
+
+.   The **//Next//** button can be used to move to the next desktop.
+
+==== User Interface
+
+*.  &[a SD_AWLA]**//Available window list actions//** can be used to configure the contents of the
+    Window List menu, available options are:
+
+    *.   **//Switch To//** can be used to access any window directly, meaning that
+         VirtuaWin will change to the window’s desktop and give the focus to
+         the window.
+
+    .   **//Move Here//** is used for moving the selected window to the current
+        desktop, useful for moving windows to different desktops.
+
+    .   **//Show//** is used to temporarily display the selected window on the current
+        desktop; the window will be returned to its original desktop when it
+        is either dismissed (see the &[l #SD_WIN_DW]dismiss window&[/l] hotkey) or on the next
+        desktop change.
+
+    .   **//Always Show//** is used to toggle whether a window is visible on all
+        desktops (sometimes termed 'sticky'). 
+
+    It is possible to choose any combination and if more than one function is
+    selected, the menus will be displayed side-by-side. Selecting a column
+    title, e.g. click on '**Switch To**', will change the menu to display all
+    columns.
+
+    **Note:** The menus will only contain the windows that are possible to affect
+    during the time, for example, moving a window to the same desktop that it
+    already belongs to is pointless and therefore windows on the current
+    desktop will not appear in the **Move Here** column.
+
+.   &[a SD_MOCWL]**//Mouse opens compact window list//**: If checked the compact form of the window
+    list is opened by the mouse rather than the standard form. The window list
+    can be opened using the mouse by left clicking on the system tray icon or
+    by middle clicking on a the desktop (if enable, see &[l #SD_EMBWLA]Enable middle button
+    window list activation&[/l]).
+
+    The compact form of the Window List displays only one column, clicking on
+    the title of the column will change the menu to the next column.
+
+    **Note:** The compact list has two further advantages, firstly it is able to
+    support many more windows (multiple menu columns will be automatically
+    used if there are too many windows to display in a single column) and the
+    length of text for each window is truncated to 128 characters rather than
+    only 30 for the non-compact form.
+
+.   &[a SD_MOCWM]**//Mouse opens compact window menu//**: If checked the compact form of the window
+    menu is opened by the mouse rather than the standard form. The window menu
+    can be opened using the mouse by middle clicking on a the desktop (if
+    enable, see &[l #SD_EMBWMA]Enable middle button window menu activation&[/l]).
+
+    The compact form of the Window Menu uses sub-menus to keep the size of the
+    main menu small.
+
+.   &[a SD_HOMLFL]**//Hotkey opens menu or list at fixed location//**: If
+    enabled VirtuaWin will open all menus and dialogs at a fixed location on
+    the screen, if disabled most menus and dialogs are opened next to the
+    mouse. 
+
+
+=== &[a Hotkeys]Hotkeys Tab
+
+The Hotkeys tab is used to bind system wide ‘hotkey’ combinations to VirtuaWin
+functionality, as the hotkey is system wide a key combination must not be used
+by any other application including Windows itself. The following commands can
+be bound to a hotkey:
+
+*.  &[a SD_NAV_ML]**//NAV: Move left//**: Moves to the next desktop to the left, this command fails
+    if the current desktop is in the left most column and &[l #SD_EDW]Enable desktop
+    wrapping&[/l] is disabled.
+
+.   &[a SD_NAV_MR]**//NAV: Move right//**: Moves to the next desktop to the right, this command
+    fails if the current desktop is in the right most column and &[l #SD_EDW]Enable
+    desktop wrapping&[/l] is disabled.
+
+.   &[a SD_NAV_MU]**//NAV: Move up//**: Moves to the next desktop above (which desktop this is
+    depends on your Expert &[l #SD_IUD]Invert Up/Down&[/l] setting). This command fails if the
+    current desktop is on the top row and &[l #SD_EDW]Enable desktop wrapping&[/l] is disabled.
+
+.   &[a SD_NAV_MD]**//NAV: Move down//**: Moves to the next desktop below (which desktop this is
+    depends on your Expert &[l #SD_IUD]Invert Up/Down&[/l] setting). This command fails if the
+    current desktop is on the bottom row and &[l #SD_EDW]Enable desktop wrapping&[/l] is
+    disabled.
+
+.   &[a SD_NAV_MTN]**//NAV: Move to next//**: Moves to the next desktop; this command will fail if
+    the current desktop is the last desktop and &[l #SD_EDW]Enable desktop wrapping&[/l] is
+    disabled.
+
+.   &[a SD_NAV_MTP]**//NAV: Move to previous//**: Moves to the previous desktop; this command will
+    fail if the current desktop is the first desktop and &[l #SD_EDW]Enable desktop
+    wrapping&[/l] is disabled.
+
+.   &[a SD_NAV_MTD]**//NAV: Move to desktop #//**: Moves directly to the desktop specified.
+
+.   &[a SD_NAV_RTL]**//NAV: Return to last desktop//**: Moves to the last desktop. Note the
+    last desktop is defined to be the last one you stayed on for more than a
+    second and isn't the current one.
+
+.   &[a SD_WIN_TAS]**//WIN: Toggle always show//**: Toggles whether the current window is visible on
+    all desktops or just the current one. 
+
+.   &[a SD_WIN_AOT]**//WIN: Always on top//**: Toggles the Window’s ‘Always on top’ property which
+    keeps the window above other windows. 
+
+.   &[a SD_WIN_PTB]**//WIN: Push to bottom//**: Pushes the window to the back of the desktop, i.e.
+    under every other window.
+
+.   &[a SD_WIN_DW]**//WIN: Dismiss window//**: If the current window is only being temporarily show
+    (for example the window list '**Show**' feature was used to display it, also
+    see option &[l #SD_OHWA]On hidden window activation&[/l]) it will be moved back to its
+    original desktop, otherwise the window will be minimized.
+
+    &[a SD_WIN_GPW]**//WIN: Gather process windows//**: Moves all the windows created by the current
+    window's process onto the current desktop.
+
+.   &[a SD_WIN_ML]**//WIN: Move left//**: Moves the current window to the next desktop to the left;
+    this command will fail if no window currently has focus or if the current
+    desktop is the left most desktop and &[l #SD_EDW]Enable desktop wrapping&[/l] is disabled.
+
+.   &[a SD_WIN_MR]**//WIN: Move right//**: Moves the current window to the next desktop to the
+    right; this command will fail if no window currently has focus or if the
+    current desktop is the right most desktop and &[l #SD_EDW]Enable desktop wrapping&[/l] is
+    disabled.
+
+.   &[a SD_WIN_MU]**//WIN: Move up//**: Moves the current window to the next desktop above (which
+    desktop this is depends on your Expert &[l #SD_IUD]Invert Up/Down&[/l] setting); this
+    command will fail if no window currently has focus or if the current
+    desktop is the top most desktop and &[l #SD_EDW]Enable desktop wrapping&[/l] is disabled.
+
+.   &[a SD_WIN_MD]**//WIN: Move down//**: Moves the current window to the next desktop below (which
+    desktop this is depends on your Expert &[l #SD_IUD]Invert Up/Down&[/l] setting); this
+    command will fail if no window currently has focus or if the current
+    desktop is the bottom most desktop and &[l #SD_EDW]Enable desktop wrapping&[/l] is
+    disabled.
+
+.   &[a SD_WIN_MTN]**//WIN: Move to next desktop//**: Moves the current window to next desktop; this
+    command will fail if no window currently has focus or if the current
+    desktop is the last desktop and &[l #SD_EDW]Enable desktop wrapping&[/l] is disabled.
+
+.   &[a SD_WIN_MTP]**//WIN: Move to previous desktop//**: Moves the current window to next desktop;
+    this command will fail if no window currently has focus or if the current
+    desktop is the first desktop and &[l #SD_EDW]Enable desktop wrapping&[/l] is disabled.
+
+.   &[a SD_WIN_MTD]**//WIN: Move to desktop #//**: Moves the current window to the specified desktop;
+    this command will fail if no window currently has focus.
+
+.   &[a SD_WIN_MLF]**//WIN: Move left and follow//**: Same as **//WIN: Move left//** except VirtuaWin changes
+    to desktop as well.
+
+.   &[a SD_WIN_MRF]**//WIN: Move right and follow//**: Same as **//WIN: Move right//** except VirtuaWin
+    changes to desktop as well.
+
+.   &[a SD_WIN_MUF]**//WIN: Move up and follow//**: Same as **//WIN: Move up//** except VirtuaWin changes to
+    desktop as well.
+
+.   &[a SD_WIN_MDF]**//WIN: Move down and follow//**: Same as **//WIN: Move down//** except VirtuaWin changes
+    to desktop as well.
+
+.   &[a SD_WIN_MTNF]**//WIN: Move to next desktop and follow//**: Same as **//WIN: Move to next desktop//**
+    except VirtuaWin changes to desktop as well.
+
+.   &[a SD_WIN_MTPF]**//WIN: Move to prev desktop and follow//**: Same as **//WIN: Move to previous
+    desktop//** except VirtuaWin changes to desktop as well.
+
+.   &[a SD_WIN_MTDF]**//WIN: Move to desktop # and follow//**: Same as **//WIN: Move to desktop #//** except
+    VirtuaWin changes to desktop as well.
+
+.   &[a SD_WIN_GAW]**//WIN: Gather all windows//**: Moves all windows being managed by VirtuaWin onto
+    the current desktop.
+
+.   &[a SD_UI_OSWM]**//UI: Open standard window menu//**: Opens the standard &[l VirtuaWin_WindowMenu.htm]window menu&[/l] to control
+    the current window; this command will fail if no window currently has
+    focus.
+
+.   &[a SD_UI_OCWM]**//UI: Open compact window menu//**: Opens the compact &[l VirtuaWin_WindowMenu.htm]window menu&[/l] to control the
+    current window; this command will fail if no window currently has focus.
+    The compact menu moves some menu items into sub-menus ensuring the size of
+    the menu does not get unmanageable.
+
+.   &[a SD_UI_OSWL]**//UI: Open standard window list//**: Opens the standard window list menu, which
+    is used to access any window.
+
+.   &[a SD_UI_OCWL]**//UI: Open compact window list//**: Opens the compact window list menu which is
+    used to access any window. See option &[l #SD_MOCWL]Mouse opens compact window list&[/l] for
+    more information on the differences between the two window list forms.
+
+.   &[a SD_UI_OMRU]**//UI: Open most recently used window list//**: Opens a menu listing all windows
+    in order of last use, VirtuaWin will switch to the selected window. 
+
+.   &[a SD_UI_OWR]**//UI: Open window rules setup//**: Opens the &[l VirtuaWin_WindowRulesDialog.htm]Window Rules Dialog&[/l].
+
+.   &[a SD_UI_OVS]**//UI: Open VirtuaWin setup//**: Opens VirtuaWin’s main &[l VirtuaWin_SetupDialog.htm]Setup Dialog&[/l].
+
+.   &[a SD_UI_OCM]**//UI: Open control menu//**: Opens VirtuaWin’s &[l VirtuaWin_ControlMenu.htm]Control Menu&[/l], which can also be
+    opened by right clicking on the system tray icon.
+
+.   &[a SD_UI_TES]**//UI: Toggle enable state//**: Toggles whether VirtuaWin is enabled or not; when
+    VirtuaWin is disabled this hotkey command is the only one which remains
+    bound.
+
+.   &[a SD_UI_TDST]**//UI: Toggle display of system tray icon//**: Toggles the display of the
+    VirtuaWin icon in the taskbar system tray.
+
+.   &[a SD_UI_EV]**//UI: Exit VirtuaWin//**: Exits VirtuaWin.
+
+==== Hotkeys
+
+*.  The first sub-window on the Hotkeys tab contains a list of current
+    hotkeys, select a line to **//Modify//** or **//Delete//** the selected hotkey. When a
+    line is selected, the remaining fields in the tab are updated to reflect
+    the hotkey selected.
+
+.   **//Command//** is used to configure what command is to be executed by the hotkey,
+    see above for a complete list of available commands and what they do.
+
+.   **//Desktop//**: Some commands require a desktop to be specified, e.g. **//NAV: Move
+    to desktop #//**, the Desktop contains a drop down list of all available
+    desktops, use this to specify the required desktop.
+
+    **Note:** Usually this list only contains normal visible desktops, if using a
+    hidden desktop you must first go to the hidden desktop for it to appear in
+    this list.
+
+.   Use the **//Hotkey//** entry to specify the required hotkey by simply clicking
+    into the entry and pressing the required Hotkey combination, the **//+ WIN key//**
+    checkbox will also need to be set depending on whether the Windows key
+    modifier is desired.
+
+    **Note:** If the Hotkey is already bound by something else (including
+    VirtuaWin and Windows) the entry will not be correctly changed, it may be
+    set to **None** and the action bound to the hotkey will be executed. This is a
+    limitation of the Windows Hotkey interface, see the main VirtuaWin FAQ for
+    instructions on how to manually configure some hotkeys.
+
+.   Pressing the **//Add//** button add the current Command/Hotkey configuration as a
+    new hotkey, it will be added to the bottom of the list. This button is not
+    enabled if the Hotkey is not set to a valid hotkey combination.
+
+.   Pressing the **//Modify//** button up-date the currently selected hotkey with the
+    current Command/Hotkey configuration. This button is not enabled if a
+    hotkey is not selected in the list or the Hotkey is not set to a valid
+    hotkey combination.
+
+.   Pressing the **//Delete//** button removes the currently selected Hotkey. This
+    button is not enabled if a hotkey is not selected in the list.
+
+
+=== &[a Mouse]Mouse Tab
+
+==== Mouse Support
+
+*.  &[a SD_EMDC]**//Enable mouse desktop changing//**: If checked, it will be possible to change
+    desktop and drag windows to other desktops with the mouse.
+
+.   The &[a SD_DBCD]**//Delay before changing desktop//** slider configures how long it will take
+    to switch desktop when the mouse goes to the ends of the screen. You can
+    set a value between 50 - 4000 ms.
+
+.   &[a SD_EMKC]**//Enable modifier key control//**: If checked, you can choose a key that must be
+    held down if the mouse should move to a new desktop. This is useful for
+    avoiding accidental desktop switch when using Mouse support.
+
+.   &[a SD_EDEK]**//Enable desktop edge knocking//**: If checked the mouse must 'knock' the
+    desktop edge before VirtuaWin will change desktops. To knock the edge the
+    mouse must move to the desktop edge, then move away from the edge (by a
+    quarter of the &[l #SD_MJL]Mouse jump length&[/l]), before going back to the edge - this
+    action must be performed within a second. So if the Mouse jump length is
+    set to 60 (recommended) the mouse must move 15 pixels away from the edge,
+    also the mouse must not wander in the direction perpendicular to the edge
+    by more than the Mouse jump length.
+
+    *.   When **//Always required//** is also checked, a knock must always be
+         performed to change desktops with the mouse. If disabled a knock is
+         only required when the mouse operation starts near the edge (within
+         'Mouse jump length', e.g. 60 pixels). For example, if the &[l #SD_EMKC]modifier
+         key control&[/l] is pressed within 60 pixels of the edge a knock will be
+         required, if its pressed outside this boarder no knock will be
+         required.
+
+.   The &[a SD_MJL]**//Mouse jump length//** field tells how many pixels the mouse pointer will
+    jump away from the desktop edge on a mouse desktop change. Values between
+    0-999 are possible, but don’t set this value any higher than the
+    resolution of your screen. A value of at least 10 is recommended to avoid
+    unwanted double desktop changing and a value of around 60 or more if edge
+    knocking is enable.
+
+.   &[a SD_EMW]**//Enable mouse warping//**: If checked, the mouse will be moved to the opposite
+    side of the screen when going over the edge. The effect of the Mouse jump
+    field is the same.
+
+.   &[a SD_EMBDC]**//Enable middle button desktop changing//**: If checked, clicking the middle
+    mouse button on the desktop and moving the mouse will change desktops in
+    the direction of the mouse movement. The size of the mouse movement
+    required to change desktops is a quarter of the &[l #SD_MJL]Mouse jump length&[/l].
+
+.   &[a SD_EMBWLA]**//Enable middle button window list activation//**: If checked, clicking the
+    middle mouse button on the desktop will open a VirtuaWin window list (see
+    **//Window List Contents//** section below). This menu can also be opened using a
+    hotkey, see **//Enable window list hotkey//**.
+
+.   &[a SD_EMBWMA]**//Enable middle button window menu activation//**: If checked, clicking the
+    middle mouse button on a window’s title bar will open a VirtuaWin control
+    menu for the window. This menu can be used to dismiss the window and
+    control which desktop it is placed on. This menu can also be opened using
+    a hotkey, see &[l #SD_UI_OSWM]UI: Open standard window menu&[/l].
+
+
+=== &[a Modules]Modules Tab
+
+The original installation of VirtuaWin includes only one module, &[l VirtuaWin_WinListModule.htm]WinList
+module&[/l]. More info about modules is available on
+http://virtuawin.sourceforge.net/&[.] There you can also find more modules to
+download. There is currently a max limit of 10 modules that VirtuaWin will
+handle.
+
+*.  The list box will display the modules that are currently loaded.
+
+.   Pressing the **//Configure//** button, or by double clicking, will bring up the
+    setup dialog for the selected module, if the selected module has one.
+
+.   Press the **//Reload//** button for unloading all modules and re-read the module
+    directory.
+
+.   Pressing the **//Enable/Disable//** button does exactly what it sounds like. Note
+    that you need to restart VirtuaWin in order for enabled modules to become
+    active again. Disabling modules works instantly.
+
+
+=== &[a Expert]Expert Tab
+
+==== &[a SD_AO]Advanced Options
+
+*.  &[a SD_ODCP]**//On desktop change preserve//**: Setting this option to **//Static
+    Taskbar Order//** will make VirtuaWin build up and maintain its own list
+    of windows in creation order, this order will be used to order the buttons
+    in the taskbar when changing desktops; VirtuaWin will not attempt to
+    restore the Z order. When the **//Z order//** is selected VirtuaWin will
+    maintain the order that windows are on top of each other, this is the same
+    order as used by the Windows Application Menu (Alt + Tab). When used, the
+    order of windows in the taskbar is not preserved and there is a desktop
+    changing performance hit of around 5% compared to Taskbar Order. When
+    **//Static Taskbar & Z Order//** is used both orders are restored but at
+    about a 10% performance cost. The **//Dynamic Taskbar//** order settings
+    differ from the static in that they get the taskbar button order from
+    Explorer just before changing desktops and corrects the button order, this
+    allows VirtuaWin to support 3rd party tools like **Taskbar Shuffle** which
+    can be used to reorder the buttons in the taskbar - these options do have
+    an additional small performance hit.
+
+.   &[a SD_OHWA]**//On hidden window activation//**: A hidden window is one
+    that currently belongs to a different desktop so it is being hidden;
+    activation is some event that suggests to VirtuaWin that the owning
+    application wants the window to be displayed (e.g. opening a url link may
+    activate a hidden internet browser). Setting this option to **//Ignore the
+    event//** which ensure that VirtuaWin will not allow the window to
+    display. When set to **//Move window to the current desktop//** VirtuaWin
+    will move the window to the current desktop and display the window. If set
+    to Show window on current desktop the window will be display but it is not
+    moved to the current desktop, instead the window will be returned to its
+    original desktop when it is either dismissed (see the &[l #SD_WIN_DW]dismiss
+    window&[/l] hotkey) or on the next desktop change. When set to **//Move
+    to window’s desktop//** VirtuaWin will do a desktop change to the window’s
+    desktop, which will also display the window. This action can also be set
+    differently for each window type using a window rule, see the &[l
+    VirtuaWin_WindowRulesDialog.htm#WRD_OHWA]Window Rule Dialog&[/l] option. 
+
+.   &[a SD_RFODC]**//Restore focus on desktop change//**: If checked, when switching desktops the
+    focus will be returned to the window that last had the focus on the
+    desktop. If disable the focus is removed - no window will have the focus.
+
+.   &[a SD_IUD]**//Invert Up/Down//**: If checked, the up/down control keys and mouse behavior
+    will be switched. This is nice to use when you have hot keys set on the
+    numpad. For example on a 3x3 desktop setup, use hot keys 1-9 on the numpad
+    and invert up/down. Then every desktop will be mapped to corresponding key
+    number and the control keys/mouse will behave as expected. Hard to
+    explain, try it out… 
+
+.   &[a SD_HSTI]**//Hide system tray icon//**: If checked the system tray icon will be removed. To
+    see the setup dialog just start VirtuaWin a second time and the setup
+    dialog will appear.
+
+==== &[a SD_W]Workarounds
+
+Options in this group should only be changed if VirtuaWin is not functioning
+correctly.
+
+*.  &[a SD_ETD]**//Enable taskbar detection//**: During startup, VirtuaWin will try to locate the
+    taskbar to be able to improve mouse based navigation and alternative Move
+    window hiding. If you use an alternative shell, e.g. LiteStep, then you wont have a taskbar and
+    probably want to disable this. If this option is disabled &[l
+    #SD_ODCP]Dynamic taskbar order&[/l] will not be available. 
+
+.   &[a SD_EWH]**//Enable Windows hook//**: If enabled, VirtuaWin installs a system shell
+    hook which monitors  activity events (such as flashing taskbar buttons) of
+    all windows to ensure none are missed.
+    
+    **Note:** If using this option before up-grading VirtuaWin it is
+    recommended you exit VirtuaWin 10 minutes or more before up-grading, this
+    will reduce the likelihood of having to reboot your system.
+
+.   &[a SD_EWSR]**//Enable window specific rules//**: If enabled, window specific rules created via the
+    &[l VirtuaWin_WindowRulesDialog.htm]Window Rules Dialog&[/l] will be applied, see help about the
+    &[l VirtuaWin_WindowRulesDialog.htm]Window Rules Dialog&[/l] for more
+    information. This option should be enabled, if not some
+    windows, most notably Explorer windows, may disappear.
+
+.   &[a SD_EDTBR]**//Enable dynamic taskbar button removal//**: If checked and a &[l
+    #SD_ODCP]Dynamic taskbar order&[/l] is used VirtuaWin will use the taskbar
+    button order returned by Explorer to remove unwanted buttons, these
+    buttons are sometimes created by programs which create a single main
+    window and taskbar buttons for each viewable file (e.g. Excel & Acrobat).
+  
+.   &[a SD_FRMKDC]**//Force release of modifier keys on desktop change//**: If
+    checked, when VirtuaWin changes desktop it will send messages to the new
+    current application to force it to drop any currently pressed modifier key
+    (Alt, Control, Shift & Windows keys). Some applications fail to 'drop'
+    these modifier keys when a hotkey is used to change desktops. 
+
+.   &[a SD_FRADC]**//Force refresh after desktop change//**: If checked, VirtuaWin will do a
+    refresh after a switch to a new desktop, similar to pressing F5 with
+    “desktop focus”. Useful if applications are leaving traces after them (I
+    have only seen this problem with PhotoShop). Otherwise, uncheck it to get
+    rid of the annoying flicker.
+
+.   &[a SD_WETVL]**//Write events to the virtuawin.log//**: If checked VirtuaWin creates a log file
+    detailing all VirtuaWin related events in your user configuration
+    directory (to locate this file see &[l #SD_EC]Explore Config&[/l]). This is very useful
+    when attempting to reproduce issues and reporting problems to VirtuaWin.
+
+.   The &[a SD_LW]**//Log Windows//** button adds information about every window to the
+    virtuawin.log file, this helps gather information required when a problem
+    is encountered. The **//Write events to the virtuawin.log//** option must be
+    enabled for this feature to have any effect.
+
+.   The &[a SD_EC]**//Explore Config//** button opens an explorer window displaying the contents
+    of your VirtuaWin configuration directory; this can be used to find your
+    configuration files.
+

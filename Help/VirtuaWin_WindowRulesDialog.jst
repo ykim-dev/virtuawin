@@ -1,0 +1,158 @@
+&[c -!- jst -!-]
+&[c Copyright: 2008 PTC]
+&[c Created:   2008-04-10 18:34:39]
+&[vns author "Steven Phillips"]
+
+== &[vs title "Window Rules Dialog"]     
+
+The Window Rules dialog can be opened by:
+
+*.  Selecting **//Window Rules//** in the &[l VirtuaWin_ControlMenu.htm]Control Menu&[/l].
+
+.   Binding the **//UI: Open window rule setup//** command to a Hotkey and pressing this Hotkey.
+
+.   Selecting **//Add Window Rule//** or **//Edit Window Rule//** in the &[l VirtuaWin_WindowMenu.htm]Window Menu&[/l].
+
+The window rules dialog is used to improve the way VirtuaWin handles certain
+types of windows. Each window rule consists of two basic parts, the first part
+controls the window identification, i.e. determines what windows the
+configuration is to be applied to, the second part configures the settings to
+apply to these windows. Each window can have at most one window rule applied.
+
+*.  The first sub-window on the Window Rules dialog contains a list of all
+    currently defined window rules, the order of the list is very important,
+    as a window can only be assigned one window rule, when a new window is
+    opened VirtuaWin starts at the top of the list trying to find a window
+    rule that matches, it stops at the first match.
+
+.   Press the **//Up//** or **//Down//** button to move the currently selected window
+    rule up or down the list; these buttons simply change the order of items
+    in the list, they do not apply any modifications made to the current
+    window rule.
+
+.   The **//Add//** button creates a new window rule at the top of the list; its
+    window identification and settings will be as per the current dialog
+    state.
+
+.   The **//Modify//** button applies any changes made to the current window
+    rule’s identification and settings.
+
+    **Note:** Until this button is pressed all changes to the current window rule are
+    ignored; a common mistake is to select a window rule, make some changes
+    and then press Okay or Apply - this has no effect as the selected window
+    rule was not modified!
+
+
+.   The **//Delete//** button removes the currently selected window rule.
+
+.   The **//OK//** and **//Apply//** buttons will save any changes made to the
+    Window Rules configuration (see note for Modify) and re-applies the window
+    rules to all windows on the current desktop.
+
+=== &[a Identification]Identification
+
+A combination of three fields is used to identify what windows the window rule is to be applied to:
+
+*.  &[a WRD_CN]**//Class Name//**: Defines the name of the window’s class, this can be found
+    in the &[l VirtuaWin_WindowMenu.htm]Window Menu&[/l]’s Info dialog. A ‘*’ at the beginning and/or at the end
+    can be used for partial string matching (e.g. “*MyClass*” will match any
+    window class containing the string “MyClass”). Leave is field empty if the
+    window rule is not to match on the window’s class.
+
+.   &[a WRD_WN]**//Window Name//**: Defines the title of the window, note that this must be
+    correctly set for when the window is first created (or when the window
+    rules are reapplied). A ‘*’ at the beginning and/or at the end can be used
+    for partial string matching (e.g. “*Mozilla Firefox” will match any window
+    whose title ends in the string “Mozilla Firefox ”). Leave is field empty
+    if the window rule is not to match on the window’s title.
+
+
+.   &[a WRD_PN]**//Program Name//**: Defines the full path of the program which created the
+    window, this can be found in the &[l VirtuaWin_WindowMenu.htm]Window Menu&[/l]’s Info dialog. A ‘*’ at the
+    beginning and/or at the end can be used for partial string matching (e.g.
+    “*\firefox.exe” will match any window created by Firefox). Leave is field
+    empty if the window rule is not to match on the window’s executable.
+
+    **Note:** The Program Name is not support on early versions of Windows, e.g. Win9x.
+
+
+.   &[a WRD_WRE]**//Window rule enabled//**: If not checked the window rule is simply ignored,
+    this option can be useful when tracking down problems.
+
+**Note:** When using the &[l VirtuaWin_WindowMenu.htm]Window Menu&[/l]’s Add
+Window Rule feature the three name fields are set to the current window’s
+details, it is very unlikely that all three fields are required for the
+identification, particularly the Window Name.
+
+=== &[a Settings]Settings
+
+**Note:** It is strongly advised that minimal changes made to avoid unwanted
+side effects; VirtuaWin handles most windows correctly so only change settings
+which directly address a problem.
+
+
+*.  &[a WRD_MWOTT]**//Manage windows of this type//**: Three radio buttons give the options to Never
+    manage, Always manage or Let VirtuaWin decide (default).
+
+.   &[a WRD_MWOMTB]**//Main window of multiple taskbar buttons//**: If checked the window is flagged
+    as the main visible window for an application that uses multiple taskbar
+    buttons to access this window. For example Excel creates a taskbar button
+    for each file opened but has only one main window, clicking on each
+    taskbar button simply changes which file is viewed in the main window.
+    This option enables VirtuaWin to identify these main windows and handle
+    them properly by removing the additional taskbar button for the main
+    window (this button is typically removed by the application). Only use
+    this option if changing desktops leads to the creation of an additional
+    taskbar button.
+
+
+.   &[a WRD_SWOAD]**//Show windows of this type on all desktops//**: If checked any window of this
+    type will be automatically shown on all desktops. This differs from the
+    window not being managed in several ways, firstly the window will not
+    appear in the main Window List menu, also when changing desktops VirtuaWin
+    will not give the focus to a non-managed window.
+
+.   &[a WRD_KAWT]**//Keep all windows of this application together//**: If checked all windows
+    created by the window's application are kept together, i.e. VirtuaWin will
+    move all the application's windows when one of them is moved and if one is
+    flagged as Always Show then all the windows will be.
+
+.   &[a WRD_AMWTD]**//Automatically move windows of this type to Desktop//**: If checked the window
+    will be automatically moved to the given desktop. VirtuaWin will move the
+    window immediately on start-up or when window rules are re-applied, when
+    VirtuaWin is already running and a new window is opened it is either moved
+    immediately if **//Move windows immediately//** is enabled or when the window is
+    first dismissed (either by using the user dismissing the window or by
+    changing desktops).
+
+.   &[a WRD_OHWA]**//On  hidden  window  activation//**:  This  is  a  window
+    specific       setting       for      the       main       Setup       &[l
+    VirtuaWin_SetupDialog.htm#SD_OHWA]On hidden window activation&[/l] option,
+    see this option for more information. When this option is set to **Default
+    - configured in main Setup** the main Setup option's setting is used. 
+
+.   &[a WRD_MFHW]**//Method for hiding the window//**: Specifies what method should be used to hide
+    windows of this type, the standard method works well for most windows and
+    is the most efficient, however some windows (most notably Explorer,
+    IExplorer and some .NET dialogs) mysteriously disappear when this method
+    is used. To avoid this problem these windows must be hidden using the move
+    window method. The minimizing window method is the most efficient to use
+    when the taskbar button is to be kept shown.
+
+    **Note:** The Windows 'Animate windows when minimizing and maximizing'
+    performance option greatly affects the minimizing hiding method; if you
+    need to use this method of hiding it is recommended that you disable this
+    option.
+
+
+.   &[a WRD_MFHTB]**//Method for hiding taskbar button//**: Specifies what method, if any, is used
+    to hide the window’s taskbar button, the standard method is the most
+    efficient but can only be used when the window is hidden using the
+    standard method. If set to **//Show//**, VirtuaWin will not hide the taskbar
+    button, this is useful when the application uses the taskbar button to
+    show events (such as a new message etc), if the taskbar button is hidden
+    the event could be missed - only **//move window//** or **//minimizing window//** hiding
+    methods can be used with this setting. The **//Hide by using toolwin flag//** is
+    an alternative hiding method which must be used when the window’s hiding
+    method is not standard method.
+

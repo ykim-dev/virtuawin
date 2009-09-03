@@ -1,0 +1,100 @@
+&[c -!- jst -!-]
+&[c Copyright: 2008 PTC]
+&[c Created:   2008-04-22 19:56:58]
+&[vns author "Steven Phillips"]
+
+== &[vs title "Window Lists"]     
+
+=== &[a WL_SWL]Standard Window List
+
+The Standard Window List can be opened by:
+
+*.  Clicking the left mouse button on the system tray icon if Setup option &[l
+    VirtuaWin_SetupDialog.htm#SD_MOCWL]Mouse opens compact window list&[/l] is
+    disabled,  or by  clicking  the left mouse  button on the system tray icon
+    with the Shift key pressed if this option is enabled.
+
+.   Clicking the middle mouse button on the desktop if Setup option &[l
+    VirtuaWin_SetupDialog.htm#SD_EMBWLA]Enable middle button window list activation&[/l] is
+    enabled, the Shift key must be pressed if &[l
+    VirtuaWin_SetupDialog.htm#SD_MOCWL]Mouse opens compact window list&[/l] is
+    enabled.
+
+.   Binding the **//UI: Open standard window list//** command to a Hotkey and pressing
+    this Hotkey.
+
+The standard window list can be configured using Setup's &[l
+VirtuaWin_SetupDialog.htm#SD_AWLA]Available window list actions&[/l] to
+display the following columns:
+
+*.  **//Switch To//**: VirtuaWin will change the current focus to the window
+selected form this column, if the window belongs to a different desktop to the
+current VirtuaWin will also change desktops.
+ 
+*.  **//Move Here//**: A window selected from this column will be moved to the
+current desktop and given the focus; only windows not on the current desktop
+will be listed in this column.
+
+*.  **//Show//**: A window selected from this column will be shown on the
+current desktop, but it is not moved; this means the window can be &[l
+VirtuaWin_SetupDialog.htm#SD_WIN_DW]dismissed&[/l] back to its original desktop.
+
+*.  **//Always Show//**: Toggles whether a window is shown on all desktops,
+the windows icon is replaced with a tick icon if the window is currently shown
+on all desktops.
+ 
+Only the columns enabled in the **//Available window list actions//** are
+initially displayed, however all columns will be displayed if a column title
+is clicked on.
+
+**Note:** This window list form is restricted to a maximum of one screen depth
+of windows, if more windows exist than can be displayed VirtuaWin will
+automatically use a compact window list.   
+
+=== &[a WL_CWL]Compact Window List
+
+The Compact Window List can be opened by:
+
+*.  Clicking the left mouse button on the system tray icon if Setup option &[l
+    VirtuaWin_SetupDialog.htm#SD_MOCWL]Mouse opens compact window list&[/l] is
+    enabled,  or by  clicking  the left mouse  button on the system tray icon
+    with the Shift key pressed if this option is disabled.
+
+.   Clicking the middle mouse button on the desktop if Setup option &[l
+    VirtuaWin_SetupDialog.htm#SD_EMBWLA]Enable middle button window list activation&[/l] is
+    enabled, the Shift key must be pressed if &[l
+    VirtuaWin_SetupDialog.htm#SD_MOCWL]Mouse opens compact window list&[/l] is
+    disabled.
+
+.   Binding the **//UI: Open compact window list//** command to a Hotkey and pressing
+    this Hotkey.
+
+As with the **//Standard Window List//** form the compact window list can be
+used to display 4 different columns. The compact form only displays one column
+at a time, click on the title to change to the next column (or the hotkey
+'n'). The compact window list will first cycle through the columns enabled in Setup's &[l
+VirtuaWin_SetupDialog.htm#SD_AWLA]Available window list actions&[/l] and then
+cycle through all columns.
+
+Unlike the standard window list, the compact window list can display more than
+one screen depth of windows and displays more of each window's title bar text.
+
+=== &[a WL_MRUWL]MRU Window List
+
+The Most Recently Used (MRU) Window List can be opened by:
+
+*.  Clicking  the left mouse  button on the system  tray icon with the Control
+    key pressed.
+
+.   Clicking the middle mouse button on the desktop with the Control key
+    pressed if Setup option &[l VirtuaWin_SetupDialog.htm#SD_EMBWLA]Enable
+    middle button window list activation&[/l] is enabled.
+
+.   Binding the **//UI: Open most recently used window list//** command to a Hotkey and pressing
+    this Hotkey.
+
+The MRU window list displays a single list of windows, order by how recently
+they they last had the input focused (i.e. similar to the main Windows Alt+tab
+window list). VirtuaWin will change the current focus to the window selected
+from this list, VirtuaWin will also change desktops if the window belongs to a
+different desktop to the current.
