@@ -1,0 +1,434 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<HTML>
+<HEAD>
+<meta name="GENERATOR" content="Microsoft&reg; HTML Help Workshop 4.1">
+<!-- Sitemap 1.0 -->
+</HEAD><BODY>
+<UL>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="Overview">
+		<param name="Local" value="VirtuaWin_Overview.htm">
+		</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="Install/Uninstall">
+		<param name="Local" value="VirtuaWin_Install.htm">
+		</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="Functions">
+		<param name="Local" value="VirtuaWin_Functions.htm">
+		</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="Control Menu">
+		<param name="Local" value="VirtuaWin_ControlMenu.htm">
+		</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="Window Menu">
+		<param name="Local" value="VirtuaWin_WindowMenu.htm">
+		</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="Window Lists">
+		<param name="Local" value="VirtuaWin_WindowLists.htm">
+		</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="Setup Dialog">
+		<param name="Local" value="VirtuaWin_SetupDialog.htm">
+		</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="Window Rules Dialog">
+		<param name="Local" value="VirtuaWin_WindowRulesDialog.htm">
+		</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="Locking or Hiding Desktops">
+		<param name="Local" value="VirtuaWin_HidingDesktops.htm">
+		</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="External Interface">
+		<param name="Local" value="VirtuaWin_ExternalInterface.htm">
+		</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="WinList Module">
+		<param name="Local" value="VirtuaWin_WinListModule.htm">
+		</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="Configuration Files">
+		<param name="Local" value="VirtuaWin_ConfigurationFiles.htm">
+		</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="Custom Icons">
+		<param name="Local" value="VirtuaWin_CustomIcons.htm">
+		</OBJECT>
+
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="General Tab">
+		<param name="Local" value="VirtuaWin_SetupDialog.htm#General">
+	</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="Desktop Layout">
+		<param name="Local" value="VirtuaWin_SetupDialog.htm#SD_DL">
+	</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="Enable desktop wrapping">
+		<param name="Local" value="VirtuaWin_SetupDialog.htm#SD_EDW">
+	</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="Name of desktop #">
+		<param name="Local" value="VirtuaWin_SetupDialog.htm#SD_NOD">
+	</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="Available window list actions">
+		<param name="Local" value="VirtuaWin_SetupDialog.htm#SD_AWLA">
+	</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="Mouse opens compact window list">
+		<param name="Local" value="VirtuaWin_SetupDialog.htm#SD_MOCWL">
+	</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="Mouse opens compact window menu">
+		<param name="Local" value="VirtuaWin_SetupDialog.htm#SD_MOCWM">
+	</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="Hotkey opens menu or list at fixed location">
+		<param name="Local" value="VirtuaWin_SetupDialog.htm#SD_HOMLFL">
+	</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="Hotkeys Tab">
+		<param name="Local" value="VirtuaWin_SetupDialog.htm#Hotkeys">
+	</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="NAV: Move left">
+		<param name="Local" value="VirtuaWin_SetupDialog.htm#SD_NAV_ML">
+	</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="NAV: Move right">
+		<param name="Local" value="VirtuaWin_SetupDialog.htm#SD_NAV_MR">
+	</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="NAV: Move up">
+		<param name="Local" value="VirtuaWin_SetupDialog.htm#SD_NAV_MU">
+	</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="NAV: Move down">
+		<param name="Local" value="VirtuaWin_SetupDialog.htm#SD_NAV_MD">
+	</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="NAV: Move to next">
+		<param name="Local" value="VirtuaWin_SetupDialog.htm#SD_NAV_MTN">
+	</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="NAV: Move to previous">
+		<param name="Local" value="VirtuaWin_SetupDialog.htm#SD_NAV_MTP">
+	</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="NAV: Move to desktop #">
+		<param name="Local" value="VirtuaWin_SetupDialog.htm#SD_NAV_MTD">
+	</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="NAV: Return to last desktop">
+		<param name="Local" value="VirtuaWin_SetupDialog.htm#SD_NAV_RTL">
+	</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="WIN: Toggle always show">
+		<param name="Local" value="VirtuaWin_SetupDialog.htm#SD_WIN_TAS">
+	</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="WIN: Always on top">
+		<param name="Local" value="VirtuaWin_SetupDialog.htm#SD_WIN_AOT">
+	</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="WIN: Push to bottom">
+		<param name="Local" value="VirtuaWin_SetupDialog.htm#SD_WIN_PTB">
+	</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="WIN: Dismiss window">
+		<param name="Local" value="VirtuaWin_SetupDialog.htm#SD_WIN_DW">
+	</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="WIN: Gather process windows">
+		<param name="Local" value="VirtuaWin_SetupDialog.htm#SD_WIN_GPW">
+	</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="WIN: Move left">
+		<param name="Local" value="VirtuaWin_SetupDialog.htm#SD_WIN_ML">
+	</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="WIN: Move right">
+		<param name="Local" value="VirtuaWin_SetupDialog.htm#SD_WIN_MR">
+	</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="WIN: Move up">
+		<param name="Local" value="VirtuaWin_SetupDialog.htm#SD_WIN_MU">
+	</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="WIN: Move down">
+		<param name="Local" value="VirtuaWin_SetupDialog.htm#SD_WIN_MD">
+	</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="WIN: Move to next desktop">
+		<param name="Local" value="VirtuaWin_SetupDialog.htm#SD_WIN_MTN">
+	</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="WIN: Move to previous desktop">
+		<param name="Local" value="VirtuaWin_SetupDialog.htm#SD_WIN_MTP">
+	</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="WIN: Move to desktop #">
+		<param name="Local" value="VirtuaWin_SetupDialog.htm#SD_WIN_MTD">
+	</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="WIN: Move left and follow">
+		<param name="Local" value="VirtuaWin_SetupDialog.htm#SD_WIN_MLF">
+	</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="WIN: Move right and follow">
+		<param name="Local" value="VirtuaWin_SetupDialog.htm#SD_WIN_MRF">
+	</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="WIN: Move up and follow">
+		<param name="Local" value="VirtuaWin_SetupDialog.htm#SD_WIN_MUF">
+	</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="WIN: Move down and follow">
+		<param name="Local" value="VirtuaWin_SetupDialog.htm#SD_WIN_MDF">
+	</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="WIN: Move to next desktop and follow">
+		<param name="Local" value="VirtuaWin_SetupDialog.htm#SD_WIN_MTNF">
+	</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="WIN: Move to prev desktop and follow">
+		<param name="Local" value="VirtuaWin_SetupDialog.htm#SD_WIN_MTPF">
+	</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="WIN: Move to desktop # and follow">
+		<param name="Local" value="VirtuaWin_SetupDialog.htm#SD_WIN_MTDF">
+	</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="WIN: Gather all windows">
+		<param name="Local" value="VirtuaWin_SetupDialog.htm#SD_WIN_GAW">
+	</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="UI: Open standard window menu">
+		<param name="Local" value="VirtuaWin_SetupDialog.htm#SD_UI_OSWM">
+	</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="UI: Open compact window menu">
+		<param name="Local" value="VirtuaWin_SetupDialog.htm#SD_UI_OCWM">
+	</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="UI: Open standard window list">
+		<param name="Local" value="VirtuaWin_SetupDialog.htm#SD_UI_OSWL">
+	</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="UI: Open compact window list">
+		<param name="Local" value="VirtuaWin_SetupDialog.htm#SD_UI_OCWL">
+	</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="UI: Open most recently used window list">
+		<param name="Local" value="VirtuaWin_SetupDialog.htm#SD_UI_OMRU">
+	</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="UI: Open window rules setup">
+		<param name="Local" value="VirtuaWin_SetupDialog.htm#SD_UI_OWR">
+	</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="UI: Open VirtuaWin setup">
+		<param name="Local" value="VirtuaWin_SetupDialog.htm#SD_UI_OVS">
+	</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="UI: Open control menu">
+		<param name="Local" value="VirtuaWin_SetupDialog.htm#SD_UI_OCM">
+	</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="UI: Toggle enable state">
+		<param name="Local" value="VirtuaWin_SetupDialog.htm#SD_UI_TES">
+	</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="UI: Toggle display of system tray icon">
+		<param name="Local" value="VirtuaWin_SetupDialog.htm#SD_UI_TDST">
+	</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="UI: Exit VirtuaWin">
+		<param name="Local" value="VirtuaWin_SetupDialog.htm#SD_UI_EV">
+	</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="Mouse Tab">
+		<param name="Local" value="VirtuaWin_SetupDialog.htm#Mouse">
+	</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="Enable mouse desktop changing">
+		<param name="Local" value="VirtuaWin_SetupDialog.htm#SD_EMDC">
+	</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="Delay before changing desktop">
+		<param name="Local" value="VirtuaWin_SetupDialog.htm#SD_DBCD">
+	</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="Enable modifier key control">
+		<param name="Local" value="VirtuaWin_SetupDialog.htm#SD_EMKC">
+	</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="Enable desktop edge knocking">
+		<param name="Local" value="VirtuaWin_SetupDialog.htm#SD_EDEK">
+	</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="Mouse jump length">
+		<param name="Local" value="VirtuaWin_SetupDialog.htm#SD_MJL">
+	</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="Enable mouse warping">
+		<param name="Local" value="VirtuaWin_SetupDialog.htm#SD_EMW">
+	</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="Enable middle button desktop changing">
+		<param name="Local" value="VirtuaWin_SetupDialog.htm#SD_EMBDC">
+	</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="Enable middle button window list activation">
+		<param name="Local" value="VirtuaWin_SetupDialog.htm#SD_EMBWLA">
+	</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="Enable middle button window menu activation">
+		<param name="Local" value="VirtuaWin_SetupDialog.htm#SD_EMBWMA">
+	</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="Modules Tab">
+		<param name="Local" value="VirtuaWin_SetupDialog.htm#Modules">
+	</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="Expert Tab">
+		<param name="Local" value="VirtuaWin_SetupDialog.htm#Expert">
+	</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="Advanced Options">
+		<param name="Local" value="VirtuaWin_SetupDialog.htm#SD_AO">
+	</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="On desktop change preserve">
+		<param name="Local" value="VirtuaWin_SetupDialog.htm#SD_ODCP">
+	</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="On hidden window activation">
+		<param name="Local" value="VirtuaWin_SetupDialog.htm#SD_OHWA">
+	</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="Restore focus on desktop change">
+		<param name="Local" value="VirtuaWin_SetupDialog.htm#SD_RFODC">
+	</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="Invert Up/Down">
+		<param name="Local" value="VirtuaWin_SetupDialog.htm#SD_IUD">
+	</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="Hide system tray icon">
+		<param name="Local" value="VirtuaWin_SetupDialog.htm#SD_HSTI">
+	</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="Workarounds">
+		<param name="Local" value="VirtuaWin_SetupDialog.htm#SD_W">
+	</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="Enable taskbar detection">
+		<param name="Local" value="VirtuaWin_SetupDialog.htm#SD_ETD">
+	</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="Enable Windows hook">
+		<param name="Local" value="VirtuaWin_SetupDialog.htm#SD_EWH">
+	</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="Enable window specific rules">
+		<param name="Local" value="VirtuaWin_SetupDialog.htm#SD_EWSR">
+	</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="Enable dynamic taskbar button removal">
+		<param name="Local" value="VirtuaWin_SetupDialog.htm#SD_EDTBR">
+	</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="Force release of modifier keys on desktop change">
+		<param name="Local" value="VirtuaWin_SetupDialog.htm#SD_FRMKDC">
+	</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="Force refresh after desktop change">
+		<param name="Local" value="VirtuaWin_SetupDialog.htm#SD_FRADC">
+	</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="Write events to the virtuawin.log">
+		<param name="Local" value="VirtuaWin_SetupDialog.htm#SD_WETVL">
+	</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="Log Windows">
+		<param name="Local" value="VirtuaWin_SetupDialog.htm#SD_LW">
+	</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="Explore Config">
+		<param name="Local" value="VirtuaWin_SetupDialog.htm#SD_EC">
+	</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="Standard Window List">
+		<param name="Local" value="VirtuaWin_WindowLists.htm#WL_SWL">
+	</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="Compact Window List">
+		<param name="Local" value="VirtuaWin_WindowLists.htm#WL_CWL">
+	</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="MRU Window List">
+		<param name="Local" value="VirtuaWin_WindowLists.htm#WL_MRUWL">
+	</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="Identification">
+		<param name="Local" value="VirtuaWin_WindowRulesDialog.htm#Identification">
+	</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="Class Name">
+		<param name="Local" value="VirtuaWin_WindowRulesDialog.htm#WRD_CN">
+	</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="Window Name">
+		<param name="Local" value="VirtuaWin_WindowRulesDialog.htm#WRD_WN">
+	</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="Program Name">
+		<param name="Local" value="VirtuaWin_WindowRulesDialog.htm#WRD_PN">
+	</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="Window rule enabled">
+		<param name="Local" value="VirtuaWin_WindowRulesDialog.htm#WRD_WRE">
+	</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="Settings">
+		<param name="Local" value="VirtuaWin_WindowRulesDialog.htm#Settings">
+	</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="Manage windows of this type">
+		<param name="Local" value="VirtuaWin_WindowRulesDialog.htm#WRD_MWOTT">
+	</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="Main window of multiple taskbar buttons">
+		<param name="Local" value="VirtuaWin_WindowRulesDialog.htm#WRD_MWOMTB">
+	</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="Show windows of this type on all desktops">
+		<param name="Local" value="VirtuaWin_WindowRulesDialog.htm#WRD_SWOAD">
+	</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="Keep all windows of this application together">
+		<param name="Local" value="VirtuaWin_WindowRulesDialog.htm#WRD_KAWT">
+	</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="Automatically move windows of this type to Desktop">
+		<param name="Local" value="VirtuaWin_WindowRulesDialog.htm#WRD_AMWTD">
+	</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="On  hidden  window  activation">
+		<param name="Local" value="VirtuaWin_WindowRulesDialog.htm#WRD_OHWA">
+	</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="Method for hiding the window">
+		<param name="Local" value="VirtuaWin_WindowRulesDialog.htm#WRD_MFHW">
+	</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="Method for hiding taskbar button">
+		<param name="Local" value="VirtuaWin_WindowRulesDialog.htm#WRD_MFHTB">
+	</OBJECT>
+</UL>
+</BODY></HTML>
