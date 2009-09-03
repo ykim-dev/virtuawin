@@ -1,11 +1,18 @@
 [OPTIONS]
+Auto Index=Yes
 Compatibility=1.1 or later
 Compiled file=VirtuaWin.chm
 Contents file=VirtuaWin.hhc
+Default Window=Main
 Default topic=VirtuaWin_Overview.htm
 Display compile progress=No
+Full-text search=Yes
+Index file=VirtuaWin.hhk
 Language=0x409 English (United States)
 Title=VirtuaWin Help
+
+[WINDOWS]
+Main="VirtuaWin Help","VirtuaWin.hhc","VirtuaWin.hhk","VirtuaWin_Overview.htm",,,,,,0x22520,,0x304e,[0,0,640,440],,,,,,,0
 
 
 [FILES]
