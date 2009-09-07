@@ -79,6 +79,10 @@
 		<param name="Local" value="VirtuaWin_SetupDialog.htm#SD_AWLA">
 	</OBJECT>
 	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="Use desktop title lines in window list">
+		<param name="Local" value="VirtuaWin_SetupDialog.htm#SD_DTLWL">
+	</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
 		<param name="Name" value="Mouse opens compact window list">
 		<param name="Local" value="VirtuaWin_SetupDialog.htm#SD_MOCWL">
 	</OBJECT>

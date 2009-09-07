@@ -12,8 +12,7 @@ Language=0x409 English (United States)
 Title=VirtuaWin Help
 
 [WINDOWS]
-Main="VirtuaWin Help","VirtuaWin.hhc","VirtuaWin.hhk","VirtuaWin_Overview.htm",,,,,,0x22520,,0x304e,[0,0,640,440],,,,,,,0
-
+Main="VirtuaWin Help","VirtuaWin.hhc","VirtuaWin.hhk","VirtuaWin_Overview.htm",,,,,,0x22520,,0x304e,,,,,,,,0
 
 [FILES]
 VirtuaWin_Overview.htm
