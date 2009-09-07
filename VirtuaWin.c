@@ -559,13 +559,17 @@ vwIconSet(int deskNumber, int hungCount)
             ll = _stprintf(nIconD.szTip,_T("%d window%s not responding\n"),hungCount,(hungCount==1) ? _T(""):_T("s")) ;
         if(!vwEnabled)
             _tcscpy(nIconD.szTip,vwVIRTUAWIN_NAME _T(" - Disabled")); /* Tooltip */
-        else if(desktopName[deskNumber] != NULL)
-        {
-            _tcsncpy(nIconD.szTip+ll,desktopName[deskNumber],64-ll) ;
-            nIconD.szTip[63] = '\0' ;
-        }
         else
-            _stprintf(nIconD.szTip+ll,_T("Desktop %d"),deskNumber) ;
+        {
+            ll += _stprintf(nIconD.szTip+ll,_T("Desktop %d"),deskNumber) ;
+            if(desktopName[deskNumber] != NULL)
+            {
+                nIconD.szTip[ll++] = ':' ;
+                nIconD.szTip[ll++] = ' ' ;
+                _tcsncpy(nIconD.szTip+ll,desktopName[deskNumber],64-ll) ;
+                nIconD.szTip[63] = '\0' ;
+            }
+        }
         if(taskbarIconShown & 0x01)
             Shell_NotifyIcon(NIM_MODIFY, &nIconD);
         else
@@ -2834,20 +2838,14 @@ winListCreateItemList(int flags, vwMenuItem **items,int *numitems)
 {
     vwWindow *win, *ww ;
     vwMenuItem *item;
-    TCHAR fmt[16], *ss ;
-    TCHAR title[vwWINDOWNAME_MAX+18];
-    TCHAR buff[MAX_PATH];
-    int i, len, x, y, listContent=(winListContent & ~vwWINLIST_ASSIGN) ;
+    TCHAR *buff, title[vwWINDOWNAME_MAX+18] ;
+    int i, len, x, y, listContent=(winListContent & ~(vwWINLIST_ASSIGN|vwWINLIST_TITLELN)) ;
     
-    ss = fmt ;
-    *ss++ = '%' ;
-    if(nDesks > 9)
-        *ss++ = '2' ;
-#ifdef NDEBUG
-    _tcscpy(ss,_T("d - %s")) ;
-#else
-    _tcscpy(ss,_T("d - %s (%x)")) ;
-#endif
+    buff = title + ((nDesks > 9) ? 2:1) ;
+    *buff++ = ' ' ;
+    *buff++ = '-' ;
+    *buff++ = ' ' ;
+    
     // create the window list
     vwMutexLock();
     windowListUpdate() ;
@@ -2883,12 +2881,20 @@ winListCreateItemList(int flags, vwMenuItem **items,int *numitems)
         {
             HICON hSmallIcon ;
             
+            if(nDesks <= 9)
+                title[0] = win->desk + '0' ;
+            else if(win->desk >= 10)
+            {
+                title[0] = (win->desk / 10) + '0' ;
+                title[1] = (win->desk % 10) + '0' ;
+            }
+            else
+            {
+                title[0] = ' ' ;
+                title[1] = win->desk + '0' ;
+            }
             GetWindowText(win->handle, buff, len);
-#ifdef NDEBUG
-            _stprintf(title,fmt,win->desk,buff);
-#else
-            _stprintf(title,fmt,win->desk,buff,(int) win->handle);
-#endif
+            
             if(((item = malloc(sizeof(vwMenuItem))) == NULL) ||
                ((item->name = _tcsdup(title)) == NULL))
             {
@@ -2947,7 +2953,7 @@ winListCreateItemList(int flags, vwMenuItem **items,int *numitems)
             }
             item->icon = hSmallIcon ;
             if(((item->desk = win->desk) != currentDesk) && vwWindowIsNotSticky(win))
-                listContent = winListContent ;
+                listContent = (winListContent & ~vwWINLIST_TITLELN) ;
             item->sticky = vwWindowIsSticky(win);
             item->id = i ;
             win->menuId = (vwUByte) i ;
@@ -2977,6 +2983,15 @@ winListCreateItemList(int flags, vwMenuItem **items,int *numitems)
         x = vwPMENU_MRU|vwPMENU_MULTICOL ;
     else
     {
+        if(winListContent & vwWINLIST_TITLELN)
+        {
+            y = i ;
+            while(--y >= 0)
+            {
+                items[y]->name[1] = '-' ;
+                items[y]->name[0] = items[y]->name[2] = items[y]->name[3] = ' ' ;
+            }
+        }
         x = listContent << 8 ;
         if(listContent != vwWINLIST_ASSIGN)
             x |= vwPMENU_ALLWIN ;
@@ -2996,11 +3011,34 @@ winListCreateItemList(int flags, vwMenuItem **items,int *numitems)
     return x ;
 }
 
+static void
+winListCreateMenuTitleLine(HMENU hMenu, MENUITEMINFO *minfo, int offset, int desktopNo)
+{
+    TCHAR buff[40], *ss ;
+    
+    _tcscpy(buff,_T("Desktop ")) ;
+    ss = buff + 8 ;
+    if(desktopNo >= 10)
+        *ss++ = (desktopNo/10)+'0' ;
+    *ss++ = (desktopNo%10)+'0' ;
+    *ss++ = ':' ;
+    if(desktopName[desktopNo] != NULL)
+    {
+        *ss++ = ' ' ;
+        _tcsncpy(ss,desktopName[desktopNo],20) ;
+        ss[19] = '\0' ;
+    }
+    else
+        *ss = '\0' ;
+    AppendMenu(hMenu,MF_STRING | MF_DISABLED,offset+desktopNo,buff) ;
+    SetMenuItemInfo(hMenu,offset+desktopNo,FALSE,minfo) ;
+}
+
 static HMENU
 winListCreateMenu(int flags, int itemCount, vwMenuItem **items)
 {
     MENUITEMINFO minfo ;
-    HMENU hMenu;
+    HMENU hMenu ;
     int c, x, divFlags, itemsPerCol, itemsAllowed ;
     
     if((hMenu = CreatePopupMenu()) == NULL)
@@ -3021,23 +3059,28 @@ winListCreateMenu(int flags, int itemCount, vwMenuItem **items)
         for(x=0 ; x < itemCount ; x++)
         {
             AppendMenu(hMenu,((--itemsAllowed == 0) ? ((itemsAllowed = itemsPerCol),(MF_OWNERDRAW|MF_MENUBARBREAK)):MF_OWNERDRAW),
-                       vwPMENU_ACCESS | (items[x]->id), (const TCHAR *) items[x]);
+                       vwPMENU_ACCESS | (items[x]->id),(const TCHAR *) items[x]) ;
         }
     }
     if(flags & vwPMENU_ACCESS)
     {
         AppendMenu(hMenu,divFlags,vwPMENU_ACCESS,(flags & vwPMENU_COMPACT) ? _T("Switch To  (&Next ->)"):_T("Switch To"));
         SetMenuItemInfo(hMenu,vwPMENU_ACCESS,FALSE,&minfo) ;
-        AppendMenu(hMenu,MF_SEPARATOR,0,NULL);
+        AppendMenu(hMenu, MF_SEPARATOR, 0, NULL );
         divFlags |= MF_MENUBARBREAK ;
         itemsAllowed = itemsPerCol - 1 ; 
         for(x=0,c=0 ; x < itemCount ; x++)
         {
-            if((c != 0) && (c != items[x]->desk))
-                AppendMenu(hMenu, MF_SEPARATOR, 0, NULL );
-            c = items[x]->desk;
+            if(c != items[x]->desk)
+            {
+                if(c != 0)
+                    AppendMenu(hMenu, MF_SEPARATOR, 0, NULL );
+                c = items[x]->desk;
+                if(winListContent & vwWINLIST_TITLELN)
+                    winListCreateMenuTitleLine(hMenu,&minfo,0,c) ;
+            }
             AppendMenu(hMenu,((--itemsAllowed == 0) ? ((itemsAllowed = itemsPerCol),(MF_OWNERDRAW|MF_MENUBARBREAK)):MF_OWNERDRAW),
-                       vwPMENU_ACCESS | (items[x]->id), (const TCHAR *) items[x] );
+                       vwPMENU_ACCESS | (items[x]->id),(const TCHAR *) items[x]) ;
         }
     }
     if(flags & vwPMENU_ASSIGN)
@@ -3052,12 +3095,22 @@ winListCreateMenu(int flags, int itemCount, vwMenuItem **items)
             //cannot assign windows already on the current Desktop
             if((items[x]->desk != currentDesk) || (flags & vwPMENU_ALLWIN))
             {
-                if((c != 0) && (c != items[x]->desk))
-                    AppendMenu(hMenu, MF_SEPARATOR, 0, NULL );
-                c = items[x]->desk;
+                if(c != items[x]->desk)
+                {
+                    if(c != 0)
+                        AppendMenu(hMenu, MF_SEPARATOR, 0, NULL );
+                    c = items[x]->desk;
+                    if(winListContent & vwWINLIST_TITLELN)
+                    {
+                        if(items[x]->desk != currentDesk)
+                            winListCreateMenuTitleLine(hMenu,&minfo,vwDESKTOP_SIZE,c) ;
+                        else
+                            AppendMenu(hMenu,MF_DISABLED,0,"") ;
+                    }
+                }
                 if(items[x]->desk != currentDesk)
                     AppendMenu(hMenu, ((--itemsAllowed == 0) ? ((itemsAllowed = itemsPerCol),(MF_OWNERDRAW|MF_MENUBARBREAK)):MF_OWNERDRAW),
-                               (vwPMENU_ASSIGN | (items[x]->id)), (const TCHAR *) items[x] );
+                               (vwPMENU_ASSIGN | (items[x]->id)),(const TCHAR *) items[x]) ;
                 else
                     /* Make it a separator so cursor movement skips this line */
                     AppendMenu(hMenu,((--itemsAllowed == 0) ? ((itemsAllowed = itemsPerCol),(MF_OWNERDRAW|MF_MENUBARBREAK|MF_SEPARATOR)):(MF_OWNERDRAW|MF_SEPARATOR)), 0, 0) ;
@@ -3073,9 +3126,14 @@ winListCreateMenu(int flags, int itemCount, vwMenuItem **items)
         itemsAllowed = itemsPerCol - 1 ; 
         for(x=0,c=0 ; x < itemCount ; x++)
         {
-            if((c != 0) && (c != items[x]->desk))
-                AppendMenu(hMenu, MF_SEPARATOR, 0, NULL );
-            c = items[x]->desk;
+            if(c != items[x]->desk)
+            {
+                if(c != 0)
+                    AppendMenu(hMenu, MF_SEPARATOR, 0, NULL );
+                c = items[x]->desk;
+                if(winListContent & vwWINLIST_TITLELN)
+                    winListCreateMenuTitleLine(hMenu,&minfo,vwDESKTOP_SIZE+vwDESKTOP_SIZE,c) ;
+            }
             AppendMenu(hMenu,((--itemsAllowed == 0) ? ((itemsAllowed = itemsPerCol),(MF_OWNERDRAW|MF_MENUBARBREAK)):MF_OWNERDRAW),
                        vwPMENU_SHOW | (items[x]->id), (const TCHAR *) items[x] );
         }
@@ -3089,9 +3147,14 @@ winListCreateMenu(int flags, int itemCount, vwMenuItem **items)
         itemsAllowed = itemsPerCol - 1 ; 
         for(x=0,c=0 ; x < itemCount ; x++)
         {
-            if((c != 0) && (c != items[x]->desk))
-                AppendMenu(hMenu, MF_SEPARATOR, 0, NULL );
-            c = items[x]->desk;
+            if(c != items[x]->desk)
+            {
+                if(c != 0)
+                    AppendMenu(hMenu, MF_SEPARATOR, 0, NULL );
+                c = items[x]->desk;
+                if(winListContent & vwWINLIST_TITLELN)
+                    winListCreateMenuTitleLine(hMenu,&minfo,vwDESKTOP_SIZE+vwDESKTOP_SIZE+vwDESKTOP_SIZE,c) ;
+            }
             AppendMenu(hMenu, MF_OWNERDRAW | (items[x]->sticky ? MF_CHECKED: 0) | ((--itemsAllowed == 0) ? ((itemsAllowed = itemsPerCol),MF_MENUBARBREAK):0),
                        vwPMENU_STICKY | (items[x]->id), (const TCHAR *) items[x] );
         }
@@ -3735,7 +3798,7 @@ popupWindowMenu(HWND theWin, int wmFlags)
     vwWindowRule *wt=NULL ;
     vwWindow *win ;
     HMENU hpopup, moveMenu=NULL ;
-    TCHAR buff[20];
+    TCHAR buff[40];
     POINT pt ;
     HWND pWin ;
     int style, ii ;
@@ -3779,13 +3842,22 @@ popupWindowMenu(HWND theWin, int wmFlags)
             return ;
         }
         else
-            AppendMenu(hpopup,MF_POPUP,(UINT_PTR) moveMenu,_T("Mo&ve to Desk"));
-        _tcscpy(buff,_T("Move to Desk & ")) ;
+            AppendMenu(hpopup,MF_POPUP,(UINT_PTR) moveMenu,_T("Mo&ve to Desktop"));
+        _tcscpy(buff,_T("Move to Desktop & ")) ;
         for(ii = 1 ; ii <= nDesks ; ii++)
         {
             if(ii >= 10)
-                buff[13] = (ii/10)+'0' ;
-            buff[14] = (ii%10)+'0' ;
+                buff[16] = (ii/10)+'0' ;
+            buff[17] = (ii%10)+'0' ;
+            if(desktopName[ii] != NULL)
+            {
+                buff[18] = ':' ;
+                buff[19] = ' ' ;
+                _tcsncpy(buff+20,desktopName[ii],20) ;
+                buff[39] = '\0' ;
+            }
+            else
+                buff[18] = '\0' ;
             AppendMenu(moveMenu,(ii == currentDesk) ? (MF_STRING|MF_GRAYED):MF_STRING,ID_WM_DESK+ii,buff) ;
         }
         wt = vwWindowRuleFind(theWin,(vwWindowRule *) win->zOrder[0]) ;
@@ -4066,7 +4138,7 @@ popupWinListMenu(HWND aHWnd, int wlFlags)
             wlcFlags |= vwPMENU_ALLWIN|vwPMENU_ACCESS|vwPMENU_ASSIGN|vwPMENU_SHOW|vwPMENU_STICKY ;
     }
             
-    if(retItem & vwPMENU_ID_MASK)
+    if((retItem & vwPMENU_COL_MASK) && (retItem & vwPMENU_ID_MASK))
     {
         vwWindow *win ;
         vwUInt flags=0 ;

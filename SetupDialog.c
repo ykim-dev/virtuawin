@@ -190,6 +190,8 @@ setupGeneral(HWND hDlg, UINT message, UINT wParam, LONG lParam)
                 SendDlgItemMessage(hDlg, IDC_MENUSHOW, BM_SETCHECK, 1, 0);
             if(winListContent & vwWINLIST_STICKY)
                 SendDlgItemMessage(hDlg, IDC_MENUSTICKY, BM_SETCHECK, 1, 0);
+            if(winListContent & vwWINLIST_TITLELN)
+                SendDlgItemMessage(hDlg, IDC_WLUSETTLLN, BM_SETCHECK, 1, 0);
 
             /* Currect desktop properties */
             initDesktopProperties() ;
@@ -248,6 +250,8 @@ setupGeneral(HWND hDlg, UINT message, UINT wParam, LONG lParam)
                 winListContent |= vwWINLIST_SHOW ;
             if(SendDlgItemMessage(hDlg, IDC_MENUSTICKY, BM_GETCHECK, 0, 0) == BST_CHECKED)
                 winListContent |= vwWINLIST_STICKY ;
+            if(SendDlgItemMessage(hDlg, IDC_WLUSETTLLN, BM_GETCHECK, 0, 0) == BST_CHECKED)
+                winListContent |= vwWINLIST_TITLELN ;
             storeDesktopProperties() ;
             
             vwSetupApply(hDlg,0x01) ;
@@ -301,6 +305,7 @@ setupGeneral(HWND hDlg, UINT message, UINT wParam, LONG lParam)
                  (wPar == IDC_MENUMOVE)    || (wPar == IDC_COMPACTWMENU)  ||
                  (wPar == IDC_MENUSHOW)    || (wPar == IDC_MENUSTICKY)    ||
                  (wPar == IDC_MENUACCESS)  || (wPar == IDC_HOTKEYMENULOC) ||
+                 (wPar == IDC_WLUSETTLLN)  ||
                  (wPar == IDC_DESKTOPNAME  && HIWORD(wParam) == EN_CHANGE)))
         {
             pageChangeMask |= 0x01 ;

@@ -28,6 +28,7 @@
 #define vwWINLIST_ASSIGN   0x02
 #define vwWINLIST_SHOW     0x04
 #define vwWINLIST_STICKY   0x08
+#define vwWINLIST_TITLELN  0x40
 
 extern HWND    dialogHWnd;         // handle to the setup dialog, NULL if not open
 extern int     dialogPos[2];       // Where to place the dialog         
