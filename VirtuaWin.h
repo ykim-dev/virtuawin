@@ -74,6 +74,7 @@ void vwHotkeyUnregister(int unregAll) ;
 void getWorkArea(void) ;
 int  windowListUpdate(void) ;
 void vwWindowRuleReapply(void) ;
+void setForegroundWin(HWND theWin, int makeTop) ;
 int  assignWindow(HWND theWin, int theDesk, vwUByte follow, vwUByte force, vwUByte setActive);
 int  gotoDesk(int theDesk, vwUByte force);
 void showHelp(HWND aHWnd, TCHAR *topic);
