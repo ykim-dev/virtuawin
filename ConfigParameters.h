@@ -52,6 +52,7 @@ extern vwUByte hiddenWindowAct;    // Hidden window activation action
 extern vwUByte taskButtonAct;	   // Hidden window but visible task button activation action
 extern vwUByte releaseFocus;       // release focus on switch
 extern vwUByte refreshOnWarp;      // if we should refresh desktop after switch
+extern vwUByte initialDesktop;     // The desktop to start on, usually 1
 extern vwUByte deskWrap;           // If we want to have desktop cycling
 extern vwUByte invertY;            // if up/down should be inverted
 extern vwUByte displayTaskbarIcon; // Should we display the systray icon

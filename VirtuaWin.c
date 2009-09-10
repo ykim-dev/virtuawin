@@ -157,6 +157,7 @@ vwUByte taskButtonAct = 0 ;
 vwUByte vwLogFlag = 0 ;
 vwUByte releaseFocus = 0 ;	
 vwUByte refreshOnWarp = 0 ;     
+vwUByte initialDesktop = 0 ;          
 vwUByte deskWrap = 0 ;          
 vwUByte invertY = 0 ;           
 vwUByte hotkeyMenuLoc = 0 ;
@@ -289,6 +290,8 @@ vwKeyboardTestModifier(vwUByte modif)
 
 /*************************************************
  * Checks if mouse button pressed on title bar (i.e. dragging window)
+ * Returns 0 = no button down, 1 = left but down on window caption, 2 = Middle down on window caption
+ * 3 = middle down on desktop, 4 = middle down on taskbar, 5 = button(s) down and not one of the others 
  */
 static unsigned char
 checkMouseState(int force)
@@ -319,22 +322,30 @@ checkMouseState(int force)
     }
     if((thisBState != lastBState) || (force && (thisBState == 1)))
     {
-        lastState = (thisBState) ? 4:0 ;
+        lastState = (thisBState) ? 5:0 ;
         if((thisBState == 1) || (thisBState == 2))
         {
             GetCursorPos(&pt);
-            if(((hwnd=WindowFromPoint(pt)) == deskIconHWnd) || (hwnd == desktopHWnd))
+            if((hwnd=WindowFromPoint(pt)) != NULL)
             {
-                if(thisBState == 2)
-                    lastState = 3 ;
-            }
-            else if((hwnd != NULL) && (hwnd != taskHWnd))
-            {
-                lParam = (((int)(short) pt.y) << 16) | (0x0ffff & ((int)(short) pt.x)) ;
-                if((SendMessageTimeout(hwnd,WM_NCHITTEST,0,lParam,SMTO_ABORTIFHUNG|SMTO_BLOCK,50,&rr) ||
-                    (Sleep(1),SendMessageTimeout(hwnd,WM_NCHITTEST,0,lParam,SMTO_ABORTIFHUNG|SMTO_BLOCK,100,&rr))) &&
-                   (rr == HTCAPTION))
-                    lastState = thisBState ;
+                if((hwnd == deskIconHWnd) || (hwnd == desktopHWnd))
+                {
+                    if(thisBState == 2)
+                        lastState = 3 ;
+                }
+                else if((hwnd == taskHWnd) || (hwnd == taskbarBCHWnd))
+                {
+                    if(thisBState == 2)
+                        lastState = 4 ;
+                }
+                else
+                {
+                    lParam = (((int)(short) pt.y) << 16) | (0x0ffff & ((int)(short) pt.x)) ;
+                    if((SendMessageTimeout(hwnd,WM_NCHITTEST,0,lParam,SMTO_ABORTIFHUNG|SMTO_BLOCK,50,&rr) ||
+                        (Sleep(1),SendMessageTimeout(hwnd,WM_NCHITTEST,0,lParam,SMTO_ABORTIFHUNG|SMTO_BLOCK,100,&rr))) &&
+                       (rr == HTCAPTION))
+                        lastState = thisBState ;
+                }
             }
         }
         vwLogVerbose((_T("Got new state %d (%d %d %d %x %d) %x %x %x\n"),(int) lastState,(int) thisBState,pt.x,pt.y,hwnd,rr,desktopHWnd,deskIconHWnd,taskHWnd)) ;
@@ -364,7 +375,7 @@ vwMouseProc(LPVOID lpParameter)
         mode = checkMouseState(0) ;
         if(mouseEnable & 0x0c)
         {
-            if(mode == 3)
+            if((mode == 3) || (mode == 4))
             {
                 GetCursorPos(&pt);
                 if(wlistState == 0)
@@ -378,7 +389,15 @@ vwMouseProc(LPVOID lpParameter)
                     if((ii=(mouseJumpLength >> 1)) < 10)
                         ii = 10 ;
                     newPos = -1 ;
-                    if(abs(pt.x - wlistX) < abs(pt.y - wlistY))
+                    
+                    if(mode == 4)
+                    {
+                        if((pt.x - wlistX) >= ii)
+                            newPos = 7 ;
+                        else if((wlistX - pt.x) >= ii)
+                            newPos = 6 ;
+                    }
+                    else if(abs(pt.x - wlistX) < abs(pt.y - wlistY))
                     {
                         if((pt.y - wlistY) >= ii)
                             newPos = 3 ;
@@ -1411,7 +1430,7 @@ vwWindowRuleFind(HWND hwnd, vwWindowRule *owt)
  * Forces a window into the foreground. Must be done in this way to avoid
  * the flashing in the taskbar insted of actually changing active window.
  */
-static void
+void
 setForegroundWin(HWND theWin, int makeTop)
 {
     HWND cwHwnd, setHwnd=theWin ;
@@ -4388,10 +4407,17 @@ wndProc(HWND aHWnd, UINT message, WPARAM wParam, LPARAM lParam)
                 /* window list */
                 popupWinListMenu(aHWnd,(HIWORD(GetKeyState(VK_CONTROL))) ? 6:(HIWORD(GetKeyState(VK_SHIFT))) ? (winListCompact ^ 5):(winListCompact | 4)) ;
                 break;
-            
             case 5:
                 /* window menu */
                 popupWindowMenu(GetForegroundWindow(),winMenuCompact);
+                break;
+            case 6:
+                /* previous */
+                stepDelta(-1) ;
+                break;
+            case 7:
+                /* next */
+                stepDelta(1) ;
                 break;
             }
         }
@@ -4935,7 +4961,12 @@ VirtuaWinInit(HINSTANCE hInstance, LPSTR cmdLine)
         vwLogFile = _tfopen(logFname,_T("w+")) ;
         vwLogBasic((vwVIRTUAWIN_NAME_VERSION _T("\n"))) ;
     }
-    
+    if(initialDesktop && (initialDesktop <= nDesks))
+    {
+        currentDesk = initialDesktop ;
+        currentDeskY = ((currentDesk - 1) / nDesksX) + 1 ;
+        currentDeskX = nDesksX + currentDesk - (currentDeskY * nDesksX) ;
+    }
     /* Fix some things for the alternate hide method */
     RM_Shellhook = RegisterWindowMessage(_T("SHELLHOOK"));
     vwTaskbarHandleGet();

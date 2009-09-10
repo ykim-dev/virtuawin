@@ -740,6 +740,7 @@ loadVirtuawinConfig(void)
         vwConfigReadInt(fp,buff,ii,hotkeyMenuLoc);
         vwConfigReadInt(fp,buff,ii,vwHookUse);
         vwConfigReadInt(fp,buff,ii,useDskChgModRelease);
+        vwConfigReadInt(fp,buff,ii,initialDesktop);
     }
     else
     {
@@ -806,6 +807,7 @@ saveVirtuawinConfig(void)
         fprintf(fp, "hotkeyMenuLoc# %d\n", hotkeyMenuLoc);
         fprintf(fp, "vwHookUse# %d\n", vwHookUse);
         fprintf(fp, "useDskChgModRelease# %d\n", useDskChgModRelease);
+        fprintf(fp, "initialDesktop# %d\n", initialDesktop);
         fclose(fp);
     }
 }
