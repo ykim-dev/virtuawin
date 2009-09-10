@@ -158,7 +158,6 @@ setupGeneral(HWND hDlg, UINT message, UINT wParam, LONG lParam)
             setupKeysHWnd = hDlg ;
             pageChangeMask = 0 ;
             pageApplyMask = 0 ;
-            SetWindowPos(dialogHWnd, 0, dialogPos[0], dialogPos[1], 0, 0, SWP_NOZORDER | SWP_NOSIZE | SWP_NOACTIVATE);
             
             SetDlgItemInt(hDlg, IDC_DESKY, nDesksY, FALSE);
             SetDlgItemInt(hDlg, IDC_DESKX, nDesksX, FALSE);
@@ -195,6 +194,8 @@ setupGeneral(HWND hDlg, UINT message, UINT wParam, LONG lParam)
 
             /* Currect desktop properties */
             initDesktopProperties() ;
+            setForegroundWin(dialogHWnd,1);
+            SetWindowPos(dialogHWnd,HWND_NOTOPMOST,dialogPos[0],dialogPos[1],0,0,SWP_NOSIZE | SWP_NOACTIVATE) ;
             return TRUE ;
         }
         
@@ -1138,7 +1139,6 @@ propCallBack( HWND hwndDlg, UINT uMsg, LPARAM lParam )
     switch(uMsg)
     {
     case PSCB_PRECREATE:
-        
         // Removes the question mark button in the title bar
         ptr = (DLGTEMPLATE*)lParam;
         ptr->style = ptr->style ^ (DS_CONTEXTHELP | DS_CENTER); 
