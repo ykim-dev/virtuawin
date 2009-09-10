@@ -1,1 +1,1 @@
-VirtuaWin.coff VirtuaWin.res vc60.pch
+VirtuaWin.coff VirtuaWin.res vc60.pch *.od vwHook.dll vwHook.lib vwHook.exp
