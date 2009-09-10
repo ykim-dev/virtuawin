@@ -1,18 +1,20 @@
 ***   VirtuaWin Revision History   ***
 --------------------------------------
 
-Ver 4.1 beta3 2009/09/??
+Ver 4.1 2009/09/09
 
 * Improved the windows help file, now has index and search enabled.
+* 2727927 Extended middle mouse button desktop change & open winlist to
+  include the taskbar
+* 2854161 Added a hidden 'start desktop' config option (.cfg file must be
+  hand edited)
+* 2797845 Improved return to last desktop command to support a rapid switch  
 * 2682854 Added XP theme support for setup dialog and fixed several rc issues
-* 2448910 Added option to install for current user or for all users.
-* 2789338 improved error messages in case of corrupt or zero byte config file.
-* 2134867 Added "Force release of modifier keys on desktop change" expert option.
-* 2189263 Added improved init and system setup logging and added potential fix.
-* 2306168 Fixed setting of last active window when only preserving the Z-order.
-
-Ver 4.1 beta2 2008/10/03
-
+* 2448910 Added option to install for current user or for all users
+* 2789338 Improved error messages in case of corrupt or zero byte config file
+* 2134867 Added "Force release of modifier keys on desktop change" option
+* 2189263 Added improved init and system setup logging and added potential fix
+* 2306168 Fixed setting of last active window when only preserving the Z-order
 * 1842145 Implemented global system hook to detect window activations -
   new config expert setting
 * 1971856 Added option to open menus at fix locations when hotkey is used
@@ -21,9 +23,6 @@ Ver 4.1 beta2 2008/10/03
 * 1942881 Fixed Z-Order of windows assigned immediately to another desktop.
 * 2036553 2036555 Implemented systray icon toggle and exit hotkey commands.
 * 2089761 Increased the max number of hotkeys to 80
-
-Ver 4.1 beta1 2008/06/03
-
 * 1869917 Added new dynamic taskbar order feature to support Taskbar shuffle.
 * Added dynamic taskbar button removal option as a better fix to long
   standing issue.
