@@ -3,7 +3,7 @@
 //  VirtuaWin.c - Core VirtuaWin routines.
 // 
 //  Copyright (c) 1999-2005 Johan Piculell
-//  Copyright (c) 2006-2008 VirtuaWin (VirtuaWin@home.se)
+//  Copyright (c) 2006-2009 VirtuaWin (VirtuaWin@home.se)
 // 
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by

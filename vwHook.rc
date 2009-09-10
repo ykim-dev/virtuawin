@@ -32,7 +32,7 @@ BEGIN
             VALUE "FileDescription", vwVIRTUAWIN_NAME_VERSION "\0"
             VALUE "FileVersion", "4.1.0.5\0"
             VALUE "InternalName", vwVIRTUAWIN_NAME " system hook\0"
-            VALUE "LegalCopyright", "Copyright © 1999-2008\0"
+            VALUE "LegalCopyright", "Copyright © 1999-2009\0"
             VALUE "OriginalFilename", "vwHook.dll\0"
             VALUE "ProductName", vwVIRTUAWIN_NAME "\0"
             VALUE "ProductVersion", "4.1.0.5\0"

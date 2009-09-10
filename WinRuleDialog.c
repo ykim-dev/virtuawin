@@ -2,7 +2,7 @@
 //  VirtuaWin - Virtual Desktop Manager (virtuawin.sourceforge.net)
 //  WinRuleDialog.c - Window Rule Dialog routines.
 // 
-//  Copyright (c) 2007-2008 VirtuaWin (VirtuaWin@home.se)
+//  Copyright (c) 2007-2009 VirtuaWin (VirtuaWin@home.se)
 // 
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by

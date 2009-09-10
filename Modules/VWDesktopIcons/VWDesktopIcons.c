@@ -2,7 +2,7 @@
  *  VirtuaWin - Virtual Desktop Manager (virtuawin.sourceforge.net)
  *  VWDesktopIcons.c - Module to control which icons are displayed on each desktop.
  * 
- *  Copyright (c) 2006-2008 VirtuaWin (VirtuaWin@home.se)
+ *  Copyright (c) 2006-2009 VirtuaWin (VirtuaWin@home.se)
  * 
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by

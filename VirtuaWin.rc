@@ -152,7 +152,7 @@ BEGIN
     GROUPBOX        vwVIRTUAWIN_NAME_VERSION, IDC_STATIC, 4, 5, 202, 91, 0x0300
     ICON            IDI_VIRTUAWIN, IDC_STATIC, 95, 16, 20, 20
     LTEXT           "Copyright (c) 1999-2005 Johan Piculell", IDC_STATIC, 35, 40, 150, 8
-    LTEXT           "Copyright (c) 2006-2008 VirtuaWin", IDC_STATIC, 35, 50, 150, 8
+    LTEXT           "Copyright (c) 2006-2009 VirtuaWin", IDC_STATIC, 35, 50, 150, 8
     LTEXT           vwVIRTUAWIN_EMAIL, IDC_MAILTO, 50, 60, 190, 8, 0x0100
     LTEXT           "Latest version, info, source, etc. visit:", IDC_STATIC, 35, 72, 150, 8
     LTEXT           vwVIRTUAWIN_WEBSITE, IDC_HTTP, 50, 82, 190, 10, 0x0100
@@ -240,7 +240,7 @@ BEGIN
             VALUE "FileDescription", vwVIRTUAWIN_NAME_VERSION "\0"
             VALUE "FileVersion", "4.1.0.5\0"
             VALUE "InternalName", vwVIRTUAWIN_NAME "\0"
-            VALUE "LegalCopyright", "Copyright © 1999-2008\0"
+            VALUE "LegalCopyright", "Copyright © 1999-2009\0"
             VALUE "OriginalFilename", vwVIRTUAWIN_NAME ".exe\0"
             VALUE "ProductName", vwVIRTUAWIN_NAME "\0"
             VALUE "ProductVersion", "4.1.0.5\0"
