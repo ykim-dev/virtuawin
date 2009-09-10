@@ -103,8 +103,13 @@ mv Defines.h.tmp Defines.h
 cat VirtuaWin.rc | ${SED} -e "s/^ FILEVERSION .*/ FILEVERSION ${ver_mjr},${ver_mnr},${ver_rev},${ver_bno}/" > VirtuaWin.rc.tmp
 cat VirtuaWin.rc.tmp | ${SED} -e "s/^ PRODUCTVERSION .*/ PRODUCTVERSION ${ver_mjr},${ver_mnr},${ver_rev},${ver_bno}/" > VirtuaWin.rc
 cat VirtuaWin.rc | ${SED} -e "s/ VALUE \"FileVersion\", \"[.0-9]*\\\\0\"/ VALUE \"FileVersion\", \"${ver_mjr}.${ver_mnr}.${ver_rev}.${ver_bno}\\\\0\"/" > VirtuaWin.rc.tmp
-cat VirtuaWin.rc.tmp | ${SED} -e "s/ VALUE \"ProductVersion\", \"[.0-9]*\\\\0\"/ VALUE \"FileVersion\", \"${ver_mjr}.${ver_mnr}.${ver_rev}.${ver_bno}\\\\0\"/" > VirtuaWin.rc
+cat VirtuaWin.rc.tmp | ${SED} -e "s/ VALUE \"ProductVersion\", \"[.0-9]*\\\\0\"/ VALUE \"ProductVersion\", \"${ver_mjr}.${ver_mnr}.${ver_rev}.${ver_bno}\\\\0\"/" > VirtuaWin.rc
 rm VirtuaWin.rc.tmp
+cat vwHook.rc | ${SED} -e "s/^ FILEVERSION .*/ FILEVERSION ${ver_mjr},${ver_mnr},${ver_rev},${ver_bno}/" > vwHook.rc.tmp
+cat vwHook.rc.tmp | ${SED} -e "s/^ PRODUCTVERSION .*/ PRODUCTVERSION ${ver_mjr},${ver_mnr},${ver_rev},${ver_bno}/" > vwHook.rc
+cat vwHook.rc | ${SED} -e "s/ VALUE \"FileVersion\", \"[.0-9]*\\\\0\"/ VALUE \"FileVersion\", \"${ver_mjr}.${ver_mnr}.${ver_rev}.${ver_bno}\\\\0\"/" > vwHook.rc.tmp
+cat vwHook.rc.tmp | ${SED} -e "s/ VALUE \"ProductVersion\", \"[.0-9]*\\\\0\"/ VALUE \"ProductVersion\", \"${ver_mjr}.${ver_mnr}.${ver_rev}.${ver_bno}\\\\0\"/" > vwHook.rc
+rm vwHook.rc.tmp
 cat Help/VirtuaWin_Overview.htm | ${SED} -e "s/VirtuaWin v[.0-9]* Help/VirtuaWin v${ver_mjr}.${ver_mnr} Help/" > Help/VirtuaWin_Overview.htm.tmp
 mv Help/VirtuaWin_Overview.htm.tmp Help/VirtuaWin_Overview.htm
 cat WinList/winlist.rc | ${SED} -e "s/^CAPTION \"WinList v.*\"/CAPTION \"WinList v$version\"/" > WinList/winlist.rc.tmp
