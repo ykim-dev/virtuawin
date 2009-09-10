@@ -51,6 +51,7 @@ OBJSD   = $(SRC:.c=.od)
 HOOKTGT = vwHook.dll
 HOOKSRC = vwHook.c
 HOOKOBJ = $(HOOKSRC:.c=.o)
+HOOKRES = vwHook.res
 
 .SUFFIXES: .rc .res .coff .c .o .od
 .c.o:
@@ -70,11 +71,11 @@ $(TARGET): $(OBJS) $(OBJRES)
 $(TARGETD): $(OBJSD) $(OBJRES)
 	$(LD) $(LDFLAGSD) /out:$@ $(OBJSD) $(OBJRES) $(LIBS)
 
-$(HOOKTGT): $(HOOKOBJ)
-	$(LD) $(LDFLAGS) /dll /out:$@ $(HOOKOBJ) $(LIBS)
+$(HOOKTGT): $(HOOKOBJ) $(HOOKRES)
+	$(LD) $(LDFLAGS) /dll /out:$@ $(HOOKOBJ) $(HOOKRES) $(LIBS)
 
 clean: 
-	- erase $(OBJS) $(OBJSD) $(OBJRES) vc60.pch $(HOOKOBJ)
+	- erase $(OBJS) $(OBJSD) $(OBJRES) $(HOOKRES) vc60.pch $(HOOKOBJ) vwHook.lib vwHook.exp
 
 all_clean:   clean all
 

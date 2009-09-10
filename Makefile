@@ -77,6 +77,8 @@ OBJSD   = $(SRC:.c=.od)
 HOOKTGT = vwHook.dll
 HOOKSRC = vwHook.c
 HOOKOBJ = $(HOOKSRC:.c=.o)
+HOOKCFF = vwHook.coff
+HOOKRES = vwHook.res
 
 .SUFFIXES: .rc .res .coff .c .o .od
 .c.o:
@@ -98,12 +100,15 @@ $(TARGETD): $(OBJSD) $(COFFS)
 VirtuaWin.coff: VirtuaWin.rc
 	$(RC) $(CUCDEFS) --input-format rc --output-format coff -o $@ -i $<
 
-$(HOOKTGT): $(HOOKOBJ)
-	$(CC) $(DLLFLAGS) -o $(HOOKTGT) $(HOOKOBJ) $(LIBS)
+$(HOOKCFF): vwHook.rc
+	$(RC) $(CUCDEFS) --input-format rc --output-format coff -o $@ -i $<
+
+$(HOOKTGT): $(HOOKOBJ) $(HOOKCFF)
+	$(CC) $(DLLFLAGS) -o $(HOOKTGT) $(HOOKOBJ) $(HOOKCFF) $(LIBS)
 	$(STRIP) $(HOOKTGT)
 
 clean: 
-	rm -f $(OBJS) $(OBJSD) $(COFFS) $(HOOKOBJ)
+	rm -f $(OBJS) $(OBJSD) $(COFFS) $(HOOKOBJ) $(HOOKCFF)
 
 all_clean:   clean all
 
@@ -111,9 +116,9 @@ alld_clean:  clean alld
 
 
 spotless: clean 
-	rm -f $(TARGET) $(TARGETD) $(OBJRES) $(HOOKTGT) vc60.pch
+	rm -f $(TARGET) $(TARGETD) $(OBJRES) $(HOOKRES) $(HOOKTGT) vc60.pch
 
 # Dependancies
 $(OBJS):  $(HEADERS)
 $(OBJSD): $(HEADERS)
-$(OBJRES):$(HEADERS)
+$(HOOKOBJ):$(HEADERS)
