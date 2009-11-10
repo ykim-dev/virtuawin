@@ -24,4 +24,4 @@
 # character to interpose another module into the current module.  This
 # can be useful for creating a module that consists of many directories
 # spread out over the entire source repository.
-all -a WinList scripts Modules Module Icons Help build build.bat ConfigParameters.h COPYING.TXT Defines.h DiskRoutines.c DiskRoutines.h HISTORY.TXT Makefile Messages.h ModuleRoutines.c README.TXT READMEII.TXT Resource.h SetupDialog.c VirtuaWin.c VirtuaWin.h VirtuaWin.rc vwCommands.def win32v6.mak WinRuleDialog.c .cvsignore
+all -a WinList scripts Modules Module Icons Help build build.bat ConfigParameters.h COPYING.TXT Defines.h DiskRoutines.c DiskRoutines.h HISTORY.TXT Makefile Messages.h ModuleRoutines.c README.TXT READMEII.TXT Resource.h SetupDialog.c VirtuaWin.c VirtuaWin.h VirtuaWin.rc vwCommands.def win32v6.mak vwHook.c vwHook.h vwHook.rc WinRuleDialog.c .cvsignore
