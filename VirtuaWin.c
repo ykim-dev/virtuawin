@@ -1407,7 +1407,7 @@ vwWindowRuleFind(HWND hwnd, vwWindowRule *owt)
                         break ;
                     case 3:
                         /* "*<NAME>*" */
-                        jj = nameLen[ii] - ((int) wt->nameLen[ii]) ;
+                        jj = nameLen[ii] - ((int) wt->nameLen[ii]) + 1 ;
                         while(--jj >= 0)
                             if((bi=nameCompFunc[ii](name[ii]+jj,wt->name[ii],wt->nameLen[ii])) == 0)
                                 break ;
