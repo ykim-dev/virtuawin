@@ -87,5 +87,5 @@ spotless: clean
 # Dependancies
 $(OBJS):  $(HEADERS)
 $(OBJSD): $(HEADERS)
-$(OBJRES):$(HEADERS)
+$(OBJRES):$(HEADERS) VirtuaWin.exe.manifest
 $(HOOKOBJ):$(HEADERS)
