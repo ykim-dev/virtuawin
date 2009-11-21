@@ -102,7 +102,6 @@ HANDLE hMutex;
 FILE *vwLogFile ;
 vwUByte vwEnabled=1;	                     // if VirtuaWin enabled or not
 
-int taskbarEdge;
 int desktopWorkArea[2][4] ;
 
 vwHotkey   hotkeyList[vwHOTKEY_MAX];         // list for holding hotkeys
@@ -116,6 +115,7 @@ moduleType moduleList[MAXMODULES];           // list that holds modules
 disModules disabledModules[MAXMODULES*2];    // list with disabled modules
 
 UINT RM_Shellhook;
+UINT RM_TaskbarCreated;         // Message used to broadcast taskbar restart 
 
 HINSTANCE hInst;		// current instance
 HWND taskHWnd;                  // handle to taskbar
@@ -259,7 +259,7 @@ vwLogPrint(const TCHAR *format, ...)
 void
 vwMutexLock(void)
 {
-    if ((hMutex != (HANDLE) 0) && (WaitForSingleObject(hMutex,0) == WAIT_TIMEOUT))
+    if(WaitForSingleObject(hMutex,0) == WAIT_TIMEOUT)
         WaitForSingleObject(hMutex,INFINITE);
 }
 
@@ -269,8 +269,7 @@ vwMutexLock(void)
 void
 vwMutexRelease(void)
 {
-    if (hMutex != (HANDLE) 0)
-        ReleaseMutex(hMutex);
+    ReleaseMutex(hMutex);
 }
 
 /************************************************
@@ -560,7 +559,7 @@ enableMouse(int turnOn)
 /*************************************************
  * Sets the icon in the systray and updates the currentDesk variable
  */
-static void
+void
 vwIconSet(int deskNumber, int hungCount)
 {
     if(displayTaskbarIcon && ((taskbarIconShown & 0x02) == 0))
@@ -590,7 +589,7 @@ vwIconSet(int deskNumber, int hungCount)
             }
         }
         if(taskbarIconShown & 0x01)
-            Shell_NotifyIcon(NIM_MODIFY, &nIconD);
+            Shell_NotifyIcon(NIM_MODIFY, &nIconD) ;
         else
         {
             // This adds the icon, try up to 3 times as systray process may not have started
@@ -603,7 +602,10 @@ vwIconSet(int deskNumber, int hungCount)
                 }
                 if(--ll <= 0)
                     break ;
-                Sleep(2000) ;
+                /* Due to the way Win7 kicks things off when logging on we can get a RM_TaskbarCreated leading to a double
+                 * initialize, try deleting and if successful we should now be able to create a new one so don't sleep */ 
+                if(Shell_NotifyIcon(NIM_DELETE,&nIconD))
+                    Sleep(2000) ;
             }
         }
     }
@@ -672,7 +674,6 @@ vwIconLoad(void)
     }
     // Load checkmark icon for sticky
     checkIcon=LoadIcon(hInst,MAKEINTRESOURCE(IDI_CHECK));
-    vwIconSet(currentDesk,0) ;
 }
 
 
@@ -777,6 +778,7 @@ static void
 getScreenSize(void)
 {
     RECT r;
+    desktopHWnd = GetDesktopWindow();
     GetClientRect(desktopHWnd,&r) ;
     dialogPos[0] = ((r.left + r.right) - 440) >> 1 ;
     dialogPos[1] = ((r.top + r.bottom) - 550) >> 1 ;
@@ -796,8 +798,8 @@ getScreenSize(void)
         desktopWorkArea[0][2] += desktopWorkArea[0][0] - 1 ;
         desktopWorkArea[0][3]  = GetSystemMetrics(SM_CYVIRTUALSCREEN) + desktopWorkArea[0][1] - 1;
     }
-    vwLogBasic((_T("Got screen size: %d %d -> %d %d\n"),
-                desktopWorkArea[0][0],desktopWorkArea[0][1],desktopWorkArea[0][2],desktopWorkArea[0][3])) ;
+    vwLogBasic((_T("Got screen %x size: %d %d -> %d %d\n"),
+                (int) desktopHWnd,desktopWorkArea[0][0],desktopWorkArea[0][1],desktopWorkArea[0][2],desktopWorkArea[0][3])) ;
 }
 
 /************************************************
@@ -823,7 +825,7 @@ getWorkArea(void)
         desktopWorkArea[1][3] = desktopWorkArea[0][3] ;
     }
     GetWindowRect(hWnd,&r) ;
-    vwLogBasic((_T("Got work area (%d %d): %d %d -> %d %d  &  %d %d -> %d %d (%d,%d)\n"),noTaskbarCheck,taskbarEdge,
+    vwLogBasic((_T("Got work area: %d %d -> %d %d  &  %d %d -> %d %d (%d,%d)\n"),
                 desktopWorkArea[0][0],desktopWorkArea[0][1],desktopWorkArea[0][2],desktopWorkArea[0][3],
                 desktopWorkArea[1][0],desktopWorkArea[1][1],desktopWorkArea[1][2],desktopWorkArea[1][3],r.left,r.top)) ;
     /* make sure the VW window is still hidden */
@@ -906,8 +908,8 @@ vwTaskbarHandleGet(void)
     }
     // if on win9x the tricky windows need to be continually hidden
     taskbarFixRequired = ((osVersion <= OSVERSION_9X) && (taskHWnd != NULL)) ;
-    vwLogBasic((_T("Got desktopWin %x, iconWin %x thread %d, taskbar win %x, type %d, fix %d\n"),
-                (int) desktopHWnd,(int) deskIconHWnd,(int) deskThread,(int) taskHWnd,taskbarBCType,taskbarFixRequired)) ;
+    vwLogBasic((_T("Got desktopWin %x, iconWin %x thread %d, taskbar %d win %x, type %d, fix %d\n"),
+                (int) desktopHWnd,(int) deskIconHWnd,(int) deskThread,noTaskbarCheck,(int) taskHWnd,taskbarBCType,taskbarFixRequired)) ;
 }
 
 /************************************************
@@ -3124,7 +3126,7 @@ winListCreateMenu(int flags, int itemCount, vwMenuItem **items)
                         if(items[x]->desk != currentDesk)
                             winListCreateMenuTitleLine(hMenu,&minfo,vwDESKTOP_SIZE,c) ;
                         else
-                            AppendMenu(hMenu,MF_DISABLED,0,"") ;
+                            AppendMenu(hMenu,MF_DISABLED,0,_T("")) ;
                     }
                 }
                 if(items[x]->desk != currentDesk)
@@ -4336,7 +4338,6 @@ popupControlMenu(HWND aHWnd, int cmFlags)
 static LRESULT CALLBACK
 wndProc(HWND aHWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-    static UINT taskbarRestart; 
     POINT pt;
     int ii ;
     
@@ -4766,9 +4767,6 @@ wndProc(HWND aHWnd, UINT message, WPARAM wParam, LPARAM lParam)
         // End plugin messages
         
     case WM_CREATE:		       // when main window is created
-        // register message for explorer/systray crash restart
-        // only works with >= IE4.0 
-        taskbarRestart = RegisterWindowMessage(TEXT("TaskbarCreated"));
         return TRUE;
         
     case WM_MOVE:
@@ -4826,7 +4824,8 @@ wndProc(HWND aHWnd, UINT message, WPARAM wParam, LPARAM lParam)
         /* no break */
     case WM_SETTINGCHANGE:
         /* the position and size of the taskbar may have changed */ 
-        getWorkArea();
+        if(initialized)
+            getWorkArea();
         return TRUE;
     case WM_MEASUREITEM:
         measureMenuItem(aHWnd,(MEASUREITEMSTRUCT*)lParam);
@@ -4836,7 +4835,7 @@ wndProc(HWND aHWnd, UINT message, WPARAM wParam, LPARAM lParam)
         break;
     default:
         // If taskbar restarted
-        if(message == taskbarRestart)
+        if(message == RM_TaskbarCreated)
         {
             taskbarIconShown &= ~0x01 ;
             vwTaskbarHandleGet();
@@ -4855,10 +4854,63 @@ vwCrashHandler(int sig)
     {
         /* only attempt this once, the window list could be corrupt */
         count = 1 ;
-        vwWindowShowAll((vwUShort) (taskButtonAct|vwWINSH_FLAGS_TRYHARD)) ;
-        vwLogBasic((_T("Received signal %d, terminating\n"),sig)) ;
-        exit(-1) ;
+        if(windowList != NULL)
+        {
+            vwWindow *win ;
+            /* lock mutex if not already locked, but don't wait */
+            WaitForSingleObject(hMutex,0) ;
+            win = windowList ;
+            while(win != NULL)
+            {
+                // still ignore windows on a private desktop unless exiting (vwWINSH_FLAGS_TRYHARD)
+                if((win->desk <= nDesks) || ((taskButtonAct & 0x01) == 0))
+                {
+                    win->desk = currentDesk ;
+                    vwWindowShowHide(win,vwWINSH_FLAGS_SHOW|vwWINSH_FLAGS_TRYHARD) ;
+                }
+                win = vwWindowGetNext(win) ;
+            }
+            vwLogBasic((_T("Received signal %d, terminating\n"),sig)) ;
+        }
+        exit(1) ;
     }
+    else
+        _exit(1) ;
+}
+
+    
+static VOID CALLBACK
+VirtuaWinInitContinue(HWND hwnd, UINT uMsg, UINT idEvent, DWORD dwTime)
+{
+    /* finish off initialization and create the list of windows */
+    DWORD threadID;
+    
+    vwHookSetup();
+    vwHotkeyRegister(1);
+    vwIconSet(currentDesk,0) ;
+    getScreenSize();
+    getWorkArea();
+    vwTaskbarHandleGet();
+    
+    /* register message for explorer/systray crash restart (>=IE4) & taskbar window button manipulation */
+    RM_TaskbarCreated = RegisterWindowMessage(_T("TaskbarCreated"));
+    RM_Shellhook = RegisterWindowMessage(_T("SHELLHOOK"));
+    
+    /* Create the thread responsible for mouse monitoring */   
+    mouseThread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE) vwMouseProc, NULL, 0, &threadID); 	
+    mouseEnabled = TRUE;
+    enableMouse(mouseEnable);
+    
+    /* always move windows immediately on startup */
+    vwMutexLock() ;
+    windowListUpdate() ;
+    vwMutexRelease() ;
+    
+    /* Load user modules */
+    loadModules();
+    
+    SetTimer(hWnd, 0x29a, 1000, monitorTimerProc); 
+    initialized = TRUE ;
 }
 
 static void
@@ -4867,7 +4919,6 @@ VirtuaWinInit(HINSTANCE hInstance, LPSTR cmdLine)
     OSVERSIONINFO os;
     HINSTANCE libHandle ; 
     WNDCLASSEX wc;
-    DWORD threadID;
     hInst = hInstance;
     
 #ifdef _WIN32_MEMORY_DEBUG
@@ -4880,15 +4931,17 @@ VirtuaWinInit(HINSTANCE hInstance, LPSTR cmdLine)
     
     /* Only one instance may be started */
     hMutex = CreateMutex(NULL, FALSE, vwVIRTUAWIN_NAME _T("PreventSecond"));
-    if(GetLastError() == ERROR_ALREADY_EXISTS)
+    if((hMutex == (HANDLE) 0) || (GetLastError() == ERROR_ALREADY_EXISTS))
     {
         UINT message=VW_SETUP ;
         WPARAM wParam=0 ;
         LPARAM lParam=0 ;
         
         if((hWnd = FindWindow(vwVIRTUAWIN_CLASSNAME, NULL)) == NULL)
+        {
+            MessageBox(hWnd,_T("Failed to find ") vwVIRTUAWIN_NAME _T(" window."),vwVIRTUAWIN_NAME _T(" Error"),0) ;
             exit(-2) ;
-        
+        }
         /* get the message from the command-line, default is to display configuration window... */
         if(cmdLine != NULL)
             sscanf(cmdLine+4,"%i %i %li",&message,&wParam,&lParam) ;
@@ -4899,6 +4952,12 @@ VirtuaWinInit(HINSTANCE hInstance, LPSTR cmdLine)
         /* VW not running, can't post message, return error */
         exit(-1) ;
     
+    /* install a crash handler to avoid loosing windows whenever possible */
+    signal(SIGINT,vwCrashHandler);
+    signal(SIGTERM,vwCrashHandler);
+    signal(SIGILL,vwCrashHandler);
+    signal(SIGABRT,vwCrashHandler);
+    signal(SIGSEGV,vwCrashHandler);
     vwThread = GetCurrentThreadId() ;
     
     os.dwOSVersionInfoSize = sizeof(os);
@@ -4952,38 +5011,7 @@ VirtuaWinInit(HINSTANCE hInstance, LPSTR cmdLine)
         exit(2) ;
     }
     
-    loadVirtuawinConfig() ;
-    if(vwLogFlag)
-    {
-        TCHAR logFname[MAX_PATH] ;
-        GetFilename(vwVIRTUAWIN_CFG,1,logFname) ;
-        _tcscpy(logFname+_tcslen(logFname)-3,_T("log")) ;
-        vwLogFile = _tfopen(logFname,_T("w+")) ;
-        vwLogBasic((vwVIRTUAWIN_NAME_VERSION _T("\n"))) ;
-    }
-    if(initialDesktop && (initialDesktop <= nDesks))
-    {
-        currentDesk = initialDesktop ;
-        currentDeskY = ((currentDesk - 1) / nDesksX) + 1 ;
-        currentDeskX = nDesksX + currentDesk - (currentDeskY * nDesksX) ;
-    }
-    /* Fix some things for the alternate hide method */
-    RM_Shellhook = RegisterWindowMessage(_T("SHELLHOOK"));
-    vwTaskbarHandleGet();
-    getScreenSize();
-    getWorkArea();
-    
-    /* install a crash handler to avoid loosing windows whenever possible */
-    signal(SIGINT,vwCrashHandler);
-    signal(SIGTERM,vwCrashHandler);
-    signal(SIGILL,vwCrashHandler);
-    signal(SIGABRT,vwCrashHandler);
-    signal(SIGSEGV,vwCrashHandler);
-    
-    /* Create the thread responsible for mouse monitoring */   
-    mouseThread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE) vwMouseProc, NULL, 0, &threadID); 	
-    mouseEnabled = TRUE;
-    
+    /* Initials the systray icon structure */
     nIconD.cbSize = sizeof(NOTIFYICONDATA); // size
     nIconD.hWnd = hWnd;		    // window to receive notifications
     nIconD.uID = 1;		    // application-defined ID for icon (can be any UINT value)
@@ -4992,25 +5020,28 @@ VirtuaWinInit(HINSTANCE hInstance, LPSTR cmdLine)
           NIF_TIP;		    // nIconD.szTip is valid, use it
     nIconD.uCallbackMessage = VW_SYSTRAY;  // message sent to nIconD.hWnd
     
+    loadVirtuawinConfig() ;
+    if(initialDesktop && (initialDesktop <= nDesks))
+    {
+        currentDesk = initialDesktop ;
+        currentDeskY = ((currentDesk - 1) / nDesksX) + 1 ;
+        currentDeskX = nDesksX + currentDesk - (currentDeskY * nDesksX) ;
+    }
+    if(vwLogFlag)
+    {
+        TCHAR logFname[MAX_PATH] ;
+        GetFilename(vwVIRTUAWIN_CFG,1,logFname) ;
+        _tcscpy(logFname+_tcslen(logFname)-3,_T("log")) ;
+        vwLogFile = _tfopen(logFname,_T("w+")) ;
+        vwLogBasic((vwVIRTUAWIN_NAME_VERSION _T("\n"))) ;
+    }
     if(useWindowRules)
         loadWindowConfig();
-    
-    vwHookSetup();
-    vwIconLoad();
-    vwHotkeyRegister(1);
-    enableMouse(mouseEnable);
-    
-    /* always move windows immediately on startup */
-    vwMutexLock() ;
-    windowListUpdate() ;
-    vwMutexRelease() ;
-    
-    /* Load user modules */
     curDisabledMod = loadDisabledModules(disabledModules);
-    loadModules();
+    vwIconLoad();
     
-    SetTimer(hWnd, 0x29a, 250, monitorTimerProc); 
-    initialized = TRUE ;
+    /* Wait a second before trying to initialize any more, this gives the system a chance to sort itself out first */
+    SetTimer(hWnd, 0x29a, 1000, VirtuaWinInitContinue); 
 }
 
 /*************************************************

@@ -84,6 +84,7 @@ vwSetupApply(HWND hDlg, int curPageMask)
             vwIconLoad();
             vwHotkeyRegister(1);
             enableMouse(mouseEnable);
+            vwIconSet(currentDesk,0);
             // Tell modules about the config change
             postModuleMessage(MOD_CFGCHANGE, 0, 0);
             pageChangeMask = 0 ;

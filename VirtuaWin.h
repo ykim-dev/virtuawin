@@ -67,7 +67,7 @@ void enableMouse(int turnOn) ;
 void setMouseKey(void) ;
 void vwHookSetup(void) ;
 void vwIconLoad(void) ;
-void vwIconShow(void) ;
+void vwIconSet(int deskNumber, int hungCount) ;
 void vwTaskbarHandleGet(void) ;
 void vwHotkeyRegister(int warnAll) ;
 void vwHotkeyUnregister(int unregAll) ;

@@ -49,7 +49,8 @@ checkDisabledList(TCHAR *theModName)
 /*************************************************
  * Adds a module to a list, found by loadModules()
  */
-static void addModule(TCHAR *moduleName, TCHAR *path)
+static void
+addModule(TCHAR *moduleName, TCHAR *path)
 {
     TCHAR tmpPath[MAX_PATH];
     TCHAR errMsg[150];
@@ -98,7 +99,7 @@ static void addModule(TCHAR *moduleName, TCHAR *path)
             }
             CloseHandle(pi.hThread) ;
             // Wait max 20 sec for the module to initialize itself then close the process handle
-            retVal = WaitForInputIdle( pi.hProcess, 20000); 
+            retVal = WaitForInputIdle(pi.hProcess, 20000); 
             CloseHandle(pi.hProcess) ;
             
             // Find the module with classname 
@@ -133,7 +134,8 @@ static void addModule(TCHAR *moduleName, TCHAR *path)
  * Locates modules in "Modules" directory, that is 
  * all files with an .exe extension
  */
-void loadModules(void)
+void
+loadModules(void)
 {
     WIN32_FIND_DATA exe_file;
     TCHAR buff[MAX_PATH], *ss ;
@@ -157,7 +159,8 @@ void loadModules(void)
 /*************************************************
  * Sends a message to all modules in the list
  */
-void sendModuleMessage(UINT Msg, WPARAM wParam,	LPARAM lParam)
+void
+sendModuleMessage(UINT Msg, WPARAM wParam, LPARAM lParam)
 {
     int index;
     for(index = 0; index < moduleCount; ++index)
@@ -168,7 +171,8 @@ void sendModuleMessage(UINT Msg, WPARAM wParam,	LPARAM lParam)
 /*************************************************
  * Posts a message to all modules in the list
  */
-void postModuleMessage(UINT Msg, WPARAM wParam, LPARAM lParam)
+void
+postModuleMessage(UINT Msg, WPARAM wParam, LPARAM lParam)
 {
     int index;
     for(index = 0; index < moduleCount; ++index) {
