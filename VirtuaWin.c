@@ -1886,7 +1886,17 @@ windowListUpdate(void)
         wb = vwWindowBaseGetNext(wb) ;
     }
     // Get all windows
-    EnumWindows(enumWindowsProc,0);
+    if(EnumWindows(enumWindowsProc,0) == 0)
+    {
+        vwLogBasic((_T("Call to EnumWindows failed: %x\n"),GetLastError())) ;
+        /* best we can do is assume all windows are still there */
+        wb = windowBaseList ;
+        while(wb != NULL)
+        {
+            wb->flags |= vwWINFLAGS_FOUND ;
+            wb = vwWindowBaseGetNext(wb) ;
+        }
+    }
     
     // finish the initialisation of new windows
     nw = windowList ;
