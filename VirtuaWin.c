@@ -2173,7 +2173,27 @@ windowListUpdate(void)
                     win->zOrder[win->desk] = vwZOrder ;
             }
         }
-        if(vwWindowIsShow(win) ^ vwWindowIsShown(win))
+        if((win->flags & (vwWINFLAGS_ELEVATED_TEST|vwWINFLAGS_ELEVATED)) == vwWINFLAGS_ELEVATED)
+        {
+            /* we use a dummy WM_NCHITTEST message to check if we have access */
+            DWORD rr ;
+            if(SendMessageTimeout(win->handle,WM_NCHITTEST,0,0,SMTO_ABORTIFHUNG|SMTO_BLOCK,50,&rr))
+                win->flags = (win->flags & ~vwWINFLAGS_ELEVATED) | vwWINFLAGS_ELEVATED_TEST ;
+            else if(GetLastError() == ERROR_ACCESS_DENIED)
+            {
+                /* failure was not a timeout - consider this an elevated window . May need to
+                 * change this to test the error is ERROR_ACCESS_DENIED */
+                win->flags |= vwWINFLAGS_ELEVATED_TEST ;
+                vwLogBasic((_T("Found window %x elevated: %x"),win->handle,win->flags)) ;
+            }
+        }
+        if(vwWindowIsShow(win))
+        {
+            if(vwWindowIsNotShown(win))
+                hungCount++ ;
+        }
+        else if(vwWindowIsShown(win) &&
+                ((win->flags & (vwWINFLAGS_ELEVATED|vwWINFLAGS_ELEVATED_TEST)) != (vwWINFLAGS_ELEVATED|vwWINFLAGS_ELEVATED_TEST)))
             hungCount++ ;
         win = vwWindowGetNext(win) ;
     }
@@ -2330,15 +2350,30 @@ monitorTimerProc(HWND hwnd, UINT uMsg, UINT idEvent, DWORD dwTime)
         ii = (mtCount & ~0x7f) ? 31:3;
         if((mtCount & ii) == 0)
         {
-            /* flash the icon for half a second each time we try */
-            vwIconSet(currentDesk,0-hungCount) ;
             win = windowList ;
             while(win != NULL)
             {
-                if(vwWindowIsShown(win) ^ vwWindowIsShow(win))
-                    vwWindowShowHide(win,win->flags & vwWINSH_FLAGS_SHOW) ;
+                if(vwWindowIsShow(win))
+                {
+                    if(vwWindowIsNotShown(win))
+                        vwWindowShowHide(win,vwWINSH_FLAGS_SHOW) ;
+                }
+                else if(vwWindowIsShown(win) &&
+                        ((win->flags & (vwWINFLAGS_ELEVATED|vwWINFLAGS_ELEVATED_TEST)) != (vwWINFLAGS_ELEVATED|vwWINFLAGS_ELEVATED_TEST)) &&
+                        vwWindowShowHide(win,0) && ((win->flags & vwWINFLAGS_ELEVATED_TEST) == 0))
+                {
+                    /* UAC support - VW may not have the required privileges to hide the window -
+                     * we don't know as we have not tested this window. So if the window is shown
+                     * and we're trying to hide it and vwWindowShowHide returns not-hung the flag
+                     * the window as potentially elevated and assume we can't hide it so don't
+                     * complain */
+                    win->flags |= vwWINFLAGS_ELEVATED ;
+                    hungCount-- ;
+                }
                 win = vwWindowGetNext(win) ;
             }
+            /* flash the icon for half a second each time we try */
+            vwIconSet(currentDesk,0-hungCount) ;
         }
         else if(((mtCount-1) & ii) == 0)
         {
@@ -4919,7 +4954,7 @@ VirtuaWinInitContinue(HWND hwnd, UINT uMsg, UINT idEvent, DWORD dwTime)
     /* Load user modules */
     loadModules();
     
-    SetTimer(hWnd, 0x29a, 1000, monitorTimerProc); 
+    SetTimer(hWnd,0x29a,1000,monitorTimerProc) ; 
     initialized = TRUE ;
 }
 
@@ -5046,12 +5081,12 @@ VirtuaWinInit(HINSTANCE hInstance, LPSTR cmdLine)
         vwLogBasic((vwVIRTUAWIN_NAME_VERSION _T("\n"))) ;
     }
     if(useWindowRules)
-        loadWindowConfig();
-    curDisabledMod = loadDisabledModules(disabledModules);
-    vwIconLoad();
+        loadWindowConfig() ;
+    curDisabledMod = loadDisabledModules(disabledModules) ;
+    vwIconLoad() ;
     
     /* Wait a second before trying to initialize any more, this gives the system a chance to sort itself out first */
-    SetTimer(hWnd, 0x29a, 1000, VirtuaWinInitContinue); 
+    SetTimer(hWnd,0x29a,1000,VirtuaWinInitContinue) ;
 }
 
 /*************************************************
