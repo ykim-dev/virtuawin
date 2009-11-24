@@ -4885,6 +4885,8 @@ VirtuaWinInitContinue(HWND hwnd, UINT uMsg, UINT idEvent, DWORD dwTime)
     /* finish off initialization and create the list of windows */
     DWORD threadID;
     
+    /* make sure this is not called twice! */
+    KillTimer(hWnd,0x29a);
     vwHookSetup();
     vwHotkeyRegister(1);
     vwIconSet(currentDesk,0) ;
