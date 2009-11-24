@@ -3714,6 +3714,8 @@ windowPushToBottom(HWND theWin)
                  SWP_DEFERERASE|SWP_NOSIZE|SWP_NOACTIVATE|SWP_NOSENDCHANGING|SWP_NOMOVE) ;
 }
 
+static HWND infoWin ;
+
 static BOOL CALLBACK
 WindowInfoDialogFunc(HWND hwndDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
@@ -3725,36 +3727,29 @@ WindowInfoDialogFunc(HWND hwndDlg, UINT msg, WPARAM wParam, LPARAM lParam)
             vwWindow *win ;
             HANDLE procHdl ;
             DWORD procId ;
-            HWND theWin ;
             RECT pos ;
             int tabstops[2] ;
             
-            theWin = GetParent(hwndDlg) ;
-            if(theWin == NULL)
-            {
-                SetDlgItemText(hwndDlg,IDC_WID_INFO,_T("Error: failed to get window handle")) ;
-                return TRUE;
-            }
             tabstops[0] = 10 ;
             tabstops[1] = 52 ;
             SendDlgItemMessage(hwndDlg,IDC_WID_INFO,EM_SETTABSTOPS,(WPARAM)2,(LPARAM)tabstops);
-            if(IsWindow(theWin))
+            if(IsWindow(infoWin))
             {
                 static TCHAR *winHandle[3] = { _T("Standard"), _T("Move"), _T("Minimize") } ;
                 static TCHAR *tbbHandle[3] = { _T("Standard"), _T("Show"), _T("Toolwin") } ;
                 ss = buff ;
                 _tcscpy(ss,_T("Class Name:\t")) ;
                 ss += _tcslen(ss) ;
-                GetClassName(theWin,ss,vwCLASSNAME_MAX);
+                GetClassName(infoWin,ss,vwCLASSNAME_MAX);
                 ss += _tcslen(ss) ;
                 _tcscpy(ss,_T("\r\nWindow Name:\t")) ;
                 ss += _tcslen(ss) ;
-                if(!GetWindowText(theWin,ss,vwWINDOWNAME_MAX))
+                if(!GetWindowText(infoWin,ss,vwWINDOWNAME_MAX))
                     _tcscpy(ss,_T("<None>"));
                 ss += _tcslen(ss) ;
                 _tcscpy(ss,_T("\r\nProcess Name:\t")) ;
                 ss += _tcslen(ss) ;
-                if(GetWindowThreadProcessId(theWin,&procId) == 0)
+                if(GetWindowThreadProcessId(infoWin,&procId) == 0)
                     procId = 0 ;
                 if(vwGetModuleFileNameEx == NULL)
                     _tcscpy(ss,_T("<Unsupported>"));
@@ -3767,15 +3762,15 @@ WindowInfoDialogFunc(HWND hwndDlg, UINT msg, WPARAM wParam, LPARAM lParam)
                     _tcscpy(ss,_T("<Unknown>"));
                 ss += _tcslen(ss) ;
                     
-                GetWindowRect(theWin,&pos) ;
+                GetWindowRect(infoWin,&pos) ;
                 ss += _stprintf(ss,_T("\r\n\tHandle:\t%x\r\n\tProcess:\t%d\r\n\tParent:\t%x\r\n\tOwner:\t%x\r\n\tStyles:\t%08x %08x\r\n\tPosition:\t%d %d %d %d\r\n\r\nThis window is "),
-                                (int)theWin,(int)procId,(int)GetParent(theWin),(int)GetWindow(theWin,GW_OWNER),
-                                (int)GetWindowLong(theWin,GWL_STYLE),(int)GetWindowLong(theWin,GWL_EXSTYLE),
+                                (int)infoWin,(int)procId,(int)GetParent(infoWin),(int)GetWindow(infoWin,GW_OWNER),
+                                (int)GetWindowLong(infoWin,GWL_STYLE),(int)GetWindowLong(infoWin,GWL_EXSTYLE),
                                 (int)pos.top,(int)pos.bottom,(int)pos.left,(int)pos.right) ;
                 
                 vwMutexLock();
                 windowListUpdate() ;
-                win = (vwWindow *) vwWindowBaseFind(theWin) ;
+                win = (vwWindow *) vwWindowBaseFind(infoWin) ;
                 if(win == NULL)
                     _tcscpy(ss,_T("not managed\r\n")) ;
                 else if(vwWindowIsManaged(win))
@@ -3934,7 +3929,10 @@ popupWindowMenu(HWND theWin, int wmFlags)
         windowSetSticky(theWin,-1) ;
         break;
     case ID_WM_INFO:
-        DialogBox(hInst,MAKEINTRESOURCE(IDD_WINDOWINFODIALOG),theWin,(DLGPROC) WindowInfoDialogFunc);
+        infoWin = theWin ;
+        if((DialogBox(hInst,MAKEINTRESOURCE(IDD_WINDOWINFODIALOG),theWin,(DLGPROC) WindowInfoDialogFunc) < 0) &&
+           (GetLastError() == ERROR_ACCESS_DENIED))
+            DialogBox(hInst,MAKEINTRESOURCE(IDD_WINDOWINFODIALOG),NULL,(DLGPROC) WindowInfoDialogFunc) ;
         return ;
     case ID_WM_AWTYPE:
         showWindowRule(theWin,1) ;
