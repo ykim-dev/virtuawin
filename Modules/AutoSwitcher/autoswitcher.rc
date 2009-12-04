@@ -3,12 +3,13 @@
 
 IDD_MAINDIALOG DIALOG 83, 36, 101, 66
 STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION
-CAPTION "AutoSwitcher 1.1"
+CAPTION "AutoSwitcher 2.0"
 FONT 8, "Helv"
 BEGIN
-    LTEXT           "Cycle interval", 9, 8, 10, 55, 12
-    EDITTEXT        IDC_INTERVAL, 9, 20, 28, 12, ES_AUTOHSCROLL
+    LTEXT           "", IDC_DESKTOPLBL, 8, 8, 90, 12
+    EDITTEXT        IDC_INTERVAL, 52, 20, 28, 12, ES_AUTOHSCROLL
+    PUSHBUTTON      "&Next", IDC_DESKTOPBTN, 6, 20, 43, 15
+    LTEXT           "sec", 370, 82, 24, 55, 12
     PUSHBUTTON      "Cancel", IDCANCEL, 52, 45, 43, 15
     PUSHBUTTON      "OK", IDOK, 6, 45, 43, 15
-    LTEXT           "seconds", 101, 40, 24, 55, 12
 END

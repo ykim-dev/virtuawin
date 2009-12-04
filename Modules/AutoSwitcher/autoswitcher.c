@@ -31,15 +31,17 @@
 #include "autoswitcherres.h"
 #include "../../Messages.h"
 
-int initialised=0;
+#define vwDESKTOP_MAX 20 // be careful with this one, size might change in Defines.h (VirtuaWin core source)
+
+int initialised = 0;
 HINSTANCE hInst;   // Instance handle
 HWND hwndMain;	   // Main window handle
 HWND vwHandle;     // Handle to VirtuaWin
-LPSTR vwPath;
 TCHAR *configFile;
-int myInterval = 2;
 int myNOfDesks;
 int myCurDesk = 1;
+int myNextCounter = 1;
+int desktopDelay[vwDESKTOP_MAX]; 
 
 /* prototype for the dialog box function. */
 static BOOL CALLBACK DialogFunc(HWND hwndDlg, UINT msg, WPARAM wParam, LPARAM lParam);
@@ -60,7 +62,7 @@ static BOOL InitApplication(HWND hwnd, char *userAppPath)
 #else
    strcpy(buff,userAppPath) ;
 #endif
-   _tcscat(buff,_T("autoswitcher.cfg")) ;
+   _tcscat(buff,_T("autoswitcher_v2.cfg")) ;
    if((configFile = _tcsdup(buff)) == NULL)
    {
       MessageBox(hwnd,_T("Malloc failure"),_T("AutoSwitcher Error"), MB_ICONWARNING);
@@ -68,7 +70,7 @@ static BOOL InitApplication(HWND hwnd, char *userAppPath)
    }
    
    loadSettings();
-   SetTimer(hwndMain, 0x50a, (myInterval * 1000), 0); 
+   SetTimer(hwndMain, 0x50a, (desktopDelay[myCurDesk-1] * 1000), 0); 
    
    return 1;
 }
@@ -82,6 +84,10 @@ LRESULT CALLBACK MainWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
    COPYDATASTRUCT *cds;
 
    switch (msg) {
+      case MOD_CHANGEDESK:
+         KillTimer(hwndMain, 0x50a);
+         myCurDesk = (int) lParam;
+         SetTimer(hwndMain, 0x50a, (desktopDelay[myCurDesk-1] * 1000), 0); 
       case WM_TIMER:
          SendMessage(vwHandle, VW_CHANGEDESK, myCurDesk, 0);
          myCurDesk++;
@@ -106,6 +112,7 @@ LRESULT CALLBACK MainWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
          deskX = SendMessage(vwHandle, VW_DESKX, 0, 0);
          deskY = SendMessage(vwHandle, VW_DESKY, 0, 0);
          myNOfDesks = deskX * deskY;
+         myCurDesk = SendMessage(vwHandle, VW_CURDESK, 0, 0);
          if(!initialised)
          {
             SendMessage(vwHandle, VW_USERAPPPATH, (WPARAM) hwnd, 0) ;
@@ -125,6 +132,11 @@ LRESULT CALLBACK MainWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
       case WM_DESTROY:
          KillTimer(hwndMain, 0x50a);
          PostQuitMessage(0);
+         break;
+      case MOD_CFGCHANGE:
+         deskX = SendMessage(vwHandle, VW_DESKX, 0, 0);
+         deskY = SendMessage(vwHandle, VW_DESKY, 0, 0);
+         myNOfDesks = deskX * deskY;
          break;
       default:
          return DefWindowProc(hwnd, msg, wParam, lParam);
@@ -180,26 +192,48 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 */
 static BOOL CALLBACK DialogFunc(HWND hwndDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
-   char buff[5];
-   
+   TCHAR buff[32];
    switch (msg) {
       case WM_INITDIALOG:
          KillTimer(hwndMain, 0x50a);
-         SetDlgItemInt(hwndDlg, IDC_INTERVAL, myInterval, TRUE);
+         myNextCounter = 1;
+         SetDlgItemInt(hwndDlg, IDC_INTERVAL, desktopDelay[myNextCounter-1], TRUE);
+         _stprintf(buff,_T("Display time of desktop %d:"), myNextCounter);
+         SetDlgItemText(hwndDlg, IDC_DESKTOPLBL, buff) ;
          return TRUE;
          
       case WM_COMMAND:
          switch (LOWORD(wParam)) {
             case IDOK:
                GetDlgItemText(hwndDlg, IDC_INTERVAL, buff, 4);
-               myInterval = atoi(buff);
+               desktopDelay[myNextCounter-1] = atoi(buff);
                saveSettings();
-               SetTimer(hwndMain, 0x50a, (myInterval * 1000), 0); 
+               SetTimer(hwndMain, 0x50a, (desktopDelay[myCurDesk] * 1000), 0); 
                EndDialog(hwndDlg,0);
                return 1;
             case IDCANCEL:
-               SetTimer(hwndMain, 0x50a, (myInterval * 1000), 0); 
+               loadSettings();
+               SetTimer(hwndMain, 0x50a, (desktopDelay[myCurDesk] * 1000), 0); 
                EndDialog(hwndDlg,0);
+               return 1;
+            case IDC_DESKTOPBTN:
+               GetDlgItemText(hwndDlg, IDC_INTERVAL, buff, 4);
+               int value = atoi(buff);
+               // Avoid 0 since that will cause out of control switching
+               if(value >= 1)
+               {
+                  desktopDelay[myNextCounter-1] = value;
+                  if(myNextCounter >= myNOfDesks)
+                     myNextCounter = 0;
+                  _stprintf(buff,_T("Display time of desktop %d:"), ++myNextCounter);
+                  SetDlgItemText(hwndDlg, IDC_DESKTOPLBL, buff);
+                  SetDlgItemInt(hwndDlg, IDC_INTERVAL, desktopDelay[myNextCounter-1], TRUE);
+               }
+               else
+               {
+                  _stprintf(buff,_T("Invalid value entered."));
+                  SetDlgItemText(hwndDlg, IDC_DESKTOPLBL, buff);
+               }
                return 1;
          }
          break;
@@ -218,11 +252,23 @@ void loadSettings()
 {
     char dummy[80];
     FILE* fp;
-   
+    int i;
+
     if((fp = _tfopen(configFile, _T("r"))))
     {
-        fscanf(fp, "%s%i", dummy, &myInterval);
-        fclose(fp);
+       for(i = 0; i < vwDESKTOP_MAX; i++)
+       {
+          fscanf(fp, "%s%d", dummy, &desktopDelay[i]);
+       }
+       fclose(fp);
+    }
+    else
+    {
+       // config not found, init with default values
+       for(i = 0; i < vwDESKTOP_MAX; i++)
+       {
+          desktopDelay[i] = 10;
+       }
     }
 }
 
@@ -237,7 +283,14 @@ void saveSettings()
    } 
    else 
    {
-      fprintf(fp, "interval# %i\n", myInterval);
+      int i = 0;
+      for(i = 0; i < vwDESKTOP_MAX; i++)
+      {
+         fprintf(fp, "interval# %d\n", desktopDelay[i]);
+      }
       fclose(fp);
    }
 }
+
+//*************************************************
+
