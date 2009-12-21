@@ -25,17 +25,24 @@ if [ `uname | sed -e "s/^MINGW.*/MINGW/"` == 'MINGW' ] ; then
     SED="sed -c"
     CDRIVE="/c"
 fi
+if [ -z "$VWPROGRAMFILES" ] ; then
+    if [ -z "$PROGRAMW6432" ] ; then
+        VWPROGRAMFILES="${CDRIVE}/Program Files"
+    else
+        VWPROGRAMFILES="${CDRIVE}/Program Files (x86)"
+    fi
+fi
 if [ -z "$EDITOR" ] ; then
     EDITOR=emacs
 fi
 if [ -z "$HELPCOMPILER" ] ; then
-    HELPCOMPILER="${CDRIVE}/Program Files/HTML Help Workshop/hhc"
+    HELPCOMPILER="${VWPROGRAMFILES}/HTML Help Workshop/hhc"
 fi
 if [ -z "$SETUPCOMPILER" ] ; then
-    SETUPCOMPILER="${CDRIVE}/Program Files/Inno Setup 5/Compil32"
+    SETUPCOMPILER="${VWPROGRAMFILES}/Inno Setup 5/Compil32"
 fi
 if [ -z "$WINZIP" ] ; then
-    WINZIP="${CDRIVE}/Program Files/WinZip/wzzip"
+    WINZIP="${VWPROGRAMFILES}/WinZip/wzzip"
 fi
 
 if [ -z "$1" ] ; then
