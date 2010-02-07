@@ -5,7 +5,7 @@
 //  configurable interval
 //  
 //  Copyright (c) 1999-2005 Johan Piculell
-//  Copyright (c) 2006-2009 VirtuaWin (VirtuaWin@home.se)
+//  Copyright (c) 2006-2010 VirtuaWin (VirtuaWin@home.se)
 // 
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -27,6 +27,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <tchar.h>
+#include <commctrl.h>
 
 #include "autoswitcherres.h"
 #include "../../Messages.h"
@@ -38,6 +39,10 @@ HINSTANCE hInst;   // Instance handle
 HWND hwndMain;	   // Main window handle
 HWND vwHandle;     // Handle to VirtuaWin
 TCHAR *configFile;
+ATOM hotKeyToggle;
+UINT HOT_TOGGLE;
+UINT HOT_TOGGLE_MOD;
+BOOL enabled = TRUE;
 int myNOfDesks;
 int myCurDesk = 1;
 int myNextCounter = 1;
@@ -52,10 +57,57 @@ LRESULT CALLBACK MainWndProc(HWND hwnd,UINT msg,WPARAM wParam,LPARAM lParam);
 void saveSettings();
 void loadSettings();
 
+void stepDesk()
+{
+   SendMessage(vwHandle, VW_CHANGEDESK, myCurDesk, 0);
+   myCurDesk++;
+   if(myCurDesk > myNOfDesks)
+      myCurDesk = 1;
+}
+
+/*************************************************
+ * Translates virtual key codes to "hotkey codes"
+ */
+UINT hotKey2ModKey(UINT vModifiers)
+{
+    WORD mod = 0;
+    if (vModifiers & HOTKEYF_ALT)
+        mod |= MOD_ALT;
+    if (vModifiers & HOTKEYF_CONTROL)
+        mod |= MOD_CONTROL;
+    if (vModifiers & HOTKEYF_SHIFT)
+        mod |= MOD_SHIFT;
+    return mod;
+}
+
+/*************************************************
+ * Registers the hotkey
+ */
+static void registerKey(void)
+{
+   if(HOT_TOGGLE)
+   {
+      hotKeyToggle = GlobalAddAtom(_T("hotKeyToggle"));
+      if(RegisterHotKey(hwndMain, hotKeyToggle, hotKey2ModKey(HOT_TOGGLE_MOD), HOT_TOGGLE) == 0)
+         MessageBox(hwndMain,_T("Invalid key modifier combination, check hot keys!"),
+                    _T("AutoSwitcher Error"), MB_ICONWARNING);
+   }
+}
+
+/*************************************************
+ * Un-register the hotkey
+ */
+static void unregisterKey(void)
+{
+   UnregisterHotKey(hwndMain, hotKeyToggle);
+}
+
 /* Initializes the window */ 
 static BOOL InitApplication(HWND hwnd, char *userAppPath)
 {
    TCHAR buff[MAX_PATH];
+   
+   InitCommonControls();
 
 #ifdef _UNICODE
    MultiByteToWideChar(CP_ACP,0,(char *) userAppPath,-1,buff,MAX_PATH) ;
@@ -70,6 +122,7 @@ static BOOL InitApplication(HWND hwnd, char *userAppPath)
    }
    
    loadSettings();
+   registerKey();
    SetTimer(hwndMain, 0x50a, (desktopDelay[myCurDesk-1] * 1000), 0); 
    
    return 1;
@@ -84,15 +137,29 @@ LRESULT CALLBACK MainWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
    COPYDATASTRUCT *cds;
 
    switch (msg) {
+      // from VirtuaWin, make sure we are in sync with current desktop
       case MOD_CHANGEDESK:
          KillTimer(hwndMain, 0x50a);
          myCurDesk = (int) lParam;
          SetTimer(hwndMain, 0x50a, (desktopDelay[myCurDesk-1] * 1000), 0); 
+         // can't figure it out right now but a break here disturbs the switch timing
+      // Time trigger
       case WM_TIMER:
-         SendMessage(vwHandle, VW_CHANGEDESK, myCurDesk, 0);
-         myCurDesk++;
-         if(myCurDesk > myNOfDesks)
-            myCurDesk = 1;
+         if(enabled)
+            stepDesk();
+         break;
+      
+      case WM_HOTKEY:
+         if(wParam == hotKeyToggle)
+         {
+            if(enabled)
+               enabled = FALSE;
+            else
+            {
+               enabled = TRUE;
+               stepDesk();
+            }
+         }
          break;
 
       case WM_COPYDATA:
@@ -130,6 +197,7 @@ LRESULT CALLBACK MainWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
          DialogBox(hInst, MAKEINTRESOURCE(IDD_MAINDIALOG), vwHandle, (DLGPROC) DialogFunc);
          break;
       case WM_DESTROY:
+         unregisterKey();
          KillTimer(hwndMain, 0x50a);
          PostQuitMessage(0);
          break;
@@ -193,6 +261,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 static BOOL CALLBACK DialogFunc(HWND hwndDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
    TCHAR buff[32];
+   WORD wRawHotKey;
+   
    switch (msg) {
       case WM_INITDIALOG:
          KillTimer(hwndMain, 0x50a);
@@ -200,6 +270,9 @@ static BOOL CALLBACK DialogFunc(HWND hwndDlg, UINT msg, WPARAM wParam, LPARAM lP
          SetDlgItemInt(hwndDlg, IDC_INTERVAL, desktopDelay[myNextCounter-1], TRUE);
          _stprintf(buff,_T("Display time of desktop %d:"), myNextCounter);
          SetDlgItemText(hwndDlg, IDC_DESKTOPLBL, buff) ;
+         unregisterKey();
+         SendDlgItemMessage(hwndDlg, IDC_HOTKEY_ENT, HKM_SETHOTKEY, 
+                            MAKEWORD(HOT_TOGGLE, HOT_TOGGLE_MOD), 0);
          return TRUE;
          
       case WM_COMMAND:
@@ -207,12 +280,20 @@ static BOOL CALLBACK DialogFunc(HWND hwndDlg, UINT msg, WPARAM wParam, LPARAM lP
             case IDOK:
                GetDlgItemText(hwndDlg, IDC_INTERVAL, buff, 4);
                desktopDelay[myNextCounter-1] = atoi(buff);
+
+               wRawHotKey = (WORD)SendDlgItemMessage(hwndDlg, IDC_HOTKEY_ENT, HKM_GETHOTKEY, 0, 0);
+               HOT_TOGGLE = LOBYTE(wRawHotKey);
+               HOT_TOGGLE_MOD = HIBYTE(wRawHotKey);
+               
                saveSettings();
+               registerKey();
                SetTimer(hwndMain, 0x50a, (desktopDelay[myCurDesk] * 1000), 0); 
+               
                EndDialog(hwndDlg,0);
                return 1;
             case IDCANCEL:
                loadSettings();
+               registerKey();
                SetTimer(hwndMain, 0x50a, (desktopDelay[myCurDesk] * 1000), 0); 
                EndDialog(hwndDlg,0);
                return 1;
@@ -260,6 +341,8 @@ void loadSettings()
        {
           fscanf(fp, "%s%d", dummy, &desktopDelay[i]);
        }
+       fscanf(fp, "%s%i", dummy, &HOT_TOGGLE_MOD);
+       fscanf(fp, "%s%i", dummy, &HOT_TOGGLE);
        fclose(fp);
     }
     else
@@ -288,6 +371,8 @@ void saveSettings()
       {
          fprintf(fp, "interval# %d\n", desktopDelay[i]);
       }
+      fprintf(fp, "toggle_mod# %i\n", HOT_TOGGLE_MOD);
+      fprintf(fp, "toggle# %i\n", HOT_TOGGLE);
       fclose(fp);
    }
 }
