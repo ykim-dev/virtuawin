@@ -4249,6 +4249,8 @@ popupWinListMenu(HWND aHWnd, int wlFlags)
             }
         }
     }
+    else if(((retItem & vwPMENU_ID_MASK) != 0) && ((ii=(retItem % vwDESKTOP_SIZE)) != currentDesk))
+        gotoDesk(ii,FALSE);
     else if(fgWin != NULL)
         setForegroundWin(fgWin,0) ;
     
