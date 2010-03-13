@@ -720,6 +720,8 @@ setupMouse(HWND hDlg, UINT message, UINT wParam, LONG lParam)
             SendDlgItemMessage(hDlg, IDC_MCTRL, BM_SETCHECK, 1,0);
         if(mouseModifier & vwHOTKEY_SHIFT)
             SendDlgItemMessage(hDlg, IDC_MSHIFT, BM_SETCHECK, 1,0);
+        if(mouseModifier & vwHOTKEY_WIN)
+            SendDlgItemMessage(hDlg, IDC_MWIN, BM_SETCHECK, 1,0);
         if(mouseKnock & 1) 
             SendDlgItemMessage(hDlg, IDC_KNOCKMODE1, BM_SETCHECK, 1,0);
         if(mouseKnock & 2) 
@@ -771,6 +773,8 @@ setupMouse(HWND hDlg, UINT message, UINT wParam, LONG lParam)
                 mouseModifier |= vwHOTKEY_CONTROL ;
             if(SendDlgItemMessage(hDlg, IDC_MSHIFT, BM_GETCHECK, 0, 0) == BST_CHECKED)
                 mouseModifier |= vwHOTKEY_SHIFT ;
+            if(SendDlgItemMessage(hDlg, IDC_MWIN, BM_GETCHECK, 0, 0) == BST_CHECKED)
+                mouseModifier |= vwHOTKEY_WIN ;
             
             vwSetupApply(hDlg,0x04) ;
             SetWindowLong(hDlg, DWL_MSGRESULT, TRUE);
@@ -793,8 +797,9 @@ setupMouse(HWND hDlg, UINT message, UINT wParam, LONG lParam)
            LOWORD(wParam) == IDC_MALT       || LOWORD(wParam) == IDC_KEYCONTROL  ||
            LOWORD(wParam) == IDC_MCTRL      || LOWORD(wParam) == IDC_KNOCKMODE1  ||
            LOWORD(wParam) == IDC_MSHIFT     || LOWORD(wParam) == IDC_KNOCKMODE2  ||
+           LOWORD(wParam) == IDC_MWIN       || LOWORD(wParam) == IDC_MOUSEWMENU  ||
            LOWORD(wParam) == IDC_MOUSEWARP  || LOWORD(wParam) == IDC_MOUSEWLIST  ||
-           LOWORD(wParam) == IDC_MOUSEWMENU || LOWORD(wParam) == IDC_MOUSEMDCHNG )
+           LOWORD(wParam) == IDC_MOUSEMDCHNG )
         {
             pageChangeMask |= 0x04 ;
             SendMessage(GetParent(hDlg), PSM_CHANGED, (WPARAM)hDlg, 0L); // Enable apply

@@ -286,6 +286,8 @@ vwKeyboardTestModifier(vwUByte modif)
         return FALSE ;
     if((modif & vwHOTKEY_SHIFT) && !HIWORD(GetAsyncKeyState(VK_SHIFT)))
         return FALSE ;
+    if((modif & vwHOTKEY_WIN) && !HIWORD(GetAsyncKeyState(VK_LWIN)) && !HIWORD(GetAsyncKeyState(VK_RWIN)))
+        return FALSE ;
     return TRUE ;
 }
 

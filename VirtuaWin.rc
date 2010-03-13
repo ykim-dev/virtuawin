@@ -95,6 +95,7 @@ BEGIN
     AUTOCHECKBOX    "Shift", IDC_MSHIFT, 67, 65, 34, 10
     AUTOCHECKBOX    "Ctrl", IDC_MCTRL, 102, 65, 30, 10
     AUTOCHECKBOX    "Alt", IDC_MALT, 132, 65, 29, 10
+    AUTOCHECKBOX    "Win", IDC_MWIN, 162, 65, 29, 10
     AUTOCHECKBOX    "Enable desktop edge knocking", IDC_KNOCKMODE1, 22, 78, 125, 10
     AUTOCHECKBOX    "Always required", IDC_KNOCKMODE2, 34, 89, 90, 10
 

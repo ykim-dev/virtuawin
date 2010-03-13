@@ -47,7 +47,8 @@
 #define IDC_MALT          1020
 #define IDC_MSHIFT        1021
 #define IDC_MCTRL         1022
-#define IDC_JUMP          1023
+#define IDC_MWIN          1023
+#define IDC_JUMP          1024
 #define IDC_HOTKEY_LIST   1031
 #define IDC_HOTKEY_CMD    1032
 #define IDC_HOTKEY_DSK    1033
