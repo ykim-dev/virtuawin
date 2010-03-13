@@ -147,10 +147,11 @@ int moduleCount = 0;
 int currentDeskX = 1;
 int currentDeskY = 1;
 int currentDesk = 1; 
-int lastDesk = 1; 
 int nDesks = 4;     
 int nDesksX = 2;     
 int nDesksY = 2;     
+int lastDesk = 1; 
+vwUByte lastDeskNoDelay = 0 ;          
 vwUByte mouseKnock = 2 ;
 vwUByte hiddenWindowAct = 2 ;
 vwUByte taskButtonAct = 0 ;		
@@ -2429,6 +2430,8 @@ changeDesk(int newDesk, WPARAM msgWParam)
         if(deskImageEnabled > 0)
             createDeskImage(currentDesk,0) ;
     }
+    else if(lastDeskNoDelay && (lastDesk != currentDesk))
+        lastDesk = currentDesk ;
     vwLogBasic((_T("Step Desk Start: %d -> %d (%d,%x)\n"),currentDesk,newDesk,isDragging,(int)dragHWnd)) ;
     
     vwMutexLock();
