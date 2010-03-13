@@ -235,6 +235,13 @@ setupGeneral(HWND hDlg, UINT message, UINT wParam, LONG lParam)
                 }
                 vwMutexRelease();
             }
+            else if((maxDesk > nDesks) && (deskImageCount >= 0))
+            {
+                do {
+                    nDesks++ ;
+                    createDeskImage(nDesks,1) ;
+                } while(nDesks < maxDesk) ;
+            }
             nDesksY = tmpDesksY;
             nDesksX = tmpDesksX;
             nDesks = maxDesk ;

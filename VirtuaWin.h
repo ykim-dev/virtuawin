@@ -36,6 +36,7 @@ extern int screenLeft;	                          // the screen dimensions, from 
 extern int screenRight;	  
 extern int screenTop;	  
 extern int screenBottom;
+extern int deskImageCount;
 
 extern vwWindow *windowList;                      // list of managed windows
 extern vwWindowBase *windowBaseList;              // list of all windows
@@ -74,6 +75,7 @@ void vwHotkeyUnregister(int unregAll) ;
 void getWorkArea(void) ;
 int  windowListUpdate(void) ;
 void vwWindowRuleReapply(void) ;
+int  createDeskImage(int deskNo, int createDefault) ;
 void setForegroundWin(HWND theWin, int makeTop) ;
 int  assignWindow(HWND theWin, int theDesk, vwUByte follow, vwUByte force, vwUByte setActive);
 int  gotoDesk(int theDesk, vwUByte force);

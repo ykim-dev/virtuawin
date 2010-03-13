@@ -202,6 +202,7 @@ vwUInt timerCounter=0 ;
 
 /* desk image generation variables */
 int         deskImageCount=-1 ;
+int         deskImageEnabled=0 ;
 HBITMAP     deskImageBitmap=NULL ;
 BITMAPINFO  deskImageInfo ;
 void       *deskImageData=NULL ;
@@ -915,7 +916,7 @@ vwTaskbarHandleGet(void)
 /************************************************
  * desk image generation functions
  */
-static int
+int
 createDeskImage(int deskNo, int createDefault)
 {
     HDC deskDC ;
@@ -925,14 +926,14 @@ createDeskImage(int deskNo, int createDefault)
     FILE *fp ;
     int ret ;
     
-    if((deskImageCount == 0) ||
+    if((deskImageEnabled == 0) || (deskNo > nDesks) ||
        ((deskDC = GetDC(desktopHWnd)) == NULL) ||
        ((bitmapDC = CreateCompatibleDC(deskDC)) == NULL))
         return 0 ;
     
     oldmap = (HBITMAP) SelectObject(bitmapDC,deskImageBitmap);
     
-    if(createDefault || (deskNo > nDesks))
+    if(createDefault)
     {
         /* create a default image */
         RECT rect;
@@ -1000,6 +1001,7 @@ disableDeskImage(int count)
         }
         deskImageInfo.bmiHeader.biHeight = 0 ;
         deskImageCount = 0 ;
+        deskImageEnabled = 0 ;
     }
     return 1 ;
 }
@@ -1046,6 +1048,7 @@ enableDeskImage(int height)
         ReleaseDC(desktopHWnd,deskDC);
         if(deskImageData == NULL)
             return 0 ;
+        deskImageEnabled = 1 ;
     }
     if(count < 0)
     {
@@ -2423,7 +2426,7 @@ changeDesk(int newDesk, WPARAM msgWParam)
     {
         if(lastDesk != currentDesk)
             lastDesk = currentDesk ;
-        if(deskImageCount > 0)
+        if(deskImageEnabled > 0)
             createDeskImage(currentDesk,0) ;
     }
     vwLogBasic((_T("Step Desk Start: %d -> %d (%d,%x)\n"),currentDesk,newDesk,isDragging,(int)dragHWnd)) ;
@@ -4737,6 +4740,10 @@ wndProc(HWND aHWnd, UINT message, WPARAM wParam, LPARAM lParam)
             return deskImageCount ;
         else if(wParam == 1)
             return enableDeskImage(lParam) ;
+        else if(wParam == 6)
+            return desktopWorkArea[0][3]-desktopWorkArea[0][1]+1 ;
+        else if(wParam == 7)
+            return desktopWorkArea[0][2]-desktopWorkArea[0][0]+1 ;
         else if(deskImageCount == 0)
             return 0 ;
         else if(wParam == 2)
@@ -4747,6 +4754,8 @@ wndProc(HWND aHWnd, UINT message, WPARAM wParam, LPARAM lParam)
             return deskImageInfo.bmiHeader.biHeight ;
         else if(wParam == 5)
             return deskImageInfo.bmiHeader.biWidth ;
+        else if(wParam == 8)
+            deskImageEnabled = lParam ;
         else
             return 0 ;
         
