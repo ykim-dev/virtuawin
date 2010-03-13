@@ -1043,7 +1043,7 @@ setupExpert(HWND hDlg, UINT message, UINT wParam, LONG lParam)
                 GetWindowRect(wb->handle,&pos) ;
                 GetClassName(wb->handle,cname,vwCLASSNAME_MAX);
                 if(!GetWindowText(wb->handle,wname,vwWINDOWNAME_MAX))
-                    _tcscpy(wname,_T("<None>"));
+                    _tcscpy(wname,vwWTNAME_NONE);
                 if(wb->flags & vwWINFLAGS_MANAGED)
                 {
                     win = (vwWindow *) wb ;

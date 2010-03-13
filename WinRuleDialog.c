@@ -142,6 +142,8 @@ windowRuleDialogInitItem(HWND hDlg)
                         _tcscpy(buff,wt->name[ii]) ;
                     if(wt->flags & (2 << (ii << 1)))
                         _tcscat(buff,_T("*")) ;
+                    if(buff[0] == '\0')
+                        _tcscpy(buff,vwWTNAME_NONE);
                 }
                 SetDlgItemText(hDlg,wtypeNameEntry[ii],buff) ;
             } while(--ii >= 0) ;
@@ -227,6 +229,8 @@ windowRuleDialogInit(HWND hDlg, int firstTime)
         SetDlgItemText(hDlg,wtypeNameEntry[0],buff) ;
         buff[0] = 0 ;
         GetWindowText(initWin,buff,MAX_PATH);
+        if(buff[0] == 0)
+            _tcscpy(buff,vwWTNAME_NONE);
         SetDlgItemText(hDlg,wtypeNameEntry[1],buff) ;
         buff[0] = 0 ;
         if((vwGetModuleFileNameEx != NULL) &&
@@ -386,6 +390,8 @@ windowRuleDialogAddMod(HWND hDlg, int add)
             ss = buff ;
             if(ss[0] != '\0')
             {
+                if(!_tcscmp(buff,vwWTNAME_NONE))
+                    ss[0] = '\0' ;
                 if(ss[0] == '*')
                 {
                     flags |= 1 << (ii << 1) ;

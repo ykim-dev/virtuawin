@@ -54,6 +54,7 @@ typedef unsigned int   vwUInt ;
 typedef unsigned short vwUShort ;
 typedef unsigned char  vwUByte ;
 
+#define vwWTNAME_NONE              _T("<None>")
 #define vwWTNAME_COUNT             3
 #define vwWTFLAGS_CN_SVAR          0x00000001
 #define vwWTFLAGS_CN_EVAR          0x00000002

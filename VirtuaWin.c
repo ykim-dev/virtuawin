@@ -2073,7 +2073,7 @@ windowListUpdate(void)
                 GetWindowRect(win->handle,&pos) ;
                 GetClassName(win->handle,cname,vwCLASSNAME_MAX);
                 if(!GetWindowText(win->handle,wname,vwWINDOWNAME_MAX))
-                    _tcscpy(wname,_T("<None>"));
+                    _tcscpy(wname,vwWTNAME_NONE);
                 vwLogBasic((_T("Got new window %8x %08x %08x Flg %x Desk %d Proc %d %x Link %x Pos %d %d\n  Class \"%s\" Title \"%s\"\n"),
                             (int)win->handle,(int)GetWindowLong(win->handle, GWL_STYLE),(int)win->exStyle,
                             (int)win->flags,(int)win->desk,(int)win->processId,(int)((win->processNext == NULL) ? 0:win->processNext->handle),
@@ -3790,7 +3790,7 @@ WindowInfoDialogFunc(HWND hwndDlg, UINT msg, WPARAM wParam, LPARAM lParam)
                 _tcscpy(ss,_T("\r\nWindow Name:\t")) ;
                 ss += _tcslen(ss) ;
                 if(!GetWindowText(infoWin,ss,vwWINDOWNAME_MAX))
-                    _tcscpy(ss,_T("<None>"));
+                    _tcscpy(ss,vwWTNAME_NONE);
                 ss += _tcslen(ss) ;
                 _tcscpy(ss,_T("\r\nProcess Name:\t")) ;
                 ss += _tcslen(ss) ;
