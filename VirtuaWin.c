@@ -210,11 +210,12 @@ void       *deskImageData=NULL ;
 
 enum {
     OSVERSION_UNKNOWN=0,
-    OSVERSION_31,
-    OSVERSION_9X,
-    OSVERSION_NT,
-    OSVERSION_2000,
-    OSVERSION_XP
+    OSVERSION_64BIT=1,
+    OSVERSION_31=2,
+    OSVERSION_9X=4,
+    OSVERSION_NT=6,
+    OSVERSION_2000=8,
+    OSVERSION_XP=10
 } ;
 int osVersion ;
 
@@ -647,7 +648,7 @@ vwIconLoad(void)
     }
     else
     {
-        if(osVersion > OSVERSION_2000)
+        if(osVersion >= OSVERSION_XP)
             iconId = IDI_ST_DIS_2 ;
         else
             iconId = IDI_ST_DIS_1 ;
@@ -875,6 +876,8 @@ vwTaskbarHandleGet(void)
                 taskbarBCHWnd = hwndBar ;
                 taskbarBCType = vwTASKBAR_BC_TOOLBAR;
             }
+            else if(FindWindowEx(taskHWnd,0,_T("MSTaskListWClass"),0) != NULL)
+                MessageBox(hWnd,_T("Dynamic taskbar is not supported on Win7 - dynamic taskbar order disabled."),vwVIRTUAWIN_NAME _T(" Error"),0) ;
             else
                 MessageBox(hWnd,_T("Failed to identify taskbar button container - dynamic taskbar order disabled."),vwVIRTUAWIN_NAME _T(" Error"),0) ;
             if(taskbarBCType)
@@ -883,7 +886,7 @@ vwTaskbarHandleGet(void)
                 
                 if(taskbarShrdMem)
                 {
-                    if(osVersion <= OSVERSION_9X)
+                    if(osVersion < OSVERSION_NT)
                         VirtualFree(taskbarShrdMem,0,MEM_RELEASE) ;
                     else
                         VirtualFreeEx(taskbarProcHdl,taskbarShrdMem,0,MEM_RELEASE);
@@ -2297,10 +2300,21 @@ vwTaskbarButtonListUpdate(void)
         for(ii = 0 ; ii < itemCount ; ++ii)
         {
             if(SendMessage(taskbarBCHWnd,TB_GETBUTTON,ii,(LPARAM)taskbarShrdMem) &&
-               ReadProcessMemory(taskbarProcHdl,taskbarShrdMem,&tbItem,sizeof(TBBUTTON),NULL) &&
-               ReadProcessMemory(taskbarProcHdl,(LPCVOID) tbItem.dwData,&tbHWnd,sizeof(HWND),NULL) &&
-               (tbHWnd != NULL))
-                taskbarButtonList[tbCount++] = tbHWnd ;
+               ReadProcessMemory(taskbarProcHdl,taskbarShrdMem,&tbItem,sizeof(TBBUTTON),NULL))
+            {
+                if(osVersion & OSVERSION_64BIT)
+                {
+                    /* On 64bit OS there is an extra 4 bytes padding so the dwData shifts into the iString member,
+                     * but this may not work all the time as the pointer should be 64bit and this assumes the higher
+                     * 32 bits are 0 */
+                    if(ReadProcessMemory(taskbarProcHdl,(LPCVOID) tbItem.iString,&tbHWnd,sizeof(HWND),NULL) &&
+                       (tbHWnd != NULL))
+                        taskbarButtonList[tbCount++] = tbHWnd ;
+                }
+                else if(ReadProcessMemory(taskbarProcHdl,(LPCVOID) tbItem.dwData,&tbHWnd,sizeof(HWND),NULL) &&
+                        (tbHWnd != NULL))
+                    taskbarButtonList[tbCount++] = tbHWnd ;
+            }
         }
     }
     taskbarButtonList[tbCount] = NULL ;
@@ -4938,6 +4952,28 @@ vwCrashHandler(int sig)
 }
 
     
+#define WIN64_KEY "HARDWARE\\DESCRIPTION\\System\\CentralProcessor\\0"
+int
+vwWindowsIs64Bit(void)
+{
+    TCHAR buff[128] ;
+    DWORD size, type;
+    HKEY base_key;
+    int ret=0 ;
+    
+    if(RegOpenKey(HKEY_LOCAL_MACHINE,_T(WIN64_KEY),&base_key) == ERROR_SUCCESS)
+    {
+        size = 128 ;
+        if(RegQueryValueEx(base_key,_T("Identifier"),(LPDWORD) 0,&type,(LPBYTE)&buff,&size) == ERROR_SUCCESS)
+        {
+            if(!_tcsncmp(buff,_T("AMD64"),5) || !_tcsncmp(buff,_T("EM64T"),5) || !_tcsncmp(buff,_T("Intel64"),7))
+                ret = OSVERSION_64BIT ;
+        }
+        RegCloseKey(base_key);
+    }
+    return ret ;
+}
+
 static VOID CALLBACK
 VirtuaWinInitContinue(HWND hwnd, UINT uMsg, UINT idEvent, DWORD dwTime)
 {
@@ -5036,6 +5072,7 @@ VirtuaWinInit(HINSTANCE hInstance, LPSTR cmdLine)
         else
             osVersion = OSVERSION_XP ;
     }
+    osVersion |= vwWindowsIs64Bit() ;
     
     if((libHandle = LoadLibrary(_T("psapi"))) != NULL)
 #ifdef _UNICODE
