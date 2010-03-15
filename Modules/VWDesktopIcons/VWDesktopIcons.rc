@@ -4,7 +4,7 @@
 
 IDD_MAINDIALOG DIALOG 79, 25, 292, 246
 STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "VirtuaWin Desktop Icons v1.2 alpha1"
+CAPTION "VirtuaWin Desktop Icons v1.3"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT           "", ID_LABEL, 6, 6, 114, 11
