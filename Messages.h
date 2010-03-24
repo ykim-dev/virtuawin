@@ -39,7 +39,7 @@
  * 
  *************************************************************************/
 
-/* Message, switch to a specified desktop, sent with following lParam or 1..vwDESKTOP_MAX */
+/* Message, switch to a specified desktop, sent with following wParam or 1..vwDESKTOP_MAX */
 #define VW_CHANGEDESK   (WM_USER + 10) 
 #define VW_STEPPREV     (WM_USER +  1)
 #define VW_STEPNEXT     (WM_USER +  2)
