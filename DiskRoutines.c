@@ -800,7 +800,7 @@ saveVirtuawinConfig(void)
         fprintf(fp, "releaseFocus# %d\n", releaseFocus);
         fprintf(fp, "refreshOnWarp# %d\n", refreshOnWarp);
         fprintf(fp, "invertY# %d\n", invertY);
-        fprintf(fp, "noTaskbarCheck# %d\n", noTaskbarCheck);
+        fprintf(fp, "noTaskbarCheck# %d\n", noTaskbarCheck & 0x01);
         fprintf(fp, "displayTaskbarIcon# %d\n", displayTaskbarIcon);
         fprintf(fp, "logFlag# %d\n", vwLogFlag);
         fprintf(fp, "winMenuCompact# %d\n", winMenuCompact);

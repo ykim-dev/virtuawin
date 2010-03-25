@@ -952,7 +952,7 @@ setupExpert(HWND hDlg, UINT message, UINT wParam, LONG lParam)
             SendDlgItemMessage(hDlg, IDC_INVERTY, BM_SETCHECK, 1,0);
         if(!displayTaskbarIcon)
             SendDlgItemMessage(hDlg, IDC_DISPLAYICON, BM_SETCHECK, 1,0);
-        if(!noTaskbarCheck)
+        if((noTaskbarCheck & 0x01) == 0)
             SendDlgItemMessage(hDlg, IDC_TASKBARDETECT, BM_SETCHECK, 1,0);
         if(vwHookUse)
             SendDlgItemMessage(hDlg, IDC_USEVWHOOK, BM_SETCHECK, 1,0);

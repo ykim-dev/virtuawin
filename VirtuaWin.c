@@ -851,7 +851,7 @@ vwTaskbarHandleGet(void)
     deskIconHWnd = FindWindowEx(deskIconHWnd, NULL, _T("SysListView32"), _T("FolderView")) ;
     deskThread = GetWindowThreadProcessId(deskIconHWnd,NULL) ;
     taskbarBCType = vwTASKBAR_BC_NONE ;
-    if(!noTaskbarCheck)
+    if((noTaskbarCheck & 0x01) == 0)
     {
         HWND hwndTray = FindWindowEx(NULL, NULL,_T("Shell_TrayWnd"), NULL);
         HWND hwndBar = FindWindowEx(hwndTray, NULL,_T("ReBarWindow32"), NULL );
@@ -863,7 +863,13 @@ vwTaskbarHandleGet(void)
         taskHWnd = FindWindowEx(hwndBar, NULL,_T("MSTaskSwWClass"), NULL);
         
         if(taskHWnd == NULL)
-            MessageBox(hWnd,_T("Could not locate handle to the taskbar.\n This will disable the ability to hide troublesome windows correctly."),vwVIRTUAWIN_NAME _T(" Error"), 0); 
+        {
+            if(noTaskbarCheck == 0)
+            {
+                MessageBox(hWnd,_T("Could not locate handle to the taskbar.\n This will disable the ability to hide troublesome windows correctly."),vwVIRTUAWIN_NAME _T(" Error"), 0); 
+                noTaskbarCheck = 2 ;
+            }
+        }
         else if(preserveZOrder > 2)
         {
             if((hwndBar = FindWindowEx(taskHWnd,0,_T("SysTabControl32"),0)) != NULL)
@@ -2329,6 +2335,9 @@ monitorTimerProc(HWND hwnd, UINT uMsg, UINT idEvent, DWORD dwTime)
     static vwUInt mtCount=0 ;
     vwWindow *win ;
     int ii, hungCount ;
+    
+    if((taskHWnd == NULL) && (noTaskbarCheck == 0) && (timerCounter >= 20))
+        vwTaskbarHandleGet() ;
     
     vwMutexLock();
     timerCounter++ ;
@@ -4982,16 +4991,17 @@ VirtuaWinInitContinue(HWND hwnd, UINT uMsg, UINT idEvent, DWORD dwTime)
     
     /* make sure this is not called twice! */
     KillTimer(hWnd,0x29a);
+    
+    /* register message for explorer/systray crash restart (>=IE4) & taskbar window button manipulation */
+    RM_TaskbarCreated = RegisterWindowMessage(_T("TaskbarCreated"));
+    RM_Shellhook = RegisterWindowMessage(_T("SHELLHOOK"));
+    
     vwHookSetup();
     vwHotkeyRegister(1);
     vwIconSet(currentDesk,0) ;
     getScreenSize();
     getWorkArea();
     vwTaskbarHandleGet();
-    
-    /* register message for explorer/systray crash restart (>=IE4) & taskbar window button manipulation */
-    RM_TaskbarCreated = RegisterWindowMessage(_T("TaskbarCreated"));
-    RM_Shellhook = RegisterWindowMessage(_T("SHELLHOOK"));
     
     /* Create the thread responsible for mouse monitoring */   
     mouseThread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE) vwMouseProc, NULL, 0, &threadID); 	
