@@ -419,12 +419,12 @@ vwSetupHotKeysInit(HWND hDlg, int firstTime)
     if(firstTime)
     {
         for(ii=0 ; vwCommandEnum[ii] != 0 ; ii++)
-            SendDlgItemMessage(hDlg, IDC_HOTKEY_CMD, CB_ADDSTRING, 0, (LONG) vwCommandName[ii]) ;
-        SendDlgItemMessage(hDlg, IDC_HOTKEY_CMD, CB_SETCURSEL, 0, 0) ;
+            SendDlgItemMessage(hDlg,IDC_HOTKEY_CMD,CB_ADDSTRING,0,(LONG) vwCommandName[ii]) ;
+        SendDlgItemMessage(hDlg,IDC_HOTKEY_CMD,CB_SETCURSEL,0,0) ;
     }
     else
     {
-        SendDlgItemMessage(hDlg,IDC_HOTKEY_DSK,CB_RESETCONTENT,0, 0);
+        SendDlgItemMessage(hDlg,IDC_HOTKEY_DSK,CB_RESETCONTENT,0,0);
     }
     if((jj = nDesks) < currentDesk)
         jj = currentDesk ;
@@ -588,6 +588,7 @@ vwSetupHotKeysAddMod(HWND hDlg, int add)
         hotkeyList[vwSetupHotkeyCur].desk = (vwCommandFlag[cmd] & 0x01) ? dsk+1:0 ;
         EnableWindow(GetDlgItem(hDlg,IDC_HOTKEY_ADD),FALSE) ;
         EnableWindow(GetDlgItem(hDlg,IDC_HOTKEY_MOD),FALSE) ;
+        EnableWindow(GetDlgItem(hDlg,IDC_HOTKEY_DEL),TRUE) ;
         vwSetupHotKeysInitList(hDlg) ;
         pageChangeMask |= 0x02 ;
         SendMessage(GetParent(hDlg), PSM_CHANGED, (WPARAM)hDlg, 0L);
@@ -610,7 +611,7 @@ vwSetupHotKeysDelete(HWND hDlg)
     }
     hotkeyCount-- ;
     vwSetupHotkeyCur = -1 ;
-    EnableWindow(GetDlgItem(hDlg,IDC_HOTKEY_ADD),FALSE) ;
+    EnableWindow(GetDlgItem(hDlg,IDC_HOTKEY_ADD),TRUE) ;
     EnableWindow(GetDlgItem(hDlg,IDC_HOTKEY_MOD),FALSE) ;
     EnableWindow(GetDlgItem(hDlg,IDC_HOTKEY_DEL),FALSE) ;
     vwSetupHotKeysInitList(hDlg) ;
