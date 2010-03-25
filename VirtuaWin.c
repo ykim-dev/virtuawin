@@ -60,6 +60,10 @@ enum {
 #define SM_CYVIRTUALSCREEN      79
 #define SM_CMONITORS            80
 #endif
+#ifndef SPI_GETFOREGROUNDLOCKTIMEOUT
+#define SPI_GETFOREGROUNDLOCKTIMEOUT 0x2000
+#define SPI_SETFOREGROUNDLOCKTIMEOUT 0x2001
+#endif
 
 #define calculateDesk(x,y) (((y) * nDesksX) - (nDesksX - (x)))
 
@@ -120,8 +124,8 @@ UINT RM_TaskbarCreated;         // Message used to broadcast taskbar restart
 HINSTANCE hInst;		// current instance
 HWND taskHWnd;                  // handle to taskbar
 HWND desktopHWnd;		// handle to the desktop window
+DWORD desktopThread;            // thread ID of desktop window
 HWND deskIconHWnd;		// handle to the desktop window holding the icons
-DWORD deskThread;               // thread ID of desktop handler (exploerer)
 HWND lastFGHWnd;		// handle to the last foreground window
 HWND dialogHWnd;       		// handle to the setup dialog, NULL if not open
 int dialogPos[2];
@@ -845,11 +849,12 @@ void
 vwTaskbarHandleGet(void)
 {
     /* set the window to give focus to when releasing focus on switch also used to refresh */
-    desktopHWnd = GetDesktopWindow();
-    deskIconHWnd = FindWindow(_T("Progman"), _T("Program Manager")) ;
-    deskIconHWnd = FindWindowEx(deskIconHWnd, NULL, _T("SHELLDLL_DefView"),NULL) ;
-    deskIconHWnd = FindWindowEx(deskIconHWnd, NULL, _T("SysListView32"), _T("FolderView")) ;
-    deskThread = GetWindowThreadProcessId(deskIconHWnd,NULL) ;
+    if((desktopHWnd = GetDesktopWindow()) != NULL)
+        desktopThread = GetWindowThreadProcessId(desktopHWnd,NULL) ;
+    if(((deskIconHWnd = FindWindow(_T("Progman"), _T("Program Manager"))) != NULL) &&
+       ((deskIconHWnd = FindWindowEx(deskIconHWnd, NULL, _T("SHELLDLL_DefView"),NULL)) != NULL))
+       deskIconHWnd = FindWindowEx(deskIconHWnd, NULL, _T("SysListView32"), _T("FolderView")) ;
+    
     taskbarBCType = vwTASKBAR_BC_NONE ;
     if((noTaskbarCheck & 0x01) == 0)
     {
@@ -921,8 +926,8 @@ vwTaskbarHandleGet(void)
     }
     // if on win9x the tricky windows need to be continually hidden
     taskbarFixRequired = ((osVersion <= OSVERSION_9X) && (taskHWnd != NULL)) ;
-    vwLogBasic((_T("Got desktopWin %x, iconWin %x thread %d, taskbar %d win %x, type %d, fix %d\n"),
-                (int) desktopHWnd,(int) deskIconHWnd,(int) deskThread,noTaskbarCheck,(int) taskHWnd,taskbarBCType,taskbarFixRequired)) ;
+    vwLogBasic((_T("Got desktopWin %x T%d, iconWin %x, taskbar %d win %x, type %d, fix %d\n"),
+                (int) desktopHWnd,(int) desktopThread,(int) deskIconHWnd,noTaskbarCheck,(int) taskHWnd,taskbarBCType,taskbarFixRequired)) ;
 }
 
 /************************************************
@@ -1452,21 +1457,35 @@ setForegroundWin(HWND theWin, int makeTop)
 {
     HWND cwHwnd, setHwnd=theWin ;
     vwWindow *win ;
-    DWORD ThreadID1;
-    DWORD ThreadID2;
+    DWORD ThreadID1, ThreadID2, timeout;
     int ii, err1, err2 ;
     
-    vwLogBasic((_T("setForegroundWin: %x %d (%x %x)\n"),(int) theWin,makeTop,(int) hWnd,(int) desktopHWnd)) ;
+    cwHwnd = GetForegroundWindow() ;
+    vwLogBasic((_T("setForegroundWin: %x -> %x %d (%x %x)\n"),(int) cwHwnd, (int) theWin,makeTop,(int) hWnd,(int) desktopHWnd)) ;
     if(theWin == NULL)
     {
-        /* releasing the focus, the current foreground window MUST be
-         * released otherwise VW can think its a popup. Assigning the focus
-         * to a window when no window has the focus is prone to failure so
-         * give the focus to VW's hidden window rather than to the Desktop */
         setHwnd = desktopHWnd ;
-        ThreadID2 = deskThread ;
         makeTop = 0 ;
     }
+    if(cwHwnd != theWin)
+    {
+        /* try cheap and easy way first */
+        if(cwHwnd == NULL)
+            BringWindowToTop(setHwnd) ;
+        err1 = SetForegroundWindow(setHwnd) ; 
+        cwHwnd = GetForegroundWindow() ;
+        vwLogBasic((_T("SetForegroundWindow: %x %x - %d\n"),(int) theWin,(int) cwHwnd, err1)) ;
+    }
+    if(cwHwnd == theWin)
+    {
+        /* bring to the front if requested as swapping desks can muddle the order */
+        if(makeTop)
+            BringWindowToTop(setHwnd);
+        return ;
+    }
+    
+    if(theWin == NULL)
+        ThreadID2 = desktopThread ;
     else if((theWin == hWnd) || (theWin == dialogHWnd))
         ThreadID2 = vwThread ;
     else if(((win = vwWindowFind(theWin)) == NULL) || vwWindowIsNotShow(win) || vwWindowIsNotShown(win) ||
@@ -1479,15 +1498,23 @@ setForegroundWin(HWND theWin, int makeTop)
     else
         ThreadID2 = GetWindowThreadProcessId(theWin,NULL) ;
     
-    ii = 2 ;
-    for(;;)
+    ii = 1 ;
+    for(;;ii--)
     {
         /* do not bother making it the foreground if it already is */
         if((cwHwnd = GetForegroundWindow()) == theWin)
             break ;
+        if(ii < 0)
+        {
+            SystemParametersInfo(SPI_GETFOREGROUNDLOCKTIMEOUT,0,(LPVOID) &timeout,0);
+            SystemParametersInfo(SPI_SETFOREGROUNDLOCKTIMEOUT,0,(LPVOID) 0,SPIF_SENDCHANGE);
+        }
         /* get the Id of the current foreground process */
         if(cwHwnd == NULL)
-            ThreadID1 = deskThread ;
+        {
+            BringWindowToTop(setHwnd) ;
+            ThreadID1 = desktopThread ;
+        }
         else if(windowIsHung(cwHwnd,50) && (Sleep(1),windowIsHung(cwHwnd,100)))
             ThreadID1 = 0 ;
         else
@@ -1525,9 +1552,15 @@ setForegroundWin(HWND theWin, int makeTop)
          * is left as the foreground window but hidden (common when moving the app or desk) VW will confuse
          * it with a popup */
         cwHwnd = GetForegroundWindow() ;
-        vwLogBasic((_T("Set foreground window: %d, %x -> %x\n"),(theWin == cwHwnd),(int) theWin,(int) cwHwnd)) ;
-        if((cwHwnd == theWin) || (--ii < 0))
+        vwLogBasic((_T("Set foreground window %d: %d, %x -> %x\n"),ii,(theWin == cwHwnd),(int) theWin,(int) cwHwnd)) ;
+        if(ii < 0)
+        {
+            SystemParametersInfo(SPI_SETFOREGROUNDLOCKTIMEOUT,0,(LPVOID) timeout,SPIF_SENDCHANGE);
             break ;
+        }
+        else if(cwHwnd == theWin)
+            break ;
+        
         /* A short sleep allows the rest of the system to catch up */
         vwLogVerbose((_T("About to FG sleep\n"))) ;
         Sleep(1) ;
