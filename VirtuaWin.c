@@ -177,6 +177,7 @@ vwUByte useDynButtonRm = 0 ;
 vwUByte useDskChgModRelease = 0 ;
 vwUByte taskbarFixRequired = 0 ;
 vwUByte preserveZOrder = 2 ;      
+vwUByte minWinHide = 1 ;
 vwUByte taskbarBCType;          // taskbar button container type - one of vwTASKBAR_BC_*
 HWND    taskbarBCHWnd;
 HANDLE  taskbarProcHdl;
@@ -867,15 +868,7 @@ vwTaskbarHandleGet(void)
         
         taskHWnd = FindWindowEx(hwndBar, NULL,_T("MSTaskSwWClass"), NULL);
         
-        if(taskHWnd == NULL)
-        {
-            if(noTaskbarCheck == 0)
-            {
-                MessageBox(hWnd,_T("Could not locate handle to the taskbar.\n This will disable the ability to hide troublesome windows correctly."),vwVIRTUAWIN_NAME _T(" Error"), 0); 
-                noTaskbarCheck = 2 ;
-            }
-        }
-        else if(preserveZOrder > 2)
+        if((taskHWnd != NULL) && (preserveZOrder > 2))
         {
             if((hwndBar = FindWindowEx(taskHWnd,0,_T("SysTabControl32"),0)) != NULL)
             {
@@ -2370,8 +2363,14 @@ monitorTimerProc(HWND hwnd, UINT uMsg, UINT idEvent, DWORD dwTime)
     int ii, hungCount ;
     
     if((taskHWnd == NULL) && (noTaskbarCheck == 0) && (timerCounter >= 20))
+    {
         vwTaskbarHandleGet() ;
-    
+        if(taskHWnd == NULL)
+        {
+            MessageBox(hWnd,_T("Could not locate handle to the taskbar.\n This will disable the ability to hide troublesome windows correctly."),vwVIRTUAWIN_NAME _T(" Error"), 0); 
+            noTaskbarCheck = 2 ;
+        }
+    }
     vwMutexLock();
     timerCounter++ ;
     if((timerCounter == 2) && taskbarBCType && useDynButtonRm)
@@ -3319,7 +3318,17 @@ vwWindowShowHide(vwWindow* aWindow, vwUInt flags)
         {
             vwLogVerbose((_T("vwWindowShow %8x %x %x %x %d %d\n"),(int) aWindow->handle,flags,(int)aWindow->flags,(int)aWindow->exStyle,aWindow->desk,currentDesk)) ;
             aWindow->flags |= (vwWINFLAGS_SHOWN|vwWINFLAGS_SHOW) ;
-            if(vwWindowIsHideByHide(aWindow))
+            if(vwWindowIsMinimized(aWindow) && minWinHide)
+            {
+                /* window is already minimised, just remove the taskbar icon - this preserves the Win7 thumbnail */
+                if((aWindow->flags & vwWINFLAGS_HIDETSK_MASK) != vwWTFLAGS_HIDETSK_DONT)
+                {
+                    SetWindowLong(aWindow->handle, GWL_EXSTYLE, aWindow->exStyle) ;  
+                    if((taskHWnd != NULL) && ((aWindow->flags & vwWINFLAGS_NO_TASKBAR_BUT) == 0))
+                        PostMessage(taskHWnd, RM_Shellhook, HSHELL_WINDOWCREATED, (LPARAM) aWindow->handle) ;
+                }
+            }
+            else if(vwWindowIsHideByHide(aWindow))
             {
                 if((aWindow->flags & (vwWINFLAGS_HIDETSK_MASK|vwWINFLAGS_NO_TASKBAR_BUT)) == vwWINFLAGS_HIDETSK_TOOLWN)
                 {
@@ -3380,7 +3389,17 @@ vwWindowShowHide(vwWindow* aWindow, vwUInt flags)
         {
             vwLogVerbose((_T("vwWindowHide %8x %x %x %x %d %d\n"),(int) aWindow->handle,flags,(int)aWindow->flags,(int)aWindow->exStyle,aWindow->desk,currentDesk)) ;
             aWindow->flags &= ~(vwWINFLAGS_SHOWN|vwWINFLAGS_SHOW) ;
-            if(vwWindowIsHideByHide(aWindow))
+            if(vwWindowIsMinimized(aWindow) && minWinHide)
+            {
+                /* window is already minimised, just remove the taskbar icon - this preserves the Win7 thumbnail */
+                if((aWindow->flags & vwWINFLAGS_HIDETSK_MASK) != vwWTFLAGS_HIDETSK_DONT)
+                {
+                    SetWindowLong(aWindow->handle, GWL_EXSTYLE,(aWindow->exStyle & (~WS_EX_APPWINDOW)) | WS_EX_TOOLWINDOW);
+                    if((taskHWnd != NULL) && ((aWindow->flags & vwWINFLAGS_NO_TASKBAR_BUT) == 0))
+                        PostMessage(taskHWnd, RM_Shellhook, HSHELL_WINDOWDESTROYED, (LPARAM) aWindow->handle);
+                }
+            }
+            else if(vwWindowIsHideByHide(aWindow))
             {
                 if((aWindow->flags & (vwWINFLAGS_HIDETSK_MASK|vwWINFLAGS_NO_TASKBAR_BUT)) == vwWINFLAGS_HIDETSK_TOOLWN)
                 {

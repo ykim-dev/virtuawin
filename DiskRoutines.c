@@ -742,6 +742,7 @@ loadVirtuawinConfig(void)
         vwConfigReadInt(fp,buff,ii,useDskChgModRelease);
         vwConfigReadInt(fp,buff,ii,initialDesktop);
         vwConfigReadInt(fp,buff,ii,lastDeskNoDelay);
+        vwConfigReadInt(fp,buff,ii,minWinHide);
     }
     else
     {
@@ -810,6 +811,7 @@ saveVirtuawinConfig(void)
         fprintf(fp, "useDskChgModRelease# %d\n", useDskChgModRelease);
         fprintf(fp, "initialDesktop# %d\n", initialDesktop);
         fprintf(fp, "lastDeskNoDelay# %d\n", lastDeskNoDelay);
+        fprintf(fp, "minWinHide# %d\n", minWinHide);
         fclose(fp);
     }
 }
