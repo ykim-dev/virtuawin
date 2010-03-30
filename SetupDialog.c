@@ -713,6 +713,8 @@ setupMouse(HWND hDlg, UINT message, UINT wParam, LONG lParam)
         
         if(mouseEnable & 1)
             SendDlgItemMessage(hDlg, IDC_ENABLEMOUSE, BM_SETCHECK, 1,0);
+        if(mouseEnable & 0x10)
+            SendDlgItemMessage(hDlg, IDC_MOUSEDRAG, BM_SETCHECK, 1,0);
         if(mouseModifierUsed)
             SendDlgItemMessage(hDlg, IDC_KEYCONTROL, BM_SETCHECK, 1,0);
         if(mouseModifier & vwHOTKEY_ALT)
@@ -746,6 +748,8 @@ setupMouse(HWND hDlg, UINT message, UINT wParam, LONG lParam)
             
         case PSN_APPLY:
             mouseEnable = (SendDlgItemMessage(hDlg, IDC_ENABLEMOUSE, BM_GETCHECK, 0, 0) == BST_CHECKED) ;
+            if(SendDlgItemMessage(hDlg, IDC_MOUSEDRAG, BM_GETCHECK, 0, 0) == BST_CHECKED)
+                mouseEnable |= 0x10 ;
             if(SendDlgItemMessage(hDlg, IDC_MOUSEWMENU, BM_GETCHECK, 0, 0) == BST_CHECKED)
                 mouseEnable |= 2 ;
             if(SendDlgItemMessage(hDlg, IDC_MOUSEWLIST, BM_GETCHECK, 0, 0) == BST_CHECKED)
@@ -800,7 +804,7 @@ setupMouse(HWND hDlg, UINT message, UINT wParam, LONG lParam)
            LOWORD(wParam) == IDC_MSHIFT     || LOWORD(wParam) == IDC_KNOCKMODE2  ||
            LOWORD(wParam) == IDC_MWIN       || LOWORD(wParam) == IDC_MOUSEWMENU  ||
            LOWORD(wParam) == IDC_MOUSEWARP  || LOWORD(wParam) == IDC_MOUSEWLIST  ||
-           LOWORD(wParam) == IDC_MOUSEMDCHNG )
+           LOWORD(wParam) == IDC_MOUSEDRAG  || LOWORD(wParam) == IDC_MOUSEMDCHNG )
         {
             pageChangeMask |= 0x04 ;
             SendMessage(GetParent(hDlg), PSM_CHANGED, (WPARAM)hDlg, 0L); // Enable apply

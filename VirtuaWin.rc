@@ -82,29 +82,30 @@ IDD_PROPPAGE_MOUSE DIALOGEX 0, 0, 210, 250
 STYLE DS_3DLOOK | WS_CHILD | WS_DISABLED | WS_BORDER
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX        "Mouse Support", IDC_STATIC, 4, 5, 202, 161
+    GROUPBOX        "Mouse Support", IDC_STATIC, 4, 5, 202, 172
     AUTOCHECKBOX    "Enable mouse desktop changing", IDC_ENABLEMOUSE, 10, 16, 120, 10
-    LTEXT           "Delay before changing desktop:", IDC_STATIC, 22, 27, 120, 8
+    AUTOCHECKBOX    "Only change when dragging a window", IDC_MOUSEDRAG, 22, 27, 150, 10
+    LTEXT           "Delay before changing desktop:", IDC_STATIC, 22, 38, 120, 8
     CONTROL         "Slider1", IDC_SLIDER, "msctls_trackbar32", 0x19 |
-                    WS_TABSTOP, 34, 38, 80, 15
-    EDITTEXT        IDC_TIME, 125, 40, 20, 12, ES_RIGHT | ES_AUTOHSCROLL |
+                    WS_TABSTOP, 34, 49, 80, 15
+    EDITTEXT        IDC_TIME, 125, 51, 20, 12, ES_RIGHT | ES_AUTOHSCROLL |
                     ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT           "ms", IDC_STATIC, 145, 40, 35, 10
-    AUTOCHECKBOX    "Enable modifier key control", IDC_KEYCONTROL, 22, 54, 110, 10
-    LTEXT           "Modifier:", IDC_STATIC, 34, 65, 30, 8
-    AUTOCHECKBOX    "Shift", IDC_MSHIFT, 67, 65, 34, 10
-    AUTOCHECKBOX    "Ctrl", IDC_MCTRL, 102, 65, 30, 10
-    AUTOCHECKBOX    "Alt", IDC_MALT, 132, 65, 29, 10
-    AUTOCHECKBOX    "Win", IDC_MWIN, 162, 65, 29, 10
-    AUTOCHECKBOX    "Enable desktop edge knocking", IDC_KNOCKMODE1, 22, 78, 125, 10
-    AUTOCHECKBOX    "Always required", IDC_KNOCKMODE2, 34, 89, 90, 10
+    LTEXT           "ms", IDC_STATIC, 145, 51, 35, 10
+    AUTOCHECKBOX    "Enable modifier key control", IDC_KEYCONTROL, 22, 65, 110, 10
+    LTEXT           "Modifier:", IDC_STATIC, 34, 76, 30, 8
+    AUTOCHECKBOX    "Shift", IDC_MSHIFT, 67, 76, 34, 10
+    AUTOCHECKBOX    "Ctrl", IDC_MCTRL, 102, 76, 30, 10
+    AUTOCHECKBOX    "Alt", IDC_MALT, 132, 76, 29, 10
+    AUTOCHECKBOX    "Win", IDC_MWIN, 162, 76, 29, 10
+    AUTOCHECKBOX    "Enable desktop edge knocking", IDC_KNOCKMODE1, 22, 89, 125, 10
+    AUTOCHECKBOX    "Always required", IDC_KNOCKMODE2, 34, 100, 90, 10
 
-    LTEXT           "Mouse jump length", IDC_STATIC, 22, 105, 60, 8, 0
-    EDITTEXT        IDC_JUMP, 87, 103, 20, 12, ES_AUTOHSCROLL
-    AUTOCHECKBOX    "Enable mouse warping", IDC_MOUSEWARP, 22, 119, 90, 10
-    AUTOCHECKBOX    "Enable middle button desktop changing", IDC_MOUSEMDCHNG, 10, 130, 160, 10
-    AUTOCHECKBOX    "Enable middle button window list activation", IDC_MOUSEWLIST, 10, 141, 160, 10
-    AUTOCHECKBOX    "Enable middle button window menu activation", IDC_MOUSEWMENU, 10, 152, 160, 10
+    LTEXT           "Mouse jump length", IDC_STATIC, 22, 116, 60, 8, 0
+    EDITTEXT        IDC_JUMP, 87, 114, 20, 12, ES_AUTOHSCROLL
+    AUTOCHECKBOX    "Enable mouse warping", IDC_MOUSEWARP, 22, 130, 90, 10
+    AUTOCHECKBOX    "Enable middle button desktop changing", IDC_MOUSEMDCHNG, 10, 141, 160, 10
+    AUTOCHECKBOX    "Enable middle button window list activation", IDC_MOUSEWLIST, 10, 152, 160, 10
+    AUTOCHECKBOX    "Enable middle button window menu activation", IDC_MOUSEWMENU, 10, 163, 160, 10
 END
 
 IDD_PROPPAGE_MODULES DIALOG 0, 0, 210, 250

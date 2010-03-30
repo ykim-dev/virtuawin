@@ -457,7 +457,7 @@ vwMouseProc(LPVOID lpParameter)
                 wmenuState = 0 ;
             }
         }
-        if((mouseEnable & 1) && ((mode == 0) || (mode == 1)) &&
+        if((mouseEnable & 1) && ((mode == 1) || ((mode == 0) && ((mouseEnable & 0x10) == 0))) &&
            (!mouseModifierUsed || vwKeyboardTestModifier(mouseModifier)))
         {
             GetCursorPos(&pt);

@@ -59,6 +59,7 @@
 #define IDC_HOTKEY_DEL    1038
 #define IDC_SLIDERX       1040
 #define IDC_SLIDERY       1041
+#define IDC_MOUSEDRAG     1043
 #define IDC_KEYCONTROL    1044
 #define IDC_NOHIDEMINWIN  1045
 #define IDC_HIDEMINWIN    1046
