@@ -377,6 +377,9 @@ handle.
     that you need to restart VirtuaWin in order for enabled modules to become
     active again. Disabling modules works instantly.
 
+.   Pressing the **//Get Modules//** button will open VirtuaWin's main modules
+    download page in your preferred web browser.
+
 
 === &[a Expert]Expert Tab
 
@@ -398,6 +401,9 @@ handle.
     allows VirtuaWin to support 3rd party tools like **Taskbar Shuffle** which
     can be used to reorder the buttons in the taskbar - these options do have
     an additional small performance hit.
+    
+    **Note:** The dynamic taskbar feature is not currently supported in
+    Windows 7.
 
 .   &[a SD_OHWA]**//On hidden window activation//**: A hidden window is one
     that currently belongs to a different desktop so it is being hidden;
@@ -419,6 +425,11 @@ handle.
 .   &[a SD_RFODC]**//Restore focus on desktop change//**: If checked, when switching desktops the
     focus will be returned to the window that last had the focus on the
     desktop. If disable the focus is removed - no window will have the focus.
+
+.   &[a SD_HMW]**//Hide minimized windows on desktop change//**: If checked, minimized
+    windows will behave as the other windows. If not checked, they will remain
+    in the taskbar of all desktops; this can be used for changing a window's
+    desktop (instead of dragging with mouse or using a hotkey).
 
 .   &[a SD_IUD]**//Invert Up/Down//**: If checked, the up/down control keys and mouse behavior
     will be switched. This is nice to use when you have hot keys set on the
@@ -462,6 +473,9 @@ correctly.
     buttons are sometimes created by programs which create a single main
     window and taskbar buttons for each viewable file (e.g. Excel & Acrobat).
   
+    **Note:** The dynamic taskbar feature is not currently supported in
+    Windows 7.
+
 .   &[a SD_FRMKDC]**//Force release of modifier keys on desktop change//**: If
     checked, when VirtuaWin changes desktop it will send messages to the new
     current application to force it to drop any currently pressed modifier key
@@ -474,17 +488,27 @@ correctly.
     have only seen this problem with PhotoShop). Otherwise, uncheck it to get
     rid of the annoying flicker.
 
+.   &[a SD_NHMW]**//Only hide taskbar button of minimized windows//**: If
+    checked, VirtuaWin uses the //Toolwin flag// method of hiding just the
+    taskbar button for all minimized windows (assuming &[l SD_HMW]Hide
+    minimized windows on desktop change&[/l] is disabled), this preserves the
+    Window's Thumbnail on Windows 7. This option has been introduced in case
+    this change introduces unwanted side effects - if no issues are reported
+    when this option is enabled the option will be removed in the next
+    release. 
+
 .   &[a SD_WETVL]**//Write events to the virtuawin.log//**: If checked VirtuaWin creates a log file
     detailing all VirtuaWin related events in your user configuration
     directory (to locate this file see &[l #SD_EC]Explore Config&[/l]). This is very useful
     when attempting to reproduce issues and reporting problems to VirtuaWin.
 
-.   The &[a SD_LW]**//Log Windows//** button adds information about every window to the
-    virtuawin.log file, this helps gather information required when a problem
-    is encountered. The **//Write events to the virtuawin.log//** option must be
-    enabled for this feature to have any effect.
+.   Pressing the &[a SD_LW]**//Log Windows//** button adds information about
+    every window to the virtuawin.log file, this helps gather information
+    required when a problem is encountered. The **//Write events to the
+    virtuawin.log//** option must be enabled for this feature to have any
+    effect.
 
-.   The &[a SD_EC]**//Explore Config//** button opens an explorer window displaying the contents
-    of your VirtuaWin configuration directory; this can be used to find your
-    configuration files.
+.   Pressing the &[a SD_EC]**//Explore Config//** button opens an explorer
+    window displaying the contents of your VirtuaWin configuration directory;
+    this can be used to find your configuration files.
 

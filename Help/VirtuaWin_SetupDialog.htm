@@ -199,17 +199,23 @@
 
 <p><li>Press the <b><i>Reload</i></b> button for unloading all modules and re-read the module directory.</p></li>
 
-<p><li>Pressing the <b><i>Enable/Disable</i></b> button does exactly what it sounds like. Note that you need to restart VirtuaWin in order for enabled modules to become active again. Disabling modules works instantly.</p></li></ul>
+<p><li>Pressing the <b><i>Enable/Disable</i></b> button does exactly what it sounds like. Note that you need to restart VirtuaWin in order for enabled modules to become active again. Disabling modules works instantly.</p></li>
+
+<p><li>Pressing the <b><i>Get Modules</i></b> button will open VirtuaWin's main modules download page in your preferred web browser.</p></li></ul>
 
 <p><h3><a name="Expert">Expert Tab</h3></p>
 
 <p><h4><a name="SD_AO">Advanced Options</h4></p>
 
-<p><ul><li><a name="SD_ODCP"><b><i>On desktop change preserve</i></b>: Setting this option to <b><i>Static Taskbar Order</i></b> will make VirtuaWin build up and maintain its own list of windows in creation order, this order will be used to order the buttons in the taskbar when changing desktops; VirtuaWin will not attempt to restore the Z order. When the <b><i>Z order</i></b> is selected VirtuaWin will maintain the order that windows are on top of each other, this is the same order as used by the Windows Application Menu (Alt + Tab). When used, the order of windows in the taskbar is not preserved and there is a desktop changing performance hit of around 5% compared to Taskbar Order. When <b><i>Static Taskbar &amp; Z Order</i></b> is used both orders are restored but at about a 10% performance cost. The <b><i>Dynamic Taskbar</i></b> order settings differ from the static in that they get the taskbar button order from Explorer just before changing desktops and corrects the button order, this allows VirtuaWin to support 3rd party tools like <b>Taskbar Shuffle</b> which can be used to reorder the buttons in the taskbar - these options do have an additional small performance hit.</p></li>
+<p><ul><li><a name="SD_ODCP"><b><i>On desktop change preserve</i></b>: Setting this option to <b><i>Static Taskbar Order</i></b> will make VirtuaWin build up and maintain its own list of windows in creation order, this order will be used to order the buttons in the taskbar when changing desktops; VirtuaWin will not attempt to restore the Z order. When the <b><i>Z order</i></b> is selected VirtuaWin will maintain the order that windows are on top of each other, this is the same order as used by the Windows Application Menu (Alt + Tab). When used, the order of windows in the taskbar is not preserved and there is a desktop changing performance hit of around 5% compared to Taskbar Order. When <b><i>Static Taskbar &amp; Z Order</i></b> is used both orders are restored but at about a 10% performance cost. The <b><i>Dynamic Taskbar</i></b> order settings differ from the static in that they get the taskbar button order from Explorer just before changing desktops and corrects the button order, this allows VirtuaWin to support 3rd party tools like <b>Taskbar Shuffle</b> which can be used to reorder the buttons in the taskbar - these options do have an additional small performance hit.</p>
+
+<p><b>Note:</b> The dynamic taskbar feature is not currently supported in Windows 7.</p></li>
 
 <p><li><a name="SD_OHWA"><b><i>On hidden window activation</i></b>: A hidden window is one that currently belongs to a different desktop so it is being hidden; activation is some event that suggests to VirtuaWin that the owning application wants the window to be displayed (e.g. opening a url link may activate a hidden internet browser). Setting this option to <b><i>Ignore the event</i></b> which ensure that VirtuaWin will not allow the window to display. When set to <b><i>Move window to the current desktop</i></b> VirtuaWin will move the window to the current desktop and display the window. If set to Show window on current desktop the window will be display but it is not moved to the current desktop, instead the window will be returned to its original desktop when it is either dismissed (see the <a href="#SD_WIN_DW">dismiss window</a> hotkey) or on the next desktop change. When set to <b><i>Move to window’s desktop</i></b> VirtuaWin will do a desktop change to the window’s desktop, which will also display the window. This action can also be set differently for each window type using a window rule, see the <a href="VirtuaWin_WindowRulesDialog.htm#WRD_OHWA">Window Rule Dialog</a> option. </p></li>
 
 <p><li><a name="SD_RFODC"><b><i>Restore focus on desktop change</i></b>: If checked, when switching desktops the focus will be returned to the window that last had the focus on the desktop. If disable the focus is removed - no window will have the focus.</p></li>
+
+<p><li><a name="SD_HMW"><b><i>Hide minimized windows on desktop change</i></b>: If checked, minimized windows will behave as the other windows. If not checked, they will remain in the taskbar of all desktops; this can be used for changing a window's desktop (instead of dragging with mouse or using a hotkey).</p></li>
 
 <p><li><a name="SD_IUD"><b><i>Invert Up/Down</i></b>: If checked, the up/down control keys and mouse behavior will be switched. This is nice to use when you have hot keys set on the numpad. For example on a 3x3 desktop setup, use hot keys 1-9 on the numpad and invert up/down. Then every desktop will be mapped to corresponding key number and the control keys/mouse will behave as expected. Hard to explain, try it out… </p></li>
 
@@ -227,17 +233,21 @@
 
 <p><li><a name="SD_EWSR"><b><i>Enable window specific rules</i></b>: If enabled, window specific rules created via the <a href="VirtuaWin_WindowRulesDialog.htm">Window Rules Dialog</a> will be applied, see help about the <a href="VirtuaWin_WindowRulesDialog.htm">Window Rules Dialog</a> for more information. This option should be enabled, if not some windows, most notably Explorer windows, may disappear.</p></li>
 
-<p><li><a name="SD_EDTBR"><b><i>Enable dynamic taskbar button removal</i></b>: If checked and a <a href="#SD_ODCP">Dynamic taskbar order</a> is used VirtuaWin will use the taskbar button order returned by Explorer to remove unwanted buttons, these buttons are sometimes created by programs which create a single main window and taskbar buttons for each viewable file (e.g. Excel &amp; Acrobat).</p></li>
+<p><li><a name="SD_EDTBR"><b><i>Enable dynamic taskbar button removal</i></b>: If checked and a <a href="#SD_ODCP">Dynamic taskbar order</a> is used VirtuaWin will use the taskbar button order returned by Explorer to remove unwanted buttons, these buttons are sometimes created by programs which create a single main window and taskbar buttons for each viewable file (e.g. Excel &amp; Acrobat).</p>
+
+<p><b>Note:</b> The dynamic taskbar feature is not currently supported in Windows 7.</p></li>
 
 <p><li><a name="SD_FRMKDC"><b><i>Force release of modifier keys on desktop change</i></b>: If checked, when VirtuaWin changes desktop it will send messages to the new current application to force it to drop any currently pressed modifier key (Alt, Control, Shift &amp; Windows keys). Some applications fail to 'drop' these modifier keys when a hotkey is used to change desktops. </p></li>
 
 <p><li><a name="SD_FRADC"><b><i>Force refresh after desktop change</i></b>: If checked, VirtuaWin will do a refresh after a switch to a new desktop, similar to pressing F5 with “desktop focus”. Useful if applications are leaving traces after them (I have only seen this problem with PhotoShop). Otherwise, uncheck it to get rid of the annoying flicker.</p></li>
 
+<p><li><a name="SD_NHMW"><b><i>Only hide taskbar button of minimized windows</i></b>: If checked, VirtuaWin uses the <i>Toolwin flag</i> method of hiding just the taskbar button for all minimized windows (assuming <a href="SD_HMW">Hide minimized windows on desktop change</a> is disabled), this preserves the Window's Thumbnail on Windows 7. This option has been introduced in case this change introduces unwanted side effects - if no issues are reported when this option is enabled the option will be removed in the next release. </p></li>
+
 <p><li><a name="SD_WETVL"><b><i>Write events to the virtuawin.log</i></b>: If checked VirtuaWin creates a log file detailing all VirtuaWin related events in your user configuration directory (to locate this file see <a href="#SD_EC">Explore Config</a>). This is very useful when attempting to reproduce issues and reporting problems to VirtuaWin.</p></li>
 
-<p><li>The <a name="SD_LW"><b><i>Log Windows</i></b> button adds information about every window to the virtuawin.log file, this helps gather information required when a problem is encountered. The <b><i>Write events to the virtuawin.log</i></b> option must be enabled for this feature to have any effect.</p></li>
+<p><li>Pressing the <a name="SD_LW"><b><i>Log Windows</i></b> button adds information about every window to the virtuawin.log file, this helps gather information required when a problem is encountered. The <b><i>Write events to the virtuawin.log</i></b> option must be enabled for this feature to have any effect.</p></li>
 
-<p><li>The <a name="SD_EC"><b><i>Explore Config</i></b> button opens an explorer window displaying the contents of your VirtuaWin configuration directory; this can be used to find your configuration files.</p></li></ul>
+<p><li>Pressing the <a name="SD_EC"><b><i>Explore Config</i></b> button opens an explorer window displaying the contents of your VirtuaWin configuration directory; this can be used to find your configuration files.</p></li></ul>
 </dir>
 </body>
 </html>
