@@ -62,6 +62,7 @@ typedef unsigned char  vwUByte ;
 #define vwWTFLAGS_WN_EVAR          0x00000008
 #define vwWTFLAGS_PN_SVAR          0x00000010
 #define vwWTFLAGS_PN_EVAR          0x00000020
+#define vwWTFLAGS_ALWAYSONTOP      0x00000100
 #define vwWTFLAGS_MANAGE           0x00000200
 #define vwWTFLAGS_DONT_MANAGE      0x00000400
 #define vwWTFLAGS_ENABLED          0x00000800

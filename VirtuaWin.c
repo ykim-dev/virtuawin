@@ -1620,6 +1620,20 @@ showWindowRule(HWND theWin, int add)
     }
 }
 
+static void
+windowSetAlwaysOnTop(HWND theWin)
+{
+    int ExStyle ;
+    
+    vwLogBasic((_T("AlwaysOnTop window: %x\n"),(int) theWin)) ;
+    if(theWin != NULL)
+    {
+        ExStyle = GetWindowLong(theWin,GWL_EXSTYLE) ;
+        SetWindowPos(theWin,(ExStyle & WS_EX_TOPMOST) ? HWND_NOTOPMOST:HWND_TOPMOST,0,0,0,0,
+                     SWP_DEFERERASE|SWP_NOSIZE|SWP_NOACTIVATE|SWP_NOSENDCHANGING|SWP_NOMOVE) ;
+    }
+}
+
 /************************************************
  * Moves a window to a given desk
  * move can be one of the following values:
@@ -1801,6 +1815,8 @@ enumWindowsProc(HWND hwnd, LPARAM lParam)
                 vwLogBasic((_T("Got new unmanaged window %8x Proc %d Flg %x %x (%08x) %x\n"),
                             (int)win->handle,(int)win->processId,(int)win->flags,(int) exstyle,(int)style,win->zOrder[0])) ;
         }
+        if((wt != NULL) && (wt->flags & vwWTFLAGS_ALWAYSONTOP) && ((exstyle & WS_EX_TOPMOST) == 0))
+            windowSetAlwaysOnTop(hwnd) ;
         return TRUE;
     }
     wb->flags |= vwWINFLAGS_FOUND ;
@@ -3793,20 +3809,6 @@ windowDismiss(HWND theWin)
     }
     vwMutexRelease();
     return ret ;
-}
-
-static void
-windowSetAlwaysOnTop(HWND theWin)
-{
-    int ExStyle ;
-    
-    vwLogBasic((_T("AlwaysOnTop window: %x\n"),(int) theWin)) ;
-    if(theWin != NULL)
-    {
-        ExStyle = GetWindowLong(theWin,GWL_EXSTYLE) ;
-        SetWindowPos(theWin,(ExStyle & WS_EX_TOPMOST) ? HWND_NOTOPMOST:HWND_TOPMOST,0,0,0,0,
-                     SWP_DEFERERASE|SWP_NOSIZE|SWP_NOACTIVATE|SWP_NOSENDCHANGING|SWP_NOMOVE) ;
-    }
 }
 
 static void

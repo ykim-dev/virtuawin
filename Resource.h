@@ -122,6 +122,7 @@
 #define IDC_WTYPE_OK      1222
 #define IDC_WTYPE_APPLY   1223
 #define IDC_WTYPE_HELP    1224
+#define IDC_WTYPE_ALONTOP 1225
 
 
 #define ID_SETUP         32771   
