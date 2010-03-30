@@ -124,24 +124,25 @@ IDD_PROPPAGE_EXPERT DIALOG 0, 0, 210, 250
 STYLE DS_3DLOOK | WS_CHILD | WS_DISABLED | WS_BORDER
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX        "Advanced Options", IDC_STATIC, 4, 5, 202, 98
+    GROUPBOX        "Advanced Options", IDC_STATIC, 4, 5, 202, 109
     LTEXT           "On desktop change preserve:", IDC_STATIC,  10, 16, 120, 10
     COMBOBOX        IDC_PRESORDER, 22, 26, 130, 75, CBS_AUTOHSCROLL | CBS_DROPDOWNLIST | WS_TABSTOP
     LTEXT           "On hidden window activation:", IDC_STATIC, 10, 41, 120, 10
     COMBOBOX        IDC_HIDWINACT, 22, 51, 130, 56, CBS_AUTOHSCROLL | CBS_DROPDOWNLIST | WS_TABSTOP
     AUTOCHECKBOX    "Restore focus on desktop change", IDC_FOCUS,                10,  66, 125, 10
-    AUTOCHECKBOX    "Invert Up/Down", IDC_INVERTY,                               10,  77,  70, 10
-    AUTOCHECKBOX    "Hide system tray icon", IDC_DISPLAYICON,                    10,  88,  80, 10
+    AUTOCHECKBOX    "Hide minimized windows on desktop change", IDC_HIDEMINWIN,  10,  77, 155, 10
+    AUTOCHECKBOX    "Invert Up/Down", IDC_INVERTY,                               10,  88,  70, 10
+    AUTOCHECKBOX    "Hide system tray icon", IDC_DISPLAYICON,                    10,  99,  80, 10
 
-    GROUPBOX        "Workarounds", IDC_STATIC, 4, 106, 202, 102
-    AUTOCHECKBOX    "Enable taskbar detection", IDC_TASKBARDETECT,               10, 117, 100, 10
-    AUTOCHECKBOX    "Enable Windows hook", IDC_USEVWHOOK,                        10, 128, 100, 10
-    AUTOCHECKBOX    "Enable window specific rules", IDC_USEWINRULES,             10, 139, 130, 10
-    AUTOCHECKBOX    "Enable dynamic taskbar button removal", IDC_DYNBUTTONRM,    10, 150, 150, 10
-    AUTOCHECKBOX    "Force release of modifier keys on desktop change", IDC_USEDCMODREL,   10, 161, 180, 10
-    AUTOCHECKBOX    "Force refresh after desktop change", IDC_REFRESH,           10, 172, 130, 10
-    AUTOCHECKBOX    "Only hide taskbar button of minimized windows", IDC_NOHIDEMINWIN,     10, 183, 180, 10
-    AUTOCHECKBOX    "Write events to virtuawin.log", IDC_DEBUGLOGGING,           10, 194, 130, 10
+    GROUPBOX        "Workarounds", IDC_STATIC, 4, 117, 202, 102
+    AUTOCHECKBOX    "Enable taskbar detection", IDC_TASKBARDETECT,               10, 128, 100, 10
+    AUTOCHECKBOX    "Enable Windows hook", IDC_USEVWHOOK,                        10, 139, 100, 10
+    AUTOCHECKBOX    "Enable window specific rules", IDC_USEWINRULES,             10, 150, 130, 10
+    AUTOCHECKBOX    "Enable dynamic taskbar button removal", IDC_DYNBUTTONRM,    10, 161, 150, 10
+    AUTOCHECKBOX    "Force release of modifier keys on desktop change", IDC_USEDCMODREL,   10, 172, 180, 10
+    AUTOCHECKBOX    "Force refresh after desktop change", IDC_REFRESH,           10, 183, 130, 10
+    AUTOCHECKBOX    "Only hide taskbar button of minimized windows", IDC_NOHIDEMINWIN,     10, 194, 180, 10
+    AUTOCHECKBOX    "Write events to virtuawin.log", IDC_DEBUGLOGGING,           10, 205, 130, 10
 
     PUSHBUTTON      "Log Windows",     IDC_LOGWINDOWS,   70, 230, 60, 14
     PUSHBUTTON      "Explore Config",  IDC_EXPLORECNFG, 140, 230, 60, 14

@@ -965,6 +965,8 @@ setupExpert(HWND hDlg, UINT message, UINT wParam, LONG lParam)
             SendDlgItemMessage(hDlg, IDC_USEDCMODREL, BM_SETCHECK, 1,0);
         if(minWinHide & 0x01)
             SendDlgItemMessage(hDlg, IDC_NOHIDEMINWIN, BM_SETCHECK, 1,0);
+        if((minWinHide & 0x02) == 0)
+            SendDlgItemMessage(hDlg, IDC_HIDEMINWIN, BM_SETCHECK, 1,0);
         if(vwLogFlag)
             SendDlgItemMessage(hDlg, IDC_DEBUGLOGGING, BM_SETCHECK, 1,0);
         return TRUE;
@@ -987,9 +989,11 @@ setupExpert(HWND hDlg, UINT message, UINT wParam, LONG lParam)
             useWindowRules = (SendDlgItemMessage(hDlg, IDC_USEWINRULES, BM_GETCHECK, 0, 0) == BST_CHECKED) ;
             useDynButtonRm = (SendDlgItemMessage(hDlg, IDC_DYNBUTTONRM, BM_GETCHECK, 0, 0) == BST_CHECKED) ;
             useDskChgModRelease = (SendDlgItemMessage(hDlg, IDC_USEDCMODREL, BM_GETCHECK, 0, 0) == BST_CHECKED) ;
-            minWinHide &= ~0x01 ;
+            minWinHide &= ~0x03 ;
             if(SendDlgItemMessage(hDlg, IDC_NOHIDEMINWIN, BM_GETCHECK, 0, 0) == BST_CHECKED)
                 minWinHide |= 0x01 ;
+            if(SendDlgItemMessage(hDlg, IDC_HIDEMINWIN, BM_GETCHECK, 0, 0) != BST_CHECKED)
+                minWinHide |= 0x02 ;
             vwLogFlag = (SendDlgItemMessage(hDlg,IDC_DEBUGLOGGING,BM_GETCHECK, 0, 0) == BST_CHECKED) ;
             displayTaskbarIcon = (SendDlgItemMessage(hDlg, IDC_DISPLAYICON, BM_GETCHECK, 0, 0) != BST_CHECKED) ;
             
@@ -1084,7 +1088,7 @@ setupExpert(HWND hDlg, UINT message, UINT wParam, LONG lParam)
                 LOWORD(wParam) == IDC_INVERTY     || LOWORD(wParam) == IDC_TASKBARDETECT ||
                 LOWORD(wParam) == IDC_REFRESH     || LOWORD(wParam) == IDC_DYNBUTTONRM ||
                 LOWORD(wParam) == IDC_USEVWHOOK   || LOWORD(wParam) == IDC_NOHIDEMINWIN ||
-                LOWORD(wParam) == IDC_USEDCMODREL ||
+                LOWORD(wParam) == IDC_USEDCMODREL || LOWORD(wParam) == IDC_HIDEMINWIN ||
                 (LOWORD(wParam) == IDC_HIDWINACT  && HIWORD(wParam) == CBN_SELCHANGE) ||
                 (LOWORD(wParam) == IDC_PRESORDER  && HIWORD(wParam) == CBN_SELCHANGE) )
         {

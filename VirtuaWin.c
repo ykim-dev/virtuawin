@@ -3320,8 +3320,9 @@ vwWindowShowHide(vwWindow* aWindow, vwUInt flags)
             aWindow->flags |= (vwWINFLAGS_SHOWN|vwWINFLAGS_SHOW) ;
             if(vwWindowIsMinimized(aWindow) && minWinHide)
             {
-                /* window is already minimised, just remove the taskbar icon - this preserves the Win7 thumbnail */
-                if((aWindow->flags & vwWINFLAGS_HIDETSK_MASK) != vwWTFLAGS_HIDETSK_DONT)
+                /* window is already minimised - do nothing if set to show mi8nimized window taskbar buttons,
+                 * otherwise just remove the taskbar icon - this preserves the Win7 thumbnail */
+                if(((minWinHide & 0x02) == 0) && ((aWindow->flags & vwWINFLAGS_HIDETSK_MASK) != vwWTFLAGS_HIDETSK_DONT))
                 {
                     SetWindowLong(aWindow->handle, GWL_EXSTYLE, aWindow->exStyle) ;  
                     if((taskHWnd != NULL) && ((aWindow->flags & vwWINFLAGS_NO_TASKBAR_BUT) == 0))
@@ -3391,8 +3392,9 @@ vwWindowShowHide(vwWindow* aWindow, vwUInt flags)
             aWindow->flags &= ~(vwWINFLAGS_SHOWN|vwWINFLAGS_SHOW) ;
             if(vwWindowIsMinimized(aWindow) && minWinHide)
             {
-                /* window is already minimised, just remove the taskbar icon - this preserves the Win7 thumbnail */
-                if((aWindow->flags & vwWINFLAGS_HIDETSK_MASK) != vwWTFLAGS_HIDETSK_DONT)
+                /* window is already minimised - do nothing if set to show mi8nimized window taskbar buttons,
+                 * otherwise just remove the taskbar icon - this preserves the Win7 thumbnail */
+                if(((minWinHide & 0x02) == 0) && ((aWindow->flags & vwWINFLAGS_HIDETSK_MASK) != vwWTFLAGS_HIDETSK_DONT))
                 {
                     SetWindowLong(aWindow->handle, GWL_EXSTYLE,(aWindow->exStyle & (~WS_EX_APPWINDOW)) | WS_EX_TOOLWINDOW);
                     if((taskHWnd != NULL) && ((aWindow->flags & vwWINFLAGS_NO_TASKBAR_BUT) == 0))
