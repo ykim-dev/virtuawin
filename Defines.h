@@ -172,11 +172,13 @@ typedef struct {
 } vwMenuItem ;
 
 /* vwHotkey - Structure to store a hotkey binding */
-#define vwHOTKEY_ALT     MOD_ALT
-#define vwHOTKEY_CONTROL MOD_CONTROL
-#define vwHOTKEY_SHIFT   MOD_SHIFT
-#define vwHOTKEY_WIN     MOD_WIN
-#define vwHOTKEY_EXT     0x10
+#define vwHOTKEY_ALT       MOD_ALT
+#define vwHOTKEY_CONTROL   MOD_CONTROL
+#define vwHOTKEY_SHIFT     MOD_SHIFT
+#define vwHOTKEY_WIN       MOD_WIN
+#define vwHOTKEY_MOD_MASK  (MOD_ALT|MOD_CONTROL|MOD_SHIFT|MOD_WIN)
+#define vwHOTKEY_EXT       0x10
+#define vwHOTKEY_WIN_MOUSE 0x20
 
 typedef struct {
     ATOM     atom ;
