@@ -137,6 +137,12 @@
 /* Message, set whether a window is managed by VW. wParam is the window handle
  * (HWND, 0 for foreground window) and lParam should be 0 for not managed  and 1 for managed. */
 #define VW_WINMANAGE    (WM_USER + 45)
+/* Message, executes a hotkey command as if the user pressed the hotkey, where wParam is the
+ * command id (see second column in vwCommands.def), LOWORD(lParam) is the desk (if required) and
+ * HIWORD(lParam) is the modifier, only bit vwHOTKEY_WIN_MOUSE is used (and only set if really
+ * needed as the command will fail if there is no window under the mouse). The return is dependent
+ * on the command being executed. */
+#define VW_HOTKEY       (WM_USER + 46)
 
 /* Message, sent by VirtuaWin after a switch. lParam will contain current desktop number 
    if wParam isn't one of the following, then wParam will also contain current desktop.
