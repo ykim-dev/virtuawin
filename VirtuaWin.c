@@ -753,7 +753,7 @@ vwHotkeyRegister(int warnAll)
             }
             if(hotkeyList[ii].atom == 0)
                 MessageBox(hWnd,_T("Failed to create global atom"),vwVIRTUAWIN_NAME _T(" Error"), MB_ICONWARNING);
-            else if((RegisterHotKey(hWnd,hotkeyList[ii].atom,(hotkeyList[ii].modifier & ~vwHOTKEY_EXT),hotkeyList[ii].key) == FALSE) &&
+            else if((RegisterHotKey(hWnd,hotkeyList[ii].atom,(hotkeyList[ii].modifier & vwHOTKEY_MOD_MASK),hotkeyList[ii].key) == FALSE) &&
                     (warnAll || (hotkeyList[ii].command != vwCMD_UI_ENABLESTATE)))
             {
                 _stprintf(buff,_T("Failed to register hotkey %d, check hotkeys."),ii+1) ;
@@ -1571,7 +1571,7 @@ showSetup(void)
 {
     if(!dialogOpen)
     {
-        // reload load current config
+        // reload current config
         loadVirtuawinConfig();
         vwLogVerbose((_T("About to call createSetupDialog\n"))) ;
         createSetupDialog(hInst,hWnd);
@@ -1620,18 +1620,18 @@ showWindowRule(HWND theWin, int add)
     }
 }
 
-static void
+static int
 windowSetAlwaysOnTop(HWND theWin)
 {
     int ExStyle ;
     
     vwLogBasic((_T("AlwaysOnTop window: %x\n"),(int) theWin)) ;
-    if(theWin != NULL)
-    {
-        ExStyle = GetWindowLong(theWin,GWL_EXSTYLE) ;
-        SetWindowPos(theWin,(ExStyle & WS_EX_TOPMOST) ? HWND_NOTOPMOST:HWND_TOPMOST,0,0,0,0,
-                     SWP_DEFERERASE|SWP_NOSIZE|SWP_NOACTIVATE|SWP_NOSENDCHANGING|SWP_NOMOVE) ;
-    }
+    if((theWin == NULL) && ((theWin = GetForegroundWindow()) == NULL))
+        return 0 ;
+    ExStyle = GetWindowLong(theWin,GWL_EXSTYLE) ;
+    SetWindowPos(theWin,(ExStyle & WS_EX_TOPMOST) ? HWND_NOTOPMOST:HWND_TOPMOST,0,0,0,0,
+                 SWP_DEFERERASE|SWP_NOSIZE|SWP_NOACTIVATE|SWP_NOSENDCHANGING|SWP_NOMOVE) ;
+    return 1 ;
 }
 
 /************************************************
@@ -3476,7 +3476,7 @@ vwWindowShowHide(vwWindow* aWindow, vwUInt flags)
 /************************************************
  * Toggles the disabled state of VirtuaWin
  */
-static void
+static int
 vwToggleEnabled(void)
 {
     vwEnabled ^= 1;
@@ -3494,6 +3494,7 @@ vwToggleEnabled(void)
         enableMouse(FALSE);
         vwHotkeyUnregister(0);
     }
+    return vwEnabled ;
 }
 
 /************************************************
@@ -3811,12 +3812,16 @@ windowDismiss(HWND theWin)
     return ret ;
 }
 
-static void
+static int
 windowPushToBottom(HWND theWin)
 {
     vwWindow *win, *wint=NULL ;
     vwUInt minZOrder=0xffffffff, maxZOrder=0 ;
     HWND pWin=NULL ;
+    
+    vwLogBasic((_T("Pushing window to bottom: %x\n"),(int) theWin)) ;
+    if((theWin == NULL) && ((theWin = GetForegroundWindow()) == NULL))
+        return 0 ;
     
     vwMutexLock();
     windowListUpdate() ;
@@ -3844,6 +3849,7 @@ windowPushToBottom(HWND theWin)
     vwMutexRelease();
     SetWindowPos(theWin,HWND_BOTTOM,0,0,0,0,
                  SWP_DEFERERASE|SWP_NOSIZE|SWP_NOACTIVATE|SWP_NOSENDCHANGING|SWP_NOMOVE) ;
+    return 1 ;
 }
 
 static HWND infoWin ;
@@ -4464,21 +4470,140 @@ popupControlMenu(HWND aHWnd, int cmFlags)
     return TRUE ;
 }
 
+static int
+vwHotkeyExecute(vwUByte command, vwUByte desk, vwUByte modifier)
+{
+    HWND hwnd, theWin = NULL ;
+    
+    if(modifier & vwHOTKEY_WIN_MOUSE)
+    {
+        POINT pt;
+        GetCursorPos(&pt);
+        if((theWin = WindowFromPoint(pt)) == NULL)
+            return 0 ;
+        while((GetWindowLong(theWin, GWL_STYLE) & WS_CHILD) && 
+              ((hwnd = GetParent(theWin)) != NULL) && (hwnd != desktopHWnd))
+            theWin = hwnd ;
+    }
+    switch(command)
+    {
+    case vwCMD_NAV_MOVE_LEFT:
+        return stepLeft();
+    case vwCMD_NAV_MOVE_RIGHT:
+        return stepRight();
+    case vwCMD_NAV_MOVE_UP:
+    case vwCMD_NAV_MOVE_DOWN:
+        if((command == vwCMD_NAV_MOVE_UP) ^ (invertY != 0))
+            return stepUp();
+        return stepDown();
+    case vwCMD_NAV_MOVE_PREV:
+        return stepDelta(-1) ;
+    case vwCMD_NAV_MOVE_NEXT:
+        return stepDelta(1) ;
+    case vwCMD_NAV_MOVE_DESKTOP:
+        return gotoDesk(desk,TRUE);
+    case vwCMD_WIN_STICKY:
+        return windowSetSticky(theWin,-1);
+    case vwCMD_WIN_DISMISS:
+        return windowDismiss(theWin);
+    case vwCMD_WIN_MOVE_DESKTOP:
+    case vwCMD_WIN_MOVE_DESK_FOL:
+        return assignWindow(theWin,desk,(vwUByte) (command == vwCMD_WIN_MOVE_DESK_FOL),TRUE,FALSE);
+    case vwCMD_WIN_MOVE_PREV:
+    case vwCMD_WIN_MOVE_PREV_FOL:
+        return assignWindow(theWin,VW_STEPPREV,(vwUByte) (command == vwCMD_WIN_MOVE_PREV_FOL),TRUE,FALSE);
+    case vwCMD_WIN_MOVE_NEXT:
+    case vwCMD_WIN_MOVE_NEXT_FOL:
+        return assignWindow(theWin,VW_STEPNEXT,(vwUByte) (command == vwCMD_WIN_MOVE_NEXT_FOL),TRUE,FALSE);
+    case vwCMD_UI_WINMENU_STD:
+        popupWindowMenu(GetForegroundWindow(),0x10);
+        break ;
+    case vwCMD_UI_WINMENU_CMP:
+        popupWindowMenu(GetForegroundWindow(),0x11);
+        break ;
+    case vwCMD_UI_WINLIST_STD:
+        popupWinListMenu(hWnd,0x14) ;
+        break ;
+    case vwCMD_UI_WINLIST_CMP:
+        popupWinListMenu(hWnd,0x15) ;
+        break ;
+    case vwCMD_UI_WINLIST_MRU:
+        popupWinListMenu(hWnd,0x16) ;
+        break ;
+    case vwCMD_UI_SETUP:
+        showSetup();
+        break ;
+    case vwCMD_WIN_PUSHTOBOTTOM:
+        return windowPushToBottom(theWin) ;
+    case vwCMD_WIN_ALWAYSONTOP:
+        return windowSetAlwaysOnTop(theWin) ;
+    case vwCMD_WIN_GATHER_ALL:
+        vwWindowShowAll(0);
+        break ;
+    case vwCMD_UI_WTYPE_SETUP:
+        showWindowRule(theWin,0) ;
+        break ;
+    case vwCMD_UI_CONTROLMENU:
+        return popupControlMenu(hWnd,0x10) ;
+    case vwCMD_WIN_GATHER:
+        windowGather(theWin);
+        break ;
+    case vwCMD_WIN_MOVE_LEFT:
+    case vwCMD_WIN_MOVE_LEFT_FOL:
+        return assignWindow(theWin,VW_STEPLEFT,(vwUByte) (command & 0x01),TRUE,FALSE);
+    case vwCMD_WIN_MOVE_RIGHT:
+    case vwCMD_WIN_MOVE_RIGHT_FOL:
+        return assignWindow(theWin,VW_STEPRIGHT,(vwUByte) (command & 0x01),TRUE,FALSE);
+    case vwCMD_WIN_MOVE_UP:
+    case vwCMD_WIN_MOVE_UP_FOL:
+    case vwCMD_WIN_MOVE_DOWN:
+    case vwCMD_WIN_MOVE_DOWN_FOL:
+        if((command >= vwCMD_WIN_MOVE_DOWN) ^ (invertY == 0))
+            return assignWindow(theWin,VW_STEPUP,(vwUByte) (command & 0x01),TRUE,FALSE);
+        return assignWindow(theWin,VW_STEPDOWN,(vwUByte) (command & 0x01),TRUE,FALSE);
+    case vwCMD_UI_ENABLESTATE:
+        return vwToggleEnabled() ;
+    case vwCMD_NAV_MOVE_LAST:
+        {
+            int nld ; 
+            if(lastDesk == currentDesk)
+                return 0 ;
+            nld = currentDesk ;
+            gotoDesk(lastDesk,FALSE);
+            lastDesk = nld ;
+            break ;
+        }
+    case vwCMD_UI_SYSTRAYICON:
+        taskbarIconShown ^= 0x02 ;
+        vwIconSet(currentDesk,0) ;
+        return (taskbarIconShown & 0x01) ;
+    case vwCMD_UI_EXIT:
+        shutDown() ;
+        break ;
+    case vwCMD_WIN_BRINGTOTOP:
+        if(theWin == NULL)
+            return 0 ;
+        setForegroundWin(theWin,1) ;
+        break ;
+    default:
+        return 0 ;
+    }
+    return 1 ;
+}
+
 /*************************************************
  * Main window callback, this is where all main window messages are taken care of
  */
 static LRESULT CALLBACK
 wndProc(HWND aHWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-    POINT pt;
-    int ii ;
-    
     switch (message)
     {
     case VW_MOUSEWARP:
         // Is virtuawin enabled
         if(vwEnabled)
         {
+            POINT pt;
             GetCursorPos(&pt);
             
             isDragging = (LOWORD(lParam) & 0x1) ;
@@ -4557,127 +4682,16 @@ wndProc(HWND aHWnd, UINT message, WPARAM wParam, LPARAM lParam)
         return TRUE;
         
     case WM_HOTKEY:				// A hot key was pressed
-        ii = hotkeyCount ;
-        while(--ii >= 0)
-            if(hotkeyList[ii].atom == wParam)
-                break ;
-        if(ii < 0)
-            return FALSE ;
-        switch(hotkeyList[ii].command)
         {
-        case vwCMD_NAV_MOVE_LEFT:
-            stepLeft();
-            break ;
-        case vwCMD_NAV_MOVE_RIGHT:
-            stepRight();
-            break ;
-        case vwCMD_NAV_MOVE_UP:
-        case vwCMD_NAV_MOVE_DOWN:
-            if((hotkeyList[ii].command == vwCMD_NAV_MOVE_UP) ^ (invertY != 0))
-                stepUp();
-            else
-                stepDown();
-            break ;
-        case vwCMD_NAV_MOVE_PREV:
-            stepDelta(-1) ;
-            break ;
-        case vwCMD_NAV_MOVE_NEXT:
-            stepDelta(1) ;
-            break ;
-        case vwCMD_NAV_MOVE_DESKTOP:
-            gotoDesk(hotkeyList[ii].desk,TRUE);
-            break ;
-        case vwCMD_WIN_STICKY:
-            windowSetSticky(0,-1);
-            break ;
-        case vwCMD_WIN_DISMISS:
-            windowDismiss(NULL);
-            break ;
-        case vwCMD_WIN_MOVE_DESKTOP:
-        case vwCMD_WIN_MOVE_DESK_FOL:
-            assignWindow(NULL,hotkeyList[ii].desk,(vwUByte) (hotkeyList[ii].command == vwCMD_WIN_MOVE_DESK_FOL),TRUE,FALSE);
-            break ;
-        case vwCMD_WIN_MOVE_PREV:
-        case vwCMD_WIN_MOVE_PREV_FOL:
-            assignWindow(NULL,VW_STEPPREV,(vwUByte) (hotkeyList[ii].command == vwCMD_WIN_MOVE_PREV_FOL),TRUE,FALSE);
-            break ;
-        case vwCMD_WIN_MOVE_NEXT:
-        case vwCMD_WIN_MOVE_NEXT_FOL:
-            assignWindow(NULL,VW_STEPNEXT,(vwUByte) (hotkeyList[ii].command == vwCMD_WIN_MOVE_NEXT_FOL),TRUE,FALSE);
-            break ;
-        case vwCMD_UI_WINMENU_STD:
-            popupWindowMenu(GetForegroundWindow(),0x10);
-            break ;
-        case vwCMD_UI_WINMENU_CMP:
-            popupWindowMenu(GetForegroundWindow(),0x11);
-            break ;
-        case vwCMD_UI_WINLIST_STD:
-            popupWinListMenu(aHWnd,0x14) ;
-            break ;
-        case vwCMD_UI_WINLIST_CMP:
-            popupWinListMenu(aHWnd,0x15) ;
-            break ;
-        case vwCMD_UI_WINLIST_MRU:
-            popupWinListMenu(aHWnd,0x16) ;
-            break ;
-        case vwCMD_UI_SETUP:
-            showSetup();
-            break ;
-        case vwCMD_WIN_PUSHTOBOTTOM:
-            windowPushToBottom(GetForegroundWindow());
-            break ;
-        case vwCMD_WIN_ALWAYSONTOP:
-            windowSetAlwaysOnTop(GetForegroundWindow());
-            break ;
-        case vwCMD_WIN_GATHER_ALL:
-            vwWindowShowAll(0);
-            break ;
-        case vwCMD_UI_WTYPE_SETUP:
-            showWindowRule(NULL,0) ;
-            break ;
-        case vwCMD_UI_CONTROLMENU:
-            return popupControlMenu(aHWnd,0x10) ;
-        case vwCMD_WIN_GATHER:
-            windowGather(NULL);
-            break ;
-        case vwCMD_WIN_MOVE_LEFT:
-        case vwCMD_WIN_MOVE_LEFT_FOL:
-            assignWindow(NULL,VW_STEPLEFT,(vwUByte) (hotkeyList[ii].command & 0x01),TRUE,FALSE);
-            break ;
-        case vwCMD_WIN_MOVE_RIGHT:
-        case vwCMD_WIN_MOVE_RIGHT_FOL:
-            assignWindow(NULL,VW_STEPRIGHT,(vwUByte) (hotkeyList[ii].command & 0x01),TRUE,FALSE);
-            break ;
-        case vwCMD_WIN_MOVE_UP:
-        case vwCMD_WIN_MOVE_UP_FOL:
-        case vwCMD_WIN_MOVE_DOWN:
-        case vwCMD_WIN_MOVE_DOWN_FOL:
-            if((hotkeyList[ii].command >= vwCMD_WIN_MOVE_DOWN) ^ (invertY == 0))
-                assignWindow(NULL,VW_STEPUP,(vwUByte) (hotkeyList[ii].command & 0x01),TRUE,FALSE);
-            else
-                assignWindow(NULL,VW_STEPDOWN,(vwUByte) (hotkeyList[ii].command & 0x01),TRUE,FALSE);
-            break ;
-        case vwCMD_UI_ENABLESTATE:
-            vwToggleEnabled() ;
-            break ;
-        case vwCMD_NAV_MOVE_LAST:
-            if(lastDesk != currentDesk)
-            {
-                ii = currentDesk ;
-                gotoDesk(lastDesk,FALSE);
-                lastDesk = ii ;
-            }
-            break ;
-        case vwCMD_UI_SYSTRAYICON:
-            taskbarIconShown ^= 0x02 ;
-            vwIconSet(currentDesk,0) ;
-            break ;
-        case vwCMD_UI_EXIT:
-            shutDown() ;
-            break ;
+            int ii = hotkeyCount ;
+            while(--ii >= 0)
+                if(hotkeyList[ii].atom == wParam)
+                    break ;
+            if(ii < 0)
+                return FALSE ;
+            vwHotkeyExecute(hotkeyList[ii].command,hotkeyList[ii].desk,hotkeyList[ii].modifier) ;
+            return TRUE ;
         }
-        return TRUE;
-        
         // Plugin messages
     case VW_CHANGEDESK: 
         if(!vwEnabled)
@@ -4757,6 +4771,7 @@ wndProc(HWND aHWnd, UINT message, WPARAM wParam, LPARAM lParam)
         
     case VW_WINGETINFO:
         {
+            int ii ;
             vwWindowBase *win ;
             vwMutexLock();
             if((win = vwWindowBaseFind((HWND)wParam)) == NULL)
@@ -4773,6 +4788,7 @@ wndProc(HWND aHWnd, UINT message, WPARAM wParam, LPARAM lParam)
         
     case VW_FOREGDWIN:
         {
+            int ii ;
             vwWindow *win ;
             vwMutexLock();
             if((win = vwWindowFind((HWND)wParam)) != NULL)
@@ -4901,6 +4917,9 @@ wndProc(HWND aHWnd, UINT message, WPARAM wParam, LPARAM lParam)
         
     case VW_WINMANAGE:
         return windowSetManage((HWND)wParam,(int) lParam);
+        
+    case VW_HOTKEY:
+        return vwHotkeyExecute((vwUByte) wParam,(vwUByte) LOWORD(lParam),(vwUByte) HIWORD(lParam)) ;
         
         // End plugin messages
         
