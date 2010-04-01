@@ -208,7 +208,7 @@ GetFilename(eFileNames filetype, int location, TCHAR *outStr)
  * Loads module names that should be disabled
  */
 int
-loadDisabledModules(disModules *theDisList)
+loadDisabledModules(vwDisModule *theDisList)
 {
     TCHAR buff[MAX_PATH];
     int len, nOfDisMod = 0;
@@ -240,7 +240,7 @@ loadDisabledModules(disModules *theDisList)
  * Write out the disabled modules
  */
 void
-saveDisabledList(int theNOfModules, moduleType* theModList)
+saveDisabledList(int theNOfModules, vwModule *theModList)
 {
     TCHAR DisabledFileList[MAX_PATH];
     FILE* fp;

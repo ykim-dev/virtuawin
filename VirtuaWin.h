@@ -44,8 +44,8 @@ extern vwWindowRule *windowRuleList;              // list for holding window rul
 extern vwHotkey hotkeyList[vwHOTKEY_MAX];         // list for holding hotkeys
 
 extern int curDisabledMod;                        // how many disabled modules we have
-extern moduleType moduleList[MAXMODULES];         // list that holds modules
-extern disModules disabledModules[MAXMODULES*2];  // list with disabled modules
+extern vwModule moduleList[MAXMODULES];           // list that holds modules
+extern vwDisModule disabledModules[MAXMODULES*2]; // list with disabled modules
 
 /* logging defines & macros */
 extern vwUByte vwLogFlag ;

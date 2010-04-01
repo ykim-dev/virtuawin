@@ -108,15 +108,15 @@ vwUByte vwEnabled=1;	                     // if VirtuaWin enabled or not
 
 int desktopWorkArea[2][4] ;
 
-vwHotkey   hotkeyList[vwHOTKEY_MAX];         // list for holding hotkeys
+vwHotkey      hotkeyList[vwHOTKEY_MAX];      // list for holding hotkeys
 vwWindowBase *windowHash[vwWINHASH_SIZE];    // hash table for all windows
 vwWindowBase *windowBaseList;                // list of all windows
 vwWindow     *windowList;                    // list of managed windows
 vwWindow     *windowFreeList;                // list of free, ready for reuse
 vwWindowBase *windowBaseFreeList;            // list of free, ready for reuse
 vwWindowRule *windowRuleList;                // list for holding window rules
-moduleType moduleList[MAXMODULES];           // list that holds modules
-disModules disabledModules[MAXMODULES*2];    // list with disabled modules
+vwModule      moduleList[MAXMODULES];        // list that holds modules
+vwDisModule   disabledModules[MAXMODULES*2]; // list with disabled modules
 
 UINT RM_Shellhook;
 UINT RM_TaskbarCreated;         // Message used to broadcast taskbar restart 
@@ -2979,10 +2979,10 @@ stepUp(void)
 #define vwWINLIST_MAX    vwPMENU_ID_MASK
 
 static int
-winListCreateItemList(int flags, vwMenuItem **items,int *numitems)
+winListCreateItemList(int flags, vwListItem **items,int *numitems)
 {
     vwWindow *win, *ww ;
-    vwMenuItem *item;
+    vwListItem *item;
     TCHAR *buff, title[vwWINDOWNAME_MAX+18] ;
     int i, len, x, y, listContent=(winListContent & ~(vwWINLIST_ASSIGN|vwWINLIST_TITLELN)) ;
     
@@ -3040,7 +3040,7 @@ winListCreateItemList(int flags, vwMenuItem **items,int *numitems)
             }
             GetWindowText(win->handle, buff, len);
             
-            if(((item = malloc(sizeof(vwMenuItem))) == NULL) ||
+            if(((item = malloc(sizeof(vwListItem))) == NULL) ||
                ((item->name = _tcsdup(title)) == NULL))
             {
                 while(--i >= 0)
@@ -3180,7 +3180,7 @@ winListCreateMenuTitleLine(HMENU hMenu, MENUITEMINFO *minfo, int offset, int des
 }
 
 static HMENU
-winListCreateMenu(int flags, int itemCount, vwMenuItem **items)
+winListCreateMenu(int flags, int itemCount, vwListItem **items)
 {
     MENUITEMINFO minfo ;
     HMENU hMenu ;
@@ -4131,11 +4131,11 @@ measureMenuItem(HWND hwnd,MEASUREITEMSTRUCT* mitem)
 {
     HDC testdc;
     HFONT menufont,oldfont;
-    vwMenuItem* item;
+    vwListItem* item;
     SIZE size;
     TCHAR *measuretext;
 
-    item = (vwMenuItem*) mitem->itemData;
+    item = (vwListItem*) mitem->itemData;
 
     measuretext = (item != NULL) ? item->name : _T("D") ;
 
@@ -4164,7 +4164,7 @@ measureMenuItem(HWND hwnd,MEASUREITEMSTRUCT* mitem)
 static void
 renderMenuItem(DRAWITEMSTRUCT* ditem)
 {
-    vwMenuItem* item;
+    vwListItem* item;
     HFONT menufont,oldfont;
     HICON icon;
     UINT oldalign;
@@ -4173,7 +4173,7 @@ renderMenuItem(DRAWITEMSTRUCT* ditem)
     SIZE size;
     int backgroundcolor,textcolor, ll;
 
-    item = (vwMenuItem *) ditem->itemData;
+    item = (vwListItem *) ditem->itemData;
 
     if((item != NULL) && (ditem->itemState & ODS_SELECTED))
     {
@@ -4228,7 +4228,7 @@ static void
 popupWinListMenu(HWND aHWnd, int wlFlags)
 {
     static int singleColumn=0;
-    vwMenuItem *items[vwWINLIST_MAX] ;
+    vwListItem *items[vwWINLIST_MAX] ;
     int itemCount;
     HMENU hpopup ;
     POINT pt ;
@@ -4342,7 +4342,7 @@ popupWinListMenu(HWND aHWnd, int wlFlags)
     else if(fgWin != NULL)
         setForegroundWin(fgWin,0) ;
     
-    // delete vwMenuItem list
+    // delete vwListItem list
     for (ii=0 ; ii<itemCount ; ii++)
     {
         free(items[ii]->name);

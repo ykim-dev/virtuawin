@@ -39,8 +39,8 @@ extern char *UserAppPathStr ;
 #endif
 
 void GetFilename(eFileNames filetype, int location, TCHAR *outStr);
-int  loadDisabledModules(disModules *theDisList);
-void saveDisabledList(int theNOfModules, moduleType* theModList);
+int  loadDisabledModules(vwDisModule *theDisList);
+void saveDisabledList(int theNOfModules, vwModule *theModList);
 void loadWindowConfig(void);
 void saveWindowConfig(void);
 void loadVirtuawinConfig(void);

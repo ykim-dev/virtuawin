@@ -154,14 +154,14 @@ typedef struct {
     HWND      handle;
     TCHAR     description[vwMODULENAME_MAX+1];
     vwUByte   disabled;
-} moduleType;
+} vwModule ;
 
 /* Holds disabled modules */
 typedef struct {
     TCHAR     moduleName[vwMODULENAME_MAX+1];
-} disModules;
+} vwDisModule ;
 
-/* vwMenuItem - Structure used by the window list menu */
+/* vwListItem - Structure used by the window list menu */
 typedef struct {
     TCHAR    *name;
     HICON     icon; 
@@ -169,7 +169,7 @@ typedef struct {
     vwUShort  id;
     vwUByte   desk;
     vwUByte   sticky;
-} vwMenuItem ;
+} vwListItem ;
 
 /* vwHotkey - Structure to store a hotkey binding */
 #define vwHOTKEY_ALT       MOD_ALT
