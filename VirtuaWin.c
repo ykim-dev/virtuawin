@@ -3434,7 +3434,7 @@ vwWindowShowHide(vwWindow* aWindow, vwUInt flags)
             else if(vwWindowIsHideByMinim(aWindow))
             {
                 if(vwWindowIsNotMinimized(aWindow))
-                    CloseWindow(aWindow->handle) ;
+                    ShowWindow(aWindow->handle,SW_MINIMIZE) ;
                 /* This removes window from taskbar and alt+tab list, must notify taskbar of the change */
                 if((aWindow->flags & vwWINFLAGS_HIDETSK_MASK) == vwWINFLAGS_HIDETSK_TOOLWN)
                 {
@@ -3790,7 +3790,7 @@ windowDismiss(HWND theWin)
         ret = vwWindowSetDesk(win,win->desk,1,FALSE) ;
     else
     {
-        ret = CloseWindow(theWin) ;
+        ShowWindow(theWin,SW_MINIMIZE) ;
         /* need to change the focus to another window */
         hwnd = NULL;
         activeZOrder = 0 ;
@@ -3807,6 +3807,7 @@ windowDismiss(HWND theWin)
             win = vwWindowGetNext(win) ;
         }
         setForegroundWin(hwnd,TRUE) ;
+        ret = 1 ;
     }
     vwMutexRelease();
     return ret ;
