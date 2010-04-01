@@ -63,6 +63,7 @@
 #define IDC_KEYCONTROL    1044
 #define IDC_NOHIDEMINWIN  1045
 #define IDC_HIDEMINWIN    1046
+#define IDC_HOTKEY_WUM    1047
 #define IDC_MODLIST       1050
 #define IDC_MODCONFIG     1051
 #define IDC_MODRELOAD     1052

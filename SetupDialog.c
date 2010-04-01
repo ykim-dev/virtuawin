@@ -450,6 +450,13 @@ vwSetupHotKeysSetCommand(HWND hDlg)
     if((ii=SendDlgItemMessage(hDlg,IDC_HOTKEY_CMD,CB_GETCURSEL,0,0)) != CB_ERR)
     {
         EnableWindow(GetDlgItem(hDlg,IDC_HOTKEY_DSK),(vwCommandFlag[ii] & 0x01)) ;
+        if(vwCommandFlag[ii] & 0x02)
+            EnableWindow(GetDlgItem(hDlg,IDC_HOTKEY_WUM),1) ;
+        else
+        {
+            EnableWindow(GetDlgItem(hDlg,IDC_HOTKEY_WUM),0) ;
+            SendDlgItemMessage(hDlg,IDC_HOTKEY_WUM,BM_SETCHECK,((vwCommandFlag[ii] & 0x04) != 0), 0);
+        }
         if((vwSetupHotkeyCur >= 0) && vwSetupHotkeyGotKey &&
            (vwCommandEnum[ii] != hotkeyList[vwSetupHotkeyCur].command))
         {
@@ -520,6 +527,8 @@ vwSetupHotKeysSetItem(HWND hDlg)
         EnableWindow(GetDlgItem(hDlg,IDC_HOTKEY_DSK),(hotkeyList[vwSetupHotkeyCur].desk > 0)) ;
         if(hotkeyList[vwSetupHotkeyCur].desk > 0)
             SendDlgItemMessage(hDlg,IDC_HOTKEY_DSK,CB_SETCURSEL,hotkeyList[vwSetupHotkeyCur].desk - 1,0) ;
+        EnableWindow(GetDlgItem(hDlg,IDC_HOTKEY_WUM),((vwCommandFlag[ii] & 0x2) != 0)) ;
+        SendDlgItemMessage(hDlg,IDC_HOTKEY_WUM,BM_SETCHECK,((hotkeyList[vwSetupHotkeyCur].modifier & vwHOTKEY_WIN_MOUSE) != 0), 0);
         
         vwSetupHotkeyGotKey = 1 ;
         ii = 0 ;
@@ -565,14 +574,13 @@ vwSetupHotKeysAddMod(HWND hDlg, int add)
         ii = hotkeyCount ;
         while(--ii >= 0)
         {
-            if((hotkeyList[ii].key == key) && (hotkeyList[ii].modifier == mod) &&
+            if((hotkeyList[ii].key == key) && ((hotkeyList[ii].modifier & (vwHOTKEY_MOD_MASK|vwHOTKEY_EXT)) == mod) &&
                (add || (ii != vwSetupHotkeyCur)))
             {
                 MessageBox(hWnd,_T("Another command is already bound to this hotkey."),vwVIRTUAWIN_NAME _T(" Error"), MB_ICONERROR);
                 return ;
             }
         }
-
         if(add)
         {
             if(hotkeyCount == vwHOTKEY_MAX)
@@ -582,6 +590,8 @@ vwSetupHotKeysAddMod(HWND hDlg, int add)
             }
             vwSetupHotkeyCur = hotkeyCount++ ;
         }
+        if((vwCommandFlag[cmd] & 0x04) || ((vwCommandFlag[cmd] & 0x02) && (SendDlgItemMessage(hDlg, IDC_HOTKEY_WUM, BM_GETCHECK, 0, 0) == BST_CHECKED)))
+            mod |= vwHOTKEY_WIN_MOUSE ;
         hotkeyList[vwSetupHotkeyCur].key = key ;
         hotkeyList[vwSetupHotkeyCur].modifier = mod ;
         hotkeyList[vwSetupHotkeyCur].command = vwCommandEnum[cmd] ;
@@ -672,6 +682,7 @@ BOOL APIENTRY setupHotkeys(HWND hDlg, UINT message, UINT wParam, LONG lParam)
             break;
         
         case IDC_HOTKEY_WIN:
+        case IDC_HOTKEY_WUM:
             if(vwSetupHotkeyGotKey)
             {
                 EnableWindow(GetDlgItem(hDlg,IDC_HOTKEY_ADD),TRUE) ;
