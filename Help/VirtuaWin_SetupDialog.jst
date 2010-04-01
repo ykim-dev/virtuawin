@@ -154,8 +154,12 @@ be bound to a hotkey:
 .   &[a SD_WIN_AOT]**//WIN: Always on top//**: Toggles the Window’s ‘Always on top’ property which
     keeps the window above other windows. 
 
-.   &[a SD_WIN_PTB]**//WIN: Push to bottom//**: Pushes the window to the back of the desktop, i.e.
-    under every other window.
+.   &[a SD_WIN_BTT]**//WIN: Bring to the top//**: Brings the window under the
+    mouse to the top of the desktop giving it the current focus. Note that
+    this does not set the Window's 'Always on top'.
+
+.   &[a SD_WIN_PTB]**//WIN: Push to the bottom//**: Pushes the window to the
+    back of the desktop, i.e. under every other window.
 
 .   &[a SD_WIN_DW]**//WIN: Dismiss window//**: If the current window is only being temporarily show
     (for example the window list '**Show**' feature was used to display it, also
@@ -272,6 +276,11 @@ be bound to a hotkey:
     **Note:** Usually this list only contains normal visible desktops, if using a
     hidden desktop you must first go to the hidden desktop for it to appear in
     this list.
+
+.   **//Operate on window under mouse//**: This option is available for
+    commands which operate on a 'current' window. If enabled the current
+    window is defined to be the one which is currently under the mouse cursor
+    rather than the one which has the current input focus.
 
 .   Use the **//Hotkey//** entry to specify the required hotkey by simply clicking
     into the entry and pressing the required Hotkey combination, the **//+ WIN key//**
