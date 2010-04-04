@@ -743,6 +743,7 @@ loadVirtuawinConfig(void)
         vwConfigReadInt(fp,buff,ii,initialDesktop);
         vwConfigReadInt(fp,buff,ii,lastDeskNoDelay);
         vwConfigReadInt(fp,buff,ii,minWinHide);
+        vwConfigReadInt(fp,buff,ii,ctlMenuCompact);
     }
     else
     {
@@ -812,6 +813,7 @@ saveVirtuawinConfig(void)
         fprintf(fp, "initialDesktop# %d\n", initialDesktop);
         fprintf(fp, "lastDeskNoDelay# %d\n", lastDeskNoDelay);
         fprintf(fp, "minWinHide# %d\n", minWinHide);
+        fprintf(fp, "ctlMenuCompact# %d\n", ctlMenuCompact);
         fclose(fp);
     }
 }
