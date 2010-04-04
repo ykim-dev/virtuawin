@@ -27,7 +27,7 @@ IDI_ST_8      ICON "Icons/st_8.ico"
 IDI_ST_9      ICON "Icons/st_9.ico"
 IDI_CHECK     ICON "Icons/check.ico"
 
-IDD_PROPPAGE_GENERAL DIALOG 0, 0, 210, 250
+IDD_PROPPAGE_GENERAL DIALOG 0, 0, 210, 261
 STYLE DS_3DLOOK | WS_CHILD | WS_DISABLED | WS_BORDER
 FONT 8, "MS Shell Dlg"
 BEGIN
@@ -57,7 +57,8 @@ BEGIN
     AUTOCHECKBOX    "Use desktop title lines in window list", IDC_WLUSETTLLN, 10, 133, 150, 10
     AUTOCHECKBOX    "Mouse opens compact window list", IDC_COMPACTWLIST, 10, 144, 130, 10
     AUTOCHECKBOX    "Mouse opens compact window menu", IDC_COMPACTWMENU, 10, 155, 130, 10
-    AUTOCHECKBOX    "Hotkey opens menu or list at fixed location", IDC_HOTKEYMENULOC, 10, 166, 160, 10
+    AUTOCHECKBOX    "Mouse opens compact control menu", IDC_COMPACTCMENU, 10, 166, 130, 10
+    AUTOCHECKBOX    "Hotkey opens menu or list at fixed location", IDC_HOTKEYMENULOC, 10, 177, 160, 10
 END
 
 IDD_PROPPAGE_HOTKEYS DIALOG 0, 0, 210, 250

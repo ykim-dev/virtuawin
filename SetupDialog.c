@@ -182,6 +182,8 @@ setupGeneral(HWND hDlg, UINT message, UINT wParam, LONG lParam)
                 SendDlgItemMessage(hDlg, IDC_COMPACTWLIST, BM_SETCHECK, 1, 0);
             if(winMenuCompact)
                 SendDlgItemMessage(hDlg, IDC_COMPACTWMENU, BM_SETCHECK, 1, 0);
+            if(ctlMenuCompact)
+                SendDlgItemMessage(hDlg, IDC_COMPACTCMENU, BM_SETCHECK, 1, 0);
             if(winListContent & vwWINLIST_ACCESS)
                 SendDlgItemMessage(hDlg, IDC_MENUACCESS, BM_SETCHECK, 1, 0);
             if(winListContent & vwWINLIST_ASSIGN)
@@ -250,6 +252,7 @@ setupGeneral(HWND hDlg, UINT message, UINT wParam, LONG lParam)
             hotkeyMenuLoc = (SendDlgItemMessage(hDlg, IDC_HOTKEYMENULOC, BM_GETCHECK, 0, 0) == BST_CHECKED) ;
             winListCompact = (SendDlgItemMessage(hDlg, IDC_COMPACTWLIST, BM_GETCHECK, 0, 0) == BST_CHECKED) ;
             winMenuCompact = (SendDlgItemMessage(hDlg, IDC_COMPACTWMENU, BM_GETCHECK, 0, 0) == BST_CHECKED) ;
+            ctlMenuCompact = (SendDlgItemMessage(hDlg, IDC_COMPACTCMENU, BM_GETCHECK, 0, 0) == BST_CHECKED) ;
             winListContent = 0 ;
             if(SendDlgItemMessage(hDlg, IDC_MENUACCESS, BM_GETCHECK, 0, 0) == BST_CHECKED)
                 winListContent |= vwWINLIST_ACCESS ;
@@ -312,9 +315,9 @@ setupGeneral(HWND hDlg, UINT message, UINT wParam, LONG lParam)
         else if((pageChangeMask >= 0) &&
                 ((wPar == IDC_DESKCYCLE)   || (wPar == IDC_COMPACTWLIST)  ||
                  (wPar == IDC_MENUMOVE)    || (wPar == IDC_COMPACTWMENU)  ||
-                 (wPar == IDC_MENUSHOW)    || (wPar == IDC_MENUSTICKY)    ||
+                 (wPar == IDC_MENUSHOW)    || (wPar == IDC_COMPACTCMENU)  ||
                  (wPar == IDC_MENUACCESS)  || (wPar == IDC_HOTKEYMENULOC) ||
-                 (wPar == IDC_WLUSETTLLN)  ||
+                 (wPar == IDC_WLUSETTLLN)  || (wPar == IDC_MENUSTICKY)    ||
                  (wPar == IDC_DESKTOPNAME  && HIWORD(wParam) == EN_CHANGE)))
         {
             pageChangeMask |= 0x01 ;
