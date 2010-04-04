@@ -1,6 +1,17 @@
 ***   VirtuaWin Revision History   ***
 --------------------------------------
 
+Ver 4.2 beta1 2009/12/02
+
+* 2901801 UAC support - recognise elevated windows and not class them as hung
+* 2902879 Handle failue to call EnumWindows better.
+* 2901797 Fixed Window Menu -> Info feature for an elevated window.
+* 2901729 Fixed start-up issues on windows 7
+* 2892755 Fixed *<NAME>* win rule matching.
+
+
+----------------------------
+
 Ver 4.1 2009/09/09
 
 * Improved the windows help file, now has index and search enabled.
