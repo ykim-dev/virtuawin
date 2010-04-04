@@ -169,6 +169,7 @@ vwUByte hotkeyMenuLoc = 0 ;
 vwUByte winListContent = (vwWINLIST_ACCESS | vwWINLIST_ASSIGN | vwWINLIST_STICKY) ;
 vwUByte winListCompact = 0 ;
 vwUByte winMenuCompact = 1 ;
+vwUByte ctlMenuCompact = 1 ;
 vwUByte displayTaskbarIcon = 1 ;
 vwUByte taskbarIconShown = 0 ;
 vwUByte noTaskbarCheck = 0 ;
@@ -3984,8 +3985,8 @@ popupWindowMenu(HWND theWin, int wmFlags)
         Sticky = vwWindowIsSticky(win) ;
         AppendMenu(hpopup,(Sticky) ? (MF_STRING|MF_CHECKED):MF_STRING,ID_WM_STICKY,_T("&Always Show"));
         AppendMenu(hpopup,(win->processNext == NULL) ? (MF_STRING|MF_GRAYED):MF_STRING,ID_WM_GATHER,_T("&Gather"));
-        AppendMenu(hpopup,(deskWrap || (currentDesk < nDesks)) ? MF_STRING:(MF_STRING|MF_GRAYED),ID_WM_NEXT,_T("Move to &Next"));
-        AppendMenu(hpopup,(deskWrap || (currentDesk > 1)) ? MF_STRING:(MF_STRING|MF_GRAYED),ID_WM_PREV,_T("Move to &Previous"));
+        AppendMenu(hpopup,(deskWrap || (currentDesk < nDesks)) ? MF_STRING:(MF_STRING|MF_GRAYED),ID_DESK_NEXT,_T("Move to &Next"));
+        AppendMenu(hpopup,(deskWrap || (currentDesk > 1)) ? MF_STRING:(MF_STRING|MF_GRAYED),ID_DESK_PREV,_T("Move to &Previous"));
         if((wmFlags & 0x01) == 0)
         {
             AppendMenu(hpopup,MF_SEPARATOR,0,NULL) ;
@@ -4013,7 +4014,7 @@ popupWindowMenu(HWND theWin, int wmFlags)
             }
             else
                 buff[18] = '\0' ;
-            AppendMenu(moveMenu,(ii == currentDesk) ? (MF_STRING|MF_GRAYED):MF_STRING,ID_WM_DESK+ii,buff) ;
+            AppendMenu(moveMenu,(ii == currentDesk) ? (MF_STRING|MF_GRAYED):MF_STRING,ID_DESK_N+ii,buff) ;
         }
         wt = vwWindowRuleFind(theWin,(vwWindowRule *) win->zOrder[0]) ;
     }
@@ -4086,12 +4087,12 @@ popupWindowMenu(HWND theWin, int wmFlags)
         windowSetManage(theWin,(win == NULL)) ;
         break;
     default:
-        if(ii == ID_WM_NEXT)
+        if(ii == ID_DESK_NEXT)
             ii = VW_STEPNEXT ;
-        else if(ii == ID_WM_PREV)
+        else if(ii == ID_DESK_PREV)
             ii = VW_STEPPREV ;
-        else if((ii > ID_WM_DESK) && (ii <= (ID_WM_DESK + nDesks)))
-            ii = ii - ID_WM_DESK ;
+        else if((ii > ID_DESK_N) && (ii <= (ID_DESK_N + nDesks)))
+            ii = ii - ID_DESK_N ;
         else
             return ;
         
@@ -4385,8 +4386,10 @@ vwWindowRuleReapply(void)
 static LRESULT
 popupControlMenu(HWND aHWnd, int cmFlags)
 {
-    HMENU hpopup;
+    HMENU hpopup, moveMenu=NULL ;
+    TCHAR buff[40];
     POINT pt;
+    int ii ;
     
     if(dialogOpen)
     {
@@ -4419,12 +4422,41 @@ popupControlMenu(HWND aHWnd, int cmFlags)
     AppendMenu(hpopup,MF_STRING,ID_HELP,_T("&Help"));
     AppendMenu(hpopup,MF_STRING,ID_DISABLE,(vwEnabled) ? _T("&Disable") : _T("&Enable"));
     AppendMenu(hpopup,MF_SEPARATOR,0,NULL) ;
-    AppendMenu(hpopup,MF_STRING,ID_EXIT,_T("E&xit"));
+    AppendMenu(hpopup,MF_STRING,ID_EXIT,_T("E&xit VirtuaWin"));
     if(vwEnabled)
     {
         AppendMenu(hpopup,MF_SEPARATOR,0,NULL) ;
-        AppendMenu(hpopup,(deskWrap || (currentDesk < nDesks)) ? MF_STRING:(MF_STRING|MF_GRAYED),ID_FORWARD,_T("&Next"));
-        AppendMenu(hpopup,(deskWrap || (currentDesk > 1)) ? MF_STRING:(MF_STRING|MF_GRAYED),ID_BACKWARD,_T("&Previous"));
+        if((cmFlags & 0x01) == 0)
+        {
+            AppendMenu(hpopup,MF_SEPARATOR,0,NULL) ;
+            moveMenu = hpopup ;
+        }
+        else if((moveMenu = CreatePopupMenu()) == NULL)
+        {
+            DestroyMenu(hpopup) ;
+            return FALSE ;
+        }
+        else
+            AppendMenu(hpopup,MF_POPUP,(UINT_PTR) moveMenu,_T("Mo&ve to Desktop"));
+        _tcscpy(buff,_T("Move to Desktop & ")) ;
+        for(ii = 1 ; ii <= nDesks ; ii++)
+        {
+            if(ii >= 10)
+                buff[16] = (ii/10)+'0' ;
+            buff[17] = (ii%10)+'0' ;
+            if(desktopName[ii] != NULL)
+            {
+                buff[18] = ':' ;
+                buff[19] = ' ' ;
+                _tcsncpy(buff+20,desktopName[ii],20) ;
+                buff[39] = '\0' ;
+            }
+            else
+                buff[18] = '\0' ;
+            AppendMenu(moveMenu,(ii == currentDesk) ? (MF_STRING|MF_GRAYED):MF_STRING,ID_DESK_N+ii,buff) ;
+        }
+        AppendMenu(hpopup,(deskWrap || (currentDesk < nDesks)) ? MF_STRING:(MF_STRING|MF_GRAYED),ID_DESK_NEXT,_T("Move to &Next"));
+        AppendMenu(hpopup,(deskWrap || (currentDesk > 1)) ? MF_STRING:(MF_STRING|MF_GRAYED),ID_DESK_PREV,_T("Move to &Previous"));
     }
     if((cmFlags & 0x010) && hotkeyMenuLoc)
     {
@@ -4434,8 +4466,12 @@ popupControlMenu(HWND aHWnd, int cmFlags)
     else
         GetCursorPos(&pt);
     SetForegroundWindow(aHWnd);
-    switch(TrackPopupMenu(hpopup, TPM_RETURNCMD | TPM_RIGHTBUTTON,
-                          pt.x, pt.y, 0, aHWnd, NULL))
+    ii = TrackPopupMenu(hpopup,TPM_RETURNCMD | TPM_RIGHTBUTTON,pt.x,pt.y,0,aHWnd,NULL) ;
+    PostMessage(aHWnd, 0, 0, 0);	
+    DestroyMenu(hpopup);
+    if((moveMenu != NULL) && (moveMenu != hpopup))
+        DestroyMenu(moveMenu) ;
+    switch(ii)
     {
     case ID_SETUP:		// show setup box
         showSetup();
@@ -4458,16 +4494,17 @@ popupControlMenu(HWND aHWnd, int cmFlags)
     case ID_EXIT:		// exit application
         DestroyWindow(aHWnd);
         break;
-    case ID_FORWARD:	// move to the next desktop
+    case ID_DESK_NEXT:	// move to the next desktop
         stepDelta(1) ;
         break;
-    case ID_BACKWARD:	// move to the previous desktop
+    case ID_DESK_PREV:	// move to the previous desktop
         stepDelta(-1) ;
         break;
+    default:
+        if((ii > ID_DESK_N) && (ii <= (ID_DESK_N + nDesks)))
+            gotoDesk(ii - ID_DESK_N,FALSE) ;
+        break ;
     }
-    PostMessage(aHWnd, 0, 0, 0);	
-    DestroyMenu(hpopup);
-    
     return TRUE ;
 }
 
@@ -4544,8 +4581,8 @@ vwHotkeyExecute(vwUByte command, vwUByte desk, vwUByte modifier)
     case vwCMD_UI_WTYPE_SETUP:
         showWindowRule(theWin,0) ;
         break ;
-    case vwCMD_UI_CONTROLMENU:
-        return popupControlMenu(hWnd,0x10) ;
+    case vwCMD_UI_CTLMENU_CMP:
+        return popupControlMenu(hWnd,0x11) ;
     case vwCMD_WIN_GATHER:
         windowGather(theWin);
         break ;
@@ -4586,6 +4623,8 @@ vwHotkeyExecute(vwUByte command, vwUByte desk, vwUByte modifier)
             return 0 ;
         setForegroundWin(theWin,1) ;
         break ;
+    case vwCMD_UI_CTLMENU_STD:
+        return popupControlMenu(hWnd,0x10) ;
     default:
         return 0 ;
     }
@@ -4966,7 +5005,7 @@ wndProc(HWND aHWnd, UINT message, WPARAM wParam, LPARAM lParam)
             break;
             
         case WM_RBUTTONUP:		   // Open the control menu
-            return popupControlMenu(aHWnd,0) ;
+            return popupControlMenu(aHWnd,ctlMenuCompact) ;
         }
         return TRUE;
         

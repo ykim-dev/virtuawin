@@ -83,9 +83,10 @@
 #define IDC_HOTKEYMENULOC 1066
 #define IDC_COMPACTWLIST  1067
 #define IDC_COMPACTWMENU  1068
-#define IDC_MODDISABLE    1069
-#define IDC_WLUSETTLLN    1070
-#define IDC_LICENSE       1071
+#define IDC_COMPACTCMENU  1069
+#define IDC_MODDISABLE    1070
+#define IDC_WLUSETTLLN    1071
+#define IDC_LICENSE       1072
 #define IDC_DISPLAYICON   1079
 #define IDC_TASKBARDETECT 1080
 #define IDC_USEVWHOOK     1081
@@ -134,8 +135,6 @@
 #define ID_HELP          32775
 #define ID_DISABLE       32776
 #define ID_EXIT          32777
-#define ID_FORWARD       32778
-#define ID_BACKWARD      32779
 
 #define ID_WM_DISMISS    32780
 #define ID_WM_ONTOP      32781
@@ -146,8 +145,9 @@
 #define ID_WM_AWTYPE     32786
 #define ID_WM_EWTYPE     32787
 #define ID_WM_INFO       32788
-#define ID_WM_PREV       32789
-#define ID_WM_NEXT       32790
-#define ID_WM_DESK       32791
+
+#define ID_DESK_PREV     32789
+#define ID_DESK_NEXT     32790
+#define ID_DESK_N        32791
 
 #endif
