@@ -101,8 +101,12 @@ from the last apply will be undone.
     can be opened using the mouse by middle clicking on a the desktop (if
     enable, see &[l #SD_EMBWMA]Enable middle button window menu activation&[/l]).
 
-    The compact form of the Window Menu uses sub-menus to keep the size of the
+    **Note:** The compact form of menus use sub-menus to keep the size of the
     main menu small.
+
+.   &[a SD_MOCCM]**//Mouse opens compact control menu//**: If checked the compact form of the control
+    menu is opened by the mouse rather than the standard form. The control menu
+    can be opened using the mouse by right clicking on the system tray icon.
 
 .   &[a SD_HOMLFL]**//Hotkey opens menu or list at fixed location//**: If
     enabled VirtuaWin will open all menus and dialogs at a fixed location on
@@ -154,11 +158,11 @@ be bound to a hotkey:
 .   &[a SD_WIN_AOT]**//WIN: Always on top//**: Toggles the Window’s ‘Always on top’ property which
     keeps the window above other windows. 
 
-.   &[a SD_WIN_BTT]**//WIN: Bring to the top//**: Brings the window under the
+.   &[a SD_WIN_BTT]**//WIN: Bring to top//**: Brings the window under the
     mouse to the top of the desktop giving it the current focus. Note that
     this does not set the Window's 'Always on top'.
 
-.   &[a SD_WIN_PTB]**//WIN: Push to the bottom//**: Pushes the window to the
+.   &[a SD_WIN_PTB]**//WIN: Push to bottom//**: Pushes the window to the
     back of the desktop, i.e. under every other window.
 
 .   &[a SD_WIN_DW]**//WIN: Dismiss window//**: If the current window is only being temporarily show
@@ -224,6 +228,16 @@ be bound to a hotkey:
 .   &[a SD_WIN_GAW]**//WIN: Gather all windows//**: Moves all windows being managed by VirtuaWin onto
     the current desktop.
 
+.   &[a SD_UI_OSCM]**//UI: Open standard control menu//**: Opens VirtuaWin’s
+    standard &[l VirtuaWin_ControlMenu.htm]Control Menu&[/l], which can also
+    be opened by right clicking on the system tray icon.
+
+.   &[a SD_UI_OCCM]**//UI: Open compact control menu//**: Opens VirtuaWin’s
+    compact &[l VirtuaWin_ControlMenu.htm]Control Menu&[/l], which can also be
+    opened by right clicking on the system tray icon. The compact menu moves
+    some menu items into sub-menus ensuring the size of the menu does not get
+    unmanageable.
+
 .   &[a SD_UI_OSWM]**//UI: Open standard window menu//**: Opens the standard &[l VirtuaWin_WindowMenu.htm]window menu&[/l] to control
     the current window; this command will fail if no window currently has
     focus.
@@ -246,9 +260,6 @@ be bound to a hotkey:
 .   &[a SD_UI_OWR]**//UI: Open window rules setup//**: Opens the &[l VirtuaWin_WindowRulesDialog.htm]Window Rules Dialog&[/l].
 
 .   &[a SD_UI_OVS]**//UI: Open VirtuaWin setup//**: Opens VirtuaWin’s main &[l VirtuaWin_SetupDialog.htm]Setup Dialog&[/l].
-
-.   &[a SD_UI_OCM]**//UI: Open control menu//**: Opens VirtuaWin’s &[l VirtuaWin_ControlMenu.htm]Control Menu&[/l], which can also be
-    opened by right clicking on the system tray icon.
 
 .   &[a SD_UI_TES]**//UI: Toggle enable state//**: Toggles whether VirtuaWin is enabled or not; when
     VirtuaWin is disabled this hotkey command is the only one which remains
@@ -373,7 +384,7 @@ be bound to a hotkey:
 
 The original installation of VirtuaWin includes only one module, &[l VirtuaWin_WinListModule.htm]WinList
 module&[/l]. More info about modules is available on
-http://virtuawin.sourceforge.net/&[.] There you can also find more modules to
+&[l "http://virtuawin.sourceforge.net/\" target=\"_blank"]http&[:]/&[/]virtuawin.sourceforge.net/&[/l]. There you can also find more modules to
 download. There is currently a max limit of 10 modules that VirtuaWin will
 handle.
 
