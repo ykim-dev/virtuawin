@@ -91,6 +91,10 @@
 		<param name="Local" value="VirtuaWin_SetupDialog.htm#SD_MOCWM">
 	</OBJECT>
 	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="Mouse opens compact control menu">
+		<param name="Local" value="VirtuaWin_SetupDialog.htm#SD_MOCCM">
+	</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
 		<param name="Name" value="Hotkey opens menu or list at fixed location">
 		<param name="Local" value="VirtuaWin_SetupDialog.htm#SD_HOMLFL">
 	</OBJECT>
@@ -137,6 +141,10 @@
 	<LI> <OBJECT type="text/sitemap">
 		<param name="Name" value="WIN: Always on top">
 		<param name="Local" value="VirtuaWin_SetupDialog.htm#SD_WIN_AOT">
+	</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="WIN: Bring to top">
+		<param name="Local" value="VirtuaWin_SetupDialog.htm#SD_WIN_BTT">
 	</OBJECT>
 	<LI> <OBJECT type="text/sitemap">
 		<param name="Name" value="WIN: Push to bottom">
@@ -211,6 +219,14 @@
 		<param name="Local" value="VirtuaWin_SetupDialog.htm#SD_WIN_GAW">
 	</OBJECT>
 	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="UI: Open standard control menu">
+		<param name="Local" value="VirtuaWin_SetupDialog.htm#SD_UI_OSCM">
+	</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="UI: Open compact control menu">
+		<param name="Local" value="VirtuaWin_SetupDialog.htm#SD_UI_OCCM">
+	</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
 		<param name="Name" value="UI: Open standard window menu">
 		<param name="Local" value="VirtuaWin_SetupDialog.htm#SD_UI_OSWM">
 	</OBJECT>
@@ -239,10 +255,6 @@
 		<param name="Local" value="VirtuaWin_SetupDialog.htm#SD_UI_OVS">
 	</OBJECT>
 	<LI> <OBJECT type="text/sitemap">
-		<param name="Name" value="UI: Open control menu">
-		<param name="Local" value="VirtuaWin_SetupDialog.htm#SD_UI_OCM">
-	</OBJECT>
-	<LI> <OBJECT type="text/sitemap">
 		<param name="Name" value="UI: Toggle enable state">
 		<param name="Local" value="VirtuaWin_SetupDialog.htm#SD_UI_TES">
 	</OBJECT>
@@ -261,6 +273,10 @@
 	<LI> <OBJECT type="text/sitemap">
 		<param name="Name" value="Enable mouse desktop changing">
 		<param name="Local" value="VirtuaWin_SetupDialog.htm#SD_EMDC">
+	</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="Only change when dragging a window">
+		<param name="Local" value="VirtuaWin_SetupDialog.htm#SD_MOCWD">
 	</OBJECT>
 	<LI> <OBJECT type="text/sitemap">
 		<param name="Name" value="Delay before changing desktop">
