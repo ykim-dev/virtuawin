@@ -896,6 +896,7 @@ setupModules(HWND hDlg, UINT message, UINT wParam, LONG lParam)
         else if(LOWORD((wParam) == IDC_MODRELOAD))
         {   
             /* Unload all modules currently running */
+            vwMenuItem *mi ;
             sendModuleMessage(MOD_QUIT, 0, 0);
             for(index = 0; index < MAXMODULES; index++)
             {
@@ -903,6 +904,12 @@ setupModules(HWND hDlg, UINT message, UINT wParam, LONG lParam)
                 moduleList[index].description[0] = '\0';
             }
             moduleCount = 0;
+            /* free off all module inserted menu items */
+            while((mi = ctlMenuItemList) != NULL)
+            {
+                ctlMenuItemList = mi->next ;
+                free(mi) ;
+            }
             /* sleep for a second to allow the modules to exit cleanly */
             Sleep(1000) ;
             curDisabledMod = loadDisabledModules(disabledModules);
