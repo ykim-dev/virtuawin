@@ -410,7 +410,7 @@ vwpSetupDialogFunc(HWND hwndDlg, UINT msg, WPARAM wParam, LPARAM lParam)
             }
             else
                 vwpHotkeyKey[vwpTYPE_FULL] = 0 ; 
-            vwpCtlMenu[vwpTYPE_FULL] = (SendDlgItemMessage(hwndDlg,IDC_WN_VWCONTROL,BM_GETCHECK,0,0) == BST_CHECKED) ;
+            vwpCtlMenu[vwpTYPE_FULL] = (SendDlgItemMessage(hwndDlg,IDC_FS_VWCONTROL,BM_GETCHECK,0,0) == BST_CHECKED) ;
             vwpOptimLayout[vwpTYPE_FULL] = (SendDlgItemMessage(hwndDlg,IDC_FS_OPTIMLAY,BM_GETCHECK,0,0) == BST_CHECKED) ;
             vwpZoomEffect[vwpTYPE_FULL] = (SendDlgItemMessage(hwndDlg,IDC_FS_ZOOM,BM_GETCHECK,0,0) == BST_CHECKED) ;
             vwpSaveConfigFile() ;
