@@ -41,6 +41,7 @@ extern int deskImageCount;
 extern vwWindow *windowList;                      // list of managed windows
 extern vwWindowBase *windowBaseList;              // list of all windows
 extern vwWindowRule *windowRuleList;              // list for holding window rules
+extern vwMenuItem *ctlMenuItemList;               // List of module inserted control menu items
 extern vwHotkey hotkeyList[vwHOTKEY_MAX];         // list for holding hotkeys
 
 extern int curDisabledMod;                        // how many disabled modules we have
