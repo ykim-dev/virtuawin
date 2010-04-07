@@ -144,6 +144,9 @@
  * on the command being executed. */
 #define VW_HOTKEY       (WM_USER + 46)
 
+/* Message & WM_COPYDATA ID, inserts or removes items from the control menu. */
+#define VW_CMENUITEM    (WM_USER + 47)
+
 /* Message, sent by VirtuaWin after a switch. lParam will contain current desktop number 
    if wParam isn't one of the following, then wParam will also contain current desktop.
    If desktop cycling is enabled, there will be two MOD_CHANGEDESK sent when going 
