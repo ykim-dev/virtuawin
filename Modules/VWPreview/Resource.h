@@ -1,0 +1,17 @@
+
+#define IDC_STATIC              -1
+#define	IDD_MAINDIALOG   	100
+#define IDI_VIRTUAWIN           101
+#define	IDC_WN_HOTKEY_ENT	111
+#define	IDC_WN_HOTKEY_WIN	112
+#define	IDC_WN_VWCONTROL	113
+#define	IDC_WN_OPTIMLAY		114
+#define	IDC_WN_IMGHEIGHT	115
+#define	IDC_FS_HOTKEY_ENT	116
+#define	IDC_FS_HOTKEY_WIN	117
+#define	IDC_FS_VWCONTROL	118
+#define	IDC_FS_OPTIMLAY		119
+#define	IDC_FS_ZOOM     	120
+#define	ID_OK			121
+#define	ID_APPLY		122
+
