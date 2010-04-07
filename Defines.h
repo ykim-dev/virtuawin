@@ -188,4 +188,22 @@ typedef struct {
     vwUByte  desk ;
 } vwHotkey ;
 
+#define vwMENU_LABEL_MAX 40
+
+typedef struct vwMenuItem {
+    struct vwMenuItem *next ;
+    HWND               module ;
+    HMENU              submenu ;          
+    vwUShort           position ;
+    vwUShort           message ;
+    vwUShort           id ;
+    TCHAR              label[vwMENU_LABEL_MAX] ;
+} vwMenuItem ;
+
+typedef struct {
+    vwUShort position ;
+    vwUShort message ;
+    char     label[vwMENU_LABEL_MAX] ;
+} vwMenuItemMsg ;
+
 #endif
