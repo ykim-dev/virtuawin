@@ -115,6 +115,7 @@ vwWindow     *windowList;                    // list of managed windows
 vwWindow     *windowFreeList;                // list of free, ready for reuse
 vwWindowBase *windowBaseFreeList;            // list of free, ready for reuse
 vwWindowRule *windowRuleList;                // list for holding window rules
+vwMenuItem   *ctlMenuItemList;               // List of module inserted control menu items
 vwModule      moduleList[MAXMODULES];        // list that holds modules
 vwDisModule   disabledModules[MAXMODULES*2]; // list with disabled modules
 
@@ -4379,6 +4380,48 @@ vwWindowRuleReapply(void)
     vwMutexRelease() ;
 }
 
+static void
+insertMenuItems(HMENU hpopup, vwUShort posMax, vwMenuItem **cmiPtr, int *cmidPtr)
+{
+    vwMenuItem *mi = *cmiPtr, *ni ;
+    int mid = *cmidPtr ;
+    HMENU mn = hpopup ;
+    vwUShort smpos=0 ;
+    HWND smmod = NULL ;
+    
+    while((mi != NULL) && (mi->position <= posMax))
+    {
+        if((mi->module != smmod) || (mi->position != smpos))
+            mn = hpopup ;
+        if(mi->label[0] == '\0')
+        {
+            mi->id = 0 ;
+            AppendMenu(mn,MF_SEPARATOR,0,NULL) ;
+        }
+        else if(mi->message == 0)
+        {
+            smmod = mi->module ;
+            smpos = mi->position ;
+            if((mn = CreatePopupMenu()) == NULL)
+            {
+                /* skip the sub menu */
+                while(((ni = mi->next) != NULL) && (smmod == ni->module) && (smpos == ni->position))
+                    mi = ni ;
+            }
+            else
+                AppendMenu(hpopup,MF_POPUP,(UINT_PTR) mn,mi->label) ;
+        }
+        else
+        {
+            mi->id = (vwUShort) ++mid ;
+            AppendMenu(mn,MF_STRING,mid,mi->label) ;
+        }
+        mi = mi->next ;
+    }
+    *cmiPtr = mi ;
+    *cmidPtr = mid ;
+}
+
 /*****************************************************************************
  * Pops up and handles the control menu. cmFlags is a bitmask:
  *   0x10 : Opened via a hotkey
@@ -4386,10 +4429,11 @@ vwWindowRuleReapply(void)
 static LRESULT
 popupControlMenu(HWND aHWnd, int cmFlags)
 {
+    vwMenuItem *mi ;
     HMENU hpopup, moveMenu=NULL ;
-    TCHAR buff[40];
-    POINT pt;
-    int ii ;
+    TCHAR buff[40] ;
+    POINT pt ;
+    int ii, mid=0 ;
     
     if(dialogOpen)
     {
@@ -4407,6 +4451,8 @@ popupControlMenu(HWND aHWnd, int cmFlags)
     {
         MENUITEMINFO minfo ;
         
+        mi = ctlMenuItemList ;
+        insertMenuItems(hpopup,100,&mi,&mid) ;
         AppendMenu(hpopup,MF_STRING,ID_SETUP,_T("&Setup"));
         minfo.cbSize = sizeof(MENUITEMINFO) ;
         minfo.fMask = MIIM_STATE ;
@@ -4414,23 +4460,32 @@ popupControlMenu(HWND aHWnd, int cmFlags)
         SetMenuItemInfo(hpopup,ID_SETUP,FALSE,&minfo) ;
         if(useWindowRules)
         {
+            insertMenuItems(hpopup,200,&mi,&mid) ;
             AppendMenu(hpopup,MF_STRING,ID_WTYPE,_T("&Window Rules")) ;
+            insertMenuItems(hpopup,300,&mi,&mid) ;
             AppendMenu(hpopup,MF_STRING,ID_REAPPLY_RULES,_T("&Re-apply Rules")) ;
         }
     }
+    else
+        mi = NULL ;
+
+    insertMenuItems(hpopup,400,&mi,&mid) ;
     AppendMenu(hpopup,MF_STRING,ID_GATHER,_T("&Gather All"));
+    insertMenuItems(hpopup,500,&mi,&mid) ;
     AppendMenu(hpopup,MF_STRING,ID_HELP,_T("&Help"));
+    insertMenuItems(hpopup,600,&mi,&mid) ;
     AppendMenu(hpopup,MF_STRING,ID_DISABLE,(vwEnabled) ? _T("&Disable") : _T("&Enable"));
+    insertMenuItems(hpopup,1000,&mi,&mid) ;
     AppendMenu(hpopup,MF_SEPARATOR,0,NULL) ;
+    insertMenuItems(hpopup,1100,&mi,&mid) ;
     AppendMenu(hpopup,MF_STRING,ID_EXIT,_T("E&xit VirtuaWin"));
     if(vwEnabled)
     {
+        insertMenuItems(hpopup,2000,&mi,&mid) ;
         AppendMenu(hpopup,MF_SEPARATOR,0,NULL) ;
+        insertMenuItems(hpopup,2100,&mi,&mid) ;
         if((cmFlags & 0x01) == 0)
-        {
-            AppendMenu(hpopup,MF_SEPARATOR,0,NULL) ;
             moveMenu = hpopup ;
-        }
         else if((moveMenu = CreatePopupMenu()) == NULL)
         {
             DestroyMenu(hpopup) ;
@@ -4438,6 +4493,8 @@ popupControlMenu(HWND aHWnd, int cmFlags)
         }
         else
             AppendMenu(hpopup,MF_POPUP,(UINT_PTR) moveMenu,_T("Mo&ve to Desktop"));
+        
+        insertMenuItems(hpopup,2200,&mi,&mid) ;
         _tcscpy(buff,_T("Move to Desktop & ")) ;
         for(ii = 1 ; ii <= nDesks ; ii++)
         {
@@ -4455,8 +4512,11 @@ popupControlMenu(HWND aHWnd, int cmFlags)
                 buff[18] = '\0' ;
             AppendMenu(moveMenu,(ii == currentDesk) ? (MF_STRING|MF_GRAYED):MF_STRING,ID_DESK_N+ii,buff) ;
         }
+        insertMenuItems(hpopup,3000,&mi,&mid) ;
         AppendMenu(hpopup,(deskWrap || (currentDesk < nDesks)) ? MF_STRING:(MF_STRING|MF_GRAYED),ID_DESK_NEXT,_T("Move to &Next"));
+        insertMenuItems(hpopup,3100,&mi,&mid) ;
         AppendMenu(hpopup,(deskWrap || (currentDesk > 1)) ? MF_STRING:(MF_STRING|MF_GRAYED),ID_DESK_PREV,_T("Move to &Previous"));
+        insertMenuItems(hpopup,0xffff,&mi,&mid) ;
     }
     if((cmFlags & 0x010) && hotkeyMenuLoc)
     {
@@ -4471,6 +4531,16 @@ popupControlMenu(HWND aHWnd, int cmFlags)
     DestroyMenu(hpopup);
     if((moveMenu != NULL) && (moveMenu != hpopup))
         DestroyMenu(moveMenu) ;
+    mi = ctlMenuItemList ;
+    while(mi != NULL)
+    {
+        if(mi->submenu != NULL)
+        {
+            DestroyMenu(mi->submenu) ;
+            mi->submenu = NULL ;
+        }
+        mi = mi->next ;
+    }
     switch(ii)
     {
     case ID_SETUP:		// show setup box
@@ -4503,6 +4573,17 @@ popupControlMenu(HWND aHWnd, int cmFlags)
     default:
         if((ii > ID_DESK_N) && (ii <= (ID_DESK_N + nDesks)))
             gotoDesk(ii - ID_DESK_N,FALSE) ;
+        else if(vwEnabled)
+        {
+            mi = ctlMenuItemList ;
+            while((mi != NULL) && (mi->id != ii))
+                mi = mi->next ;
+            if(mi != NULL)
+            {
+                vwLogBasic((_T("Module CMenu item %x %d\n"),(int) mi->module,(int) mi->message)) ;
+                PostMessage(mi->module,VW_CMENUITEM,mi->message,0) ;
+            }
+        }
         break ;
     }
     return TRUE ;
@@ -4961,6 +5042,32 @@ wndProc(HWND aHWnd, UINT message, WPARAM wParam, LPARAM lParam)
     case VW_HOTKEY:
         return vwHotkeyExecute((vwUByte) wParam,(vwUByte) LOWORD(lParam),(vwUByte) HIWORD(lParam)) ;
         
+    case VW_CMENUITEM:
+        {
+            vwMenuItem *mi, *pi, *ni ;
+            vwUShort pos = (vwUShort) lParam ;
+            HWND module = (HWND) wParam ;            
+            
+            pi = NULL ;
+            mi = ctlMenuItemList ;
+            while(mi != NULL)
+            {
+                ni = mi->next ;
+                if((mi->module == module) && ((pos == 0) || (mi->position == pos)))
+                {
+                    if(pi == NULL)
+                        ctlMenuItemList = ni ;
+                    else
+                        pi->next = ni ;
+                    free(mi) ;
+                }
+                else
+                    pi = mi ;
+                mi = ni ;
+            }
+            return TRUE ;
+        }
+        
         // End plugin messages
         
     case WM_CREATE:		       // when main window is created
@@ -5030,6 +5137,58 @@ wndProc(HWND aHWnd, UINT message, WPARAM wParam, LPARAM lParam)
     case WM_DRAWITEM:
         renderMenuItem((DRAWITEMSTRUCT*)lParam);        
         break;
+    
+    case WM_COPYDATA:
+        if(lParam != 0)
+        {
+            COPYDATASTRUCT *cds = (COPYDATASTRUCT *) lParam ;
+            if(cds->dwData == VW_CMENUITEM)
+            {
+                vwMenuItemMsg *mim ;
+                vwMenuItem *mi, *pi, *ni ;
+                int ii ;
+                
+                if((cds->cbData > 4) && ((mim=cds->lpData) != NULL) &&
+                   ((mi = malloc(sizeof(vwMenuItem))) != NULL))
+                {
+                    mi->module = (HWND) wParam ;
+                    mi->submenu = NULL ;
+                    mi->position = mim->position ;
+                    mi->message = mim->message ;
+                    mi->id = 0 ;
+#ifdef _UNICODE
+                    MultiByteToWideChar(CP_ACP,0,mim->label,-1,mi->label,vwMENU_LABEL_MAX) ;
+#else
+                    strncpy(mi->label,mim->label,vwMENU_LABEL_MAX) ;
+#endif
+                    mi->label[vwMENU_LABEL_MAX-1] = '\0' ;
+                    ii = 0 ;
+                    pi = NULL ;
+                    ni = ctlMenuItemList ;
+                    while(ni != NULL)
+                    {
+                        if(ni->position == mi->position)
+                        {
+                            if(ni->module == mi->module)
+                                ii = 1 ;
+                            else if(ii)
+                                break ;
+                        }
+                        else if(ni->position > mi->position)
+                            break ;
+                        pi = ni ;
+                        ni = ni->next ;
+                    }
+                    mi->next = ni ;
+                    if(pi == NULL)
+                        ctlMenuItemList = mi ;
+                    else
+                        pi->next = mi ;
+                }
+                return TRUE ;
+            }
+        }
+        break ;
     default:
         // If taskbar restarted
         if(message == RM_TaskbarCreated)
