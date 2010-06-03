@@ -2380,17 +2380,19 @@ monitorTimerProc(HWND hwnd, UINT uMsg, UINT idEvent, DWORD dwTime)
     vwWindow *win ;
     int ii, hungCount ;
     
-    if((taskHWnd == NULL) && (noTaskbarCheck == 0) && (timerCounter >= 20))
+    timerCounter++ ;
+    if((taskHWnd == NULL) && (noTaskbarCheck == 0) && ((timerCounter & 0x3) == 0))
     {
         vwTaskbarHandleGet() ;
-        if(taskHWnd == NULL)
+        if(taskHWnd != NULL)
+            vwIconSet(currentDesk,0) ;
+        else if(timerCounter >= 20)
         {
             MessageBox(hWnd,_T("Could not locate handle to the taskbar.\n This will disable the ability to hide troublesome windows correctly."),vwVIRTUAWIN_NAME _T(" Error"), 0); 
             noTaskbarCheck = 2 ;
         }
     }
     vwMutexLock();
-    timerCounter++ ;
     if((timerCounter == 2) && taskbarBCType && useDynButtonRm)
     {
         /* check the taskbar buttons in the taskbar are correct */
@@ -5272,10 +5274,10 @@ VirtuaWinInitContinue(HWND hwnd, UINT uMsg, UINT idEvent, DWORD dwTime)
     
     vwHookSetup();
     vwHotkeyRegister(1);
-    vwIconSet(currentDesk,0) ;
     getScreenSize();
     getWorkArea();
     vwTaskbarHandleGet();
+    vwIconSet(currentDesk,0) ;
     
     /* Create the thread responsible for mouse monitoring */   
     mouseThread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE) vwMouseProc, NULL, 0, &threadID); 	
