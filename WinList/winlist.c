@@ -137,16 +137,23 @@ enumWindowsProc(HWND hwnd, LPARAM lParam)
         }
         else
         {
-            if(((flag & vwWINFLAGS_SHOWN) == 0) ^ ((flag & vwWINFLAGS_SHOW) == 0))
+            if((flag & (vwWINFLAGS_ELEVATED_TEST|vwWINFLAGS_ELEVATED)) == (vwWINFLAGS_ELEVATED_TEST|vwWINFLAGS_ELEVATED))
             {
-                /* if show but not shown or vice versa then the window is hung */
+                /* window is known to be elevated */
                 state = 2 ;
-                sbuff[0] = 'H' ;
+                sbuff[0] = 'E' ;
+            }
+            else if(((flag & vwWINFLAGS_SHOWN) != 0) ^ ((flag & vwWINFLAGS_SHOW) == 0))
+            {
+                /* if show & shown or vice versa then the window is okay */
+                state = 1 ;
+                sbuff[0] = 'O' ;
             }
             else
             {
-                state = 1 ;
-                sbuff[0] = 'O' ;
+                /* window is hung */
+                state = 3 ;
+                sbuff[0] = 'H' ;
             }
             flag = vwWindowGetInfoDesk(flag) ;
             if((flag != deskCrrnt) && (flag > deskCount))
@@ -158,13 +165,13 @@ enumWindowsProc(HWND hwnd, LPARAM lParam)
     }
     else if(style & WS_VISIBLE)
     {
-        fbuff[0] = ' ' ;
-        flag = 0 ;
+        fbuff[0] = 'V' ;
+        flag = -1 ;
     }
     else
     {
         fbuff[0] = 'H' ;
-        flag = -1 ;
+        flag = -2 ;
     }
     if((win = malloc(sizeof(vwlWindow))) == NULL)
         return FALSE ;
