@@ -10,102 +10,117 @@
 </OBJECT>
 <UL>
 	<LI> <OBJECT type="text/sitemap">
-		<param name="Name" value="Overview">
+		<param name="Name" value="Introducing VirtuaWin">
 		<param name="Local" value="VirtuaWin_Overview.htm">
-		</OBJECT>
-	<LI> <OBJECT type="text/sitemap">
-		<param name="Name" value="Install/Uninstall">
-		<param name="Local" value="VirtuaWin_Install.htm">
-		</OBJECT>
-	<LI> <OBJECT type="text/sitemap">
-		<param name="Name" value="Functions">
-		<param name="Local" value="VirtuaWin_Functions.htm">
-		</OBJECT>
-	<LI> <OBJECT type="text/sitemap">
-		<param name="Name" value="Control Menu">
-		<param name="Local" value="VirtuaWin_ControlMenu.htm">
-		</OBJECT>
-	<LI> <OBJECT type="text/sitemap">
-		<param name="Name" value="Window Menu">
-		<param name="Local" value="VirtuaWin_WindowMenu.htm">
-		</OBJECT>
-	<LI> <OBJECT type="text/sitemap">
-		<param name="Name" value="Window Lists">
-		<param name="Local" value="VirtuaWin_WindowLists.htm">
+		<param name="ImageNumber" value="1">
 		</OBJECT>
 	<UL>
 		<LI> <OBJECT type="text/sitemap">
-			<param name="Name" value="Standard Window List">
-			<param name="Local" value="VirtuaWin_WindowLists.htm#WL_SWL">
+			<param name="Name" value="Functions">
+			<param name="Local" value="VirtuaWin_Functions.htm">
 			</OBJECT>
 		<LI> <OBJECT type="text/sitemap">
-			<param name="Name" value="Compact Window List">
-			<param name="Local" value="VirtuaWin_WindowLists.htm#WL_CWL">
-			</OBJECT>
-		<LI> <OBJECT type="text/sitemap">
-			<param name="Name" value="MRU Window List">
-			<param name="Local" value="VirtuaWin_WindowLists.htm#WL_MRUWL">
+			<param name="Name" value="Install/Uninstall">
+			<param name="Local" value="VirtuaWin_Install.htm">
 			</OBJECT>
 	</UL>
 	<LI> <OBJECT type="text/sitemap">
-		<param name="Name" value="Setup Dialog">
-		<param name="Local" value="VirtuaWin_SetupDialog.htm">
+		<param name="Name" value="VirtuaWin UI Reference">
+		<param name="ImageNumber" value="1">
 		</OBJECT>
 	<UL>
 		<LI> <OBJECT type="text/sitemap">
-			<param name="Name" value="General Tab">
-			<param name="Local" value="VirtuaWin_SetupDialog.htm#General">
+			<param name="Name" value="Control Menu">
+			<param name="Local" value="VirtuaWin_ControlMenu.htm">
 			</OBJECT>
 		<LI> <OBJECT type="text/sitemap">
-			<param name="Name" value="Hotkeys Tab">
-			<param name="Local" value="VirtuaWin_SetupDialog.htm#Hotkeys">
+			<param name="Name" value="Window Menu">
+			<param name="Local" value="VirtuaWin_WindowMenu.htm">
 			</OBJECT>
 		<LI> <OBJECT type="text/sitemap">
-			<param name="Name" value="Mouse Tab">
-			<param name="Local" value="VirtuaWin_SetupDialog.htm#Mouse">
+			<param name="Name" value="Window Lists">
+			<param name="Local" value="VirtuaWin_WindowLists.htm">
 			</OBJECT>
+		<UL>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="Standard Window List">
+				<param name="Local" value="VirtuaWin_WindowLists.htm#WL_SWL">
+				</OBJECT>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="Compact Window List">
+				<param name="Local" value="VirtuaWin_WindowLists.htm#WL_CWL">
+				</OBJECT>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="MRU Window List">
+				<param name="Local" value="VirtuaWin_WindowLists.htm#WL_MRUWL">
+				</OBJECT>
+		</UL>
 		<LI> <OBJECT type="text/sitemap">
-			<param name="Name" value="Modules Tab">
-			<param name="Local" value="VirtuaWin_SetupDialog.htm#Modules">
+			<param name="Name" value="Setup Dialog">
+			<param name="Local" value="VirtuaWin_SetupDialog.htm">
 			</OBJECT>
+		<UL>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="General Tab">
+				<param name="Local" value="VirtuaWin_SetupDialog.htm#General">
+				</OBJECT>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="Hotkeys Tab">
+				<param name="Local" value="VirtuaWin_SetupDialog.htm#Hotkeys">
+				</OBJECT>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="Mouse Tab">
+				<param name="Local" value="VirtuaWin_SetupDialog.htm#Mouse">
+				</OBJECT>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="Modules Tab">
+				<param name="Local" value="VirtuaWin_SetupDialog.htm#Modules">
+				</OBJECT>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="Expert Tab">
+				<param name="Local" value="VirtuaWin_SetupDialog.htm#Expert">
+				</OBJECT>
+		</UL>
 		<LI> <OBJECT type="text/sitemap">
-			<param name="Name" value="Expert Tab">
-			<param name="Local" value="VirtuaWin_SetupDialog.htm#Expert">
+			<param name="Name" value="Window Rules Dialog">
+			<param name="Local" value="VirtuaWin_WindowRulesDialog.htm">
 			</OBJECT>
+		<UL>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="Identification">
+				<param name="Local" value="VirtuaWin_WindowRulesDialog.htm#Identification">
+				</OBJECT>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="Settings">
+				<param name="Local" value="VirtuaWin_WindowRulesDialog.htm#Settings">
+				</OBJECT>
+		</UL>
 	</UL>
 	<LI> <OBJECT type="text/sitemap">
-		<param name="Name" value="Window Rules Dialog">
-		<param name="Local" value="VirtuaWin_WindowRulesDialog.htm">
+		<param name="Name" value="Advanced User Guide">
+		<param name="ImageNumber" value="1">
 		</OBJECT>
 	<UL>
 		<LI> <OBJECT type="text/sitemap">
-			<param name="Name" value="Identification">
-			<param name="Local" value="VirtuaWin_WindowRulesDialog.htm#Identification">
+			<param name="Name" value="WinList Module">
+			<param name="Local" value="VirtuaWin_WinListModule.htm">
 			</OBJECT>
 		<LI> <OBJECT type="text/sitemap">
-			<param name="Name" value="Settings">
-			<param name="Local" value="VirtuaWin_WindowRulesDialog.htm#Settings">
+			<param name="Name" value="Custom Icons">
+			<param name="Local" value="VirtuaWin_CustomIcons.htm">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="External Interface">
+			<param name="Local" value="VirtuaWin_ExternalInterface.htm">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Locking or Hiding Desktops">
+			<param name="Local" value="VirtuaWin_HidingDesktops.htm">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Configuration Files">
+			<param name="Local" value="VirtuaWin_ConfigurationFiles.htm">
 			</OBJECT>
 	</UL>
-	<LI> <OBJECT type="text/sitemap">
-		<param name="Name" value="Locking or Hiding Desktops">
-		<param name="Local" value="VirtuaWin_HidingDesktops.htm">
-		</OBJECT>
-	<LI> <OBJECT type="text/sitemap">
-		<param name="Name" value="External Interface">
-		<param name="Local" value="VirtuaWin_ExternalInterface.htm">
-		</OBJECT>
-	<LI> <OBJECT type="text/sitemap">
-		<param name="Name" value="WinList Module">
-		<param name="Local" value="VirtuaWin_WinListModule.htm">
-		</OBJECT>
-	<LI> <OBJECT type="text/sitemap">
-		<param name="Name" value="Configuration Files">
-		<param name="Local" value="VirtuaWin_ConfigurationFiles.htm">
-		</OBJECT>
-	<LI> <OBJECT type="text/sitemap">
-		<param name="Name" value="Custom Icons">
-		<param name="Local" value="VirtuaWin_CustomIcons.htm">
-		</OBJECT>
 </UL>
 </BODY></HTML>
