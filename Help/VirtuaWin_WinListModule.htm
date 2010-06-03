@@ -9,11 +9,29 @@
 
 <p><h2>WinList Module</h2></p>
 
-<p>The WinList module is used for recovering windows that might be lost by VirtuaWin due to some reason. </p>
+<p>The WinList module is used for recovering any window that might have been lost by VirtuaWin. </p>
 
-<p>Press the configure button for the module to bring up a list of all windows that exists. Note that there are many system windows that are hidden by default, which are also shown in this list. It is possible to undo the latest action if the window list dialog is not closed.</p>
+<p>To open WinList's recovery dialog open VirtuaWin's <a href="VirtuaWin_SetupDialog.htm">Setup Dialog</a>, go to the Modules tab and select WinList in the Module List, then press the configure button. This will open the WinList dialog listing all the windows that currently exists. Note that there are many system windows that are hidden by default, which are also shown in this list. It is possible to undo the latest action if the window list dialog is not closed.</p>
 
-<p>Note that both the application title bar text and the classname is displayed and if the title cannot be found, the module will display "<span style="font-family: monospace">&lt;None&gt;</span>" as title.</p>
+<p>The Flag column (<i>F</i>) indicates the current handling of the window by VirtuaWin, it will have one of the following values:</p>
+
+<p><ul><li><b>1 .. 20</b>: Known managed window, the number indicates the desktop it belongs to.</p></li></ul>
+
+<p><ul><li><b>U</b>: Known unmanaged window.</p></li>
+
+<p><li><b>V</b>: Unknown visible window (rare).</p></li>
+
+<p><li><b>H</b>: Unknown hidden window (possibly lost).</p></li></ul>
+
+<p>The Status column (<i>S</i>) indicates the current status of the window according to VirtuaWin, this column is only set when VirtuaWin is managing the window (i.e. the <i>F</i> column is set to a desktop number) in which case it will have one of the following values:</p>
+
+<p><ul><li><b>O</b>: Okay - the window is responding normally.</p></li>
+
+<p><li><b>E</b>: Elevated - the window is considered elevated (Vista or Win7), VirtuaWin cannot manage these windows as it does not have the require permissions to hide them.</p></li>
+
+<p><li><b>H</b>: Hung - the window has stopped responding, VirtuaWin will continue to manage and monitor the window, it will be recovered as soon as it starts responding. The VirtuaWin system try icon should be flashing to warn you of this issue. </p></li></ul>
+
+<p>The window's application classname and title bar text are displayed in the <i>Class</i> and <i>Title</i> columns, if the window does not have a title "<span style="font-family: monospace">&lt;None&gt;</span>" will be displayed instead.</p>
 </dir>
 </body>
 </html>

@@ -5,14 +5,44 @@
 
 == &[vs title "WinList Module"]
 
-The WinList module is used for recovering windows that might be lost by
-VirtuaWin due to some reason. 
+The WinList module is used for recovering any window that might have been lost by
+VirtuaWin. 
 
-Press the configure button for the module to bring up a list of all windows
-that exists. Note that there are many system windows that are hidden by
-default, which are also shown in this list. It is possible to undo the latest
-action if the window list dialog is not closed.
+To open WinList's recovery dialog open VirtuaWin's &[l
+VirtuaWin_SetupDialog.htm]Setup Dialog&[/l], go to the Modules tab and select
+WinList in the Module List, then press the configure button. This will open
+the WinList dialog listing all the windows that currently exists. Note that
+there are many system windows that are hidden by default, which are also shown
+in this list. It is possible to undo the latest action if the window list
+dialog is not closed.
 
-Note that both the application title bar text and the classname is displayed
-and if the title cannot be found, the module will display "@@<None>@@" as title.
+The Flag column (//F//) indicates the current handling of the window by VirtuaWin,
+it will have one of the following values:
 
+*.  **1 .. 20**: Known managed window, the number indicates the desktop it
+belongs to.
+  
+*.  **U**: Known unmanaged window.
+
+.   **V**: Unknown visible window (rare).
+
+.   **H**: Unknown hidden window (possibly lost).
+
+The Status column (//S//) indicates the current status of the window according
+to VirtuaWin, this column is only set when VirtuaWin is managing the window
+(i.e. the //F// column is set to a desktop number) in which case it will have one of the following values:
+
+*.  **O**: Okay - the window is responding normally.
+
+.   **E**: Elevated - the window is considered elevated (Vista or Win7),
+VirtuaWin cannot manage these windows as it does not have the require
+permissions to hide them.
+
+.   **H**: Hung - the window has stopped responding, VirtuaWin will continue
+to manage and monitor the window, it will be recovered as soon as it starts
+responding. The VirtuaWin system try icon should be flashing to warn you of
+this issue. 
+ 
+The window's application classname and title bar text are displayed in the
+//Class// and //Title// columns, if the window does not have a title "@@<None>@@" will
+be displayed instead.
