@@ -939,10 +939,11 @@ WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, INT nCmdS
     
     memset(&wc, 0, sizeof(WNDCLASS));
     wc.style = 0;
-    wc.lpfnWndProc = (WNDPROC)vwPreviewDlgProc;
+    wc.lpfnWndProc = (WNDPROC)vwPreviewDlgProc ;
     wc.hInstance = hInstance ;
-    wc.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_VIRTUAWIN));
-    wc.lpszClassName = _T("VWPreview");
+    wc.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_VIRTUAWIN)) ;
+    wc.hCursor = LoadCursor(NULL,IDC_ARROW) ;
+    wc.lpszClassName = _T("VWPreview") ;
     if(!RegisterClass(&wc))
         return 0;
     
