@@ -56,7 +56,7 @@ Copyright:
 VWDesktopIcons is a freely distributed program and is licensed under the GNU
 General Public License.
 
-Copyright (c) 2007-2009 VirtuaWin (virtuawin@home.se)
+Copyright (c) 2006-2010 VirtuaWin (virtuawin@home.se)
 
 
 HISTORY

@@ -2,7 +2,7 @@
 //  VirtuaWin - Virtual Desktop Manager (virtuawin.sourceforge.net)
 //  vwHook.h - Windows Hook for sending window activation events.
 // 
-//  Copyright (c) 2007-2009 VirtuaWin (VirtuaWin@home.se)
+//  Copyright (c) 2007-2010 VirtuaWin (VirtuaWin@home.se)
 // 
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
