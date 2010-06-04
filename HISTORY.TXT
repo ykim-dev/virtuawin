@@ -1,8 +1,33 @@
 ***   VirtuaWin Revision History   ***
 --------------------------------------
 
-Ver 4.2 beta1 2009/12/02
+Ver 4.2 2010/06/04
 
+* 2980468 Added VW_CMENUITEM module message so modules can add items to the 
+  main control menu
+* 3011201 Restructured help topic tree to have fewer top level items.
+* 2976228 Allowed up to 5sec for VW to detect taskbar before complaining
+* 2980490 Added direct desktop change options to control menu and created
+  compact & standard versions with hotkey & mouse options.
+* 2976533 Fixed loss of minimized window thumbnail on Win7, added "Only hide 
+  taskbar button ..." expert option to disable it in case of side effects
+* 2918536 Reduced outlook lockups by modifying set foreground window algorithm
+* 2978143 Fixed Minimize hide method issue on Windows 7
+* 2979653 Brought back "Hide minimized windows on desktop change" expert opt
+* 2979675 Added "Make windows of this type always on top" option in Win rules
+* 2979883 Added VW_HOTKEY module message so modules can execute hotkey cmds
+* 2912583 Added "Only change when dragging a window" mouse option.
+* 2979884 Added "WIN: Bring to the top" hotkey command
+* 2979817 Added "Operate on window under mouse" hotkey option
+* 2122513 Added 64bit OS support for dynamic toolbar and added error message
+  documenting dynamic toolbar is not supported on Win7
+* 2905598 Added WIN as a mouse modifier (submitted patch)
+* 2959463 Implemented clicking on window list desk names to change desktop
+* 2950454 Added hidden option lastDeskNoDelay to disable the 1sec delay before
+  updating last desktop, used by "NAV: Return to last desktop" command
+* Improved module IMAGE message so that 6 & 7 return the desktop size and
+  8 toggles auto image create state (so a module can temporarily  disable it)
+* 2969735 Support Win Rule Window Name to be '<None>' to mean no name.
 * 2901801 UAC support - recognise elevated windows and not class them as hung
 * 2902879 Handle failue to call EnumWindows better.
 * 2901797 Fixed Window Menu -> Info feature for an elevated window.
