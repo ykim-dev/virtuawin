@@ -256,14 +256,12 @@ vwPreviewInit(void)
 static void
 vwpLoadConfigFile(void)
 {
-    char buff[1024], *ss ;
+    char buff[1024] ;
     FILE *fp ;
     int ii, ver ;
     
-    ss = userAppPath + strlen(userAppPath) ;
-    strcpy(ss,"vwpreview.cfg") ;
+    strcpy(userAppBase,"vwpreview.cfg") ;
     fp = fopen(userAppPath,"r") ;
-    *ss = '\0' ;
     if(fp != NULL)
     {
         vwpLoadConfigFileInt(fp,buff,ii,ver) ;
@@ -284,13 +282,10 @@ vwpLoadConfigFile(void)
 static void
 vwpSaveConfigFile(void)
 {
-    char *ss ;
     FILE *fp ;
     
-    ss = userAppPath + strlen(userAppPath) ;
-    strcpy(ss,"vwpreview.cfg") ;
+    strcpy(userAppBase,"vwpreview.cfg") ;
     fp = fopen(userAppPath,"w") ;
-    *ss = '\0' ;
     if(fp != NULL)
     {
         fprintf(fp,"ver# 1\n") ;
