@@ -3,31 +3,33 @@
 
 IDI_VIRTUAWIN ICON "../../Icons/virtuawin.ico"
 
-IDD_MAINDIALOG DIALOG 79, 25, 212, 162
+IDD_MAINDIALOG DIALOG 79, 25, 212, 184
 STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "VirtuaWin Desktop Preview v1.0"
+CAPTION "VirtuaWin Desktop Preview v1.1"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX        "Desktop Preview (Full Screen)", IDC_STATIC, 4, 5, 202, 61
+    GROUPBOX        "Desktop Preview (Full Screen)", IDC_STATIC, 4, 5, 202, 72
     LTEXT           "Hotkey:", IDC_STATIC, 10, 18, 40, 10
     CONTROL         "Hotkey", IDC_FS_HOTKEY_ENT, "msctls_hotkey32", WS_BORDER | WS_TABSTOP, 50, 16, 102, 12
     AUTOCHECKBOX    "+ WIN", IDC_FS_HOTKEY_WIN, 155, 18, 35, 9, 0x0020
     AUTOCHECKBOX    "Add option into VirtuaWin Control menu", IDC_FS_VWCONTROL, 10, 30, 180, 10
     AUTOCHECKBOX    "Optimise desktop layout for better screen coverage", IDC_FS_OPTIMLAY, 10, 41, 180, 10
     AUTOCHECKBOX    "Enable zoom effect on selection", IDC_FS_ZOOM, 10, 52, 180, 10
+    AUTOCHECKBOX    "Update desktop previews", IDC_FS_UPDATE, 10, 63, 180, 10
 
-    GROUPBOX        "Desktop Select (Window)", IDC_STATIC, 4, 69, 202, 68
-    LTEXT           "Hotkey:", IDC_STATIC, 10, 82, 40, 10
-    CONTROL         "Hotkey", IDC_WN_HOTKEY_ENT, "msctls_hotkey32", WS_BORDER | WS_TABSTOP, 50, 80, 102, 12
-    AUTOCHECKBOX    "+ WIN", IDC_WN_HOTKEY_WIN, 155, 82, 35, 9, 0x0020
-    AUTOCHECKBOX    "Add option into VirtuaWin Control menu", IDC_WN_VWCONTROL, 10, 93, 180, 10
-    AUTOCHECKBOX    "Optimise desktop layout for better screen coverage", IDC_WN_OPTIMLAY, 10, 104, 180, 10
-    LTEXT           "Desktop image height", IDC_STATIC, 22, 119, 70, 8, 0
-    EDITTEXT        IDC_WN_IMGHEIGHT, 97, 117, 20, 12, ES_AUTOHSCROLL
+    GROUPBOX        "Desktop Select (Window)", IDC_STATIC, 4, 80, 202, 77
+    LTEXT           "Hotkey:", IDC_STATIC, 10, 93, 40, 10
+    CONTROL         "Hotkey", IDC_WN_HOTKEY_ENT, "msctls_hotkey32", WS_BORDER | WS_TABSTOP, 50, 91, 102, 12
+    AUTOCHECKBOX    "+ WIN", IDC_WN_HOTKEY_WIN, 155, 93, 35, 9, 0x0020
+    AUTOCHECKBOX    "Add option into VirtuaWin Control menu", IDC_WN_VWCONTROL, 10, 104, 180, 10
+    AUTOCHECKBOX    "Optimise desktop layout for better screen coverage", IDC_WN_OPTIMLAY, 10, 115, 180, 10
+    AUTOCHECKBOX    "Close after desktop change", IDC_WN_CLOSE, 10, 126, 180, 10
+    LTEXT           "Desktop image height", IDC_STATIC, 22, 141, 70, 8, 0
+    EDITTEXT        IDC_WN_IMGHEIGHT, 97, 139, 20, 12, ES_AUTOHSCROLL
 
-    PUSHBUTTON      "OK",      ID_OK,         50, 142, 48, 14
-    DEFPUSHBUTTON   "Cancel",  IDCANCEL,     104, 142, 48, 14
-    PUSHBUTTON      "Apply",   ID_APPLY,     158, 142, 48, 14
+    PUSHBUTTON      "OK",      ID_OK,         50, 164, 48, 14
+    DEFPUSHBUTTON   "Cancel",  IDCANCEL,     104, 164, 48, 14
+    PUSHBUTTON      "Apply",   ID_APPLY,     158, 164, 48, 14
 END
 
 #ifndef _MAC
@@ -37,8 +39,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 1,0,0,2
- PRODUCTVERSION 1,0,0,2
+ FILEVERSION 1,1,0,2
+ PRODUCTVERSION 1,1,0,2
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -55,13 +57,13 @@ BEGIN
         BEGIN
             VALUE "Comments", "http://virtuawin.sourceforge.net/\0"
             VALUE "CompanyName", "VirtuaWin\0"
-            VALUE "FileDescription", "VirtuaWin Desktop Preview v1.0\0"
-            VALUE "FileVersion", "1.0.0.2\0"
+            VALUE "FileDescription", "VirtuaWin Desktop Preview v1.1\0"
+            VALUE "FileVersion", "1.1.0.2\0"
             VALUE "InternalName", "VWPreview\0"
             VALUE "LegalCopyright", "Copyright © 2009-2010\0"
             VALUE "OriginalFilename", "VWPreview.exe\0"
             VALUE "ProductName", "VirtuaWin VWPreview\0"
-            VALUE "ProductVersion", "1.0.0.2\0"
+            VALUE "ProductVersion", "1.1.0.2\0"
         END
     END
     BLOCK "VarFileInfo"
