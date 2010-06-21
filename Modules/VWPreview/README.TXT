@@ -44,6 +44,11 @@ Copyright (c) 2010 VirtuaWin (virtuawin@home.se)
 
 HISTORY
 
+Ver 1.2 - 2010/06/21
+
+* Fixed preview dialog window issues on Windows XP.
+
+
 Ver 1.1 - 2010/06/15
 
 * Added Full Screen 'Update desktop  previews'  option - this option should be
@@ -64,6 +69,7 @@ Ver 1.1 - 2010/06/15
   automatically  update  the  preview  (update  rate can be changed by editing
   "winUdtim# 1000" line - see option above). This make VWPreview act more like
   a very basic desktop pager.
+
 
 Ver 1.0 - 2010/06/10
 
