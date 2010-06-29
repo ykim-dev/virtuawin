@@ -48,7 +48,7 @@ BEGIN
     EDITTEXT        IDC_DESKTOPNAME, 22,68, 130, 12, ES_LEFT | ES_AUTOHSCROLL
     GROUPBOX        "Desktop Configuration", IDC_STATIC, 4, 5, 202, 81
 
-    GROUPBOX        "User Interface", IDC_STATIC,   4, 89, 202, 91
+    GROUPBOX        "User Interface", IDC_STATIC,   4, 89, 202, 102
     LTEXT           "Available window list actions:", IDC_STATIC, 10, 100, 120, 10
     AUTOCHECKBOX    "Switch To",   IDC_MENUACCESS, 22, 111, 50, 10
     AUTOCHECKBOX    "Move Here",   IDC_MENUMOVE,   77, 111, 55, 10
