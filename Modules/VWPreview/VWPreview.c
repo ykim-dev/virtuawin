@@ -69,6 +69,7 @@ int vwDeskSizeY ;
 #define vwpCMI_WINDOW  2022
 #define vwpCMI_SEP     2023
 
+vwUByte os9x=0;
 int vwpType=0;                 /* preview window type */
 int vwpBttnHeight=200 ;
 int vwpOptimLayout[vwpTYPE_COUNT] = { 0, 1 } ;
@@ -325,6 +326,10 @@ vwpSetupDialogFunc(HWND hwndDlg, UINT msg, WPARAM wParam, LPARAM lParam)
     TCHAR buff[10] ;
     int ii ;
     
+#if vwpDEBUG
+    _ftprintf(logfp,_T("SetupMessage %x: %d %x %x\n"),hwndDlg,msg,wParam,lParam) ;
+    fflush(logfp) ;
+#endif
     switch(msg)
     {
     case WM_INITDIALOG:
@@ -445,6 +450,15 @@ vwpSetupDialogFunc(HWND hwndDlg, UINT msg, WPARAM wParam, LPARAM lParam)
     return 0 ;
 }
 
+void
+vwpSetupOpen(HWND pHwnd)
+{
+    // reload current config
+    InitCommonControls() ;
+    vwpLoadConfigFile() ;
+    DialogBox(hInst, MAKEINTRESOURCE(IDD_MAINDIALOG), pHwnd, (DLGPROC) vwpSetupDialogFunc) ;
+}
+
 
 void WINAPI
 vwPreviewDraw(HDC hdc)
@@ -453,6 +467,13 @@ vwPreviewDraw(HDC hdc)
     HDC hdcMem;
     
     hdcMem = CreateCompatibleDC(hdc) ;
+    if(os9x)
+        SetStretchBltMode(hdc,COLORONCOLOR) ;
+    else
+    {
+        SetStretchBltMode(hdc,HALFTONE) ;
+        SetBrushOrgEx(hdcMem,0,0,0) ;
+    }
     if(vwpZoomStep)
     {
         ii = vwDeskCur - 1 ;
@@ -754,7 +775,7 @@ vwPreviewDlgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam )
     
     case WM_RBUTTONUP:
         if(vwpHnd != NULL)
-            DialogBox(hInst, MAKEINTRESOURCE(IDD_MAINDIALOG), vwpHnd, (DLGPROC) vwpSetupDialogFunc);
+            vwpSetupOpen(vwpHnd) ;
         return 0 ;
         
     case WM_CHAR:
@@ -898,8 +919,10 @@ vwPreviewCreate(int type)
     hwnd = CreateWindow("VWPreview","VirtuaWin Preview",ii,CW_USEDEFAULT,CW_USEDEFAULT,100,100,HWND_DESKTOP,NULL,hInst,NULL) ;
     if(hwnd != NULL)
     {
+        /* try everything to get the current input focus so tab and escape work */
         SetForegroundWindow(hwnd) ; 
         SetFocus(hwnd) ;
+        SendMessage(vwHandle,VW_FOREGDWIN,(WPARAM) hwnd,-1) ;
     }
 }
 
@@ -962,18 +985,14 @@ MainWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
         }
         vwDeskCur = lParam ;
         return TRUE ;
-   case MOD_QUIT:
+    
+    case MOD_QUIT:
         /* This must be handled, otherwise VirtuaWin can't shut down the module */
         PostQuitMessage(0);
         break;
+    
     case MOD_SETUP:
-        if(wParam != 0)
-            hwnd = (HWND) wParam ;
-        else
-            hwnd = (HWND) wHnd ;
-        // reload current config
-        vwpLoadConfigFile() ;
-        DialogBox(hInst, MAKEINTRESOURCE(IDD_MAINDIALOG), hwnd, (DLGPROC) vwpSetupDialogFunc);
+        vwpSetupOpen((wParam != 0) ? (HWND) wParam:(HWND) wHnd) ;
         break;
     
     case VW_CMENUITEM:
@@ -1020,13 +1039,21 @@ MainWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 int WINAPI
 WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, INT nCmdShow)
 {
+    OSVERSIONINFO os;
     WNDCLASS wc ;
     MSG msg ;
     
+    hInst = hInstance;
+    
+    os.dwOSVersionInfoSize = sizeof(os);
+    GetVersionEx(&os);
+    os9x = ((os.dwPlatformId == VER_PLATFORM_WIN32s) || (os.dwPlatformId == VER_PLATFORM_WIN32_WINDOWS)) ;
 #if vwpDEBUG
     logfp = fopen("c:\\temp\\VWPreview.log","w+") ;
+    _ftprintf(logfp,_T("Init: %x %d\n"),hInst,(int) os9x) ;
+    fflush(logfp) ;
 #endif
-    hInst = hInstance;
+    
     memset(&wc, 0, sizeof(WNDCLASS));
     wc.style = 0;
     wc.lpfnWndProc = (WNDPROC)MainWndProc;
