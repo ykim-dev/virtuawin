@@ -1,0 +1,60 @@
+<html>
+<head>
+<title>Hidden Configuration Options</title>
+<meta name="Author" content="Steven Phillips">
+<meta name="Generator" content="MicroEmacs JST">
+</head>
+<body>
+<p>   </p>
+
+<p><h2>Hidden Configuration Options </h2></p>
+
+<p>Some of the more obscure VirtuaWin configuration options have not been added to the Setup dialog as this dialog is already rather complex. Following is a list of this hidden configurations, if you wish to change a setting please refer to the <a href="#HCO_Edit">Editing a Hidden Option</a> section below.</p>
+
+<table border=1 cellpadding=4 cellspacing=0>
+
+<tr><td valign="top">
+<p><b>Option name</b></p></td>
+<td valign="top">
+<p><b>Values</b></p></td>
+<td valign="top">
+<p><b>Description</b></p></td></tr>
+<tr><td valign="top">
+<p>initialDesktop</p></td>
+<td valign="top">
+<p>#</p></td>
+<td valign="top">
+<p>Sets the initial (or startup) desktop of VirtuaWin to #.</p></td></tr>
+<tr><td valign="top">
+<p>lastDeskNoDelay</p></td>
+<td valign="top">
+<p>0 or 1</p></td>
+<td valign="top">
+<p>Disables the one second delay before updating the last desktop as used by the <a href="VirtuaWin_SetupDialog.htm#SD_NAV_RTL"><b><i>NAV: Return to last desktop</i></b></a>.</p></td></tr></table>
+
+<p><h3><a name="HCO_Edit">Editing a Hidden Option</h3></p>
+
+<p>To change the value of a hidden configuration option you need to manually edit the <a href="VirtuaWin_ConfigurationFiles.htm#CF_VWCFG"><span style="font-family: monospace">virtuawin.cfg</span></a> file. To do this: </p>
+
+<p><ol><li>Ensures your <span style="font-family: monospace">virtuawin.cfg</span> is the latest version as earlier versions may not have the option you are trying to set. To do this:</p>
+
+<p><ol type="a"><li>Open the VirtuaWin <a href="VirtuaWin_SetupDialog.htm">Setup Dialog</a>.</p></li>
+
+<p><li>Make any change so that the <b>Apply</b> button becomes active and press it.</p></li>
+
+<p><li>Undo your change and press the <b>Apply</b> button again.</p></li></ol></li>
+
+<p><li>In the Setup Dialog got to the Expert tab and click on <b>Explore Config</b>, then click on <b>Ok</b> to close the setup dialog. </p></li>
+
+<p><li>Exit VirtuaWin.</p></li>
+
+<p><li>In the Explorer window opened in step 2 locate the <span style="font-family: monospace">virtuawin.cfg</span> file and open this in a text editor (such as notepad).</p></li>
+
+<p><li>Locate the line which starts '<span style="font-family: monospace">&lt;option-name&gt;# </span>', this will typically be near the bottom of the file. If the option cannot be found you most likely using an earlier version of VirtuaWin.</p></li>
+
+<p><li>Change the text to the right of the '<span style="font-family: monospace">&lt;option-name&gt;# </span>' marker to your required new value and save the file. </p></li>
+
+<p><li>Restart VirtuaWin, your change should now take effect.</p></li></ol>
+</dir>
+</body>
+</html>

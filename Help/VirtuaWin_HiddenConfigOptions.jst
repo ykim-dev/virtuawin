@@ -1,0 +1,66 @@
+&[c -!- jst -!-]
+&[c Copyright: 2008-2010 VirtuaWin]
+&[c Created:   2008-04-10 21:35:45]
+&[vns author "Steven Phillips"]
+
+== &[vs title "Hidden Configuration Options"]     
+
+Some of the more obscure VirtuaWin configuration options have not been added
+to the Setup dialog as this dialog is already rather complex. Following is a
+list of this hidden configurations, if you wish to change a setting please
+refer to the &[l #HCO_Edit]Editing a Hidden Option&[/l] section below.
+
+] 3 ?
+
+] **Option name**
+
+] **Values**
+
+] **Description**
+
+]! initialDesktop
+
+] #
+
+] Sets the initial (or startup) desktop of VirtuaWin to #.
+
+]? lastDeskNoDelay
+
+] 0 or 1
+
+] Disables the one second delay before updating the last desktop as used by
+the &[l VirtuaWin_SetupDialog.htm#SD_NAV_RTL]**//NAV: Return to last
+desktop//**&[/l].
+
+=== &[a HCO_Edit]Editing a Hidden Option
+
+To change the value of a hidden configuration option you need to manually edit
+the &[l VirtuaWin_ConfigurationFiles.htm#CF_VWCFG]@@virtuawin.cfg@@&[/l] file.
+To do this: 
+
+1.  Ensures your @@virtuawin.cfg@@ is the latest version as earlier versions may
+    not have the option you are trying to set. To do this:
+
+    a.  Open the VirtuaWin &[l VirtuaWin_SetupDialog.htm]Setup Dialog&[/l].
+    
+    b.  Make any change so that the **Apply** button becomes active and press
+        it.
+    
+    c.  Undo your change and press the **Apply** button again.
+    
+2.  In the Setup Dialog got to the Expert tab and click on **Explore Config**,
+    then click on **Ok** to close the setup dialog. 
+
+3.  Exit VirtuaWin.
+
+4.  In the Explorer window opened in step 2 locate the @@virtuawin.cfg@@ file and
+    open this in a text editor (such as notepad).
+
+5.  Locate the line which starts '@@<option-name># @@', this will typically be
+    near the bottom of the file. If the option cannot be found you most likely
+    using an earlier version of VirtuaWin.
+
+6.  Change the text to the right of the '@@<option-name># @@' marker to your
+    required new value and save the file. 
+
+7.  Restart VirtuaWin, your change should now take effect.

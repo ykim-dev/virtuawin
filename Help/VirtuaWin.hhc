@@ -102,6 +102,10 @@
 		</OBJECT>
 	<UL>
 		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Hidden Configuration Options">
+			<param name="Local" value="VirtuaWin_HiddenConfigOptions.htm">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
 			<param name="Name" value="WinList Module">
 			<param name="Local" value="VirtuaWin_WinListModule.htm">
 			</OBJECT>

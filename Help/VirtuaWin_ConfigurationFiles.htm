@@ -11,7 +11,7 @@
 
 <p>With the exception of <b>userpath.cfg</b> all configuration files are located in the user’s '<span style="font-family: monospace">Application Data/VirtuaWin</span>' directory, use the Setup Expert <b><i>Explore Config</i></b> button to locate this directory. When a user runs VirtuaWin for the first time all configuration files located in the VirtuaWin installation directory are copied into the user’s own VirtuaWin directory within their Application Data area. The following configuration files are used by VirtuaWin:</p>
 
-<p><h3>userpath.cfg</h3></p>
+<p><h3><a name="CF_UPCFG">userpath.cfg</h3></p>
 
 <p>If present in the installation directory it contains a single line defining the directory containing the user’s configuration files. This file can be used to solve problems caused by user permissions and roaming profiles. The string within the file can user environment variables by using the format '<span style="font-family: monospace">${&lt;variable-name&gt;}</span>' (e.g. <span style="font-family: monospace">${HOMEPATH}</span>) and can use the built in variable <span style="font-family: monospace">${VIRTUAWIN_PATH}</span> to use the VirtuaWin installation directory. For example, the following could be used if a fixed path with the same setup for all users was required:</p>
 
@@ -23,15 +23,15 @@
 
 </dir><p>Note that VirtuaWin will create the directory if it does not already exist.</p>
 
-<p><h3>virtuawin.cfg</h3></p>
+<p><h3><a name="CF_VWCFG">virtuawin.cfg</h3></p>
 
 <p>Main user configuration file, the Setup Dialog settings are stored in this file.</p>
 
-<p><h3>window.cfg</h3></p>
+<p><h3><a name="CF_WCFG">window.cfg</h3></p>
 
 <p>Configuration file used to store the specific Window Rule setup.</p>
 
-<p><h3>module.cfg</h3></p>
+<p><h3><a name="CF_MCFG">module.cfg</h3></p>
 
 <p>Contains the list of currently disabled modules.</p>
 </dir>

@@ -54,6 +54,22 @@
 		<param name="Local" value="VirtuaWin_ConfigurationFiles.htm">
 		</OBJECT>
 	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="userpath.cfg">
+		<param name="Local" value="VirtuaWin_ConfigurationFiles.htm#CF_UPCFG">
+		</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="virtuawin.cfg">
+		<param name="Local" value="VirtuaWin_ConfigurationFiles.htm#CF_VWCFG">
+		</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="window.cfg">
+		<param name="Local" value="VirtuaWin_ConfigurationFiles.htm#CF_WCFG">
+		</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="CF_MCFG">
+		<param name="Local" value="VirtuaWin_ConfigurationFiles.htm#module.cfg">
+		</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
 		<param name="Name" value="Custom Icons">
 		<param name="Local" value="VirtuaWin_CustomIcons.htm">
 		</OBJECT>
@@ -439,7 +455,7 @@
 		<param name="Local" value="VirtuaWin_WindowRulesDialog.htm#WRD_AMWTD">
 	</OBJECT>
 	<LI> <OBJECT type="text/sitemap">
-		<param name="Name" value="On  hidden  window  activation">
+		<param name="Name" value="On hidden window activation">
 		<param name="Local" value="VirtuaWin_WindowRulesDialog.htm#WRD_OHWA">
 	</OBJECT>
 	<LI> <OBJECT type="text/sitemap">
@@ -449,6 +465,14 @@
 	<LI> <OBJECT type="text/sitemap">
 		<param name="Name" value="Method for hiding taskbar button">
 		<param name="Local" value="VirtuaWin_WindowRulesDialog.htm#WRD_MFHTB">
+	</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="Hidden Configuration Options">
+		<param name="Local" value="VirtuaWin_HiddenConfigOptions.htm">
+	</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="Editing a Hidden Option">
+		<param name="Local" value="VirtuaWin_HiddenConfigOptions.htm#HCO_Edit">
 	</OBJECT>
 </UL>
 </BODY></HTML>
