@@ -502,7 +502,7 @@ windowRuleDialogDelete(HWND hDlg)
 static BOOL CALLBACK
 windowRuleDialogFunc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
-    int ii ;
+    int ii, jj ;
     switch (msg)
     {
     case WM_INITDIALOG:
@@ -547,16 +547,26 @@ windowRuleDialogFunc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
         
         case IDC_WTYPE_WHIDE:
             if((HIWORD(wParam) == CBN_SELCHANGE) &&
-               ((ii=SendDlgItemMessage(hDlg,IDC_WTYPE_WHIDE,CB_GETCURSEL,0,0)) != CB_ERR) && (ii > 0) &&
-               ((ii=SendDlgItemMessage(hDlg,IDC_WTYPE_THIDE,CB_GETCURSEL,0,0)) != CB_ERR) && (ii == 0))
-                SendDlgItemMessage(hDlg, IDC_WTYPE_THIDE, CB_SETCURSEL, 2, 0) ;
+               ((ii=SendDlgItemMessage(hDlg,IDC_WTYPE_WHIDE,CB_GETCURSEL,0,0)) != CB_ERR) &&
+               ((jj=SendDlgItemMessage(hDlg,IDC_WTYPE_THIDE,CB_GETCURSEL,0,0)) != CB_ERR))
+            {
+                if((ii > 0) && (jj == 0))
+                    SendDlgItemMessage(hDlg, IDC_WTYPE_THIDE, CB_SETCURSEL, 2, 0) ;
+                else if((ii == 0) && (jj == 1))
+                    SendDlgItemMessage(hDlg, IDC_WTYPE_THIDE, CB_SETCURSEL, 0, 0) ;
+            }
             break ;
             
         case IDC_WTYPE_THIDE:
             if((HIWORD(wParam) == CBN_SELCHANGE) &&
-               ((ii=SendDlgItemMessage(hDlg,IDC_WTYPE_THIDE,CB_GETCURSEL,0,0)) != CB_ERR) && (ii == 1) &&
-               ((ii=SendDlgItemMessage(hDlg,IDC_WTYPE_WHIDE,CB_GETCURSEL,0,0)) != CB_ERR) && (ii == 0))
-                SendDlgItemMessage(hDlg, IDC_WTYPE_WHIDE, CB_SETCURSEL, 2, 0) ;
+               ((ii=SendDlgItemMessage(hDlg,IDC_WTYPE_THIDE,CB_GETCURSEL,0,0)) != CB_ERR) &&
+               ((jj=SendDlgItemMessage(hDlg,IDC_WTYPE_WHIDE,CB_GETCURSEL,0,0)) != CB_ERR))
+            {
+                if((ii == 1) && (jj == 0))
+                    SendDlgItemMessage(hDlg, IDC_WTYPE_WHIDE, CB_SETCURSEL, 2, 0) ;
+                else if((ii == 0) && (jj != 0))
+                    SendDlgItemMessage(hDlg, IDC_WTYPE_WHIDE, CB_SETCURSEL, 0, 0) ;
+            }
             break ;
 
         case IDC_WTYPE_OK:
