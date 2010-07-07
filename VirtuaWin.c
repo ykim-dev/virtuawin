@@ -936,34 +936,46 @@ createDeskImage(int deskNo, int createDefault)
     HBITMAP oldmap;
     TCHAR fname[MAX_PATH] ;
     FILE *fp ;
-    int ret ;
+    int ww, hh, ret ;
     
     if((deskImageEnabled == 0) || (deskNo > nDesks) ||
        ((deskDC = GetDC(desktopHWnd)) == NULL) ||
        ((bitmapDC = CreateCompatibleDC(deskDC)) == NULL))
         return 0 ;
-    
     oldmap = (HBITMAP) SelectObject(bitmapDC,deskImageBitmap);
-    
+    ww = desktopWorkArea[0][2]-desktopWorkArea[0][0] + 1 ;
+    hh = desktopWorkArea[0][3]-desktopWorkArea[0][1] + 1 ;
     if(createDefault)
     {
-        /* create a default image */
+        /* Fill all using the button color (taskbar) and then draw the active desktop area (non-taskbar)
+         * the background colour, but one pixel smaller all round to creatre a boarder, this makes
+         * modules like VWPreview easier to use when only default previews are available. */
         RECT rect;
         rect.left   = 0 ;
         rect.top    = 0 ;
         rect.right  = deskImageInfo.bmiHeader.biWidth ;
         rect.bottom = deskImageInfo.bmiHeader.biHeight ;
+        FillRect(bitmapDC,&rect,(HBRUSH) (COLOR_BTNFACE+1)) ;
+        rect.left   = 1 + ((desktopWorkArea[1][0] - desktopWorkArea[0][0]) * deskImageInfo.bmiHeader.biWidth / ww) ;
+        rect.top    = 1 + ((desktopWorkArea[1][1] - desktopWorkArea[0][1]) * deskImageInfo.bmiHeader.biHeight / hh) ;
+        rect.right  = (desktopWorkArea[1][2] - desktopWorkArea[0][0]) * deskImageInfo.bmiHeader.biWidth / ww ;
+        rect.bottom = (desktopWorkArea[1][3] - desktopWorkArea[0][1]) * deskImageInfo.bmiHeader.biHeight / hh ;
         FillRect(bitmapDC,&rect,(HBRUSH) (COLOR_BACKGROUND+1)) ;
     }
     else
     {
-        /* can set to HALFTONE for better quality, but not supported on Win95/98/Me */
-        SetStretchBltMode(bitmapDC,COLORONCOLOR);
-        StretchBlt(bitmapDC,0,0,deskImageInfo.bmiHeader.biWidth,deskImageInfo.bmiHeader.biHeight,deskDC,
-                   desktopWorkArea[0][0],desktopWorkArea[0][1],desktopWorkArea[0][2]-desktopWorkArea[0][0]+1,
-                   desktopWorkArea[0][3]-desktopWorkArea[0][1]+1,SRCCOPY);    
+        /* set to HALFTONE for better quality, but not supported on Win95/98/Me */
+        if(osVersion >= OSVERSION_NT)
+        {
+            SetStretchBltMode(bitmapDC,HALFTONE) ;
+            SetBrushOrgEx(bitmapDC,0,0,0) ;
+        }
+        else
+            SetStretchBltMode(bitmapDC,COLORONCOLOR) ;
+        StretchBlt(bitmapDC,0,0,deskImageInfo.bmiHeader.biWidth,deskImageInfo.bmiHeader.biHeight,
+                   deskDC,desktopWorkArea[0][0],desktopWorkArea[0][1],ww,hh,SRCCOPY);    
     }
-
+    
     /* Create the desk_#.bmp file */ 
     GetFilename(vwFILE_COUNT,1,fname) ;
     _stprintf(fname+_tcslen(fname),_T("desk_%d.bmp"),deskNo) ;
@@ -987,9 +999,11 @@ createDeskImage(int deskNo, int createDefault)
     }
     else
         ret = 0 ;
+    
     SelectObject(bitmapDC,oldmap);
     DeleteDC(bitmapDC);
     ReleaseDC(desktopHWnd,deskDC) ;
+    
     vwLogBasic((_T("createDeskImage: %d: %d %d - %d %d\n"),ret,deskNo,createDefault,(int) deskImageInfo.bmiHeader.biWidth,(int) deskImageInfo.bmiHeader.biHeight)) ;
     return ret ;
 }
@@ -1062,6 +1076,7 @@ enableDeskImage(int height)
             return 0 ;
         deskImageEnabled = 1 ;
     }
+    /* if first time enabled, create default images for all desks */
     if(count < 0)
     {
         /* first time enabled, create default images for all desks */
