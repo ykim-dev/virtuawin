@@ -81,8 +81,11 @@
  * (HWND, 0 for foreground window) and lParam should be -1 for toggle, 0 for
  * unset and 1 for set sticky state. */
 #define VW_SETSTICKY    (WM_USER + 26)
-/* Message, make a window the foreground, only if visible 
-   wParam is the window handle (HWND) */
+/* Message, make a window the foreground, wParam is the window handle, if 0 then VirtuaWin chooses
+ * the best window on the current desktop to make the foreground window. If wParam is not 0 it must
+ * be a HWND of the window to give focus, in this case the lParam is used to define the desktop, 0
+ * for the current desktop, if not the current desktop then only the windows desktop Z-order for that
+ * desktop is changed (i.e. it will be main the foreground window when the user goes to that desktop) */
 #define VW_FOREGDWIN    (WM_USER + 27)
 /* Message, return VirtuaWin's installation path. The path will be returned via a WM_COPYDATA
  * message, set wParam to the HWND which is to receive the WM_COPYDATA message */
@@ -120,7 +123,12 @@
  *   3 - Updates the current desk's image if image generation is enabled, returns
  *       1 if successfully updated, 0 otherwise.
  *   4 - Returns the desk image height if enabled, 0 otherwise 
- *   5 - Returns the desk image width if enabled, 0 otherwise */ 
+ *   5 - Returns the desk image width if enabled, 0 otherwise
+ *   6 - Returns the width, in pixels, of the desktop.
+ *   7 - Returns the depth, in pixels, of the desktop.
+ *   8 - Temporarily disables (if lParam is 0) or enables (if lParam is not 0) the
+ *       generation of desktop images (this only takes effect if generation has been
+ *       enabled via a wParam=1 message) */ 
 #define VW_DESKIMAGE    (WM_USER + 41)
 /* Message, set the main VirtuaWin enable/disable state. If wParam is 0
    the current state is not changed, 1 for toggle, 2 for disable
