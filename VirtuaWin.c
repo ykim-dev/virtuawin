@@ -1840,6 +1840,7 @@ enumWindowsProc(HWND hwnd, LPARAM lParam)
     if(vwWindowIsNotWindow(wb))
         return TRUE ;
     win = (vwWindow *) wb ;
+    vwLogVerbose((_T("Updating win %x Flgs %08x %08x %08x\n"),(int) hwnd,(int)win->flags,(int)win->exStyle,(int)style)) ;
     if(vwWindowIsNotManaged(win))
     {
         if((style & WS_VISIBLE) == 0)
@@ -1888,7 +1889,7 @@ enumWindowsProc(HWND hwnd, LPARAM lParam)
     {
         if((style & WS_MINIMIZE) == 0)
         {
-            if(vwWindowIsHideByMinim(win))
+            if(vwWindowIsHideByMinim(win) || (vwWindowIsMinimized(win) && minWinHide))
             {
                 vwLogBasic((_T("Got minim-window state change: %x %d (%d) %x -> %x\n"),
                             (int) win->handle,win->desk,currentDesk,win->flags,style)) ;
@@ -1950,8 +1951,7 @@ windowListUpdate(void)
     TCHAR cname[vwCLASSNAME_MAX], wname[vwWINDOWNAME_MAX] ;
     int newDesk=0, j, hungCount=0 ;
     
-    vwLogVerbose((_T("Updating winList fgw %x tpw %x\n"),
-                (int) GetForegroundWindow(),(int) GetTopWindow(NULL))) ;
+    vwLogVerbose((_T("Updating winList fgw %x tpw %x\n"),(int) GetForegroundWindow(),(int) GetTopWindow(NULL))) ;
     /* We now own the mutex. */
     wb = windowBaseList ;
     while(wb != NULL)
@@ -2165,7 +2165,7 @@ windowListUpdate(void)
     // difficult to differentiate between this and a genuine pop-up event.
     if(((activeHWnd = GetForegroundWindow()) == NULL) || (activeHWnd == hWnd))
         lastFGHWnd = activeHWnd = NULL ;
-    else if((activeHWnd = GetForegroundWindow()) == lastFGHWnd)
+    else if(activeHWnd == lastFGHWnd)
         activeHWnd = NULL ;
     wb = windowBaseList ;
     while(wb != NULL)
