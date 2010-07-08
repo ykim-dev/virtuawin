@@ -7,6 +7,7 @@ win32v6.mak
 *.h
 *.rc
 *.def
+*.manifest
 Icons/*.ico
 WinList/Makefile
 WinList/win32v6.mak
