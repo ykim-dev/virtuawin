@@ -4931,6 +4931,37 @@ wndProc(HWND aHWnd, UINT message, WPARAM wParam, LPARAM lParam)
         }
         
     case VW_FOREGDWIN:
+        if(wParam == 0)
+        {
+            HWND activeHWnd=NULL ;
+            vwUInt activeZOrder=0 ;
+            vwWindow *win ;
+            
+            vwMutexLock();
+            
+            win = windowList ;
+            while(win != NULL)
+            {
+                if(vwWindowIsShow(win) && vwWindowIsShown(win) && 
+                   vwWindowIsNotMinimized(win) && (win->zOrder[currentDesk] > activeZOrder))
+                {
+                    activeHWnd = win->handle;
+                    activeZOrder = win->zOrder[currentDesk];
+                }
+                win = vwWindowGetNext(win) ;
+            }
+            setForegroundWin(activeHWnd,0) ;
+            vwMutexRelease();
+            return 1 ;
+        }
+        else if(lParam < 0)
+        {
+            int ii ;
+            if((ii=IsWindow((HWND)wParam)) != 0)
+                setForegroundWin((HWND)wParam,0);
+            return ii ;
+        }
+        else
         {
             int ii ;
             vwWindow *win ;
