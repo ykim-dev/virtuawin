@@ -1670,31 +1670,34 @@ vwWindowSetDesk(vwWindow *win, int theDesk, vwUByte move, vwUByte setActive)
     
     ewin = (win->linkedNext != NULL) ? win:NULL ;
     do {
-        if(vwWindowIsShownNotHung(win))
-            win->zOrder[theDesk] = win->zOrder[currentDesk] ;
-        else if(win->desk != theDesk)
-            win->zOrder[theDesk] = win->zOrder[win->desk] ;
-        if(vwWindowIsNotSticky(win) && ((win->desk != theDesk) || (vwWindowIsShow(win) && (theDesk != currentDesk))))
+        if(vwWindowIsManaged(win))
         {
-            /* if temporarily show the window on this desk */ 
-            if(move > 1)
+            if(vwWindowIsShownNotHung(win))
+                win->zOrder[theDesk] = win->zOrder[currentDesk] ;
+            else if(win->desk != theDesk)
+                win->zOrder[theDesk] = win->zOrder[win->desk] ;
+            if(vwWindowIsNotSticky(win) && ((win->desk != theDesk) || (vwWindowIsShow(win) && (theDesk != currentDesk))))
             {
-                if(theDesk == currentDesk)
-                    show = vwWINSH_FLAGS_SHOW ;
+                /* if temporarily show the window on this desk */ 
+                if(move > 1)
+                {
+                    if(theDesk == currentDesk)
+                        show = vwWINSH_FLAGS_SHOW ;
+                    else
+                        show = vwWINSH_FLAGS_HIDE ;
+                }
                 else
-                    show = vwWINSH_FLAGS_HIDE ;
+                {
+                    win->desk = theDesk;
+                    if((currentDesk == theDesk) || (move == 0))
+                        show = vwWINSH_FLAGS_SHOW ;
+                    else
+                        show = vwWINSH_FLAGS_HIDE ;
+                }
+                if(!show && (activeHWnd == win->handle))
+                    setActive = TRUE ;
+                vwWindowShowHide(win,show) ;
             }
-            else
-            {
-                win->desk = theDesk;
-                if((currentDesk == theDesk) || (move == 0))
-                    show = vwWINSH_FLAGS_SHOW ;
-                else
-                    show = vwWINSH_FLAGS_HIDE ;
-            }
-            if(!show && (activeHWnd == win->handle))
-                setActive = TRUE ;
-            vwWindowShowHide(win,show) ;
         }
         win = win->linkedNext ;
     } while(win != ewin) ;
@@ -1735,26 +1738,29 @@ vwWindowSetSticky(vwWindow *win, int state)
     
     ewin = (win->linkedNext != NULL) ? win:NULL ;
     do {
-        if(state < 0) // toggle sticky state - set state so all owner windows are set correctly.
-            state = vwWindowIsSticky(win) ^ TRUE;
-        vwLogVerbose((_T("Setting Sticky: %x %x - %d -> %d\n"),(int) win->handle,
-                      (int) theWin,(int) vwWindowIsSticky(win),state)) ;
-        if(state)
+        if(vwWindowIsManaged(win))
         {
-            win->flags |= vwWINFLAGS_STICKY ;
-            // set its zOrder of all desks to its zOrder on its current desk
-            zOrder = win->zOrder[win->desk] ;
-            ii = vwDESKTOP_SIZE - 1 ;
-            do
-                win->zOrder[ii] = zOrder ;
-            while(--ii >= 0) ;
-            // if not currently set to show (i.e. was on another desktop) then make it visible
-            if(vwWindowIsNotShow(win))
-                vwWindowShowHide(win,vwWINSH_FLAGS_SHOW) ;
+            if(state < 0) // toggle sticky state - set state so all owner windows are set correctly.
+                state = vwWindowIsSticky(win) ^ TRUE;
+            vwLogVerbose((_T("Setting Sticky: %x %x - %d -> %d\n"),(int) win->handle,
+                          (int) theWin,(int) vwWindowIsSticky(win),state)) ;
+            if(state)
+            {
+                win->flags |= vwWINFLAGS_STICKY ;
+                // set its zOrder of all desks to its zOrder on its current desk
+                zOrder = win->zOrder[win->desk] ;
+                ii = vwDESKTOP_SIZE - 1 ;
+                do
+                    win->zOrder[ii] = zOrder ;
+                while(--ii >= 0) ;
+                // if not currently set to show (i.e. was on another desktop) then make it visible
+                if(vwWindowIsNotShow(win))
+                    vwWindowShowHide(win,vwWINSH_FLAGS_SHOW) ;
+            }
+            else
+                win->flags &= ~vwWINFLAGS_STICKY ;
+            win->desk = currentDesk;
         }
-        else
-            win->flags &= ~vwWINFLAGS_STICKY ;
-        win->desk = currentDesk;
         win = win->linkedNext ;
     } while(win != ewin) ;
     
