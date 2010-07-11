@@ -27,11 +27,6 @@ Notes:
   is typically  black which can make the preview  display rather  unhelpful. A
   future  enhancement  would be to initialise these desktops to the background
   image instead.
-* If one of the modes is not being used it is  recommended  that the hotkey is
-  removed and option to "Add option into  VirtuaWin  Control Menu" is disabled
-  as this may  improve  the quality of the preview  image (a single  image per
-  desktop  is used for both modes so the images  must be scaled for one of the
-  modes).
 
 
 Copyright:
@@ -43,6 +38,15 @@ Copyright (c) 2010 VirtuaWin (virtuawin@home.se)
 
 
 HISTORY
+
+Ver 1.3 - 2010/07/10
+
+* 3025853 Stopped preview window appearing in the desktop previews.
+* 3025723 Fixed further preview dialog window issues on Windows XP.
+* 3025759 Improved the  quality of the desktop images by using HALFTONE on the
+  platforms which support it.
+* 3025763 Fixed  keyboard  control  when  preview is opened via the  VirtuaWin
+  control menu
 
 Ver 1.2 - 2010/06/21
 
