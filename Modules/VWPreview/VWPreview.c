@@ -459,6 +459,14 @@ vwpSetupOpen(HWND pHwnd)
     DialogBox(hInst, MAKEINTRESOURCE(IDD_MAINDIALOG), pHwnd, (DLGPROC) vwpSetupDialogFunc) ;
 }
 
+static VOID CALLBACK
+vwPreviewRenableImageCapture(HWND hwnd, UINT uMsg, UINT idEvent, DWORD dwTime)
+{
+    KillTimer(hwnd,0x29b) ;
+    /* re-enable desk image capture */
+    if(vwpHnd == NULL)
+        SendMessage(vwHandle,VW_DESKIMAGE,8,1) ;
+}
 
 void WINAPI
 vwPreviewDraw(HDC hdc)
@@ -831,8 +839,7 @@ sel_desk:
             _ftprintf(logfp,_T("WM_DESTROY: %d %x %x %x\n"),vwpZoomStep,vwpHnd,hwnd,wParam) ;
             fflush(logfp) ;
 #endif
-            /* re-enable desk image capture */
-            SendMessage(vwHandle,VW_DESKIMAGE,8,1) ;
+            vwpHnd = NULL ;
             ii = vwDesksN ;
             while(--ii >= 0)
             {
@@ -842,8 +849,12 @@ sel_desk:
                     dskBtmpImg[ii] = NULL ;
                 }
             }
-            vwpHnd = NULL ;
+            /* delay re-enable of desk image capture to ensure this window has gone */
+            SetTimer(wHnd,0x29b,500,vwPreviewRenableImageCapture) ;
+            /* give focus to something else */
+            SendMessage(vwHandle,VW_FOREGDWIN,0,0) ;
         }
+        /* no break */
     default:
         return DefWindowProc(hwnd, msg, wParam, lParam);
     }
@@ -871,7 +882,6 @@ vwPreviewCreate(int type)
             return ;
     }
     
-    /* update image for current desktop */
     if(((deskDC = GetDC(desktopHWnd)) == NULL) ||
        ((bitmapDC = CreateCompatibleDC(deskDC)) == NULL))
     {
@@ -881,6 +891,7 @@ vwPreviewCreate(int type)
     vwpType = type ;
     vwpZoomStep = 0 ;
     vwDeskNxt = vwDeskCur ;
+    /* update image for current desktop */
     SendMessage(vwHandle,VW_DESKIMAGE,3,0) ;
     
     ii = vwDesksN ;
@@ -997,7 +1008,7 @@ MainWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
     
     case VW_CMENUITEM:
         if((wParam == vwpCMI_FULL) || (wParam == vwpCMI_WINDOW))
-           vwPreviewCreate(wParam == vwpCMI_FULL) ;
+            vwPreviewCreate(wParam == vwpCMI_FULL) ;
         break;
     
     case WM_COPYDATA:
