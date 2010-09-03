@@ -133,6 +133,10 @@ int dialogPos[2];
 vwUByte dialogOpen;         
 vwUByte initialized;
 
+HWND ichangeHWnd = NULL;        // handle to module hangling desktop changes
+static int ichangeDesk=0 ;
+static WPARAM ichangeWParam ;
+
 // vector holding icon handles for the systray
 HICON checkIcon;                // Sticky tick icon in window list
 HICON icons[vwDESKTOP_SIZE];    // 0=disabled, 1,2..=normal desks
@@ -962,6 +966,10 @@ createDeskImage(int deskNo, int createDefault)
         rect.bottom = (desktopWorkArea[1][3] - desktopWorkArea[0][1]) * deskImageInfo.bmiHeader.biHeight / hh ;
         FillRect(bitmapDC,&rect,(HBRUSH) (COLOR_BACKGROUND+1)) ;
     }
+    else if(deskImageInfo.bmiHeader.biHeight == hh)
+    {
+        BitBlt(bitmapDC,0,0,ww,hh,deskDC,desktopWorkArea[0][0],desktopWorkArea[0][1],SRCCOPY) ;
+    }
     else
     {
         /* set to HALFTONE for better quality, but not supported on Win95/98/Me */
@@ -1008,7 +1016,7 @@ createDeskImage(int deskNo, int createDefault)
     return ret ;
 }
 
-static int
+int
 disableDeskImage(int count)
 {
     if(deskImageCount <= 0)
@@ -1873,9 +1881,8 @@ enumWindowsProc(HWND hwnd, LPARAM lParam)
         {
             if(vwWindowIsShown(win))
             {
-                /* this window has been hidden by someone else - stop handling it
-                 * unless VirtualWin knows its not visible (which means it is
-                 * probably a hung process so keep it.) */
+                /* this window has been hidden by someone else - stop handling it unless VirtuaWin
+                 * knows its not visible (which means it is probably a hung process so keep it.) */
                 vwLogBasic((_T("Stopped managing window %8x Proc %d Flg %x %x (%08x) Desk %d\n"),
                             (int)win->handle,(int)win->processId,(int)win->flags,(int) win->exStyle,(int)style,(int)win->desk)) ;
                 vwWindowBaseUnlink(wb) ;
@@ -2508,28 +2515,13 @@ monitorTimerProc(HWND hwnd, UINT uMsg, UINT idEvent, DWORD dwTime)
  * Does the actual switching work 
  */
 static int
-changeDesk(int newDesk, WPARAM msgWParam)
+ichangeDeskProc(int newDesk, WPARAM msgWParam)
 {
     HWND activeHWnd, lzh ;
     vwWindow *win, *bwn ;
     vwUInt activeZOrder=0, cno, czo, bno, bzo, lno, lzo ;
     int notHung ;
     
-    if(newDesk == currentDesk)
-        // Nothing to do
-        return 0;
-    
-    /* don't bother updating last desktop or generating an image unless the
-     * user has been on the desk for at least a second */
-    if(timerCounter >= 4)
-    {
-        if(lastDesk != currentDesk)
-            lastDesk = currentDesk ;
-        if(deskImageEnabled > 0)
-            createDeskImage(currentDesk,0) ;
-    }
-    else if(lastDeskNoDelay && (lastDesk != currentDesk))
-        lastDesk = currentDesk ;
     vwLogBasic((_T("Step Desk Start: %d -> %d (%d,%x)\n"),currentDesk,newDesk,isDragging,(int)dragHWnd)) ;
     
     vwMutexLock();
@@ -2852,6 +2844,60 @@ changeDesk(int newDesk, WPARAM msgWParam)
     vwLogBasic((_T("Step Desk End (%x)\n"),(int)GetForegroundWindow())) ;
     
     return currentDesk ;
+}
+
+static VOID CALLBACK
+ichangeDeskTimeoutProc(HWND hwnd, UINT uMsg, UINT idEvent, DWORD dwTime)
+{
+    int newDesk = ichangeDesk ;
+    ichangeDesk = -1  ;
+    KillTimer(hWnd,0x29b) ;
+    
+    if((newDesk > 0) && (newDesk != currentDesk))
+        ichangeWParam = ichangeDeskProc(newDesk,ichangeWParam) ;
+    else
+        ichangeWParam = 0 ;
+    ichangeDesk = 0  ;
+}
+
+static int
+changeDesk(int newDesk, WPARAM msgWParam)
+{
+    MSG msg ;
+    
+    ichangeDesk = 0 ;
+    KillTimer(hWnd,0x29b) ;
+    
+    if(newDesk == currentDesk)
+        // Nothing to do
+        return 0;
+    
+    /* don't bother updating last desktop or generating an image unless the
+     * user has been on the desk for at least a second */
+    if(timerCounter >= 4)
+    {
+        if(lastDesk != currentDesk)
+            lastDesk = currentDesk ;
+        if(deskImageEnabled > 0)
+            createDeskImage(currentDesk,0) ;
+    }
+    else if(lastDeskNoDelay && (lastDesk != currentDesk))
+        lastDesk = currentDesk ;
+    
+    if((ichangeHWnd == NULL) || isDragging || (currentDesk > nDesks) || (newDesk > nDesks))
+        return ichangeDeskProc(newDesk,msgWParam) ;
+        
+    vwLogBasic((_T("IChange Desk: %d -> %d (%d,%x)\n"),currentDesk,newDesk,msgWParam,(int)ichangeHWnd)) ;
+    ichangeDesk = newDesk ;
+    ichangeWParam = msgWParam ;
+    PostMessage(ichangeHWnd,VW_ICHANGEDESK,currentDesk,newDesk);
+    SetTimer(hWnd, 0x29b, 250, ichangeDeskTimeoutProc);
+    while(ichangeDesk && GetMessage(&msg, NULL, 0, 0))
+    {
+        TranslateMessage(&msg);
+        DispatchMessage(&msg);
+    }
+    return ichangeWParam ;
 }
 
 /*************************************************
@@ -3379,7 +3425,7 @@ vwWindowShowHide(vwWindow* aWindow, vwUInt flags)
                     if(taskHWnd != NULL)
                         PostMessage(taskHWnd, RM_Shellhook, HSHELL_WINDOWCREATED, (LPARAM) aWindow->handle) ;
                 }
-                SetWindowPos(aWindow->handle,0,0,0,0,0,(SWP_SHOWWINDOW | SWP_NOZORDER | SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE)) ;
+                SetWindowPos(aWindow->handle,0,0,0,0,0,(SWP_SHOWWINDOW | SWP_NOZORDER | SWP_NOMOVE | SWP_NOSIZE | SWP_DEFERERASE | SWP_NOACTIVATE)) ;
                 /* if minimized dont show popups */
                 if(vwWindowIsNotMinimized(aWindow))
                     ShowOwnedPopups(aWindow->handle,TRUE) ;
@@ -5121,6 +5167,27 @@ wndProc(HWND aHWnd, UINT message, WPARAM wParam, LPARAM lParam)
             }
             return TRUE ;
         }
+    
+    case VW_ICHANGEDESK:
+        if(wParam == 0)
+            return (LRESULT) ichangeHWnd ;
+        else if(wParam == 3)
+        {
+            if(ichangeDesk > 0)
+                SetTimer(hWnd, 0x29b, 1, ichangeDeskTimeoutProc);
+        }
+        else if(wParam == 1)
+        {
+            if((ichangeHWnd == NULL) || (ichangeHWnd == (HWND) lParam))
+            {
+                ichangeHWnd = (HWND) lParam ;
+                return 2 ;
+            }
+            return 1 ;
+        }
+        else if((wParam == 2) && (ichangeHWnd == (HWND) lParam))
+            ichangeHWnd = NULL ;
+        return 0 ;
         
         // End plugin messages
         
