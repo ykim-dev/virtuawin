@@ -4868,6 +4868,9 @@ wndProc(HWND aHWnd, UINT message, WPARAM wParam, LPARAM lParam)
                 stepDelta(1) ;
                 break;
             }
+            /* reset isDragging to 0 as the call to step desk may have failed and will 
+             * result in a window being dragged on next change if left set to 1 */
+            isDragging = 0 ;
         }
         return TRUE;
         
