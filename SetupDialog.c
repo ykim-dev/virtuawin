@@ -904,12 +904,14 @@ setupModules(HWND hDlg, UINT message, UINT wParam, LONG lParam)
                 moduleList[index].description[0] = '\0';
             }
             moduleCount = 0;
-            /* free off all module inserted menu items */
+            /* free off all module inserted menu items and reset ICHANGE and image generation */
             while((mi = ctlMenuItemList) != NULL)
             {
                 ctlMenuItemList = mi->next ;
                 free(mi) ;
             }
+            ichangeHWnd = NULL ;
+            disableDeskImage(deskImageCount) ;
             /* sleep for a second to allow the modules to exit cleanly */
             Sleep(1000) ;
             curDisabledMod = loadDisabledModules(disabledModules);
@@ -925,6 +927,8 @@ setupModules(HWND hDlg, UINT message, UINT wParam, LONG lParam)
                 {   // let's disable
                     moduleList[curSel].disabled = TRUE;
                     PostMessage(moduleList[curSel].handle, MOD_QUIT, 0, 0);
+                    if(ichangeHWnd == moduleList[curSel].handle)
+                        ichangeHWnd = NULL ;
                 }
                 else
                 {   // let's enable

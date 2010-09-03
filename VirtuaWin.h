@@ -47,6 +47,7 @@ extern vwHotkey hotkeyList[vwHOTKEY_MAX];         // list for holding hotkeys
 extern int curDisabledMod;                        // how many disabled modules we have
 extern vwModule moduleList[MAXMODULES];           // list that holds modules
 extern vwDisModule disabledModules[MAXMODULES*2]; // list with disabled modules
+extern HWND ichangeHWnd;                          // handle to module hangling desktop changes
 
 /* logging defines & macros */
 extern vwUByte vwLogFlag ;
@@ -76,6 +77,7 @@ void vwHotkeyUnregister(int unregAll) ;
 void getWorkArea(void) ;
 int  windowListUpdate(void) ;
 void vwWindowRuleReapply(void) ;
+int  disableDeskImage(int count) ;
 int  createDeskImage(int deskNo, int createDefault) ;
 void setForegroundWin(HWND theWin, int makeTop) ;
 int  assignWindow(HWND theWin, int theDesk, vwUByte follow, vwUByte force, vwUByte setActive);
