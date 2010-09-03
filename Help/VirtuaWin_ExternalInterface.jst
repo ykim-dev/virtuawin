@@ -249,9 +249,26 @@ not be fully up-to-date:
 
     ] hWnd
     
-    ] -
+    ] 0
 
     ] Give the window the focus, i.e. make it the foreground window.
+
+    ]! 1051
+
+    ] 0
+    
+    ] 0
+
+    ] Get VirtuaWin to select the best window to give the current focus to.
+
+    ]! 1051
+
+    ] hWnd
+    
+    ] #
+
+    ] Give the window the focus for the given desktop, i.e. sets the z-order
+    so the window will be given the focus when next on that desktop.
 
     ]! 1052
 
@@ -384,13 +401,59 @@ not be fully up-to-date:
     remember this setting for the lifespan of the window, only a 'manage
     window' message (see below) can change this.
 
-    ]? 1069
+    ]! 1069
 
     ] hWnd or 0
 
     ] 1
 
     ] Force VirtuaWin to manage the given window.
+
+    ]! 1070
+
+    ] cmd-id
+
+    ] ?
+
+    ] Execute hotkey command //cmd-id// (see second column in vwCommands.def)
+    as if the user pressed the hotkey. The lParam value is split into to
+    parts, the lower 16 bits (LOWORD(lParam)) is the desktop number (if
+    required but the hotkey command) and the higher 16 bits (HIWORD(lParam))
+    is the modifier, only bit vwHOTKEY_WIN_MOUSE is used.
+    
+    ]! 1071
+
+    ] 0
+
+    ] -
+
+    ] Get the handle of the current module handling desktop changes.
+
+    ]! 1071
+
+    ] 1
+
+    ] hWnd
+
+    ] Set the handle of the module handling desktop changes, returns 2 if
+    successful, 1 otherwise.
+
+    ]! 1071
+
+    ] 2
+
+    ] hWnd
+
+    ] Unsets the current desktop change handling module.
+
+    ]? 1071
+
+    ] 3
+
+    ] -
+
+    ] Execute the desktop change - only sent but the module controlling
+    desktop changing. See Messages.h for more information.
 
 
 **Where:**

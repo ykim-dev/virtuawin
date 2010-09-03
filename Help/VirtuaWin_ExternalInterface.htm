@@ -246,9 +246,25 @@
 <td valign="top">
 <p>hWnd</p></td>
 <td valign="top">
-<p>-</p></td>
+<p>0</p></td>
 <td valign="top">
 <p>Give the window the focus, i.e. make it the foreground window.</p></td></tr>
+<tr><td valign="top">
+<p>1051</p></td>
+<td valign="top">
+<p>0</p></td>
+<td valign="top">
+<p>0</p></td>
+<td valign="top">
+<p>Get VirtuaWin to select the best window to give the current focus to.</p></td></tr>
+<tr><td valign="top">
+<p>1051</p></td>
+<td valign="top">
+<p>hWnd</p></td>
+<td valign="top">
+<p>#</p></td>
+<td valign="top">
+<p>Give the window the focus for the given desktop, i.e. sets the z-order so the window will be given the focus when next on that desktop.</p></td></tr>
 <tr><td valign="top">
 <p>1052</p></td>
 <td valign="top">
@@ -384,7 +400,47 @@
 <td valign="top">
 <p>1</p></td>
 <td valign="top">
-<p>Force VirtuaWin to manage the given window.</p></td></tr></table>
+<p>Force VirtuaWin to manage the given window.</p></td></tr>
+<tr><td valign="top">
+<p>1070</p></td>
+<td valign="top">
+<p>cmd-id</p></td>
+<td valign="top">
+<p>?</p></td>
+<td valign="top">
+<p>Execute hotkey command <i>cmd-id</i> (see second column in vwCommands.def) as if the user pressed the hotkey. The lParam value is split into to parts, the lower 16 bits (LOWORD(lParam)) is the desktop number (if required but the hotkey command) and the higher 16 bits (HIWORD(lParam)) is the modifier, only bit vwHOTKEY_WIN_MOUSE is used.</p></td></tr>
+<tr><td valign="top">
+<p>1071</p></td>
+<td valign="top">
+<p>0</p></td>
+<td valign="top">
+<p>-</p></td>
+<td valign="top">
+<p>Get the handle of the current module handling desktop changes.</p></td></tr>
+<tr><td valign="top">
+<p>1071</p></td>
+<td valign="top">
+<p>1</p></td>
+<td valign="top">
+<p>hWnd</p></td>
+<td valign="top">
+<p>Set the handle of the module handling desktop changes, returns 2 if successful, 1 otherwise.</p></td></tr>
+<tr><td valign="top">
+<p>1071</p></td>
+<td valign="top">
+<p>2</p></td>
+<td valign="top">
+<p>hWnd</p></td>
+<td valign="top">
+<p>Unsets the current desktop change handling module.</p></td></tr>
+<tr><td valign="top">
+<p>1071</p></td>
+<td valign="top">
+<p>3</p></td>
+<td valign="top">
+<p>-</p></td>
+<td valign="top">
+<p>Execute the desktop change - only sent but the module controlling desktop changing. See Messages.h for more information.</p></td></tr></table>
 
 </dir><p><b>Where:</b></p>
 
