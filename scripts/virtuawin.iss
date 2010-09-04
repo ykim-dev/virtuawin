@@ -2,7 +2,7 @@
 
 [Setup]
 AppName=VirtuaWin
-AppVerName=VirtuaWin v4.2
+AppVerName=VirtuaWin v4.3
 DefaultDirName={pf}\VirtuaWin
 DefaultGroupName=VirtuaWin
 MinVersion=4,4

@@ -1,6 +1,31 @@
 ***   VirtuaWin Revision History   ***
 --------------------------------------
 
+Ver 4.3 2010/09/04
+
+* 3058490 Fixed bug causing current window to be moved to the next desktop
+* 3017670 Added new module interface message to control desktop changing
+* 3026593 Updated external interface documentation
+* 3025763 Improved VW_FOREGDWIN message so that modules can force VW to give
+  focus to their unmanaged windows
+* 3025866 Improved VW_FOREGDWIN message to allow modules to get VW to choose
+  a suitable foreground window
+* 3026574 Fixed problem with hidden linked windows being made visible by VW
+* 3026907 Added manifest file to the source package
+* 3024305 Fixed minimised window activation issue when using new 'Only hide
+  taskbar button ...' option.
+* 3025759 Changed BltMode to HALFTONE (not Win9x) to improve image quality
+* 3014409 Improved initial deskop image by simulating the taskbar and adding
+  a boarder.
+* 3014411 Improved Window Rule's hide method option behaviour to avoid
+  invalid combinations
+* 3012041 Added documentation for hidden config options
+* 3012028 Fixed size of box around User Interface section in Setup
+
+
+
+----------------------------
+
 Ver 4.2 2010/06/04
 
 * 2980468 Added VW_CMENUITEM module message so modules can add items to the 

@@ -81,8 +81,11 @@
  * (HWND, 0 for foreground window) and lParam should be -1 for toggle, 0 for
  * unset and 1 for set sticky state. */
 #define VW_SETSTICKY    (WM_USER + 26)
-/* Message, make a window the foreground, only if visible 
-   wParam is the window handle (HWND) */
+/* Message, make a window the foreground, wParam is the window handle, if 0 then VirtuaWin chooses
+ * the best window on the current desktop to make the foreground window. If wParam is not 0 it must
+ * be a HWND of the window to give focus, in this case the lParam is used to define the desktop, 0
+ * for the current desktop, if not the current desktop then only the windows desktop Z-order for that
+ * desktop is changed (i.e. it will be main the foreground window when the user goes to that desktop) */
 #define VW_FOREGDWIN    (WM_USER + 27)
 /* Message, return VirtuaWin's installation path. The path will be returned via a WM_COPYDATA
  * message, set wParam to the HWND which is to receive the WM_COPYDATA message */
@@ -120,7 +123,12 @@
  *   3 - Updates the current desk's image if image generation is enabled, returns
  *       1 if successfully updated, 0 otherwise.
  *   4 - Returns the desk image height if enabled, 0 otherwise 
- *   5 - Returns the desk image width if enabled, 0 otherwise */ 
+ *   5 - Returns the desk image width if enabled, 0 otherwise
+ *   6 - Returns the width, in pixels, of the desktop.
+ *   7 - Returns the depth, in pixels, of the desktop.
+ *   8 - Temporarily disables (if lParam is 0) or enables (if lParam is not 0) the
+ *       generation of desktop images (this only takes effect if generation has been
+ *       enabled via a wParam=1 message) */ 
 #define VW_DESKIMAGE    (WM_USER + 41)
 /* Message, set the main VirtuaWin enable/disable state. If wParam is 0
    the current state is not changed, 1 for toggle, 2 for disable
@@ -143,9 +151,24 @@
  * needed as the command will fail if there is no window under the mouse). The return is dependent
  * on the command being executed. */
 #define VW_HOTKEY       (WM_USER + 46)
-
-/* Message & WM_COPYDATA ID, inserts or removes items from the control menu. */
+/* Message & WM_COPYDATA ID, inserts or removes items from the control menu. See Feature request
+ * 2980468 (https://sourceforge.net/tracker/?func=detail&aid=2980468&group_id=39588&atid=526970)
+ * for more info and example code */
 #define VW_CMENUITEM    (WM_USER + 47)
+
+/* Message, used to get or set the current desktop change module handler and to manage a desktop
+ * change. VirtuaWin supports one module controlling the desktop change process, if a module has 
+ * set itself as the ICHANGE handler then on every desktop change VirtuaWin will send the module
+ * a VW_ICHANGEDESK message (wParam=oldDesk, lParam=newDesk) the module can then initiate
+ * transition effects but it must also post a VW_ICHANGEDESK (wParam=3) message back to VirtuaWin 
+ * so it knows when to actually change desktops; VirtuaWin gives the Module upto half a second to
+ * send this message otherwise it will change desks anyway. Values of wParam are as follows:
+ *  0 to get current handler
+ *  1 to set current handler
+ *  2 to remove self as handler
+ *  3 execute the desktop change */
+#define VW_ICHANGEDESK  (WM_USER + 48)
+
 
 /* Message, sent by VirtuaWin after a switch. lParam will contain current desktop number 
    if wParam isn't one of the following, then wParam will also contain current desktop.
