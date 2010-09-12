@@ -16,4 +16,9 @@
 #define	IDC_FS_OPTIMLAY		1010
 #define	IDC_FS_ZOOM     	1011
 #define	IDC_FS_UPDATE     	1012
+#define	IDC_FS_UDCONT     	1013
+#define	IDC_TE_ENABLE    	1014
+#define	IDC_TE_EFFECT     	1015
+#define	IDC_GS_FULLSIZE     	1016
+#define	IDC_GS_KEEPIMGS     	1017
 

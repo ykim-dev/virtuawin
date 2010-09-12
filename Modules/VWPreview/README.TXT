@@ -1,4 +1,4 @@
-VWPreview v1.1 - Steven Phillips
+VWPreview v1.4 - Steven Phillips
 
 Description:
 
@@ -8,6 +8,9 @@ a desktop will change to that desktop, right  clicking  anywhere will open the
 module's  setup dialog. The Tab,  Shift+Tab and Enter keys can also be used to
 change desktops, Esc closes the preview. The module requires VirtuaWin version
 4.2 or above.
+
+The module can also provide basic desktop change transition effects, for these
+version 4.3 of VirtuaWin or above is required.
 
 
 Installation:
@@ -19,14 +22,24 @@ Notes:
 
 * The module supports 2 modes, Desktop Preview which uses the whole screen and
   Desktop Select which uses a standard window (size is configurable).
+* The  module  can also  provide  desktop  change  transition  effect if using
+  VirtuaWin v4.3 or later.
 * The module has not been  tested on  multiple  monitor  systems and while the
   author does not  envisage any  particularly  nasty  problems the full screen
-  preview is unlikely to work well.
-* Desktops  which have not yet been  visited will be rendered  blank using the
-  background colour, if a background image is being used the background colour
-  is typically  black which can make the preview  display rather  unhelpful. A
-  future  enhancement  would be to initialise these desktops to the background
-  image instead.
+  preview or transition effects are unlikely to work well.
+* Desktops  which have not yet been  visited  will be rendered  largely  blank
+  using  the  background  colour,  if a  background  image  is being  used the
+  background  colour is  typically  black  which can make the preview  display
+  rather unhelpful. A future enhancement would be to initialise these desktops
+  to the background image instead.
+* There are now two time values in the vwpreview.cfg file:
+    fulUdTm1# - Initial update time (in ms) used to  update all previews,
+                default is 2sec (i.e. 2000)  
+    fulUdTm2# - Continued update time (in ms), default is 10sec.
+* Found that update does not work well when  Windows  Themes are used  because
+  the screen has not been  properly  updated. To avoid the  problem a pause is
+  needed to allow the  screen to be  redrawn,  set option  'fulUdPas#'  in the
+  vwpreview.cfg file to say 500 for a half second pause. 
 
 
 Copyright:
@@ -38,6 +51,17 @@ Copyright (c) 2010 VirtuaWin (virtuawin@home.se)
 
 
 HISTORY
+
+Ver 1.4 - 2010/09/12
+
+* 3064557  Implemented a new  Continuous  update option which, when  disabled,
+  stops the update once all desktops  have been updated. Also changed to using
+  two update times, an initial time for a quick  update and a second timer for
+  slower continued update.
+* 3064553 Implemented some basic desktop change transition effects, bit slow
+  as it doesn't use DirectX
+* 3025866 Fixed VirtuaWin window focus problem.
+* 3025763 Fixed key input issue.
 
 Ver 1.3 - 2010/07/10
 

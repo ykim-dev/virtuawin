@@ -59,11 +59,26 @@ int vwDeskSizeY ;
 
 #define vwpTYPE_WINDOW 0
 #define vwpTYPE_FULL   1
-#define vwpTYPE_COUNT  2
+#define vwpTYPE_TRANS  2
+#define vwpTYPE_COUNT  3
 
-#define vwpEFFECT_NONE 0
-#define vwpEFFECT_ZOOM 1
-#define vwpZOOM_STEPS  10
+#define vwpEFFECT_TIME 200
+#define vwpEFFECT_STEP 20
+
+#define vwpEFFECT_INPROG  1
+#define vwpEFFECT_CLOSE   2
+#define vwpEFFECT_FULLCUR 4
+#define vwpEFFECT_FULLNXT 8
+#define vwpEFFECT_DRAWCUR 16
+#define vwpEFFECT_DRAWNXT 32
+
+#define vwpEFFECT_ZOOM_STATIC    0
+#define vwpEFFECT_SPRING_NOWRAP  1
+#define vwpEFFECT_SPRING_WRAP    2
+#define vwpEFFECT_HSPRING_NOWRAP 3
+#define vwpEFFECT_HSPRING_WRAP   4
+#define vwpEFFECT_VSPRING_NOWRAP 5
+#define vwpEFFECT_VSPRING_WRAP   6
 
 #define vwpCMI_FULL    2021
 #define vwpCMI_WINDOW  2022
@@ -79,12 +94,24 @@ vwUByte vwpHotkeyMod[vwpTYPE_COUNT] = { 0, 0 } ;
 ATOM    vwpHotkeyAtm[vwpTYPE_COUNT] ;
 vwUByte vwpWinClose=1 ;
 int     vwpWinUpdateTime=1000 ;
-vwUByte vwpFullEffect=vwpEFFECT_ZOOM ;
+vwUByte vwpFullEffect=1 ;
 vwUByte vwpFullUpdate=0 ;
+vwUByte vwpFullUpdateCont=1 ;
 vwUByte vwpFullUpdateChng=0 ;
-int     vwpFullUpdateTime=1000 ;
-vwUByte vwpZoomStep=0 ;
-RECT vwpZoomRect ;
+int     vwpFullUpdateTime1=2000 ;
+int     vwpFullUpdateTime2=10000 ;
+int     vwpFullUpdatePause=0 ;
+int     vwpFullUpdateCount ;     
+vwUByte vwpTransitionEnable=0 ;
+vwUByte vwpTransitionEffect=vwpEFFECT_SPRING_WRAP ;
+vwUByte vwpFullSizeImages=0 ;
+vwUByte vwpKeepImages=1 ;
+
+
+int     vwpEffectFlag=0 ;
+DWORD   vwpEffectStart ;
+RECT    vwpEffectRectN ;
+RECT    vwpEffectRectNS ;
 
 int vwpBttnsX[vwpTYPE_COUNT] ;
 int vwpBttnsY[vwpTYPE_COUNT] ;
@@ -95,11 +122,27 @@ int vwpFullOffsetY ;
 
 HBITMAP dskBtmpImg[vwDESKTOP_MAX] ;
 SIZE    dskBtmpSize[vwDESKTOP_MAX] ;
+int     dskBtmpTime[vwDESKTOP_MAX] ;
 
 #define vwpDEBUG 0
 #if vwpDEBUG
 FILE *logfp ;
 #endif
+
+int
+vwPreviewGetFileTime(char *fname)
+{
+    HANDLE          *fh ;
+    WIN32_FIND_DATA  fd ;
+    int tstamp ;
+    fh = FindFirstFile(fname,&fd) ;
+    if(fh == INVALID_HANDLE_VALUE)
+        return 0 ;
+
+    tstamp = (fd.ftLastWriteTime.dwHighDateTime << 16) | (fd.ftLastWriteTime.dwLowDateTime >> 16) | 1 ;
+    FindClose(fh) ;
+    return tstamp ;
+}
 
 void
 vwPreviewInit(void)
@@ -123,6 +166,8 @@ vwPreviewInit(void)
         SendMessage(vwHandle,VW_DESKIMAGE,2,0) ;
         if(initialised & 0x22)
             SendMessage(vwHandle,VW_CMENUITEM,(WPARAM) wHnd,0) ;
+        if(initialised & 0x100)
+            SendMessage(vwHandle,VW_ICHANGEDESK,2,(WPARAM) wHnd) ;
     }
     initialised = 0 ;
     if(vwpHotkeyKey[vwpTYPE_FULL] != 0)
@@ -175,6 +220,13 @@ vwPreviewInit(void)
         cds.lpData = &mim ;
         SendMessage(vwHandle,WM_COPYDATA,(WPARAM) wHnd,(LPARAM) &cds) ;
     }
+    if(vwpTransitionEnable != 0)
+    {
+        if((xx=SendMessage(vwHandle,VW_ICHANGEDESK,1,(LPARAM) wHnd)) == 2)
+            initialised |= 0x100 ;
+        else
+            MessageBox(wHnd,(xx == 1) ? "Failed to install transition handler - another module has control":"Failed to install transition handler - incompatible version of VirtuaWin, please upgrade.","VWPreview Error", MB_ICONWARNING);
+    }
     
     if((desktopHWnd = GetDesktopWindow()) == NULL)
         MessageBox(wHnd,"Failed to get desktop window handle","VWPreview Error", MB_ICONWARNING);
@@ -223,6 +275,10 @@ vwPreviewInit(void)
     }
     vwpFullOffsetX = (desktopSizeX - (vwpBttnsX[vwpTYPE_FULL]*vwpBttnSizeX[vwpTYPE_FULL])) >> 1 ;
     vwpFullOffsetY = (desktopSizeY - (vwpBttnsY[vwpTYPE_FULL]*vwpBttnSizeY[vwpTYPE_FULL])) >> 1 ;
+    vwpBttnsX[vwpTYPE_TRANS] = vwpBttnsX[vwpTYPE_FULL] ;
+    vwpBttnsY[vwpTYPE_TRANS] = vwpBttnsY[vwpTYPE_FULL] ;
+    vwpBttnSizeX[vwpTYPE_TRANS] = vwpBttnSizeX[vwpTYPE_FULL] ;
+    vwpBttnSizeY[vwpTYPE_TRANS] = vwpBttnSizeY[vwpTYPE_FULL] ;
 
     if(vwpOptimLayout[vwpTYPE_WINDOW])
     {
@@ -246,7 +302,9 @@ vwPreviewInit(void)
     
     if(initialised)
     {
-        if(((initialised & 0xf0) == 0) ||
+        if(vwpFullSizeImages)
+            oy = vwDeskSizeY ;
+        else if(((initialised & 0xf0) == 0) ||
            (((initialised & 0x0f) != 0) && (vwpBttnSizeY[vwpTYPE_FULL] > vwpBttnSizeY[vwpTYPE_WINDOW])))
             oy = vwpBttnSizeY[vwpTYPE_FULL] ;
         else
@@ -285,9 +343,16 @@ vwpLoadConfigFile(void)
         vwpLoadConfigFileInt(fp,buff,ii,vwpOptimLayout[vwpTYPE_FULL]) ;
         vwpLoadConfigFileInt(fp,buff,ii,vwpFullEffect) ;
         vwpLoadConfigFileInt(fp,buff,ii,vwpFullUpdate) ;
-        vwpLoadConfigFileInt(fp,buff,ii,vwpFullUpdateTime) ;
+        vwpLoadConfigFileInt(fp,buff,ii,vwpFullUpdateTime2) ;
         vwpLoadConfigFileInt(fp,buff,ii,vwpWinClose) ;
         vwpLoadConfigFileInt(fp,buff,ii,vwpWinUpdateTime) ;
+        vwpLoadConfigFileInt(fp,buff,ii,vwpTransitionEnable) ;
+        vwpLoadConfigFileInt(fp,buff,ii,vwpTransitionEffect) ;
+        vwpLoadConfigFileInt(fp,buff,ii,vwpFullSizeImages) ;
+        vwpLoadConfigFileInt(fp,buff,ii,vwpKeepImages) ;
+        vwpLoadConfigFileInt(fp,buff,ii,vwpFullUpdatePause) ;
+        vwpLoadConfigFileInt(fp,buff,ii,vwpFullUpdateCont) ;
+        vwpLoadConfigFileInt(fp,buff,ii,vwpFullUpdateTime1) ;
         fclose(fp) ;
     }
 }
@@ -313,9 +378,16 @@ vwpSaveConfigFile(void)
         fprintf(fp,"fulOpLay# %d\n",vwpOptimLayout[vwpTYPE_FULL]) ;
         fprintf(fp,"fulEffec# %d\n",vwpFullEffect) ;
         fprintf(fp,"fulUpdat# %d\n",vwpFullUpdate) ;
-        fprintf(fp,"fulUdtim# %d\n",vwpFullUpdateTime) ;
+        fprintf(fp,"fulUdTm2# %d\n",vwpFullUpdateTime2) ;
         fprintf(fp,"winClose# %d\n",vwpWinClose) ;
-        fprintf(fp,"winUdtim# %d\n",vwpWinUpdateTime) ;
+        fprintf(fp,"winUdTim# %d\n",vwpWinUpdateTime) ;
+        fprintf(fp,"trnEnble# %d\n",vwpTransitionEnable) ;
+        fprintf(fp,"trnEffct# %d\n",vwpTransitionEffect) ;
+        fprintf(fp,"genFulSz# %d\n",vwpFullSizeImages) ;
+        fprintf(fp,"genKepIm# %d\n",vwpKeepImages) ;
+        fprintf(fp,"fulUdPas# %d\n",vwpFullUpdatePause) ;
+        fprintf(fp,"fulUdCnt# %d\n",vwpFullUpdateCont) ;
+        fprintf(fp,"fulUdTm1# %d\n",vwpFullUpdateTime1) ;
         fclose(fp) ;
     }
 }
@@ -377,6 +449,22 @@ vwpSetupDialogFunc(HWND hwndDlg, UINT msg, WPARAM wParam, LPARAM lParam)
             SendDlgItemMessage(hwndDlg,IDC_FS_ZOOM,BM_SETCHECK,1,0) ;
         if(vwpFullUpdate)
             SendDlgItemMessage(hwndDlg,IDC_FS_UPDATE,BM_SETCHECK,1,0) ;
+        if(vwpFullUpdateCont)
+            SendDlgItemMessage(hwndDlg,IDC_FS_UDCONT,BM_SETCHECK,1,0) ;
+        if(vwpTransitionEnable)
+            SendDlgItemMessage(hwndDlg,IDC_TE_ENABLE,BM_SETCHECK,1,0) ;
+        SendDlgItemMessage(hwndDlg,IDC_TE_EFFECT,CB_ADDSTRING,0,(LONG) _T("Zoom on from static position"));
+        SendDlgItemMessage(hwndDlg,IDC_TE_EFFECT,CB_ADDSTRING,0,(LONG) _T("Spring on from side - no wrap"));
+        SendDlgItemMessage(hwndDlg,IDC_TE_EFFECT,CB_ADDSTRING,0,(LONG) _T("Spring on from side - with wrap"));
+        SendDlgItemMessage(hwndDlg,IDC_TE_EFFECT,CB_ADDSTRING,0,(LONG) _T("Horizontal spring - no wrap"));
+        SendDlgItemMessage(hwndDlg,IDC_TE_EFFECT,CB_ADDSTRING,0,(LONG) _T("Horizontal spring - with wrap"));
+        SendDlgItemMessage(hwndDlg,IDC_TE_EFFECT,CB_ADDSTRING,0,(LONG) _T("Vertical spring - no wrap"));
+        SendDlgItemMessage(hwndDlg,IDC_TE_EFFECT,CB_ADDSTRING,0,(LONG) _T("Vertical spring - with wrap"));
+        SendDlgItemMessage(hwndDlg,IDC_TE_EFFECT,CB_SETCURSEL,vwpTransitionEffect,0) ;
+        if(vwpFullSizeImages)
+            SendDlgItemMessage(hwndDlg,IDC_GS_FULLSIZE,BM_SETCHECK,1,0) ;
+        if(vwpKeepImages)
+            SendDlgItemMessage(hwndDlg,IDC_GS_KEEPIMGS,BM_SETCHECK,1,0) ;
         return 1 ;
         
     case WM_COMMAND:
@@ -435,6 +523,11 @@ vwpSetupDialogFunc(HWND hwndDlg, UINT msg, WPARAM wParam, LPARAM lParam)
             vwpOptimLayout[vwpTYPE_FULL] = (SendDlgItemMessage(hwndDlg,IDC_FS_OPTIMLAY,BM_GETCHECK,0,0) == BST_CHECKED) ;
             vwpFullEffect = (SendDlgItemMessage(hwndDlg,IDC_FS_ZOOM,BM_GETCHECK,0,0) == BST_CHECKED) ;
             vwpFullUpdate = (SendDlgItemMessage(hwndDlg,IDC_FS_UPDATE,BM_GETCHECK,0,0) == BST_CHECKED) ;
+            vwpFullUpdateCont = (SendDlgItemMessage(hwndDlg,IDC_FS_UDCONT,BM_GETCHECK,0,0) == BST_CHECKED) ;
+            vwpTransitionEnable = (SendDlgItemMessage(hwndDlg,IDC_TE_ENABLE,BM_GETCHECK,0,0) == BST_CHECKED) ;
+            vwpTransitionEffect = (vwUByte) SendDlgItemMessage(hwndDlg,IDC_TE_EFFECT,CB_GETCURSEL,0,0) ;
+            vwpFullSizeImages = (SendDlgItemMessage(hwndDlg,IDC_GS_FULLSIZE,BM_GETCHECK,0,0) == BST_CHECKED) ;
+            vwpKeepImages = (SendDlgItemMessage(hwndDlg,IDC_GS_KEEPIMGS,BM_GETCHECK,0,0) == BST_CHECKED) ;
             vwpSaveConfigFile() ;
             vwPreviewInit() ;
             if(LOWORD(wParam) == ID_OK)
@@ -480,18 +573,12 @@ vwPreviewDraw(HDC hdc)
     else
     {
         SetStretchBltMode(hdc,HALFTONE) ;
-        SetBrushOrgEx(hdcMem,0,0,0) ;
+        SetBrushOrgEx(hdc,0,0,0) ;
     }
-    if(vwpZoomStep)
-    {
-        ii = vwDeskCur - 1 ;
-        SelectObject(hdcMem,dskBtmpImg[ii]) ;
-        StretchBlt(hdc,vwpZoomRect.left,vwpZoomRect.top,vwpZoomRect.right-vwpZoomRect.left,vwpZoomRect.bottom-vwpZoomRect.top,
-                   hdcMem,0,0,dskBtmpSize[ii].cx,dskBtmpSize[ii].cy,SRCCOPY) ;
-    }
-    else
+    if(vwpEffectFlag == 0)
     {
         HGDIOBJ pPen, pBsh ;
+        RECT rect;
         
         bx = vwpBttnsX[vwpType] ;
         by = vwpBttnsY[vwpType] ;
@@ -507,13 +594,43 @@ vwPreviewDraw(HDC hdc)
         {
             ox = vwpFullOffsetX ;
             oy = vwpFullOffsetY ;
+            if(ox > 0)
+            {
+                rect.left   = 0 ;
+                rect.top    = 0 ;
+                rect.right  = ox ;
+                rect.bottom = desktopSizeY ;
+                FillRect(hdc,&rect,(HBRUSH) (COLOR_3DDKSHADOW+1)) ;
+            }
+            if(oy > 0)
+            {
+                rect.left   = 0 ;
+                rect.top    = 0 ;
+                rect.right  = desktopSizeX ;
+                rect.bottom = oy ;
+                FillRect(hdc,&rect,(HBRUSH) (COLOR_3DDKSHADOW+1)) ;
+            }
         }
         for(ii=0, yy=0, py=oy ; yy < by ; yy++,py+=bsy)
         {
             for(xx=0, px=ox ; xx < bx ; xx++,px+=bsx)
             {
-                SelectObject(hdcMem,dskBtmpImg[ii]) ;
-                StretchBlt(hdc,px,py,bsx,bsy,hdcMem,0,0,dskBtmpSize[ii].cx,dskBtmpSize[ii].cy,SRCCOPY) ;
+                if((ii < vwDesksN) && dskBtmpImg[ii])
+                {
+                    SelectObject(hdcMem,dskBtmpImg[ii]) ;
+                    if((dskBtmpSize[ii].cx == bsx) && (dskBtmpSize[ii].cy == bsy))
+                        BitBlt(hdc,px,py,bsx,bsy,hdcMem,0,0,SRCCOPY) ;
+                    else
+                        StretchBlt(hdc,px,py,bsx,bsy,hdcMem,0,0,dskBtmpSize[ii].cx,dskBtmpSize[ii].cy,SRCCOPY) ;
+                }
+                else
+                {
+                    rect.left   = px ;
+                    rect.top    = py ;
+                    rect.right  = px+bsx ;
+                    rect.bottom = py+bsy ;
+                    FillRect(hdc,&rect,(HBRUSH) (ii < vwDesksN) ? ((HBRUSH) (COLOR_BACKGROUND+1)):((HBRUSH) (COLOR_3DDKSHADOW+1))) ;
+                }
                 ii++ ;
                 if((ii == vwDeskCur) || (ii == vwDeskNxt))
                 {
@@ -526,46 +643,191 @@ vwPreviewDraw(HDC hdc)
                 }
             }
         }
+        if(vwpType != vwpTYPE_WINDOW)
+        {
+            ox = vwpFullOffsetX ;
+            oy = vwpFullOffsetY ;
+            if(px < desktopSizeX)
+            {
+                rect.left   = px ;
+                rect.top    = 0 ;
+                rect.right  = desktopSizeX ;
+                rect.bottom = desktopSizeY ;
+                FillRect(hdc,&rect,(HBRUSH) (COLOR_3DDKSHADOW+1)) ;
+            }
+            if(py < desktopSizeY)
+            {
+                rect.left   = 0 ;
+                rect.top    = py ;
+                rect.right  = desktopSizeX ;
+                rect.bottom = desktopSizeY ;
+                FillRect(hdc,&rect,(HBRUSH) (COLOR_3DDKSHADOW+1)) ;
+            }
+        }
+    }
+    else if(vwpEffectFlag & vwpEFFECT_FULLNXT)
+    {
+        ii = vwDeskNxt - 1 ;
+        SelectObject(hdcMem,dskBtmpImg[ii]) ;
+        if((dskBtmpSize[ii].cx == desktopSizeX) && (dskBtmpSize[ii].cy == desktopSizeY))
+            BitBlt(hdc,0,0,desktopSizeX,desktopSizeY,hdcMem,0,0,SRCCOPY) ;
+        else
+            StretchBlt(hdc,0,0,desktopSizeX,desktopSizeY,hdcMem,0,0,dskBtmpSize[ii].cx,dskBtmpSize[ii].cy,SRCCOPY) ;
+    }
+    else if(vwpType == vwpTYPE_TRANS)
+    {
+        if(vwpEffectFlag & vwpEFFECT_FULLCUR)
+        {
+            ii = vwDeskCur - 1 ;
+            SelectObject(hdcMem,dskBtmpImg[ii]) ;
+            if((dskBtmpSize[ii].cx == desktopSizeX) && (dskBtmpSize[ii].cy == desktopSizeY))
+                BitBlt(hdc,0,0,desktopSizeX,desktopSizeY,hdcMem,0,0,SRCCOPY) ;
+            else
+                StretchBlt(hdc,0,0,desktopSizeX,desktopSizeY,hdcMem,0,0,dskBtmpSize[ii].cx,dskBtmpSize[ii].cy,SRCCOPY) ;
+            vwpEffectFlag &= ~vwpEFFECT_FULLCUR ;
+        }
+        ii = vwDeskNxt - 1 ;
+        xx = vwpEffectRectN.right - vwpEffectRectN.left ;
+        yy = vwpEffectRectN.bottom - vwpEffectRectN.top ;
+        SelectObject(hdcMem,dskBtmpImg[ii]) ;
+        if((dskBtmpSize[ii].cx == xx) && (dskBtmpSize[ii].cy == yy))
+            BitBlt(hdc,vwpEffectRectN.left,vwpEffectRectN.top,xx,yy,hdcMem,0,0,SRCCOPY) ;
+        else
+            StretchBlt(hdc,vwpEffectRectN.left,vwpEffectRectN.top,xx,yy,hdcMem,0,0,dskBtmpSize[ii].cx,dskBtmpSize[ii].cy,SRCCOPY) ;
+    }
+    else
+    {
+        ii = vwDeskNxt - 1 ;
+        xx = vwpEffectRectN.right - vwpEffectRectN.left ;
+        yy = vwpEffectRectN.bottom - vwpEffectRectN.top ;
+        SelectObject(hdcMem,dskBtmpImg[ii]) ;
+        if((dskBtmpSize[ii].cx == xx) && (dskBtmpSize[ii].cy == yy))
+            BitBlt(hdc,vwpEffectRectN.left,vwpEffectRectN.top,xx,yy,hdcMem,0,0,SRCCOPY) ;
+        else
+            StretchBlt(hdc,vwpEffectRectN.left,vwpEffectRectN.top,xx,yy,hdcMem,0,0,dskBtmpSize[ii].cx,dskBtmpSize[ii].cy,SRCCOPY) ;
     }
     DeleteDC(hdcMem) ;
 }
 
 static VOID CALLBACK
-vwPreviewZoom(HWND hwnd, UINT uMsg, UINT idEvent, DWORD dwTime)
+vwPreviewEffect(HWND hwnd, UINT uMsg, UINT idEvent, DWORD dwTime)
 {
+    DWORD ct ;
+    
 #if vwpDEBUG
     {
         SYSTEMTIME stime;
     
         GetLocalTime (&stime);
-        _ftprintf(logfp,_T("[%04d-%02d-%02d %02d:%02d:%02d:%03d] Zoom %d %x: %x %d %d\n"),
+        _ftprintf(logfp,_T("[%04d-%02d-%02d %02d:%02d:%02d:%03d] Zoom %x %d: %d %d\n"),
                   stime.wYear, stime.wMonth, stime.wDay,
-                  stime.wHour, stime.wMinute, stime.wSecond, stime.wMilliseconds,vwpZoomStep,vwpHnd,hwnd,idEvent,dwTime) ;
+                  stime.wHour, stime.wMinute, stime.wSecond, stime.wMilliseconds,vwpHnd,vwpEffectFlag,vwpEffectStart,dwTime-vwpEffectStart) ;
         fflush(logfp) ;
     }
 #endif
     if(vwpHnd == NULL)
     {
         KillTimer(vwpHnd,0x29a) ;
+        return ;
     }
-    else if(vwpZoomStep >= vwpZOOM_STEPS)
+    if(dwTime == 0)
+    {
+        SetTimer(vwpHnd,0x29a,vwpEFFECT_STEP,vwPreviewEffect) ;
+        vwpEffectStart = GetTickCount() - vwpEFFECT_STEP ;
+        vwpEffectFlag = vwpEFFECT_INPROG ;
+        ct = vwpEFFECT_STEP ;
+        if(vwpType == vwpTYPE_TRANS)
+        {
+            int ii, jj, xx, yy ;
+            if(vwpTransitionEffect == vwpEFFECT_ZOOM_STATIC)
+            {
+                ii = vwDeskNxt - 1 ;
+                xx = (desktopSizeX * ((ii % vwDesksX) * 2 + 1)) / (vwDesksX * 2) ;
+                yy = (desktopSizeY * ((ii / vwDesksX) * 2 + 1)) / (vwDesksY * 2) ;
+                vwpEffectRectNS.left = xx ;
+                vwpEffectRectNS.right = desktopSizeX - xx ;
+                vwpEffectRectNS.top = yy ;
+                vwpEffectRectNS.bottom = desktopSizeY - yy ;
+            }
+            else
+            {
+                if((vwpTransitionEffect == vwpEFFECT_HSPRING_WRAP) || (vwpTransitionEffect == vwpEFFECT_HSPRING_NOWRAP))
+                {
+                    xx = vwDeskNxt - vwDeskCur ;
+                    if((vwpTransitionEffect == vwpEFFECT_HSPRING_WRAP) && (abs(xx) > (vwDesksN >> 1)))
+                        xx = 0 - xx ;
+                    yy = 0 ;
+                }
+                else if((vwpTransitionEffect == vwpEFFECT_VSPRING_WRAP) || (vwpTransitionEffect == vwpEFFECT_VSPRING_NOWRAP))
+                {
+                    xx = 0 ;
+                    yy = vwDeskNxt - vwDeskCur ;
+                    if((vwpTransitionEffect == vwpEFFECT_VSPRING_WRAP) && (abs(yy) > (vwDesksN >> 1)))
+                        yy = 0 - yy ;
+                }
+                else
+                {
+                    ii = vwDeskNxt - 1 ;
+                    jj = vwDeskCur - 1 ;
+                    xx = (ii % vwDesksX) - (jj % vwDesksX) ;
+                    yy = (ii / vwDesksX) - (jj / vwDesksX) ;
+                    if(vwpTransitionEffect == vwpEFFECT_SPRING_WRAP)
+                    {
+                        if(abs(xx) > (vwDesksX >> 1))
+                            xx = 0 - xx ;
+                        if(abs(yy) > (vwDesksY >> 1))
+                            yy = 0 - yy ;
+                    }
+                }
+                if((xx == 0) && (yy == 0))
+                    xx = 1 ;
+                vwpEffectRectNS.left = 0 ;
+                vwpEffectRectNS.right = 0 ;
+                vwpEffectRectNS.top = 0 ;
+                vwpEffectRectNS.bottom = 0 ;
+                if(xx < 0)
+                    vwpEffectRectNS.right = desktopSizeX ;
+                else if(xx > 0)
+                    vwpEffectRectNS.left = desktopSizeX ;
+                if(yy < 0)
+                    vwpEffectRectNS.bottom = desktopSizeY ;
+                else if(yy > 0)
+                    vwpEffectRectNS.top = desktopSizeY ;
+            }
+            vwpEffectFlag |= vwpEFFECT_FULLCUR ;
+        }
+        else
+            SetForegroundWindow(desktopHWnd) ;
+    }
+    else
+        ct = dwTime - vwpEffectStart ;
+    if(ct >= vwpEFFECT_TIME)
     {
         KillTimer(vwpHnd,0x29a) ;
-        DestroyWindow(vwpHnd) ;
-        vwpZoomStep = 0 ;
-        vwpHnd = NULL ;
+        if(vwpEffectFlag & vwpEFFECT_CLOSE)
+        {
+            DestroyWindow(vwpHnd) ;
+            vwpEffectFlag = 0 ;
+            vwpHnd = NULL ;
+            return ;
+        }
+        InvalidateRect(vwpHnd,NULL,FALSE) ;
+        vwpEffectFlag |= vwpEFFECT_CLOSE|vwpEFFECT_FULLNXT ;
+    }
+    else if(vwpType == vwpTYPE_TRANS)
+    {
+        int ii = vwpEFFECT_TIME - ct ;
+        vwpEffectRectN.left = (vwpEffectRectNS.left*ii) / vwpEFFECT_TIME ;
+        vwpEffectRectN.top = (vwpEffectRectNS.top*ii) / vwpEFFECT_TIME ;
+        vwpEffectRectN.right = desktopSizeX - ((vwpEffectRectNS.right*ii)/vwpEFFECT_TIME) ;
+        vwpEffectRectN.bottom = desktopSizeY - ((vwpEffectRectNS.bottom*ii)/vwpEFFECT_TIME) ;
+        InvalidateRect(vwpHnd,&vwpEffectRectN,FALSE) ;
     }
     else
     {
         int ii, bx, by, px, py, bsx, bsy ;
         
-        if(vwpZoomStep == 0)
-        {
-            SetForegroundWindow(desktopHWnd) ;
-            SetTimer(vwpHnd,0x29a,25,vwPreviewZoom) ;
-        }
-
-        ii = vwDeskCur - 1 ;
+        ii = vwDeskNxt - 1 ;
         bx = vwpBttnsX[vwpType] ;
         by = vwpBttnsY[vwpType] ;
         bsx = vwpBttnSizeX[vwpType] ;
@@ -573,23 +835,17 @@ vwPreviewZoom(HWND hwnd, UINT uMsg, UINT idEvent, DWORD dwTime)
         py = ii / bx ;
         px = ((ii - (py * bx)) * bsx) ;
         py = (py * bsy) ;
-        if(vwpType != vwpTYPE_WINDOW)
-        {
-            px += vwpFullOffsetX ;
-            py += vwpFullOffsetY ;
-        }
         
-        vwpZoomStep++ ;
-        ii = vwpZOOM_STEPS - vwpZoomStep ;
-        vwpZoomRect.left = (px*ii) / vwpZOOM_STEPS ;
-        vwpZoomRect.top = (py*ii) / vwpZOOM_STEPS ;
-        vwpZoomRect.right = desktopSizeX - (((desktopSizeX-(px+bsx))*ii)/vwpZOOM_STEPS) ;
-        vwpZoomRect.bottom = desktopSizeY - (((desktopSizeY-(py+bsy))*ii)/vwpZOOM_STEPS) ;
-        InvalidateRect(vwpHnd,&vwpZoomRect,FALSE) ;
-        UpdateWindow(vwpHnd) ;
+        ii = vwpEFFECT_TIME - ct ;
+        vwpEffectRectN.left = (px*ii) / vwpEFFECT_TIME ;
+        vwpEffectRectN.top = (py*ii) / vwpEFFECT_TIME ;
+        vwpEffectRectN.right = desktopSizeX - (((desktopSizeX-(px+bsx))*ii)/vwpEFFECT_TIME) ;
+        vwpEffectRectN.bottom = desktopSizeY - (((desktopSizeY-(py+bsy))*ii)/vwpEFFECT_TIME) ;
+        InvalidateRect(vwpHnd,&vwpEffectRectN,FALSE) ;
     }
+    UpdateWindow(vwpHnd) ;
 #if vwpDEBUG
-    _ftprintf(logfp,_T("Zoom end: %d %x\n"),vwpZoomStep,vwpHnd) ;
+    _ftprintf(logfp,_T("Zoom end: %d %x\n"),vwpEffectStart,vwpHnd) ;
     fflush(logfp) ;
 #endif
 }
@@ -600,7 +856,7 @@ vwPreviewUpdate(HWND hwnd, UINT uMsg, UINT idEvent, DWORD dwTime)
     BITMAPINFO bmi;
     HDC bitmapDC ;
     HDC deskDC ;
-    int ii ;
+    int ii, ts ;
 #if vwpDEBUG
     {
         SYSTEMTIME stime;
@@ -629,6 +885,10 @@ vwPreviewUpdate(HWND hwnd, UINT uMsg, UINT idEvent, DWORD dwTime)
     {
         vwpFullUpdateChng = 1 ;
         SetWindowPos(vwpHnd,0,0,0,0,0,(SWP_HIDEWINDOW | SWP_NOZORDER | SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE)) ;
+        /* restore the focus */
+        SendMessage(vwHandle,VW_FOREGDWIN,0,0) ;
+        if(vwpFullUpdatePause > 0)
+            Sleep(vwpFullUpdatePause) ;
         SendMessage(vwHandle,VW_DESKIMAGE,8,1) ;
         SendMessage(vwHandle,VW_DESKIMAGE,3,0) ;
         SendMessage(vwHandle,VW_DESKIMAGE,8,0) ;
@@ -642,38 +902,49 @@ vwPreviewUpdate(HWND hwnd, UINT uMsg, UINT idEvent, DWORD dwTime)
             return ;
         }
     }
-    if(dskBtmpImg[ii])
-    {
-        DeleteObject(dskBtmpImg[ii]) ;
-        dskBtmpImg[ii] = NULL ;
-    }
     _stprintf(userAppBase,_T("desk_%d.bmp"),ii+1) ;
-    if((dskBtmpImg[ii] = (HBITMAP) LoadImage(NULL,userAppPath,IMAGE_BITMAP,0,0,LR_DEFAULTSIZE|LR_LOADFROMFILE)) == NULL)
+    if((dskBtmpImg[ii] == NULL) || (vwpKeepImages == 0) || ((ts=vwPreviewGetFileTime(userAppPath)) != dskBtmpTime[ii]))
     {
-        vwpFullUpdateChng = 0 ;
-        MessageBox(wHnd,"Failed to load desktop image","VWPreview Error", MB_ICONWARNING);
-        return ;
+        if(dskBtmpImg[ii])
+        {
+            DeleteObject(dskBtmpImg[ii]) ;
+            dskBtmpImg[ii] = NULL ;
+        }
+        if((dskBtmpImg[ii] = (HBITMAP) LoadImage(NULL,userAppPath,IMAGE_BITMAP,0,0,LR_DEFAULTSIZE|LR_LOADFROMFILE)) == NULL)
+        {
+            vwpFullUpdateChng = 0 ;
+            MessageBox(wHnd,"Failed to load desktop image","VWPreview Error", MB_ICONWARNING);
+            return ;
+        }
+        memset(&bmi,0,sizeof(bmi)) ;
+        bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER) ;
+        GetDIBits(bitmapDC,dskBtmpImg[ii],0,0,NULL,&bmi,DIB_RGB_COLORS) ;
+        if(((dskBtmpSize[ii].cx = bmi.bmiHeader.biWidth) <= 0) || ((dskBtmpSize[ii].cy = bmi.bmiHeader.biHeight) <= 0))
+        {
+            vwpFullUpdateChng = 0 ;
+            MessageBox(wHnd,"Failed to get desktop image size","VWPreview Error", MB_ICONWARNING);
+            return ;
+        }
+        if(vwpKeepImages)
+            dskBtmpTime[ii] = ts ;
+        InvalidateRect(vwpHnd,NULL,FALSE) ;
+        UpdateWindow(vwpHnd) ;
     }
-    memset(&bmi,0,sizeof(bmi)) ;
-    bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER) ;
-    GetDIBits(bitmapDC,dskBtmpImg[ii],0,0,NULL,&bmi,DIB_RGB_COLORS) ;
-    if(((dskBtmpSize[ii].cx = bmi.bmiHeader.biWidth) <= 0) || ((dskBtmpSize[ii].cy = bmi.bmiHeader.biHeight) <= 0))
-    {
-        vwpFullUpdateChng = 0 ;
-        MessageBox(wHnd,"Failed to get desktop image size","VWPreview Error", MB_ICONWARNING);
-        return ;
-    }
-    InvalidateRect(vwpHnd,NULL,FALSE) ;
-    UpdateWindow(vwpHnd) ;
-    
     if((vwpType != vwpTYPE_WINDOW) && vwpFullUpdateChng)
     {
+        if(++vwpFullUpdateCount == vwDesksN)
+        {
+            if(vwpFullUpdateCont)
+                SetTimer(vwpHnd,0x29a,vwpFullUpdateTime2,vwPreviewUpdate) ;
+            else
+                KillTimer(vwpHnd,0x29a) ;
+        }
         if((ii += 2) > vwDesksN)
             ii = 1 ;
         PostMessage(vwHandle,VW_CHANGEDESK,ii,0) ;
     }
 #if vwpDEBUG
-    _ftprintf(logfp,_T("Update end: %d %x\n"),vwpZoomStep,vwpHnd) ;
+    _ftprintf(logfp,_T("Update end: %d %x\n"),vwpEffectFlag,vwpHnd) ;
     fflush(logfp) ;
 #endif
 }
@@ -735,8 +1006,17 @@ vwPreviewDlgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam )
                 SetWindowPos(hwnd,HWND_TOPMOST,0,0,desktopSizeX,desktopSizeY,SWP_FRAMECHANGED|SWP_SHOWWINDOW) ;
                 ox = vwpFullOffsetX ;
                 oy = vwpFullOffsetY ;
-                if(vwpFullUpdate)
-                   SetTimer(vwpHnd,0x29a,vwpFullUpdateTime,vwPreviewUpdate) ;
+                if(vwpType == vwpTYPE_TRANS)
+                    vwPreviewEffect(hwnd,0,0,0) ;
+                else if(vwpFullUpdate)
+                {
+                    vwpFullUpdateChng = 1 ;
+                    if((ii = (vwDeskCur + 1)) > vwDesksN)
+                        ii = 1 ;
+                    PostMessage(vwHandle,VW_CHANGEDESK,ii,0) ;
+                    SetTimer(vwpHnd,0x29a,vwpFullUpdateTime1,vwPreviewUpdate) ;
+                    vwpFullUpdateCount = 1 ;
+                }
             }
             return 1;
         }
@@ -757,17 +1037,18 @@ vwPreviewDlgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam )
         
     case WM_LBUTTONDOWN:
     case WM_LBUTTONUP:
-        if((vwpHnd != NULL) && !vwpZoomStep)
+        if((vwpHnd != NULL) && !vwpEffectFlag)
         {
             int xx = LOWORD(lParam) ;
             int yy = HIWORD(lParam) ;
             int ii ;
-            if(vwpType != vwpTYPE_WINDOW)
-            {
-                xx -= vwpFullOffsetX ;
-                yy -= vwpFullOffsetY ;
-            }
-            ii = ((yy / vwpBttnSizeY[vwpType]) * vwpBttnsX[vwpType]) + (xx / vwpBttnSizeX[vwpType]) + 1 ;
+            if((vwpType != vwpTYPE_WINDOW) &&
+               (((xx -= vwpFullOffsetX) < 0) || ((yy -= vwpFullOffsetY) < 0)))
+                return 0 ;
+            if(((xx /= vwpBttnSizeX[vwpType]) >= vwpBttnsX[vwpType]) ||
+               ((yy /= vwpBttnSizeY[vwpType]) >= vwpBttnsY[vwpType]) ||
+               ((ii = (yy * vwpBttnsX[vwpType]) + xx + 1) > vwDesksN))
+                return 0 ;
             if(msg == WM_LBUTTONDOWN)
             {
                 vwDeskNxt = ii ;
@@ -787,7 +1068,7 @@ vwPreviewDlgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam )
         return 0 ;
         
     case WM_CHAR:
-        if((vwpHnd != NULL) && !vwpZoomStep)
+        if((vwpHnd != NULL) && !vwpEffectFlag)
         {
             switch(wParam)
             {
@@ -812,8 +1093,7 @@ sel_desk:
                     if((vwpType == vwpTYPE_FULL) && vwpFullEffect)
                     {
                         vwDeskCur = vwDeskNxt ;
-                        vwpZoomStep = 0 ;
-                        vwPreviewZoom(hwnd,0,0,0) ;
+                        vwPreviewEffect(hwnd,0,0,0) ;
                         return 0 ;
                     }
                 }
@@ -822,6 +1102,7 @@ sel_desk:
                 /* no break */
             
             case VK_ESCAPE:
+                vwpEffectFlag = 0 ;
                 vwpFullUpdateChng = 0 ;
                 KillTimer(vwpHnd,0x29a) ;
                 DestroyWindow(hwnd) ;
@@ -836,17 +1117,20 @@ sel_desk:
             int ii ;
             
 #if vwpDEBUG
-            _ftprintf(logfp,_T("WM_DESTROY: %d %x %x %x\n"),vwpZoomStep,vwpHnd,hwnd,wParam) ;
+            _ftprintf(logfp,_T("WM_DESTROY: %d %x %x %x\n"),vwpEffectFlag,vwpHnd,hwnd,wParam) ;
             fflush(logfp) ;
 #endif
             vwpHnd = NULL ;
             ii = vwDesksN ;
-            while(--ii >= 0)
+            if(vwpKeepImages == 0)
             {
-                if(dskBtmpImg[ii])
+                while(--ii >= 0)
                 {
-                    DeleteObject(dskBtmpImg[ii]) ;
-                    dskBtmpImg[ii] = NULL ;
+                    if(dskBtmpImg[ii])
+                    {
+                        DeleteObject(dskBtmpImg[ii]) ;
+                        dskBtmpImg[ii] = NULL ;
+                    }
                 }
             }
             /* delay re-enable of desk image capture to ensure this window has gone */
@@ -868,12 +1152,12 @@ vwPreviewCreate(int type)
     HDC bitmapDC ;
     HDC deskDC ;
     HWND hwnd ;
-    int ii ;
+    int ii, ts, loadMask ;
     
     /* check if a preview is already open */
     if(vwpHnd != NULL)
     {
-        vwpZoomStep = 0 ;
+        vwpEffectFlag = 0 ;
         vwpFullUpdateChng = 0 ;
         KillTimer(vwpHnd,0x29a) ;
         DestroyWindow(vwpHnd) ;
@@ -889,37 +1173,55 @@ vwPreviewCreate(int type)
         return ;
     }
     vwpType = type ;
-    vwpZoomStep = 0 ;
-    vwDeskNxt = vwDeskCur ;
-    /* update image for current desktop */
-    SendMessage(vwHandle,VW_DESKIMAGE,3,0) ;
-    
+    if(vwpType == vwpTYPE_TRANS)
+    {
+        loadMask = (1 << (vwDeskCur - 1)) | (1 << (vwDeskNxt - 1)) ;
+    }
+    else
+    {
+        /* update image for current desktop */
+        SendMessage(vwHandle,VW_DESKIMAGE,3,0) ;
+        loadMask = 0xffffffff ;
+        vwDeskNxt = vwDeskCur ;
+    }
     ii = vwDesksN ;
     while(--ii >= 0)
     {
-        if(dskBtmpImg[ii])
+        if(loadMask & (1 << ii))
         {
-            DeleteObject(dskBtmpImg[ii]) ;
-            dskBtmpImg[ii] = NULL ;
-        }
-        _stprintf(userAppBase,_T("desk_%d.bmp"),ii+1) ;
-        if((dskBtmpImg[ii] = (HBITMAP) LoadImage(NULL,userAppPath,IMAGE_BITMAP,0,0,LR_DEFAULTSIZE|LR_LOADFROMFILE)) == NULL)
-        {
-            MessageBox(wHnd,"Failed to load desktop image","VWPreview Error", MB_ICONWARNING);
-            return ;
-        }
-        memset(&bmi,0,sizeof(bmi)) ;
-        bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER) ;
-        GetDIBits(bitmapDC,dskBtmpImg[ii],0,0,NULL,&bmi,DIB_RGB_COLORS) ;
-        if(((dskBtmpSize[ii].cx = bmi.bmiHeader.biWidth) <= 0) || ((dskBtmpSize[ii].cy = bmi.bmiHeader.biHeight) <= 0))
-        {
-            MessageBox(wHnd,"Failed to get desktop image size","VWPreview Error", MB_ICONWARNING);
-            return ;
+            _stprintf(userAppBase,_T("desk_%d.bmp"),ii+1) ;
+            if((vwpKeepImages == 0) || ((ts=vwPreviewGetFileTime(userAppPath)) != dskBtmpTime[ii]) || (dskBtmpImg[ii] == NULL))
+            {
+#if vwpDEBUG
+                _ftprintf(logfp,_T("LoadImage %d: %x %d %x %x\n"),dskBtmpImg[ii],vwpKeepImages,ii,dskBtmpTime[ii],ts) ;
+                fflush(logfp) ;
+#endif
+                if(dskBtmpImg[ii])
+                {
+                    DeleteObject(dskBtmpImg[ii]) ;
+                    dskBtmpImg[ii] = NULL ;
+                }
+                if((dskBtmpImg[ii] = (HBITMAP) LoadImage(NULL,userAppPath,IMAGE_BITMAP,0,0,LR_DEFAULTSIZE|LR_LOADFROMFILE)) == NULL)
+                {
+                    MessageBox(wHnd,"Failed to load desktop image","VWPreview Error", MB_ICONWARNING);
+                    return ;
+                }
+                memset(&bmi,0,sizeof(bmi)) ;
+                bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER) ;
+                GetDIBits(bitmapDC,dskBtmpImg[ii],0,0,NULL,&bmi,DIB_RGB_COLORS) ;
+                if(((dskBtmpSize[ii].cx = bmi.bmiHeader.biWidth) <= 0) || ((dskBtmpSize[ii].cy = bmi.bmiHeader.biHeight) <= 0))
+                {
+                    MessageBox(wHnd,"Failed to get desktop image size","VWPreview Error", MB_ICONWARNING);
+                    return ;
+                }
+                if(vwpKeepImages)
+                    dskBtmpTime[ii] = ts ;
+            }
         }
     }
     DeleteDC(bitmapDC);
     ReleaseDC(desktopHWnd,deskDC) ;
-    if((vwpType != vwpTYPE_WINDOW) || vwpWinClose)
+    if((vwpType != vwpTYPE_TRANS) && ((vwpType != vwpTYPE_WINDOW) || vwpWinClose))
         /* disable desk image generation now to stop this preview window being captured */ 
         SendMessage(vwHandle,VW_DESKIMAGE,8,0) ;
     
@@ -928,7 +1230,7 @@ vwPreviewCreate(int type)
     else
         ii = 0 ; //WS_VISIBLE ;
     hwnd = CreateWindow("VWPreview","VirtuaWin Preview",ii,CW_USEDEFAULT,CW_USEDEFAULT,100,100,HWND_DESKTOP,NULL,hInst,NULL) ;
-    if(hwnd != NULL)
+    if((hwnd != NULL) && (vwpType != vwpTYPE_TRANS))
     {
         /* try everything to get the current input focus so tab and escape work */
         SetForegroundWindow(hwnd) ; 
@@ -978,9 +1280,23 @@ MainWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
         break;
     
     case MOD_CHANGEDESK:
-        if((vwpHnd != 0) && !vwpZoomStep)
+        vwDeskCur = lParam ;
+        if(vwpHnd != 0)
         {
-            if((vwpType == vwpTYPE_WINDOW) && !vwpWinClose)
+            if(vwpEffectFlag)
+            {
+                if(vwpEffectFlag & vwpEFFECT_CLOSE)
+                {
+                    vwpEffectFlag = 0 ;
+                    vwpFullUpdateChng = 0 ;
+                    KillTimer(vwpHnd,0x29a) ;
+                    DestroyWindow(vwpHnd) ;
+                    vwpHnd = NULL ;
+                }
+                else
+                    vwpEffectFlag |= vwpEFFECT_CLOSE ;
+            }
+            else if((vwpType == vwpTYPE_WINDOW) && !vwpWinClose)
             {
                 SetTimer(vwpHnd,0x29a,250,vwPreviewUpdate) ;
                 vwDeskNxt = lParam ;
@@ -994,7 +1310,6 @@ MainWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
                 vwpHnd = NULL ;
             }
         }
-        vwDeskCur = lParam ;
         return TRUE ;
     
     case MOD_QUIT:
@@ -1005,6 +1320,27 @@ MainWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
     case MOD_SETUP:
         vwpSetupOpen((wParam != 0) ? (HWND) wParam:(HWND) wHnd) ;
         break;
+        
+    case VW_ICHANGEDESK:
+        vwDeskCur = wParam ;
+        if((initialised <= 0) || ((vwpHnd != 0) && (vwpType == vwpTYPE_TRANS)))
+            PostMessage(vwHandle,VW_ICHANGEDESK,3,0) ;
+        else if((vwpHnd != 0) && (vwpType == vwpTYPE_FULL))
+        {
+            PostMessage(vwHandle,VW_ICHANGEDESK,3,0) ;
+            if(!vwpFullUpdateChng)
+            {
+                vwDeskNxt = lParam ;
+                vwPreviewEffect(hwnd,0,0,0) ;
+            }
+        }
+        else
+        {
+            vwDeskNxt = lParam ;
+            vwPreviewCreate(vwpTYPE_TRANS) ;
+            PostMessage(vwHandle,VW_ICHANGEDESK,3,0) ;
+        }
+        return TRUE ;
     
     case VW_CMENUITEM:
         if((wParam == vwpCMI_FULL) || (wParam == vwpCMI_WINDOW))
@@ -1115,8 +1451,13 @@ WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, INT nCmdS
         DispatchMessage(&msg);
     }
     if(initialised)
+    {
         /* Unregister our interest in generating images */
         PostMessage(vwHandle,VW_DESKIMAGE,2,0) ;
+        while(--vwDesksN >= 0)
+            if(dskBtmpImg[vwDesksN])
+                DeleteObject(dskBtmpImg[vwDesksN]) ;
+    }
     
     return msg.wParam;
 }
