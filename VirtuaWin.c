@@ -303,6 +303,32 @@ vwKeyboardTestModifier(vwUByte modif)
     return TRUE ;
 }
 
+/* check the current position of the mouse, returns: 1 if on caption of a window, 2 if on desktop, 3 if on taskbar, 0 otherwise */
+static unsigned char
+checkMousePosition(void)
+{
+    LPARAM lParam ;
+    HWND hwnd ;
+    POINT pt ;
+    DWORD rr ;
+    
+    GetCursorPos(&pt);
+    if((hwnd=WindowFromPoint(pt)) == NULL)
+        return 0 ;
+    
+    if((hwnd == deskIconHWnd) || (hwnd == desktopHWnd))
+        return 2 ;
+    if((hwnd == taskHWnd) || (hwnd == taskbarBCHWnd))
+        return 3 ;
+    
+    lParam = (((int)(short) pt.y) << 16) | (0x0ffff & ((int)(short) pt.x)) ;
+    if((SendMessageTimeout(hwnd,WM_NCHITTEST,0,lParam,SMTO_ABORTIFHUNG|SMTO_BLOCK,50,&rr) ||
+        (Sleep(1),SendMessageTimeout(hwnd,WM_NCHITTEST,0,lParam,SMTO_ABORTIFHUNG|SMTO_BLOCK,100,&rr))) &&
+       (rr == HTCAPTION))
+        return 1 ;
+    
+    return 0 ;
+}
 /*************************************************
  * Checks if mouse button pressed on title bar (i.e. dragging window)
  * Returns 0 = no button down, 1 = left but down on window caption, 2 = Middle down on window caption
@@ -312,11 +338,7 @@ static unsigned char
 checkMouseState(int force)
 {
     static unsigned char lastState=0, lastBState=0 ;
-    unsigned char thisBState ;
-    LPARAM lParam ;
-    HWND hwnd ;
-    POINT pt ;
-    DWORD rr ;
+    unsigned char thisBState, mp ;
     
     // Check the state of mouse buttons
     if(GetSystemMetrics(SM_SWAPBUTTON))
@@ -337,33 +359,13 @@ checkMouseState(int force)
     }
     if((thisBState != lastBState) || (force && (thisBState == 1)))
     {
-        lastState = (thisBState) ? 5:0 ;
-        if((thisBState == 1) || (thisBState == 2))
-        {
-            GetCursorPos(&pt);
-            if((hwnd=WindowFromPoint(pt)) != NULL)
-            {
-                if((hwnd == deskIconHWnd) || (hwnd == desktopHWnd))
-                {
-                    if(thisBState == 2)
-                        lastState = 3 ;
-                }
-                else if((hwnd == taskHWnd) || (hwnd == taskbarBCHWnd))
-                {
-                    if(thisBState == 2)
-                        lastState = 4 ;
-                }
-                else
-                {
-                    lParam = (((int)(short) pt.y) << 16) | (0x0ffff & ((int)(short) pt.x)) ;
-                    if((SendMessageTimeout(hwnd,WM_NCHITTEST,0,lParam,SMTO_ABORTIFHUNG|SMTO_BLOCK,50,&rr) ||
-                        (Sleep(1),SendMessageTimeout(hwnd,WM_NCHITTEST,0,lParam,SMTO_ABORTIFHUNG|SMTO_BLOCK,100,&rr))) &&
-                       (rr == HTCAPTION))
-                        lastState = thisBState ;
-                }
-            }
-        }
-        vwLogVerbose((_T("Got new state %d (%d %d %d %x %d) %x %x %x\n"),(int) lastState,(int) thisBState,pt.x,pt.y,hwnd,rr,desktopHWnd,deskIconHWnd,taskHWnd)) ;
+        if(thisBState == 1)
+            lastState = (checkMousePosition() == 1) ? 1:5 ;
+        else if(thisBState == 2)
+            lastState = ((mp = checkMousePosition()) != 0) ? mp+1:5 ;
+        else
+            lastState = (thisBState) ? 5:0 ;
+        vwLogVerbose((_T("Got new state %d (%d %d)\n"),(int) lastState,(int) lastBState,(int) thisBState)) ;
         lastBState = thisBState ;
     }
     return lastState ;
@@ -441,7 +443,8 @@ vwMouseProc(LPVOID lpParameter)
             }
             else if(wlistState)
             {
-                if((mode == 0) && (wlistState == 1) && (mouseEnable & 4))
+                if((mode == 0) && (wlistState == 1) && (mouseEnable & 4) &&
+                   (checkMousePosition() > 1))
                 {
                     vwLogBasic((_T("Mouse wlist %d\n"),wlistState)) ;
                     SendMessage(hWnd, VW_MOUSEWARP, 0, MAKELPARAM(0,4)) ;
@@ -455,7 +458,7 @@ vwMouseProc(LPVOID lpParameter)
                 wmenuState = 1 ;
             else
             {
-                if((mode == 0) && (wmenuState == 1))
+                if((mode == 0) && (wmenuState == 1) && (checkMousePosition() == 1))
                 {
                     vwLogBasic((_T("Mouse wmenu %d\n"),wmenuState)) ;
                     SendMessage(hWnd, VW_MOUSEWARP, 0, MAKELPARAM(0,5)) ;
