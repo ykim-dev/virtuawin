@@ -2031,7 +2031,7 @@ windowListUpdate(void)
                     do {
                         if(ww->handle == owner)
                         {
-                            if(ww->flags & vwWINFLAGS_FOUND)
+                            if(vwWindowIsWindow(ww) && (ww->flags & vwWINFLAGS_FOUND) && vwWindowIsShown(ww))
                             {
                                 vwWindowLink(ww,win) ;
                                 if(vwWindowIsNotHideByHide(win) && vwWindowIsHideByHide(ww) && vwWindowIsShown(ww))
