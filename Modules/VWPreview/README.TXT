@@ -1,4 +1,4 @@
-VWPreview v1.4 - Steven Phillips
+VWPreview v1.5 - Steven Phillips
 
 Description:
 
@@ -47,10 +47,16 @@ Copyright:
 VWPreview is a freely distributed program and is licensed under the GNU
 General Public License.
 
-Copyright (c) 2010 VirtuaWin (virtuawin@home.se)
+Copyright (c) 2010-2011 VirtuaWin (virtuawin@home.se)
 
 
 HISTORY
+
+Ver 1.5 - 2011/02/20
+
+* 3152494 Merged in patch submitted by rolfbrocke  adding slide-on  and center
+  zoom transition effects.
+* Added new Effect duration setting. 
 
 Ver 1.4 - 2010/09/12
 

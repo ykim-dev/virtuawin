@@ -1,6 +1,6 @@
 /*
  *  VirtuaWin - Virtual Desktop Manager (virtuawin.sourceforge.net)
- *  VWPreview.c - Module to display the time spent on each desk.
+ *  VWPreview.c - Module to display an overview of all desks as well as transition smoothly between them.
  * 
  *  Copyright (c) 2006-2008 VirtuaWin (VirtuaWin@home.se)
  * 
@@ -62,7 +62,6 @@ int vwDeskSizeY ;
 #define vwpTYPE_TRANS  2
 #define vwpTYPE_COUNT  3
 
-#define vwpEFFECT_TIME 200
 #define vwpEFFECT_STEP 20
 
 #define vwpEFFECT_INPROG  1
@@ -72,13 +71,16 @@ int vwDeskSizeY ;
 #define vwpEFFECT_DRAWCUR 16
 #define vwpEFFECT_DRAWNXT 32
 
-#define vwpEFFECT_ZOOM_STATIC    0
-#define vwpEFFECT_SPRING_NOWRAP  1
-#define vwpEFFECT_SPRING_WRAP    2
-#define vwpEFFECT_HSPRING_NOWRAP 3
-#define vwpEFFECT_HSPRING_WRAP   4
-#define vwpEFFECT_VSPRING_NOWRAP 5
-#define vwpEFFECT_VSPRING_WRAP   6
+#define vwpEFFECT_ZOOM_CENTER    0
+#define vwpEFFECT_ZOOM_STATIC    1
+#define vwpEFFECT_SPRING_NOWRAP  2
+#define vwpEFFECT_SPRING_WRAP    3
+#define vwpEFFECT_HSPRING_NOWRAP 4
+#define vwpEFFECT_HSPRING_WRAP   5
+#define vwpEFFECT_VSPRING_NOWRAP 6
+#define vwpEFFECT_VSPRING_WRAP   7
+#define vwpEFFECT_SLIDEIN_NOWRAP 8
+#define vwpEFFECT_SLIDEIN_WRAP   9
 
 #define vwpCMI_FULL    2021
 #define vwpCMI_WINDOW  2022
@@ -94,6 +96,7 @@ vwUByte vwpHotkeyMod[vwpTYPE_COUNT] = { 0, 0 } ;
 ATOM    vwpHotkeyAtm[vwpTYPE_COUNT] ;
 vwUByte vwpWinClose=1 ;
 int     vwpWinUpdateTime=1000 ;
+int     vwpEffectDuration=250 ;
 vwUByte vwpFullEffect=1 ;
 vwUByte vwpFullUpdate=0 ;
 vwUByte vwpFullUpdateCont=1 ;
@@ -108,6 +111,14 @@ vwUByte vwpFullSizeImages=0 ;
 vwUByte vwpKeepImages=1 ;
 
 
+/* The effects assumes the full screen has the coordinates 0,0 (top left) to desktopSizeX,desktopSizeY (which
+ * means this wont work for dual monitor systems with a -ve coordinate). The effect initialisation in 
+ * vwPreviewEffect() defines the distance each coordinate must move over the length of the effect, i.e.
+ * 0+vwpEffectRectNS.left defines the starting left coordinate and desktopSizeX-vwpEffectRectNS.right defines
+ * the right, the position of the moving desktop at any point in time is then easy to compute. 
+ * vwpEffectRectN is used to sort the current postion so that the update process can be simplified.
+ * Note: the effect time is always started at vwpEFFECT_STEP not 0, so you will never see the starting point.
+ */
 int     vwpEffectFlag=0 ;
 DWORD   vwpEffectStart ;
 RECT    vwpEffectRectN ;
@@ -353,7 +364,10 @@ vwpLoadConfigFile(void)
         vwpLoadConfigFileInt(fp,buff,ii,vwpFullUpdatePause) ;
         vwpLoadConfigFileInt(fp,buff,ii,vwpFullUpdateCont) ;
         vwpLoadConfigFileInt(fp,buff,ii,vwpFullUpdateTime1) ;
+        vwpLoadConfigFileInt(fp,buff,ii,vwpEffectDuration) ;
         fclose(fp) ;
+        if(ver == 1)
+            vwpTransitionEffect++ ;
     }
 }
 
@@ -366,7 +380,7 @@ vwpSaveConfigFile(void)
     fp = fopen(userAppPath,"w") ;
     if(fp != NULL)
     {
-        fprintf(fp,"ver# 1\n") ;
+        fprintf(fp,"ver# 2\n") ;
         fprintf(fp,"winHKMod# %d\n",vwpHotkeyMod[vwpTYPE_WINDOW]) ;
         fprintf(fp,"winHKKey# %d\n",vwpHotkeyKey[vwpTYPE_WINDOW]) ;
         fprintf(fp,"winCMenu# %d\n",vwpCtlMenu[vwpTYPE_WINDOW]) ;
@@ -388,6 +402,7 @@ vwpSaveConfigFile(void)
         fprintf(fp,"fulUdPas# %d\n",vwpFullUpdatePause) ;
         fprintf(fp,"fulUdCnt# %d\n",vwpFullUpdateCont) ;
         fprintf(fp,"fulUdTm1# %d\n",vwpFullUpdateTime1) ;
+        fprintf(fp,"genEfDur# %d\n",vwpEffectDuration) ;
         fclose(fp) ;
     }
 }
@@ -453,18 +468,22 @@ vwpSetupDialogFunc(HWND hwndDlg, UINT msg, WPARAM wParam, LPARAM lParam)
             SendDlgItemMessage(hwndDlg,IDC_FS_UDCONT,BM_SETCHECK,1,0) ;
         if(vwpTransitionEnable)
             SendDlgItemMessage(hwndDlg,IDC_TE_ENABLE,BM_SETCHECK,1,0) ;
-        SendDlgItemMessage(hwndDlg,IDC_TE_EFFECT,CB_ADDSTRING,0,(LONG) _T("Zoom on from static position"));
+        SendDlgItemMessage(hwndDlg,IDC_TE_EFFECT,CB_ADDSTRING,0,(LONG) _T("Zoom in from center"));
+        SendDlgItemMessage(hwndDlg,IDC_TE_EFFECT,CB_ADDSTRING,0,(LONG) _T("Zoom in from static position"));
         SendDlgItemMessage(hwndDlg,IDC_TE_EFFECT,CB_ADDSTRING,0,(LONG) _T("Spring on from side - no wrap"));
         SendDlgItemMessage(hwndDlg,IDC_TE_EFFECT,CB_ADDSTRING,0,(LONG) _T("Spring on from side - with wrap"));
         SendDlgItemMessage(hwndDlg,IDC_TE_EFFECT,CB_ADDSTRING,0,(LONG) _T("Horizontal spring - no wrap"));
         SendDlgItemMessage(hwndDlg,IDC_TE_EFFECT,CB_ADDSTRING,0,(LONG) _T("Horizontal spring - with wrap"));
         SendDlgItemMessage(hwndDlg,IDC_TE_EFFECT,CB_ADDSTRING,0,(LONG) _T("Vertical spring - no wrap"));
         SendDlgItemMessage(hwndDlg,IDC_TE_EFFECT,CB_ADDSTRING,0,(LONG) _T("Vertical spring - with wrap"));
+        SendDlgItemMessage(hwndDlg,IDC_TE_EFFECT,CB_ADDSTRING,0,(LONG) _T("Slide on from side - no wrap"));
+        SendDlgItemMessage(hwndDlg,IDC_TE_EFFECT,CB_ADDSTRING,0,(LONG) _T("Slide on from side - with wrap"));
         SendDlgItemMessage(hwndDlg,IDC_TE_EFFECT,CB_SETCURSEL,vwpTransitionEffect,0) ;
         if(vwpFullSizeImages)
             SendDlgItemMessage(hwndDlg,IDC_GS_FULLSIZE,BM_SETCHECK,1,0) ;
         if(vwpKeepImages)
             SendDlgItemMessage(hwndDlg,IDC_GS_KEEPIMGS,BM_SETCHECK,1,0) ;
+        SetDlgItemInt(hwndDlg,IDC_GS_EFFECT_DUR,vwpEffectDuration,TRUE) ;
         return 1 ;
         
     case WM_COMMAND:
@@ -528,6 +547,9 @@ vwpSetupDialogFunc(HWND hwndDlg, UINT msg, WPARAM wParam, LPARAM lParam)
             vwpTransitionEffect = (vwUByte) SendDlgItemMessage(hwndDlg,IDC_TE_EFFECT,CB_GETCURSEL,0,0) ;
             vwpFullSizeImages = (SendDlgItemMessage(hwndDlg,IDC_GS_FULLSIZE,BM_GETCHECK,0,0) == BST_CHECKED) ;
             vwpKeepImages = (SendDlgItemMessage(hwndDlg,IDC_GS_KEEPIMGS,BM_GETCHECK,0,0) == BST_CHECKED) ;
+            GetDlgItemText(hwndDlg,IDC_GS_EFFECT_DUR,buff,10);
+            if((ii = _ttoi(buff)) > 0)
+                vwpEffectDuration = ii ;
             vwpSaveConfigFile() ;
             vwPreviewInit() ;
             if(LOWORD(wParam) == ID_OK)
@@ -712,16 +734,16 @@ vwPreviewDraw(HDC hdc)
 static VOID CALLBACK
 vwPreviewEffect(HWND hwnd, UINT uMsg, UINT idEvent, DWORD dwTime)
 {
-    DWORD ct ;
+    int ct ;
     
 #if vwpDEBUG
     {
         SYSTEMTIME stime;
     
         GetLocalTime (&stime);
-        _ftprintf(logfp,_T("[%04d-%02d-%02d %02d:%02d:%02d:%03d] Zoom %x %d: %d %d\n"),
+        _ftprintf(logfp,_T("[%04d-%02d-%02d %02d:%02d:%02d:%03d] Effect %x %d: %d %d\n"),
                   stime.wYear, stime.wMonth, stime.wDay,
-                  stime.wHour, stime.wMinute, stime.wSecond, stime.wMilliseconds,vwpHnd,vwpEffectFlag,vwpEffectStart,dwTime-vwpEffectStart) ;
+                  stime.wHour, stime.wMinute, stime.wSecond, stime.wMilliseconds,vwpHnd,vwpEffectFlag,vwpEffectStart,(dwTime == 0) ? 0:dwTime-vwpEffectStart) ;
         fflush(logfp) ;
     }
 #endif
@@ -732,10 +754,7 @@ vwPreviewEffect(HWND hwnd, UINT uMsg, UINT idEvent, DWORD dwTime)
     }
     if(dwTime == 0)
     {
-        SetTimer(vwpHnd,0x29a,vwpEFFECT_STEP,vwPreviewEffect) ;
-        vwpEffectStart = GetTickCount() - vwpEFFECT_STEP ;
         vwpEffectFlag = vwpEFFECT_INPROG ;
-        ct = vwpEFFECT_STEP ;
         if(vwpType == vwpTYPE_TRANS)
         {
             int ii, jj, xx, yy ;
@@ -748,6 +767,11 @@ vwPreviewEffect(HWND hwnd, UINT uMsg, UINT idEvent, DWORD dwTime)
                 vwpEffectRectNS.right = desktopSizeX - xx ;
                 vwpEffectRectNS.top = yy ;
                 vwpEffectRectNS.bottom = desktopSizeY - yy ;
+            }
+            else if(vwpTransitionEffect == vwpEFFECT_ZOOM_CENTER)
+            {
+                vwpEffectRectNS.left = vwpEffectRectNS.right = desktopSizeX / 2 ;
+                vwpEffectRectNS.top = vwpEffectRectNS.bottom = desktopSizeY / 2 ;
             }
             else
             {
@@ -771,7 +795,7 @@ vwPreviewEffect(HWND hwnd, UINT uMsg, UINT idEvent, DWORD dwTime)
                     jj = vwDeskCur - 1 ;
                     xx = (ii % vwDesksX) - (jj % vwDesksX) ;
                     yy = (ii / vwDesksX) - (jj / vwDesksX) ;
-                    if(vwpTransitionEffect == vwpEFFECT_SPRING_WRAP)
+                    if((vwpTransitionEffect == vwpEFFECT_SPRING_WRAP) || (vwpTransitionEffect == vwpEFFECT_SLIDEIN_WRAP))
                     {
                         if(abs(xx) > (vwDesksX >> 1))
                             xx = 0 - xx ;
@@ -781,28 +805,46 @@ vwPreviewEffect(HWND hwnd, UINT uMsg, UINT idEvent, DWORD dwTime)
                 }
                 if((xx == 0) && (yy == 0))
                     xx = 1 ;
-                vwpEffectRectNS.left = 0 ;
-                vwpEffectRectNS.right = 0 ;
-                vwpEffectRectNS.top = 0 ;
-                vwpEffectRectNS.bottom = 0 ;
-                if(xx < 0)
-                    vwpEffectRectNS.right = desktopSizeX ;
-                else if(xx > 0)
-                    vwpEffectRectNS.left = desktopSizeX ;
-                if(yy < 0)
-                    vwpEffectRectNS.bottom = desktopSizeY ;
-                else if(yy > 0)
-                    vwpEffectRectNS.top = desktopSizeY ;
+                if((vwpTransitionEffect == vwpEFFECT_SLIDEIN_WRAP) || (vwpTransitionEffect == vwpEFFECT_SLIDEIN_NOWRAP))
+                {
+                    vwpEffectRectNS.left   = (xx > 0) ? desktopSizeX : (xx < 0) ? (0 - desktopSizeX) : 0 ;
+                    vwpEffectRectNS.right  = 0 - vwpEffectRectNS.left ;
+                    vwpEffectRectNS.top    = (yy > 0) ? desktopSizeY : (yy < 0) ? (0 - desktopSizeY) : 0 ;
+                    vwpEffectRectNS.bottom = 0 - vwpEffectRectNS.top ;
+                }
+                else
+                {
+                    vwpEffectRectNS.left = 0 ;
+                    vwpEffectRectNS.right = 0 ;
+                    vwpEffectRectNS.top = 0 ;
+                    vwpEffectRectNS.bottom = 0 ;
+                    if(xx < 0)
+                        vwpEffectRectNS.right = desktopSizeX ;
+                    else if(xx > 0)
+                        vwpEffectRectNS.left = desktopSizeX ;
+                    if(yy < 0)
+                        vwpEffectRectNS.bottom = desktopSizeY ;
+                    else if(yy > 0)
+                        vwpEffectRectNS.top = desktopSizeY ;
+                }
             }
+#if vwpDEBUG
+            _ftprintf(logfp,_T("Effect init %d %d %d %d\n"),vwpEffectRectNS.left,vwpEffectRectNS.top,vwpEffectRectNS.right,vwpEffectRectNS.bottom) ;
+            fflush(logfp) ;
+#endif
             vwpEffectFlag |= vwpEFFECT_FULLCUR ;
         }
         else
             SetForegroundWindow(desktopHWnd) ;
+        SetTimer(vwpHnd,0x29a,vwpEFFECT_STEP,vwPreviewEffect) ;
+        vwpEffectStart = GetTickCount() - vwpEFFECT_STEP ;
+        ct = vwpEFFECT_STEP ;
     }
     else
         ct = dwTime - vwpEffectStart ;
-    if(ct >= vwpEFFECT_TIME)
+    if(ct >= vwpEffectDuration)
     {
+        // effect duration exceeded
         KillTimer(vwpHnd,0x29a) ;
         if(vwpEffectFlag & vwpEFFECT_CLOSE)
         {
@@ -816,15 +858,17 @@ vwPreviewEffect(HWND hwnd, UINT uMsg, UINT idEvent, DWORD dwTime)
     }
     else if(vwpType == vwpTYPE_TRANS)
     {
-        int ii = vwpEFFECT_TIME - ct ;
-        vwpEffectRectN.left = (vwpEffectRectNS.left*ii) / vwpEFFECT_TIME ;
-        vwpEffectRectN.top = (vwpEffectRectNS.top*ii) / vwpEFFECT_TIME ;
-        vwpEffectRectN.right = desktopSizeX - ((vwpEffectRectNS.right*ii)/vwpEFFECT_TIME) ;
-        vwpEffectRectN.bottom = desktopSizeY - ((vwpEffectRectNS.bottom*ii)/vwpEFFECT_TIME) ;
+        // doing a transition effect
+        int ii = vwpEffectDuration - ct ;
+        vwpEffectRectN.left = (vwpEffectRectNS.left*ii) / vwpEffectDuration ;
+        vwpEffectRectN.top = (vwpEffectRectNS.top*ii) / vwpEffectDuration ;
+        vwpEffectRectN.right = desktopSizeX - ((vwpEffectRectNS.right*ii) / vwpEffectDuration) ;
+        vwpEffectRectN.bottom = desktopSizeY - ((vwpEffectRectNS.bottom*ii) / vwpEffectDuration) ;
         InvalidateRect(vwpHnd,&vwpEffectRectN,FALSE) ;
     }
     else
     {
+        // doing a selection effect after selection in fullscreen preview
         int ii, bx, by, px, py, bsx, bsy ;
         
         ii = vwDeskNxt - 1 ;
@@ -836,17 +880,24 @@ vwPreviewEffect(HWND hwnd, UINT uMsg, UINT idEvent, DWORD dwTime)
         px = ((ii - (py * bx)) * bsx) ;
         py = (py * bsy) ;
         
-        ii = vwpEFFECT_TIME - ct ;
-        vwpEffectRectN.left = (px*ii) / vwpEFFECT_TIME ;
-        vwpEffectRectN.top = (py*ii) / vwpEFFECT_TIME ;
-        vwpEffectRectN.right = desktopSizeX - (((desktopSizeX-(px+bsx))*ii)/vwpEFFECT_TIME) ;
-        vwpEffectRectN.bottom = desktopSizeY - (((desktopSizeY-(py+bsy))*ii)/vwpEFFECT_TIME) ;
+        ii = vwpEffectDuration - ct ;
+        vwpEffectRectN.left = (px*ii) / vwpEffectDuration ;
+        vwpEffectRectN.top = (py*ii) / vwpEffectDuration ;
+        vwpEffectRectN.right = desktopSizeX - (((desktopSizeX-(px+bsx))*ii) / vwpEffectDuration) ;
+        vwpEffectRectN.bottom = desktopSizeY - (((desktopSizeY-(py+bsy))*ii) / vwpEffectDuration) ;
         InvalidateRect(vwpHnd,&vwpEffectRectN,FALSE) ;
     }
     UpdateWindow(vwpHnd) ;
 #if vwpDEBUG
-    _ftprintf(logfp,_T("Zoom end: %d %x\n"),vwpEffectStart,vwpHnd) ;
-    fflush(logfp) ;
+    {
+        SYSTEMTIME stime;
+    
+        GetLocalTime (&stime);
+        _ftprintf(logfp,_T("[%04d-%02d-%02d %02d:%02d:%02d:%03d] Effect end %d %x\n"),
+                  stime.wYear, stime.wMonth, stime.wDay,
+                  stime.wHour, stime.wMinute, stime.wSecond, stime.wMilliseconds,vwpEffectStart,vwpHnd) ;
+        fflush(logfp) ;
+    }
 #endif
 }
 
@@ -993,7 +1044,7 @@ vwPreviewDlgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam )
                 ox = 0 ;
                 oy = 0 ;
                 if(!vwpWinClose)
-                   SetTimer(vwpHnd,0x29a,vwpWinUpdateTime,vwPreviewUpdate) ;
+                    SetTimer(vwpHnd,0x29a,vwpWinUpdateTime,vwPreviewUpdate) ;
             }
             else
             {

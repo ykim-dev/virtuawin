@@ -21,4 +21,5 @@
 #define	IDC_TE_EFFECT     	1015
 #define	IDC_GS_FULLSIZE     	1016
 #define	IDC_GS_KEEPIMGS     	1017
+#define	IDC_GS_EFFECT_DUR     	1018
 
