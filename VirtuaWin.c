@@ -193,9 +193,13 @@ int     taskbarButtonListSize = 0 ;
 
 #define vwTASKBAR_BC_NONE       0    // None - no dynamic update
 #define vwTASKBAR_BC_TABCONTROL 1    // Win 2000
-#define vwTASKBAR_BC_TOOLBAR    2    // Win XP
+#define vwTASKBAR_BC_TOOLBAR    2    // Win XP & Vista
+#define vwTASKBAR_BC_WIN7       3    // Win7
 // Undocumented flag for 9x/ME
 #define VA_SHARED 0x8000000
+// Undocumented offsets for Win7
+#define DPA_DELTA_64 0xE0
+#define DPA_DELTA_32 0x90
 
 HANDLE mouseThread;                          // Handle to the mouse thread
 vwUByte mouseEnabled = 1 ;                   // Status of the mouse thread, always running at startup 
@@ -889,8 +893,11 @@ vwTaskbarHandleGet(void)
                 taskbarBCHWnd = hwndBar ;
                 taskbarBCType = vwTASKBAR_BC_TOOLBAR;
             }
-            else if(FindWindowEx(taskHWnd,0,_T("MSTaskListWClass"),0) != NULL)
-                MessageBox(hWnd,_T("Dynamic taskbar is not supported on Win7 - dynamic taskbar order disabled."),vwVIRTUAWIN_NAME _T(" Error"),0) ;
+            else if((hwndBar = FindWindowEx(taskHWnd,0,_T("MSTaskListWClass"),0)) != NULL)
+            {
+                taskbarBCHWnd = hwndBar ;
+                taskbarBCType = vwTASKBAR_BC_WIN7;
+            }
             else
                 MessageBox(hWnd,_T("Failed to identify taskbar button container - dynamic taskbar order disabled."),vwVIRTUAWIN_NAME _T(" Error"),0) ;
             if(taskbarBCType)
@@ -913,15 +920,18 @@ vwTaskbarHandleGet(void)
                 if((GetWindowThreadProcessId(taskbarBCHWnd,&procId) != 0) && (procId != 0) &&
                    ((taskbarProcHdl = OpenProcess(PROCESS_VM_OPERATION | PROCESS_VM_READ | PROCESS_VM_WRITE, FALSE, procId)) != NULL))
                 {
-                    if(osVersion <= OSVERSION_9X)
-                        taskbarShrdMem = VirtualAlloc(NULL,sizeof(TBBUTTON) + sizeof(TCITEM),MEM_COMMIT | VA_SHARED, PAGE_READWRITE) ;
-                    else
-                        taskbarShrdMem = VirtualAllocEx(taskbarProcHdl,NULL,sizeof(TBBUTTON) + sizeof(TCITEM),MEM_COMMIT,PAGE_READWRITE) ;
-                }
-                if(taskbarShrdMem == NULL)
-                {
-                    MessageBox(hWnd,_T("Failed to create taskbar button transfer memory - dynamic taskbar order disabled."),vwVIRTUAWIN_NAME _T(" Error"),0) ;
-                    taskbarBCType = vwTASKBAR_BC_NONE ;
+                    if(taskbarBCType != vwTASKBAR_BC_WIN7)
+                    {
+                        if(osVersion <= OSVERSION_9X)
+                            taskbarShrdMem = VirtualAlloc(NULL,sizeof(TBBUTTON) + sizeof(TCITEM),MEM_COMMIT | VA_SHARED, PAGE_READWRITE) ;
+                        else
+                            taskbarShrdMem = VirtualAllocEx(taskbarProcHdl,NULL,sizeof(TBBUTTON) + sizeof(TCITEM),MEM_COMMIT,PAGE_READWRITE) ;
+                        if(taskbarShrdMem == NULL)
+                        {
+                            MessageBox(hWnd,_T("Failed to create taskbar button transfer memory - dynamic taskbar order disabled."),vwVIRTUAWIN_NAME _T(" Error"),0) ;
+                            taskbarBCType = vwTASKBAR_BC_NONE ;
+                        }
+                    }
                 }
             }
         }
@@ -2335,18 +2345,84 @@ shutDown(void)
     vwWindowShowAll((vwUShort) (taskButtonAct|vwWINSH_FLAGS_TRYHARD)) ;
     // Delete loaded icon resource
     DeleteObject(checkIcon);
+    if(taskbarShrdMem)
+    {
+        if(osVersion < OSVERSION_NT)
+            VirtualFree(taskbarShrdMem,0,MEM_RELEASE) ;
+        else
+            VirtualFreeEx(taskbarProcHdl,taskbarShrdMem,0,MEM_RELEASE);
+        taskbarShrdMem = NULL;
+    }
+    if(taskbarProcHdl == NULL)
+    {
+        CloseHandle(taskbarProcHdl);
+        taskbarProcHdl = NULL;
+    }
     PostQuitMessage(0);
 }
+
+#define vwProcessMemoryRead(hProcess,lpBaseAddress,lpBuffer,nSize,rSize) \
+((ReadProcessMemory(hProcess,lpBaseAddress,lpBuffer,nSize,&rSize) != 0) && (rSize == nSize))
 
 static int
 vwTaskbarButtonListUpdate(void)
 {
-    int ii, tbCount=0, itemCount ;
+    int ii, jj, tbCount=0, itemCount, bgsCount, psz ;
+    vwUByte *dp1, *dp2, *bgs;
+    size_t rSize;
     TCITEM tcItem;
     TBBUTTON tbItem;
     HWND tbHWnd;
     
-    if(taskbarBCType == vwTASKBAR_BC_TABCONTROL)
+    if(taskbarBCType == vwTASKBAR_BC_WIN7)
+    {
+        /* Win7: Msg result -> the dpa -> button groups -> button group -> buttons */
+	if((dp1 = (vwUByte *) GetWindowLong(taskbarBCHWnd,DWL_MSGRESULT)) == NULL)
+        {
+            vwLogBasic((_T("Win7BC Err0: %d\n"),GetLastError())) ;
+            return 0 ;
+        }
+        if(osVersion & OSVERSION_64BIT)
+        {
+            dp1 += DPA_DELTA_64 ;
+            psz = 8 ;
+        }
+        else
+        {
+            dp1 += DPA_DELTA_32 ;
+            psz = 4 ;
+        }
+        if(!vwProcessMemoryRead(taskbarProcHdl,dp1,&dp2,sizeof(void *),rSize) || (dp2 == NULL) || // the dpa
+           !vwProcessMemoryRead(taskbarProcHdl,dp2,&bgsCount, sizeof(int),rSize) || // button groups count and pointer
+           !vwProcessMemoryRead(taskbarProcHdl,dp2+psz,&bgs, sizeof(void *),rSize))
+        {
+            vwLogBasic((_T("Win7BC Err1: %p %p -> %d %p\n"),dp1,dp2,bgsCount,bgs)) ;
+            return 0 ;
+        }
+        vwLogBasic((_T("Win7BC1: %p %p -> %d %p\n"),dp1,dp2,bgsCount,bgs)) ;
+        itemCount = 0 ;
+        for(ii=0; ii<bgsCount; ii++)
+        {
+            if(!vwProcessMemoryRead(taskbarProcHdl,bgs+(ii*psz),&dp1,sizeof(void *),rSize) || // button group
+               !vwProcessMemoryRead(taskbarProcHdl,dp1+(6*psz),&jj, sizeof(int),rSize)) // button group type
+            {
+                vwLogBasic((_T("Win7BC Err2: %d %p -> %p %d\n"),ii,bgs,dp1,jj)) ;
+                return 0 ;
+            }
+            else if((jj == 1) || (jj == 3))
+            {
+                if(!vwProcessMemoryRead(taskbarProcHdl,dp1+(5*psz),&dp2,sizeof(void *),rSize) ||
+                   !vwProcessMemoryRead(taskbarProcHdl,dp2,&jj,sizeof(int),rSize)) // button count
+                {
+                    vwLogBasic((_T("Win7BC Err3: %d %p -> %p %d\n"),ii,bgs,dp1,jj)) ;
+                    return 0 ;
+                }
+                itemCount += jj ;
+                vwLogBasic((_T("Win7BC2: %d %p -> %p %d\n"),ii,dp1,dp2,jj)) ;
+            }
+        }
+    }
+    else if(taskbarBCType == vwTASKBAR_BC_TABCONTROL)
         itemCount = TabCtrl_GetItemCount(taskbarBCHWnd) ;
     else
         itemCount = SendMessage(taskbarBCHWnd,TB_BUTTONCOUNT,0,0) ;
@@ -2364,7 +2440,39 @@ vwTaskbarButtonListUpdate(void)
             return 0 ;
         }
     }
-    if(taskbarBCType == vwTASKBAR_BC_TABCONTROL)
+    if(taskbarBCType == vwTASKBAR_BC_WIN7)
+    {
+        for(ii=0; ii<bgsCount; ii++)
+        {
+            if(!vwProcessMemoryRead(taskbarProcHdl,bgs+(ii*psz),&dp1,sizeof(void *),rSize) || // button group
+               !vwProcessMemoryRead(taskbarProcHdl,dp1+(6*psz),&jj, sizeof(int),rSize)) // button group type
+            {
+                vwLogBasic((_T("Win7BC Err4: %d %p -> %p %d\n"),ii,bgs,dp1,jj)) ;
+                return 0 ;
+            }
+            else if((jj == 1) || (jj == 3))
+            {
+                if(!vwProcessMemoryRead(taskbarProcHdl,dp1+(5*psz),&dp2,sizeof(void *),rSize) || 
+                   !vwProcessMemoryRead(taskbarProcHdl,dp2,&itemCount,sizeof(int),rSize) ||  // button count
+                   !vwProcessMemoryRead(taskbarProcHdl,dp2+(1*psz),&dp1,sizeof(void *),rSize)) // buttons
+                {
+                    vwLogBasic((_T("Win7BC Err5: %d %p -> %p -> %d %p\n"),ii,bgs,dp2,itemCount,dp1)) ;
+                    return 0 ;
+                }
+                for(jj=0; jj<itemCount; jj++)
+                {
+                    if(vwProcessMemoryRead(taskbarProcHdl,dp1+(jj*psz),&dp2,sizeof(void *),rSize) && 
+                       vwProcessMemoryRead(taskbarProcHdl,dp2+(3*psz),&dp2,sizeof(void *),rSize) &&
+                       vwProcessMemoryRead(taskbarProcHdl,dp2+psz,&tbHWnd,sizeof(HWND),rSize))
+                    {
+                       taskbarButtonList[tbCount++] = tbHWnd ;
+                       vwLogBasic((_T("Win7BC3: %d %d -> %p\n"),ii,jj,tbHWnd)) ;
+                    }
+                }
+            }
+        }
+    }
+    else if(taskbarBCType == vwTASKBAR_BC_TABCONTROL)
     {
         for(ii = 0 ; ii < itemCount ; ++ii)
         {
