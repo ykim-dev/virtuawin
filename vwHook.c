@@ -23,6 +23,7 @@
 #define vwHOOK_TEST 0
 
 #include <windows.h>
+#include <stdlib.h>
 #include <stdio.h>
 #include <time.h>
 #include "Messages.h"
