@@ -49,6 +49,9 @@ enum {
 #endif
 
 /* define some constants that are often missing in early compilers */
+#ifndef ICON_SMALL2
+#define ICON_SMALL2 2
+#endif
 #ifndef WS_EX_NOACTIVATE
 #define WS_EX_NOACTIVATE 0x8000000
 #endif
@@ -3206,7 +3209,8 @@ winListCreateItemList(int flags, vwListItem **items,int *numitems)
             ww = NULL ;
         if(ww == NULL)
         {
-            HICON hSmallIcon ;
+            HICON hIcon ;
+            DWORD dIcon ;
             
             if(nDesks <= 9)
                 title[0] = win->desk + '0' ;
@@ -3266,19 +3270,23 @@ winListCreateItemList(int flags, vwListItem **items,int *numitems)
             items[x] = item ;
             i++ ;
             
-            if((hSmallIcon = (HICON)GetClassLong(win->handle, GCL_HICON)) == NULL)
+            /* First try to get the current icon from the app as the app can dynamically change the icon.
+             * Try to get a small icon first but if that fails (but not with timeout) try to get a big 
+             * icon as some apps only have big icons (e.g. Opera). If that fails and we're on XP+ get the
+               system icon for the window using ICON_SMALL2 */
+            hIcon = NULL ;
+            if(SendMessageTimeout(win->handle,WM_GETICON,ICON_SMALL,0L,SMTO_ABORTIFHUNG|SMTO_BLOCK,100,&dIcon))
             {
-                // Fallback plan, maybe this works better for this type of application
-                // Otherwise there is not much we can do (could try looking for an owned window)
-                // Note: some apps (e.g. Opera) only have big icons
-                DWORD theIcon;
-                if((SendMessageTimeout(win->handle, WM_GETICON, ICON_SMALL, 0L, 
-                                       SMTO_ABORTIFHUNG | SMTO_BLOCK, 100, &theIcon) && (theIcon != 0)) ||
-                   (SendMessageTimeout(win->handle, WM_GETICON, ICON_BIG, 0L, 
-                                       SMTO_ABORTIFHUNG | SMTO_BLOCK, 100, &theIcon) && (theIcon != 0)))
-                    hSmallIcon = (HICON) theIcon ;
+               /* didn't time out */
+                if((dIcon != 0) ||
+                   (SendMessageTimeout(win->handle,WM_GETICON,ICON_BIG,0L,SMTO_ABORTIFHUNG|SMTO_BLOCK,100,&dIcon) && (dIcon != 0)) ||
+                   ((osVersion >= OSVERSION_XP) && SendMessageTimeout(win->handle,WM_GETICON,ICON_SMALL2,0L,SMTO_ABORTIFHUNG|SMTO_BLOCK,100,&dIcon) && (dIcon != 0)))
+                    hIcon = (HICON) dIcon ;
             }
-            item->icon = hSmallIcon ;
+            if(hIcon == NULL)
+                /* Failed to get an icon from the app itself, try to get the registered class icon */
+                hIcon = (HICON) GetClassLong(win->handle, GCL_HICON) ;
+            item->icon = hIcon ;
             if(((item->desk = win->desk) != currentDesk) && vwWindowIsNotSticky(win))
                 listContent = (winListContent & ~vwWINLIST_TITLELN) ;
             item->sticky = vwWindowIsSticky(win);
