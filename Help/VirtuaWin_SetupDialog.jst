@@ -268,6 +268,20 @@ be bound to a hotkey:
 .   &[a SD_UI_TDST]**//UI: Toggle display of system tray icon//**: Toggles the display of the
     VirtuaWin icon in the taskbar system tray.
 
+.   &[a SD_UI_BK]**//UI: Boss key//**: Hides sensitive application windows by moving immediately to 
+    desktop 1 and then disables & hides VirtuaWin itself. If an &[l #SD_UI_UBK]Unboss key&[/l] is defined then
+    only the //unboss key// can be used to restore access to VirtuaWin and the other desktops, if
+    no //unboss key// is defined then the //boss key// acts as a toggle, i.e. press once to active
+    boss key mode and press again to restore VirtuaWin.  
+
+    **Note:** Boss key takes the highest priority, so even if VirtuaWin is
+    currently disabled (see &[l #SD_UI_UBK]Toggle enable state&[/l]) pressing
+    this key will still make VirtuaWin change to desktop 1 and hide. It
+    cannot however disable modules such as the numerous pagers which run
+    independently.
+
+.   &[a SD_UI_UBK]**//UI: Boss key//**: Deactivates Boss key mode - see &[l #SD_UI_BK]Boss key&[/l] above.
+
 .   &[a SD_UI_EV]**//UI: Exit VirtuaWin//**: Exits VirtuaWin.
 
 ==== Hotkeys

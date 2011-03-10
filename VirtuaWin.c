@@ -68,7 +68,11 @@ enum {
 #define SPI_SETFOREGROUNDLOCKTIMEOUT 0x2001
 #endif
 
-#define calculateDesk(x,y) (((y) * nDesksX) - (nDesksX - (x)))
+#define vwCalculateDesk(x,y) (((y) * nDesksX) - (nDesksX - (x)))
+
+#define vwIsEnabled()        (vwDisabled == 0)
+#define vwIsDisabled()       (vwDisabled != 0)
+#define vwIsBossLocked()     ((vwDisabled & 0x02) != 0)
 
 #define vwWindowBaseGetNext(win)      ((win)->next)
 #define vwWindowGetNext(win)          ((vwWindow *) (win)->next)
@@ -107,7 +111,7 @@ HWND hWnd;                                   // handle to VirtuaWin
 DWORD vwThread;                              // ID of main VW thread
 HANDLE hMutex;
 FILE *vwLogFile ;
-vwUByte vwEnabled=1;	                     // if VirtuaWin enabled or not
+vwUByte vwDisabled=0;	                     // if VirtuaWin enabled or not, see vwIsEnabled macro above
 
 int desktopWorkArea[2][4] ;
 
@@ -136,7 +140,7 @@ int dialogPos[2];
 vwUByte dialogOpen;         
 vwUByte initialized;
 
-HWND ichangeHWnd = NULL;        // handle to module hangling desktop changes
+HWND ichangeHWnd = NULL;        // handle to module handling desktop changes
 static int ichangeDesk=0 ;
 static WPARAM ichangeWParam ;
 
@@ -601,7 +605,7 @@ vwIconSet(int deskNumber, int hungCount)
         ll = 0 ;
         if(hungCount)
             ll = _stprintf(nIconD.szTip,_T("%d window%s not responding\n"),hungCount,(hungCount==1) ? _T(""):_T("s")) ;
-        if(!vwEnabled)
+        if(vwIsDisabled())
             _tcscpy(nIconD.szTip,vwVIRTUAWIN_NAME _T(" - Disabled")); /* Tooltip */
         else
         {
@@ -749,7 +753,7 @@ vwHookSetup(void)
 }
 
 /************************************************
- * Registering all hotkeys
+ * Registering hotkeys - don't complain if registering toggle enable or boss keys as these are not always unregistered 
  */
 void
 vwHotkeyRegister(int warnAll)
@@ -770,7 +774,8 @@ vwHotkeyRegister(int warnAll)
             if(hotkeyList[ii].atom == 0)
                 MessageBox(hWnd,_T("Failed to create global atom"),vwVIRTUAWIN_NAME _T(" Error"), MB_ICONWARNING);
             else if((RegisterHotKey(hWnd,hotkeyList[ii].atom,(hotkeyList[ii].modifier & vwHOTKEY_MOD_MASK),hotkeyList[ii].key) == FALSE) &&
-                    (warnAll || (hotkeyList[ii].command != vwCMD_UI_ENABLESTATE)))
+                    (warnAll || ((hotkeyList[ii].command != vwCMD_UI_ENABLESTATE) &&
+                                 (hotkeyList[ii].command != vwCMD_UI_BOSS_KEY) && (hotkeyList[ii].command != vwCMD_UI_UNBOSS_KEY))))
             {
                 _stprintf(buff,_T("Failed to register hotkey %d, check hotkeys."),ii+1) ;
                 MessageBox(hWnd,buff,vwVIRTUAWIN_NAME _T(" Error"), MB_ICONWARNING);
@@ -779,8 +784,8 @@ vwHotkeyRegister(int warnAll)
     }
 }
 
-/************************************************
- * Unregistering all hotkeys
+/***************************************************************************************************
+ * Unregistering hotkeys - dont unregister the toggle enable state or boss keys unless exiting
  */
 void
 vwHotkeyUnregister(int unregAll)
@@ -791,14 +796,14 @@ vwHotkeyUnregister(int unregAll)
         ii = hotkeyRegistered ;
         hotkeyRegistered = 0 ;
         while(--ii >= 0)
-            if((hotkeyList[ii].atom) && (unregAll || (hotkeyList[ii].command != vwCMD_UI_ENABLESTATE)))
+            if((hotkeyList[ii].atom) && (unregAll || ((hotkeyList[ii].command != vwCMD_UI_ENABLESTATE) && 
+                                                      (hotkeyList[ii].command != vwCMD_UI_BOSS_KEY) && (hotkeyList[ii].command != vwCMD_UI_UNBOSS_KEY))))
                 UnregisterHotKey(hWnd,hotkeyList[ii].atom) ;
     }
 }
 
-/************************************************
- * Get screen width and height and store values in
- * global variables
+/***************************************************************************************************
+ * Get screen width and height and store values in global variables
  */
 static void
 getScreenSize(void)
@@ -3071,7 +3076,7 @@ stepRight(void)
             return 0;
         deskX = 1;
     }
-    return changeDesk(calculateDesk(deskX,deskY),MOD_STEPRIGHT);
+    return changeDesk(vwCalculateDesk(deskX,deskY),MOD_STEPRIGHT);
 }
 
 /*************************************************
@@ -3093,7 +3098,7 @@ stepLeft(void)
             return 0;
         deskX = nDesksX;
     }
-    return changeDesk(calculateDesk(deskX,deskY),MOD_STEPLEFT);
+    return changeDesk(vwCalculateDesk(deskX,deskY),MOD_STEPLEFT);
 }
 
 /*************************************************
@@ -3115,7 +3120,7 @@ stepDown(void)
             return 0;
         deskY = 1;
     }
-    return changeDesk(calculateDesk(deskX,deskY),MOD_STEPDOWN);
+    return changeDesk(vwCalculateDesk(deskX,deskY),MOD_STEPDOWN);
 }
 
 /*************************************************
@@ -3137,7 +3142,7 @@ stepUp(void)
             return 0;
         deskY = nDesksY;
     }
-    return changeDesk(calculateDesk(deskX,deskY),MOD_STEPUP);
+    return changeDesk(vwCalculateDesk(deskX,deskY),MOD_STEPUP);
 }
 
 /*************************************************
@@ -3664,13 +3669,46 @@ vwWindowShowHide(vwWindow* aWindow, vwUInt flags)
 }
 
 /************************************************
- * Toggles the disabled state of VirtuaWin
+ * Action depends on action:
+ *   0 - Toggles the disabled state of VirtuaWin,  
+ *   1 - Boss lock (or toggle) VirtuaWin  
+ *   2 - Boss unlock VirtuaWin  
  */
 static int
-vwToggleEnabled(void)
+vwToggleEnabled(int action)
 {
-    vwEnabled ^= 1;
-    if(vwEnabled)
+    vwUByte oldState = vwDisabled ;
+    if(action == 0)
+    {
+        /* The boss lock take higher priority */
+        if(vwIsBossLocked())
+            return 0 ;
+        vwDisabled ^= 1 ;
+    }
+    else if(action == 1)
+    {
+        if(vwIsBossLocked())
+        {
+            /* need to look for an UNBOSS key to work out whether to toggle boss state or do nothing */
+            int ii = hotkeyCount ;
+            while(--ii >= 0)
+                if((hotkeyList[ii].atom) && (hotkeyList[ii].command == vwCMD_UI_UNBOSS_KEY))
+                    /* there is an UNBOSS hotkey so do nothing */
+                    return 0 ;
+        }
+        vwDisabled ^= 2 ;
+    }
+    else if(!vwIsBossLocked())
+        return 1 ;
+    else
+        vwDisabled ^= 2 ;
+        
+    if((vwDisabled & 6) == 4)
+    {
+        displayTaskbarIcon = 1 ;
+        vwDisabled ^= 4 ;
+    }
+    if(vwIsEnabled())
     {   /* Enable VirtuaWin */
         vwHotkeyRegister(0);
         enableMouse(mouseEnable);
@@ -3680,11 +3718,24 @@ vwToggleEnabled(void)
     else
     {   /* Disable VirtuaWin */
         KillTimer(hWnd, 0x29a);
+        if(vwIsBossLocked() && displayTaskbarIcon)
+        {
+            displayTaskbarIcon = 0 ;
+            vwDisabled |= 4 ;
+        }
         vwIconSet(0,0);
         enableMouse(FALSE);
         vwHotkeyUnregister(0);
+        if(vwIsBossLocked() && (currentDesk != 1))
+        {
+            /* Change to Desktop 1, remove any change handler to get the job done asap */ 
+            HWND ichangeHWndTmp = ichangeHWnd ;
+            ichangeHWnd = NULL ;
+            changeDesk(1,0) ;
+            ichangeHWnd = ichangeHWndTmp ;
+        }
     }
-    return vwEnabled ;
+    return vwIsEnabled() ;
 }
 
 /************************************************
@@ -3718,33 +3769,33 @@ assignWindow(HWND theWin, int theDesk, vwUByte follow, vwUByte force, vwUByte se
         if(currentDesk > nDesks)
             theDesk = 0 - nDesks ;
         else if(currentDeskX <= 1)
-            theDesk = 0 - calculateDesk(nDesksX,currentDeskY) ;
+            theDesk = 0 - vwCalculateDesk(nDesksX,currentDeskY) ;
         else
-            theDesk = calculateDesk(currentDeskX-1,currentDeskY) ;
+            theDesk = vwCalculateDesk(currentDeskX-1,currentDeskY) ;
         break;
     case VW_STEPRIGHT:
         if(currentDesk > nDesks)
             theDesk = 0 - 1 ;
         else if(currentDeskX >= nDesksX)
-            theDesk = 0 - calculateDesk(1,currentDeskY) ;
+            theDesk = 0 - vwCalculateDesk(1,currentDeskY) ;
         else
-            theDesk = calculateDesk(currentDeskX+1,currentDeskY) ;
+            theDesk = vwCalculateDesk(currentDeskX+1,currentDeskY) ;
         break;
     case VW_STEPUP:
         if(currentDesk > nDesks)
             theDesk = 0 - nDesks ;
         else if(currentDeskY <= 1)
-            theDesk = 0 - calculateDesk(currentDeskX,nDesksY) ;
+            theDesk = 0 - vwCalculateDesk(currentDeskX,nDesksY) ;
         else
-            theDesk = calculateDesk(currentDeskX,currentDeskY-1) ;
+            theDesk = vwCalculateDesk(currentDeskX,currentDeskY-1) ;
         break;
     case VW_STEPDOWN:
         if(currentDesk > nDesks)
             theDesk = 0 - 1 ;
         else if(currentDeskY >= nDesksY)
-            theDesk = 0 - calculateDesk(currentDeskX,1) ;
+            theDesk = 0 - vwCalculateDesk(currentDeskX,1) ;
         else
-            theDesk = calculateDesk(currentDeskX,currentDeskY+1) ;
+            theDesk = vwCalculateDesk(currentDeskX,currentDeskY+1) ;
         break;
     }
     if(theDesk < 0)
@@ -4635,7 +4686,7 @@ popupControlMenu(HWND aHWnd, int cmFlags)
     if((hpopup = CreatePopupMenu()) == NULL)
         return FALSE ;
     
-    if(vwEnabled)
+    if(vwIsEnabled())
     {
         MENUITEMINFO minfo ;
         
@@ -4662,12 +4713,12 @@ popupControlMenu(HWND aHWnd, int cmFlags)
     insertMenuItems(hpopup,500,&mi,&mid) ;
     AppendMenu(hpopup,MF_STRING,ID_HELP,_T("&Help"));
     insertMenuItems(hpopup,600,&mi,&mid) ;
-    AppendMenu(hpopup,MF_STRING,ID_DISABLE,(vwEnabled) ? _T("&Disable") : _T("&Enable"));
+    AppendMenu(hpopup,MF_STRING,ID_DISABLE,(vwIsEnabled()) ? _T("&Disable") : _T("&Enable"));
     insertMenuItems(hpopup,1000,&mi,&mid) ;
     AppendMenu(hpopup,MF_SEPARATOR,0,NULL) ;
     insertMenuItems(hpopup,1100,&mi,&mid) ;
     AppendMenu(hpopup,MF_STRING,ID_EXIT,_T("E&xit VirtuaWin"));
-    if(vwEnabled)
+    if(vwIsEnabled())
     {
         insertMenuItems(hpopup,2000,&mi,&mid) ;
         AppendMenu(hpopup,MF_SEPARATOR,0,NULL) ;
@@ -4747,7 +4798,7 @@ popupControlMenu(HWND aHWnd, int cmFlags)
         showHelp(aHWnd,NULL) ;
         break;
     case ID_DISABLE:	// Disable VirtuaWin
-        vwToggleEnabled() ;
+        vwToggleEnabled(0) ;
         break;
     case ID_EXIT:		// exit application
         DestroyWindow(aHWnd);
@@ -4761,7 +4812,7 @@ popupControlMenu(HWND aHWnd, int cmFlags)
     default:
         if((ii > ID_DESK_N) && (ii <= (ID_DESK_N + nDesks)))
             gotoDesk(ii - ID_DESK_N,FALSE) ;
-        else if(vwEnabled)
+        else if(vwIsEnabled())
         {
             mi = ctlMenuItemList ;
             while((mi != NULL) && (mi->id != ii))
@@ -4869,7 +4920,7 @@ vwHotkeyExecute(vwUByte command, vwUByte desk, vwUByte modifier)
             return assignWindow(theWin,VW_STEPUP,(vwUByte) (command & 0x01),TRUE,FALSE);
         return assignWindow(theWin,VW_STEPDOWN,(vwUByte) (command & 0x01),TRUE,FALSE);
     case vwCMD_UI_ENABLESTATE:
-        return vwToggleEnabled() ;
+        return vwToggleEnabled(0) ;
     case vwCMD_NAV_MOVE_LAST:
         {
             int nld ; 
@@ -4884,6 +4935,10 @@ vwHotkeyExecute(vwUByte command, vwUByte desk, vwUByte modifier)
         taskbarIconShown ^= 0x02 ;
         vwIconSet(currentDesk,0) ;
         return (taskbarIconShown & 0x01) ;
+    case vwCMD_UI_BOSS_KEY:
+        return vwToggleEnabled(1) ;
+    case vwCMD_UI_UNBOSS_KEY:
+        return vwToggleEnabled(2) ;
     case vwCMD_UI_EXIT:
         shutDown() ;
         break ;
@@ -4910,7 +4965,7 @@ wndProc(HWND aHWnd, UINT message, WPARAM wParam, LPARAM lParam)
     {
     case VW_MOUSEWARP:
         // Is virtuawin enabled
-        if(vwEnabled)
+        if(vwIsEnabled())
         {
             POINT pt;
             GetCursorPos(&pt);
@@ -5006,7 +5061,7 @@ wndProc(HWND aHWnd, UINT message, WPARAM wParam, LPARAM lParam)
         }
         // Plugin messages
     case VW_CHANGEDESK: 
-        if(!vwEnabled)
+        if(vwIsDisabled())
             return FALSE ;
         switch (wParam)
         {
@@ -5032,7 +5087,7 @@ wndProc(HWND aHWnd, UINT message, WPARAM wParam, LPARAM lParam)
         return TRUE;
         
     case VW_SETUP:
-        if(!vwEnabled)
+        if(vwIsDisabled())
             return FALSE ;
         showSetup();
         return TRUE;
@@ -5065,19 +5120,19 @@ wndProc(HWND aHWnd, UINT message, WPARAM wParam, LPARAM lParam)
         return currentDesk;
         
     case VW_ASSIGNWIN:
-        if(!vwEnabled)
+        if(vwIsDisabled())
             return FALSE ;
         if(lParam < 0)
             return assignWindow((HWND) wParam,0-lParam,TRUE,FALSE,FALSE);
         return assignWindow((HWND) wParam,(vwUByte) lParam,FALSE,FALSE,FALSE);
         
     case VW_ACCESSWIN:
-        if(!vwEnabled)
+        if(vwIsDisabled())
             return FALSE ;
         return accessWindow((HWND)wParam,(int) lParam,FALSE);
         
     case VW_SETSTICKY:
-        if(!vwEnabled)
+        if(vwIsDisabled())
             return FALSE ;
         return windowSetSticky((HWND)wParam,(int) lParam);
         
@@ -5205,9 +5260,9 @@ wndProc(HWND aHWnd, UINT message, WPARAM wParam, LPARAM lParam)
             return 0 ;
         
     case VW_ENABLE_STATE:
-        lParam = vwEnabled ;
-        if((wParam == 1) || ((wParam == 2) && vwEnabled) || ((wParam == 3) && !vwEnabled))
-            vwToggleEnabled() ;
+        lParam = vwIsEnabled() ;
+        if((wParam == 1) || ((wParam == 2) && vwIsEnabled()) || ((wParam == 3) && vwIsDisabled()))
+            vwToggleEnabled(0) ;
         return lParam ;
         
     case VW_DESKNAME:
@@ -5340,17 +5395,17 @@ wndProc(HWND aHWnd, UINT message, WPARAM wParam, LPARAM lParam)
         switch (lParam)
         {
         case WM_LBUTTONDOWN:               // Show the window list
-            if(vwEnabled)
+            if(vwIsEnabled())
                 popupWinListMenu(aHWnd,(HIWORD(GetKeyState(VK_CONTROL))) ? 2:(HIWORD(GetKeyState(VK_SHIFT))) ? (winListCompact ^ 1):winListCompact) ;
             break;
         
         case WM_LBUTTONDBLCLK:             // double click on icon
-            if(vwEnabled)
+            if(vwIsEnabled())
                 showSetup();
             break;
             
         case WM_MBUTTONUP:		   // Move to the next desktop
-            if(vwEnabled)
+            if(vwIsEnabled())
                 stepDelta((HIWORD(GetKeyState(VK_SHIFT))) ? -1:1) ;
             break;
             
