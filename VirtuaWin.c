@@ -2221,7 +2221,10 @@ windowListUpdate(void)
         if(win->flags & vwWINFLAGS_ACTIVATED)
         {
             vwUByte activateAction ;
-            if((win->flags & vwWINFLAGS_HWACT_MASK) == 0)
+            /* if not hiding minimized windows the an activation of a minimized window should always move the window */
+            if((minWinHide & 0x02) && vwWindowIsMinimized(win))
+                activateAction = 1 ;
+            else if((win->flags & vwWINFLAGS_HWACT_MASK) == 0)
                 activateAction = hiddenWindowAct ;
             else
                 activateAction = ((win->flags & vwWINFLAGS_HWACT_MASK) >> vwWINFLAGS_HWACT_BITROT) - 1 ;
