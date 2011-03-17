@@ -83,7 +83,7 @@ HWND    wHnd;                    /* DesktopIcons Handle */
 HWND    setupWHnd;               /* DesktopIcons Setup Handle */
 HWND    vwHandle;                /* Handle to VirtuaWin */
 TCHAR   userAppPath[MAX_PATH] ;  /* User's config path */
-HWND    diHandle;                /* Handle to SystemList containing icons */
+HWND    diHandle = NULL;         /* Handle to SystemList containing icons */
 HANDLE  diProcess;
 LVITEM *diLocalItem ;
 char   *diShareItem ;
@@ -829,6 +829,30 @@ vwWindowsIs64Bit(void)
     return ret ;
 }
 
+int
+vwWindowFindDesktopWindow(HWND pWnd)
+{
+    HWND wnd ;
+    while(((wnd = FindWindowEx(pWnd,NULL,_T("SHELLDLL_DefView"),NULL)) == NULL) && ((pWnd = FindWindowEx(pWnd,NULL,_T("WorkerW"),NULL)) != NULL))
+        ;
+    if((wnd != NULL) && ((diHandle = FindWindowEx(wnd,NULL,_T("SysListView32"),NULL)) != NULL))
+        return 1 ;
+    return 0 ;
+}
+
+static int CALLBACK
+enumWindowsProc(HWND hwnd, LPARAM lParam) 
+{
+    TCHAR name[128] ;
+    
+    name[0] = '\0' ;
+    GetClassName(hwnd,name,128);
+    if(!_tcscmp(name,_T("WorkerW")) && vwWindowFindDesktopWindow(hwnd))
+        /* found desktop icon window - quit */
+        return FALSE ;
+    return TRUE ;
+}
+
 /*
  * Main startup function
  */
@@ -837,6 +861,7 @@ WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, INT nCmdS
 {
     DWORD dwPID;
     WNDCLASS wc;
+    HWND wnd;
     MSG msg;
     
 #if vwDI_DEBUG
@@ -868,21 +893,16 @@ WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, INT nCmdS
                           NULL)) == (HWND) 0)
         return 1 ;
     
-    /* get the SystemList handle holding the deskop icon and allocate required resources */ 
-    if((diHandle = FindWindow(_T("Progman"),NULL)) == NULL)
+    /* get the SystemList handle holding the deskop icon and allocate required resources */
+    if(((wnd = FindWindow(_T("Progman"),NULL)) == NULL) || !vwWindowFindDesktopWindow(wnd))
     {
-        MessageBox(wHnd,_T("Failed to obtain handle to Progman\n"),_T("VWDesktopIcons Error"), MB_ICONERROR) ;
-        exit(1) ;
-    }
-    if((diHandle = FindWindowEx(diHandle,NULL,_T("SHELLDLL_DefView"),NULL)) == NULL)
-    {
-        MessageBox(wHnd,_T("Failed to obtain handle to SHELLDLL_DefView\n"),_T("VWDesktopIcons Error"), MB_ICONERROR) ;
-        exit(1) ;
-    }
-    if((diHandle = FindWindowEx(diHandle,NULL,_T("SysListView32"),NULL)) == NULL)
-    {
-        MessageBox(wHnd,_T("Failed to obtain handle to SysListView32\n"),_T("VWDesktopIcons Error"), MB_ICONERROR) ;
-        exit(1) ;
+        EnumWindows(enumWindowsProc,0) ;
+        if(diHandle == NULL)
+        {
+            
+            MessageBox(wHnd,_T("Failed to obtain handle to the desktop icons window\n"),_T("VWDesktopIcons Error"), MB_ICONERROR) ;
+            exit(1) ;
+        }
     }
     
     GetWindowThreadProcessId(diHandle, &dwPID);
