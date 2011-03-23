@@ -709,13 +709,79 @@ vwPreviewDraw(HDC hdc)
             vwpEffectFlag &= ~vwpEFFECT_FULLCUR ;
         }
         ii = vwDeskNxt - 1 ;
-        xx = vwpEffectRectN.right - vwpEffectRectN.left ;
-        yy = vwpEffectRectN.bottom - vwpEffectRectN.top ;
+        px = vwpEffectRectN.left ;
+        py = vwpEffectRectN.top ;
+        xx = vwpEffectRectN.right - px ;
+        yy = vwpEffectRectN.bottom - py ;
         SelectObject(hdcMem,dskBtmpImg[ii]) ;
         if((dskBtmpSize[ii].cx == xx) && (dskBtmpSize[ii].cy == yy))
-            BitBlt(hdc,vwpEffectRectN.left,vwpEffectRectN.top,xx,yy,hdcMem,0,0,SRCCOPY) ;
+        {
+            /* check the destination range is on the screen, if not crop */
+            if(px < 0)
+            {
+                ox = (0 - px) ;
+                xx += px ;
+                px = 0 ;
+            }
+            else
+            {
+                ox = 0 ;
+                if((ii=vwpEffectRectN.right - desktopSizeX) > 0)
+                    xx -= ii ;
+            }
+            if(py < 0)
+            {
+                oy = (0 - py) ;
+                yy += py ;
+                py = 0 ;
+            }
+            else
+            {
+                oy = 0 ;
+                if((ii=vwpEffectRectN.bottom - desktopSizeY) > 0)
+                    yy -= ii ;
+            }
+            BitBlt(hdc,px,py,xx,yy,hdcMem,ox,oy,SRCCOPY) ;
+        }
         else
-            StretchBlt(hdc,vwpEffectRectN.left,vwpEffectRectN.top,xx,yy,hdcMem,0,0,dskBtmpSize[ii].cx,dskBtmpSize[ii].cy,SRCCOPY) ;
+        {
+            bx = dskBtmpSize[ii].cx ;
+            by = dskBtmpSize[ii].cy ;
+            /* check the destination range is on the screen, if not crop */
+            if(px < 0)
+            {
+                ox = (0 - px) * bx / desktopSizeX ;
+                bx -= ox ;
+                xx += px ;
+                px = 0 ;
+            }
+            else
+            {
+                ox = 0 ;
+                if((ii=vwpEffectRectN.right - desktopSizeX) > 0)
+                {
+                    xx -= ii ;
+                    bx -= ii * bx / desktopSizeX ;
+                }
+            }
+            if(py < 0)
+            {
+                oy = (0 - py) * by / desktopSizeY ;
+                by -= oy ;
+                yy += py ;
+                py = 0 ;
+            }
+            else
+            {
+                oy = 0 ;
+                if((ii=vwpEffectRectN.bottom - desktopSizeY) > 0)
+                {
+                    yy -= ii ;
+                    by -= ii * by / desktopSizeY ;
+                }
+            }
+            StretchBlt(hdc,px,py,xx,yy,hdcMem,ox,oy,bx,by,SRCCOPY) ;
+        }
     }
     else
     {
