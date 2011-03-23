@@ -1,4 +1,4 @@
-VWPreview v1.5 - Steven Phillips
+VWPreview v1.6 - Steven Phillips
 
 Description:
 
@@ -51,6 +51,10 @@ Copyright (c) 2010-2011 VirtuaWin (virtuawin@home.se)
 
 
 HISTORY
+
+Ver 1.6 - 2011/03/23
+
+* 3213143 Fixed slide-on from left or top when not using full sized images.
 
 Ver 1.5 - 2011/02/20
 
