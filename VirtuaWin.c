@@ -1628,7 +1628,7 @@ showSetup(void)
         // setup dialog has probably been lost under the windows raise it.
         setForegroundWin(dialogHWnd,0);
         SetWindowPos(dialogHWnd,HWND_NOTOPMOST,0,0,0,0,
-                     SWP_DEFERERASE | SWP_NOSIZE | SWP_NOACTIVATE | SWP_NOSENDCHANGING | SWP_NOMOVE) ;
+                     SWP_DEFERERASE | SWP_NOSIZE | SWP_NOSENDCHANGING | SWP_NOMOVE) ;
     }
 }
 
@@ -1662,7 +1662,7 @@ showWindowRule(HWND theWin, int add)
         // setup dialog has probably been lost under the windows raise it.
         setForegroundWin(dialogHWnd,0);
         SetWindowPos(dialogHWnd,HWND_NOTOPMOST,0,0,0,0,
-                     SWP_DEFERERASE | SWP_NOSIZE | SWP_NOACTIVATE | SWP_NOSENDCHANGING | SWP_NOMOVE) ;
+                     SWP_DEFERERASE | SWP_NOSIZE | SWP_NOSENDCHANGING | SWP_NOMOVE) ;
     }
 }
 
@@ -1678,6 +1678,21 @@ windowSetAlwaysOnTop(HWND theWin)
     SetWindowPos(theWin,(ExStyle & WS_EX_TOPMOST) ? HWND_NOTOPMOST:HWND_TOPMOST,0,0,0,0,
                  SWP_DEFERERASE|SWP_NOSIZE|SWP_NOACTIVATE|SWP_NOSENDCHANGING|SWP_NOMOVE) ;
     return 1 ;
+}
+
+/************************************************
+ * Force full redraw of a window
+ * VW's changing of the Toolwin flag means the window can be drawn with the wrong frame which changes the size of the client area.
+ * But forcing a full redraw is tricky as the main Windows redraw functions/flags do not address the client window resize issue.
+ * To force the full redrawing shrink the window size by 1 pixel and then increase it again - I'm sure there's a
+ * better solution but I've not found it */
+static void
+WindowFullRedraw(HWND theWin)
+{
+    RECT pos;
+    GetWindowRect(theWin,&pos) ;
+    SetWindowPos(theWin,0,0,0,pos.right-pos.left,pos.bottom-pos.top-1,(SWP_FRAMECHANGED | SWP_NOZORDER | SWP_NOMOVE | SWP_NOACTIVATE | SWP_DEFERERASE| SWP_NOSENDCHANGING)) ; 
+    SetWindowPos(theWin,0,0,0,pos.right-pos.left,pos.bottom-pos.top,(SWP_FRAMECHANGED | SWP_NOZORDER | SWP_NOMOVE | SWP_NOACTIVATE | SWP_DEFERERASE| SWP_NOSENDCHANGING)) ; 
 }
 
 /************************************************
@@ -2231,6 +2246,7 @@ windowListUpdate(void)
             win->flags &= ~vwWINFLAGS_ACTIVATED ;
             if((win->desk != currentDesk) && ((activateAction == 0) || (win->desk > nDesks)))
             {
+                vwLogBasic((_T("Ignore SWin Activation: %x (%d %d %x %x)\n"),(int) win->handle,(int) activateAction,(int) win->desk,win->flags,minWinHide)) ;
                 j = win->desk ;
                 /* remove any link as we need to push this window back in isolation */
                 nw = win->linkedNext ;
@@ -2245,15 +2261,13 @@ windowListUpdate(void)
             else
             {
                 vwUInt flags=win->flags ; 
+                vwLogBasic((_T("Got SWin Activation: %x (%d %d %x %x)\n"),(int) win->handle,(int) activateAction,(int) win->desk,win->flags,minWinHide)) ;
                 if((activateAction == 3) && (newDesk == 0))
                     newDesk = win->desk ;
                 vwWindowSetDesk(win,currentDesk,activateAction,FALSE) ;
-                if((flags & (vwWINFLAGS_SHOWN|vwWINFLAGS_HIDETSK_MASK)) == vwWINFLAGS_HIDETSK_TOOLWN)
-                {
-                    /* VW's setting of the Toolwin flag means the frame will have been drawn wrong, force a redraw */
-                    vwLogBasic((_T("Redrawing window %x (%x %x)\n"),(int) win->handle,flags,win->flags)) ;
-                    RedrawWindow(win->handle,NULL,NULL,RDW_FRAME|RDW_INVALIDATE) ;
-                }
+                if(((flags & (vwWINFLAGS_SHOWN|vwWINFLAGS_HIDETSK_MASK)) == vwWINFLAGS_HIDETSK_TOOLWN) || (vwWindowIsMinimized(win) && minWinHide))
+                    /* VW's setting of the Toolwin flag means the frame will have been drawn wrong, force a redraw. */
+                    WindowFullRedraw(win->handle) ;
             }
         }
         if(win->handle == activeHWnd)
@@ -2266,17 +2280,20 @@ windowListUpdate(void)
             
             if((win->desk != currentDesk) && ((activateAction == 0) || (win->desk > nDesks)))
             {
-                vwLogBasic((_T("Ignore Popup %x %d %d\n"),(int) activeHWnd,(int) activateAction,(int) win->desk)) ;
+                vwLogBasic((_T("Ignore NWin Activation: %x (%d %d %x %x)\n"),(int) activeHWnd,(int) activateAction,(int) win->desk,win->flags,minWinHide)) ;
                 setForegroundWin(NULL,0) ;
             }
             else
             {
+                vwLogBasic((_T("Got NWin Activation: %x (%d %d %x %x)\n"),(int) activeHWnd,(int) activateAction,(int) win->desk,win->flags,minWinHide)) ;
                 if(vwWindowIsNotShown(win) && activateAction)
                 {
-                    vwLogBasic((_T("Got Popup - Active %x (%d %d)\n"),(int) activeHWnd,(int) activateAction,(int) win->desk)) ;
                     if((activateAction == 3) && (newDesk == 0))
                         newDesk = win->desk ;
                     vwWindowSetDesk(win,currentDesk,activateAction,FALSE) ;
+                    if((win->flags & vwWINFLAGS_HIDETSK_MASK) == vwWINFLAGS_HIDETSK_TOOLWN)
+                        /* VW's setting of the Toolwin flag means the frame will have been drawn wrong, force a redraw. */
+                        WindowFullRedraw(win->handle) ;
                 }
                 win->zOrder[currentDesk] = ++vwZOrder ;
                 // if this is only a temporary display increase its zorder in its main desk
@@ -2410,7 +2427,6 @@ vwTaskbarButtonListUpdate(void)
             vwLogBasic((_T("Win7BC Err1: %p %p -> %d %p\n"),dp1,dp2,bgsCount,bgs)) ;
             return 0 ;
         }
-        vwLogBasic((_T("Win7BC1: %p %p -> %d %p\n"),dp1,dp2,bgsCount,bgs)) ;
         itemCount = 0 ;
         for(ii=0; ii<bgsCount; ii++)
         {
@@ -2429,7 +2445,6 @@ vwTaskbarButtonListUpdate(void)
                     return 0 ;
                 }
                 itemCount += jj ;
-                vwLogBasic((_T("Win7BC2: %d %p -> %p %d\n"),ii,dp1,dp2,jj)) ;
             }
         }
     }
@@ -2475,10 +2490,7 @@ vwTaskbarButtonListUpdate(void)
                     if(vwProcessMemoryRead(taskbarProcHdl,dp1+(jj*psz),&dp2,sizeof(void *),rSize) && 
                        vwProcessMemoryRead(taskbarProcHdl,dp2+(3*psz),&dp2,sizeof(void *),rSize) &&
                        vwProcessMemoryRead(taskbarProcHdl,dp2+psz,&tbHWnd,sizeof(HWND),rSize))
-                    {
                        taskbarButtonList[tbCount++] = tbHWnd ;
-                       vwLogBasic((_T("Win7BC3: %d %d -> %p\n"),ii,jj,tbHWnd)) ;
-                    }
                 }
             }
         }
