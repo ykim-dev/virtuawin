@@ -1,4 +1,4 @@
-VWDesktopIcons v1.3 - Steven Phillips
+VWDesktopIcons v1.4 - Steven Phillips
 
 Description:
 
@@ -56,10 +56,14 @@ Copyright:
 VWDesktopIcons is a freely distributed program and is licensed under the GNU
 General Public License.
 
-Copyright (c) 2006-2010 VirtuaWin (virtuawin@home.se)
+Copyright (c) 2006-2011 VirtuaWin (virtuawin@home.se)
 
 
 HISTORY
+
+Ver 1.4 - 2011/03/17
+
+* 3182977 Fixed module to find desktop icon window on Windows 7.
 
 Ver 1.3 - 2010/03/15
 
