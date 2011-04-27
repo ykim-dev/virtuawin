@@ -36,10 +36,13 @@ Notes:
     fulUdTm1# - Initial update time (in ms) used to  update all previews,
                 default is 2sec (i.e. 2000)  
     fulUdTm2# - Continued update time (in ms), default is 10sec.
-* Found that update does not work well when  Windows  Themes are used  because
-  the screen has not been  properly  updated. To avoid the  problem a pause is
-  needed to allow the  screen to be  redrawn,  set option  'fulUdPas#'  in the
-  vwpreview.cfg file to say 500 for a half second pause. 
+* Found that full screen preview update does not work well when Windows Themes
+  are not used because the screen has not been properly  updated  (snapshot of
+  the preview is taken instead  leading to horrid  'sub-dividing'  effect). To
+  avoid the  problem a pause is needed to allow the screen to be redrawn,  set
+  option  'fulUdPas#' in the  vwpreview.cfg  file to say 500 for a half second
+  pause. 
+
 
 
 Copyright:
