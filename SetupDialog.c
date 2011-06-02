@@ -86,7 +86,7 @@ vwSetupApply(HWND hDlg, int curPageMask)
             enableMouse(mouseEnable);
             vwIconSet(currentDesk,0);
             // Tell modules about the config change
-            postModuleMessage(MOD_CFGCHANGE, 0, 0);
+            vwModulesPostMessage(MOD_CFGCHANGE, 0, 0);
             pageChangeMask = 0 ;
             pageApplyMask = 0 ;
         }
@@ -897,7 +897,7 @@ setupModules(HWND hDlg, UINT message, UINT wParam, LONG lParam)
         {   
             /* Unload all modules currently running */
             vwMenuItem *mi ;
-            sendModuleMessage(MOD_QUIT, 0, 0);
+            vwModulesSendMessage(MOD_QUIT, 0, 0);
             for(index = 0; index < MAXMODULES; index++)
             {
                 moduleList[index].handle = NULL;
@@ -915,7 +915,7 @@ setupModules(HWND hDlg, UINT message, UINT wParam, LONG lParam)
             /* sleep for a second to allow the modules to exit cleanly */
             Sleep(1000) ;
             curDisabledMod = loadDisabledModules(disabledModules);
-            loadModules();
+            vwModulesLoad();
             setupModulesList(hDlg) ;
         }
         else if(LOWORD((wParam) == IDC_MODDISABLE))
@@ -1067,15 +1067,7 @@ setupExpert(HWND hDlg, UINT message, UINT wParam, LONG lParam)
             }
             else
             {
-                TCHAR *lpszLastErrorMsg; 
-                FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM, NULL, 
-                              GetLastError(), 
-                              MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), //The user default language 
-                              (TCHAR *) &lpszLastErrorMsg, 
-                              0, 
-                              NULL ); 
-                
-                _stprintf(cmdLn,_T("Failed to launch explorer.\n %s"),lpszLastErrorMsg);
+                _stprintf(cmdLn,_T("Failed to launch explorer. (Err %d)"),(int) GetLastError());
                 MessageBox(hWnd,cmdLn,vwVIRTUAWIN_NAME _T(" Error"),MB_ICONWARNING) ;
             }
         }

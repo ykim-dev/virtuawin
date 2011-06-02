@@ -66,6 +66,7 @@ extern FILE *vwLogFile ;
 void vwLogPrint(const TCHAR *format, ...) ;
 void vwMutexLock(void) ;
 void vwMutexRelease(void) ;
+HWND vwFindWindow(TCHAR *className, TCHAR *windowText, int printOut) ;
 void enableMouse(int turnOn) ;
 void setMouseKey(void) ;
 void vwHookSetup(void) ;
@@ -93,8 +94,8 @@ void storeDesktopProperties(void) ;
 void createWindowRuleDialog(HINSTANCE theHinst, HWND theHwndOwner, vwWindowRule *wtype, HWND theWin) ;
 
 /* Prototypes from ModuleRoutines.c */
-void loadModules(void);
-void sendModuleMessage(UINT Msg, WPARAM wParam, LPARAM lParam);
-void postModuleMessage(UINT Msg, WPARAM wParam, LPARAM lParam);
+void vwModulesLoad(void);
+void vwModulesSendMessage(UINT Msg, WPARAM wParam, LPARAM lParam);
+void vwModulesPostMessage(UINT Msg, WPARAM wParam, LPARAM lParam);
 
 #endif

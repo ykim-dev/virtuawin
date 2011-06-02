@@ -297,6 +297,66 @@ vwMutexRelease(void)
     ReleaseMutex(hMutex);
 }
 
+
+/************************************************
+ * Find a window give the class name and optionally the window text.
+ * Same as Window's FindWindow except more reliable and gives better error reporting.
+ */
+typedef struct {
+    TCHAR buff[128] ;
+    TCHAR *className ;
+    TCHAR *windowText ;
+    HWND winHWnd ;
+    int printOut ;
+} vwFNDWIN ;
+
+static int CALLBACK
+vwFindWindowEProc(HWND hwnd, LPARAM lParam) 
+{
+    vwFNDWIN *mfwd ;
+    mfwd = (vwFNDWIN *) lParam ;
+    mfwd->buff[0] = '\0' ;
+    GetClassName(hwnd,mfwd->buff,128);
+    if(mfwd->printOut)
+        vwLogBasic((_T("Find CN: [%s] Win: %x [%s]\n"),mfwd->className,(int) hwnd,mfwd->buff)) ;
+    if(_tcsicmp(mfwd->className,mfwd->buff))
+        return TRUE ;
+    
+    if(mfwd->windowText != NULL)
+    {
+        if(!GetWindowText(hwnd,mfwd->buff,128))
+            mfwd->buff[0] = '\0' ;
+        if(mfwd->printOut)
+            vwLogBasic((_T("Find WT: [%s] Win: %x [%s]\n"),mfwd->windowText,(int) hwnd,mfwd->buff)) ;
+        if(_tcsicmp(mfwd->windowText,mfwd->buff))
+            return TRUE ;
+    }
+    /* found the module window - quit */
+    if(mfwd->printOut)
+        vwLogBasic((_T("Found window: %x [%s]\n"),(int) hwnd,mfwd->className)) ;
+    mfwd->winHWnd = hwnd ;
+    return FALSE ;
+}
+
+HWND
+vwFindWindow(TCHAR *className, TCHAR *windowText, int printOut)
+{
+    vwFNDWIN mfwd ;
+    int rv1 ;
+    
+    mfwd.winHWnd = NULL ;
+    mfwd.printOut = printOut ;
+    mfwd.className = className ;
+    mfwd.windowText = windowText ;
+    rv1 = EnumWindows(vwFindWindowEProc,(LPARAM) &mfwd) ;
+    
+    if(mfwd.winHWnd != NULL)
+        return mfwd.winHWnd ;
+    if(printOut)
+        vwLogBasic((_T("Failed to find window: %d %d [%s]\n"),rv1,GetLastError(),className)) ;
+    return NULL ;
+}
+
 /************************************************
  * Returns a bit mask of currently pressed modifier keys
  */
@@ -873,7 +933,7 @@ vwTaskbarHandleGet(void)
     /* set the window to give focus to when releasing focus on switch also used to refresh */
     if((desktopHWnd = GetDesktopWindow()) != NULL)
         desktopThread = GetWindowThreadProcessId(desktopHWnd,NULL) ;
-    if(((deskIconHWnd = FindWindow(_T("Progman"), _T("Program Manager"))) != NULL) &&
+    if(((deskIconHWnd = vwFindWindow(_T("Progman"), _T("Program Manager"),0)) != NULL) &&
        ((deskIconHWnd = FindWindowEx(deskIconHWnd, NULL, _T("SHELLDLL_DefView"),NULL)) != NULL))
        deskIconHWnd = FindWindowEx(deskIconHWnd, NULL, _T("SysListView32"), _T("FolderView")) ;
     
@@ -2364,7 +2424,7 @@ shutDown(void)
     KillTimer(hWnd, 0x29a);
     if(vwHookInstalled)
         vwHookUninstallFunc() ;
-    postModuleMessage(MOD_QUIT, 0, 0);
+    vwModulesPostMessage(MOD_QUIT, 0, 0);
     vwHotkeyUnregister(1);
     // gather all windows quickly & remove icon
     vwWindowShowAll(0) ;
@@ -2395,9 +2455,9 @@ shutDown(void)
 static int
 vwTaskbarButtonListUpdate(void)
 {
-    int ii, jj, tbCount=0, itemCount, bgsCount, psz ;
+    int ii, jj, tbCount=0, itemCount, bgsCount, psz=4 ;
     vwUByte *dp1, *dp2, *bgs;
-    size_t rSize;
+    DWORD rSize;
     TCITEM tcItem;
     TBBUTTON tbItem;
     HWND tbHWnd;
@@ -2416,10 +2476,7 @@ vwTaskbarButtonListUpdate(void)
             psz = 8 ;
         }
         else
-        {
             dp1 += DPA_DELTA_32 ;
-            psz = 4 ;
-        }
         if(!vwProcessMemoryRead(taskbarProcHdl,dp1,&dp2,sizeof(void *),rSize) || (dp2 == NULL) || // the dpa
            !vwProcessMemoryRead(taskbarProcHdl,dp2,&bgsCount, sizeof(int),rSize) || // button groups count and pointer
            !vwProcessMemoryRead(taskbarProcHdl,dp2+psz,&bgs, sizeof(void *),rSize))
@@ -2502,7 +2559,7 @@ vwTaskbarButtonListUpdate(void)
             tcItem.mask = TCIF_PARAM;
             if(WriteProcessMemory(taskbarProcHdl,taskbarShrdMem,&tcItem,sizeof(TCITEM),NULL) &&
                TabCtrl_GetItem(taskbarBCHWnd,ii,taskbarShrdMem) &&
-               ReadProcessMemory(taskbarProcHdl,taskbarShrdMem,&tcItem,sizeof(TCITEM),NULL) &&
+               vwProcessMemoryRead(taskbarProcHdl,taskbarShrdMem,&tcItem,sizeof(TCITEM),rSize) &&
                (tcItem.lParam != 0))
                 taskbarButtonList[tbCount++] = (HWND) tcItem.lParam ;
         }
@@ -2512,18 +2569,18 @@ vwTaskbarButtonListUpdate(void)
         for(ii = 0 ; ii < itemCount ; ++ii)
         {
             if(SendMessage(taskbarBCHWnd,TB_GETBUTTON,ii,(LPARAM)taskbarShrdMem) &&
-               ReadProcessMemory(taskbarProcHdl,taskbarShrdMem,&tbItem,sizeof(TBBUTTON),NULL))
+               vwProcessMemoryRead(taskbarProcHdl,taskbarShrdMem,&tbItem,sizeof(TBBUTTON),rSize))
             {
                 if(osVersion & OSVERSION_64BIT)
                 {
                     /* On 64bit OS there is an extra 4 bytes padding so the dwData shifts into the iString member,
                      * but this may not work all the time as the pointer should be 64bit and this assumes the higher
                      * 32 bits are 0 */
-                    if(ReadProcessMemory(taskbarProcHdl,(LPCVOID) tbItem.iString,&tbHWnd,sizeof(HWND),NULL) &&
+                    if(vwProcessMemoryRead(taskbarProcHdl,(LPCVOID) tbItem.iString,&tbHWnd,sizeof(HWND),rSize) &&
                        (tbHWnd != NULL))
                         taskbarButtonList[tbCount++] = tbHWnd ;
                 }
-                else if(ReadProcessMemory(taskbarProcHdl,(LPCVOID) tbItem.dwData,&tbHWnd,sizeof(HWND),NULL) &&
+                else if(vwProcessMemoryRead(taskbarProcHdl,(LPCVOID) tbItem.dwData,&tbHWnd,sizeof(HWND),rSize) &&
                         (tbHWnd != NULL))
                     taskbarButtonList[tbCount++] = tbHWnd ;
             }
@@ -2963,7 +3020,7 @@ ichangeDeskProc(int newDesk, WPARAM msgWParam)
     if(refreshOnWarp)
         RedrawWindow( NULL, NULL, NULL, RDW_INVALIDATE | RDW_ERASE | RDW_ALLCHILDREN );
     
-    postModuleMessage(MOD_CHANGEDESK,msgWParam,currentDesk);
+    vwModulesPostMessage(MOD_CHANGEDESK,msgWParam,currentDesk);
     if(taskHWnd != NULL)
     {
         /* this strange piece of code resolves bad pop-up problems, by changing the style
@@ -3692,7 +3749,6 @@ vwWindowShowHide(vwWindow* aWindow, vwUInt flags)
 static int
 vwToggleEnabled(int action)
 {
-    vwUByte oldState = vwDisabled ;
     if(action == 0)
     {
         /* The boss lock take higher priority */
@@ -5241,7 +5297,7 @@ wndProc(HWND aHWnd, UINT message, WPARAM wParam, LPARAM lParam)
             cds.lpData = (void*)ss;
             if(wParam == 0)
             {
-                sendModuleMessage(WM_COPYDATA, (WPARAM) aHWnd, (LPARAM)&cds); 
+                vwModulesSendMessage(WM_COPYDATA, (WPARAM) aHWnd, (LPARAM)&cds); 
                 ret = TRUE ;
             }
             else if(!SendMessageTimeout((HWND)wParam,WM_COPYDATA,(WPARAM) aHWnd,(LPARAM) &cds,SMTO_ABORTIFHUNG|SMTO_BLOCK,10000,&ret))
@@ -5601,7 +5657,7 @@ VirtuaWinInitContinue(HWND hwnd, UINT uMsg, UINT idEvent, DWORD dwTime)
     vwMutexRelease() ;
     
     /* Load user modules */
-    loadModules();
+    vwModulesLoad();
     
     SetTimer(hWnd,0x29a,1000,monitorTimerProc) ; 
     initialized = TRUE ;
@@ -5631,7 +5687,7 @@ VirtuaWinInit(HINSTANCE hInstance, LPSTR cmdLine)
         WPARAM wParam=0 ;
         LPARAM lParam=0 ;
         
-        if((hWnd = FindWindow(vwVIRTUAWIN_CLASSNAME, NULL)) == NULL)
+        if((hWnd = vwFindWindow(vwVIRTUAWIN_CLASSNAME,NULL,0)) == NULL)
         {
             MessageBox(hWnd,_T("Failed to find ") vwVIRTUAWIN_NAME _T(" window."),vwVIRTUAWIN_NAME _T(" Error"),0) ;
             exit(-2) ;
