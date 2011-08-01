@@ -850,6 +850,8 @@ setupModulesList(HWND hDlg)
         tmpName[100] = '\0' ;
         if(moduleList[index].disabled)
             _tcscat(tmpName,_T(" (disabled)")) ;
+        else if(moduleList[index].handle == NULL)
+            _tcscat(tmpName,_T(" (failed to run)")) ;
         SendDlgItemMessage(hDlg, IDC_MODLIST, LB_ADDSTRING, 0, (LONG)tmpName);
     }
 }
@@ -890,7 +892,7 @@ setupModules(HWND hDlg, UINT message, UINT wParam, LONG lParam)
         if(LOWORD((wParam) == IDC_MODCONFIG || HIWORD(wParam) == LBN_DBLCLK ))
         {   // Show config
             int curSel = SendDlgItemMessage(hDlg, IDC_MODLIST, LB_GETCURSEL, 0, 0);
-            if(curSel != LB_ERR)
+            if((curSel != LB_ERR) && (moduleList[curSel].handle != NULL))
                 PostMessage(moduleList[curSel].handle, MOD_SETUP, (UINT) hDlg, 0);
         }
         else if(LOWORD((wParam) == IDC_MODRELOAD))
@@ -926,18 +928,21 @@ setupModules(HWND hDlg, UINT message, UINT wParam, LONG lParam)
                 if(moduleList[curSel].disabled == FALSE)
                 {   // let's disable
                     moduleList[curSel].disabled = TRUE;
-                    PostMessage(moduleList[curSel].handle, MOD_QUIT, 0, 0);
-                    if(ichangeHWnd == moduleList[curSel].handle)
-                        ichangeHWnd = NULL ;
+                    if(moduleList[curSel].handle != NULL)
+                    {
+                        PostMessage(moduleList[curSel].handle, MOD_QUIT, 0, 0);
+                        if(ichangeHWnd == moduleList[curSel].handle)
+                            ichangeHWnd = NULL ;
+                    }
                 }
                 else
-                {   // let's enable
-                    MessageBox(hDlg,_T("Press reload or restart VirtuaWin to enable the module"),
-                               vwVIRTUAWIN_NAME _T(" Note"), MB_ICONINFORMATION);
+                {   // let's enable & load
                     moduleList[curSel].disabled = FALSE;
+                    vwModuleLoad(curSel,NULL) ;
                 }
                 saveDisabledList(moduleCount, moduleList);
                 setupModulesList(hDlg) ;
+                SendDlgItemMessage(hDlg,IDC_MODLIST,LB_SETCURSEL,curSel,0) ;
             }
         }
         else if(LOWORD(wParam) == IDC_GETMODS)

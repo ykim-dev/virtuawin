@@ -45,6 +45,74 @@ vwModuleCheckDisabled(TCHAR *theModName)
     return FALSE;  // Not disabled
 }
 
+void
+vwModuleLoad(int moduleIdx, TCHAR *path)
+{
+    HWND modHWnd ;
+    TCHAR buff[MAX_PATH], *s1, *s2 ;
+    STARTUPINFO si;
+    PROCESS_INFORMATION pi;  
+    int rv1, rv2 ;
+    
+    s1 = buff ;
+    *s1++ = '"' ;
+    if(path != NULL)
+    {
+        _tcscpy(s1,path) ;
+        s1 += _tcslen(s1) ;
+    }
+    else
+    {
+        GetFilename(vwMODULES,0,s1);
+        if((s2 = _tcsrchr(s1,'\\')) != NULL)
+            s1 = s2 + 1 ;
+    }
+    _tcscpy(s1,moduleList[moduleIdx].description) ;
+    s2 = s1 + _tcslen(s1) ;
+    _tcscpy(s2,_T(".exe")) ;
+    s2 += 4 ;
+    if((modHWnd = vwFindWindow(s1,NULL,0)) != NULL)
+    {
+        _stprintf(buff,_T("The module '%s' seems to already be running and will be re-used. This is probably due to incorrect shutdown of VirtuaWin."), moduleList[moduleIdx].description);
+        MessageBox(hWnd,buff,vwVIRTUAWIN_NAME _T(" Error"),MB_ICONWARNING);
+    }
+    else
+    {
+        // Launch the module
+        _tcscpy(s2,_T("\" -module")) ;
+        memset(&si, 0, sizeof(si)); 
+        si.cb = sizeof(si); 
+        if(!CreateProcess(NULL,buff,NULL,NULL,FALSE,0,NULL,NULL,&si,&pi))
+        {
+            vwLogBasic((_T("Failed to launch module: [%s] %d\n"),buff,(int) GetLastError()));
+            _stprintf(buff,_T("Failed to launch module '%s'. (Err %d)"),moduleList[moduleIdx].description,(int) GetLastError());
+            MessageBox(hWnd,buff,vwVIRTUAWIN_NAME _T(" Error"),MB_ICONWARNING);
+        }
+        else
+        {
+            CloseHandle(pi.hThread) ;
+            // Wait max 20 sec for the module to initialize itself then close the process handle
+            rv1 = WaitForInputIdle(pi.hProcess, 20000); 
+            *s2 = '\0' ;
+            
+            // Find the module with classname 
+            if((modHWnd = vwFindWindow(s1,NULL,0)) == NULL)
+            {
+                Sleep(500) ;
+                rv2 = WaitForInputIdle(pi.hProcess,10000) ;
+                if((modHWnd = vwFindWindow(s1,NULL,1)) == NULL)
+                {
+                    _stprintf(buff,_T("Failed to load module '%s' - maybe wrong class or file name? (Err %d, %d, %d)"),moduleList[moduleIdx].description,rv1,rv2,(int) GetLastError());
+                    MessageBox(hWnd,buff,vwVIRTUAWIN_NAME _T(" Error"),MB_ICONWARNING);
+                }
+            }
+            CloseHandle(pi.hProcess) ;
+        }
+    }
+    if((moduleList[moduleIdx].handle = modHWnd) != NULL)
+        PostMessage(modHWnd, MOD_INIT, (WPARAM) hWnd , 0);
+}
+          
 /*************************************************
  * Adds a module to a list, found by vwModulesLoad()
  */
@@ -52,74 +120,35 @@ static void
 vwModuleAdd(TCHAR *moduleName, TCHAR *path)
 {
     TCHAR buff[MAX_PATH];
-    HWND myModule;
-    STARTUPINFO si;
-    PROCESS_INFORMATION pi;  
-    int rv1, rv2 ;
+    int ll ;
     
+    // remove .exe to get module name
+    ll = _tcslen(moduleName) - 4 ;
+    moduleName[ll] = '\0'; 
+    if(ll > vwMODULENAME_MAX)
+    {
+        _stprintf(buff,_T("Name of module '%s' is too long, maximum is %d."),moduleName,vwMODULENAME_MAX) ;
+        MessageBox(hWnd,buff,vwVIRTUAWIN_NAME _T(" Error"),MB_ICONWARNING);
+        return;
+    }
     if(moduleCount >= MAXMODULES)
     {
         _stprintf(buff,_T("Max number of modules have been added, '%s' won't be loaded."), moduleName);
         MessageBox(hWnd,buff,vwVIRTUAWIN_NAME _T(" Error"),MB_ICONWARNING);
         return;
     }
+          
+    // Add the module to the list
+    _tcsncpy(moduleList[moduleCount].description, moduleName, vwMODULENAME_MAX);
+    moduleList[moduleCount].disabled = vwModuleCheckDisabled(moduleName) ;
     
-    if(vwModuleCheckDisabled(moduleName))
-    {
+    if(moduleList[moduleCount].disabled)
         // The module is disabled
         moduleList[moduleCount].handle = NULL;
-        moduleList[moduleCount].disabled = TRUE;
-        moduleName[_tcslen(moduleName)-4] = '\0'; // remove .exe
-        _tcsncpy(moduleList[moduleCount].description, moduleName, 79);
-        moduleCount++;
-        return;
-    }
-    
-    if((myModule = vwFindWindow(moduleName,NULL,0)) != NULL)
-    {
-        _stprintf(buff,_T("The module '%s' seems to already be running and will be re-used. This is probably due to incorrect shutdown of VirtuaWin."), moduleName);
-        MessageBox(hWnd,buff,vwVIRTUAWIN_NAME _T(" Error"),MB_ICONWARNING);
-    }
     else
-    {
-        // Launch the module
-        buff[0] = '"' ;
-        _tcscpy(buff+1,path) ;
-        _tcscat(buff,moduleName) ;
-        _tcscat(buff,_T("\" -module")) ;
-        memset(&si, 0, sizeof(si)); 
-        si.cb = sizeof(si); 
-        if(!CreateProcess(NULL,buff,NULL,NULL,FALSE,0,NULL,NULL,&si,&pi))
-        {
-            _stprintf(buff,_T("Failed to launch module '%s'. (Err %d)"),moduleName,(int) GetLastError());
-            MessageBox(hWnd,buff,vwVIRTUAWIN_NAME _T(" Error"),MB_ICONWARNING);
-            return;
-        }
-        CloseHandle(pi.hThread) ;
-        // Wait max 20 sec for the module to initialize itself then close the process handle
-        rv1 = WaitForInputIdle(pi.hProcess, 20000); 
-        
-        // Find the module with classname 
-        if((myModule = vwFindWindow(moduleName,NULL,0)) == NULL)
-        {
-            Sleep(500) ;
-            rv2 = WaitForInputIdle(pi.hProcess,10000) ;
-            if((myModule = vwFindWindow(moduleName,NULL,1)) == NULL)
-            {
-                CloseHandle(pi.hProcess) ;
-                _stprintf(buff,_T("Failed to load module '%s' - maybe wrong class or file name? (Err %d, %d, %d)"),moduleName,rv1,rv2,(int) GetLastError());
-                MessageBox(hWnd,buff,vwVIRTUAWIN_NAME _T(" Error"),MB_ICONWARNING);
-                return;
-            }
-        }
-        CloseHandle(pi.hProcess) ;
-    }
-    moduleList[moduleCount].handle = myModule;
-    moduleList[moduleCount].disabled = FALSE;
-    moduleName[_tcslen(moduleName)-4] = '\0'; // remove .exe
-    _tcsncpy(moduleList[moduleCount].description, moduleName, 79);
-    PostMessage(myModule, MOD_INIT, (WPARAM) hWnd , 0);
+        vwModuleLoad(moduleCount,path) ;
     moduleCount++;
+    return;
 }
 
 /*************************************************
@@ -167,8 +196,7 @@ void
 vwModulesPostMessage(UINT Msg, WPARAM wParam, LPARAM lParam)
 {
     int index;
-    for(index = 0; index < moduleCount; ++index) {
+    for(index = 0; index < moduleCount; ++index)
         if(moduleList[index].handle != NULL)
             PostMessage(moduleList[index].handle, Msg, wParam, lParam);
-    }
 }
