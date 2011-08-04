@@ -5,7 +5,7 @@
 //  configurable interval
 //  
 //  Copyright (c) 1999-2005 Johan Piculell
-//  Copyright (c) 2006-2010 VirtuaWin (VirtuaWin@home.se)
+//  Copyright (c) 2006-2011 VirtuaWin (VirtuaWin@home.se)
 // 
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -260,7 +260,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 */
 static BOOL CALLBACK DialogFunc(HWND hwndDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
-   TCHAR buff[32];
+   TCHAR buff[11];
    WORD wRawHotKey;
    
    switch (msg) {
@@ -278,8 +278,8 @@ static BOOL CALLBACK DialogFunc(HWND hwndDlg, UINT msg, WPARAM wParam, LPARAM lP
       case WM_COMMAND:
          switch (LOWORD(wParam)) {
             case IDOK:
-               GetDlgItemText(hwndDlg, IDC_INTERVAL, buff, 4);
-               desktopDelay[myNextCounter-1] = atoi(buff);
+               GetDlgItemText(hwndDlg, IDC_INTERVAL, buff, 11);
+               desktopDelay[myNextCounter-1] = strtol(buff, 0, 10);
 
                wRawHotKey = (WORD)SendDlgItemMessage(hwndDlg, IDC_HOTKEY_ENT, HKM_GETHOTKEY, 0, 0);
                HOT_TOGGLE = LOBYTE(wRawHotKey);
@@ -298,8 +298,8 @@ static BOOL CALLBACK DialogFunc(HWND hwndDlg, UINT msg, WPARAM wParam, LPARAM lP
                EndDialog(hwndDlg,0);
                return 1;
             case IDC_DESKTOPBTN:
-               GetDlgItemText(hwndDlg, IDC_INTERVAL, buff, 4);
-               int value = atoi(buff);
+               GetDlgItemText(hwndDlg, IDC_INTERVAL, buff, 11);
+               int value = strtol(buff, 0, 10);
                // Avoid 0 since that will cause out of control switching
                if(value >= 1)
                {
