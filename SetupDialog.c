@@ -65,7 +65,84 @@ static unsigned char vwCommandFlag[]={
 
 static int pageChangeMask=0 ;
 static int pageApplyMask=0 ;
-static HWND setupKeysHWnd=NULL;
+static HWND setupGeneralHWnd=NULL;
+static HWND setupHotkeysHWnd=NULL;
+static int vwSetupHotkeyCur ;
+static unsigned char vwSetupHotkeyGotKey ;
+
+
+static void
+vwSetupHotKeysInitList(void)
+{
+    TCHAR buff[128], *ss;
+    int ii, jj, cmd, deskCount ;
+    
+    if((deskCount = nDesks) < currentDesk)
+        deskCount = currentDesk ;
+    
+    SendDlgItemMessage(setupHotkeysHWnd,IDC_HOTKEY_LIST,LB_RESETCONTENT,0, 0);
+    ii = 130 ;
+    SendDlgItemMessage(setupHotkeysHWnd,IDC_HOTKEY_LIST,LB_SETTABSTOPS,(WPARAM)1,(LPARAM)&ii);
+    for(ii=0 ; ii<hotkeyCount ; ii++)
+    {
+        if(hotkeyList[ii].desk <= deskCount)
+        {
+            cmd = 0 ;
+            while((vwCommandEnum[cmd] != 0) && (vwCommandEnum[cmd] != hotkeyList[ii].command))
+                cmd++ ;
+            ss = buff ;
+            _tcscpy(ss,vwCommandName[cmd]) ;
+            if(hotkeyList[ii].desk && vwCommandEnum[cmd])
+            {
+                ss = _tcschr(ss,'#') ;
+                ss += _stprintf(ss,_T("%d"),hotkeyList[ii].desk) ;
+                _tcscpy(ss,_tcschr(vwCommandName[cmd],'#') + 1) ;
+            }
+            ss += _tcslen(ss) ;
+            *ss++ = '\t' ;
+            if(hotkeyList[ii].modifier & vwHOTKEY_ALT)
+            {
+                *ss++ = 'A' ;
+                *ss++ = ' ' ;
+                *ss++ = '+' ;
+                *ss++ = ' ' ;
+            }
+            if(hotkeyList[ii].modifier & vwHOTKEY_CONTROL)
+            {
+                *ss++ = 'C' ;
+                *ss++ = ' ' ;
+                *ss++ = '+' ;
+                *ss++ = ' ' ;
+            }
+            if(hotkeyList[ii].modifier & vwHOTKEY_SHIFT)
+            {
+                *ss++ = 'S' ;
+                *ss++ = ' ' ;
+                *ss++ = '+' ;
+                *ss++ = ' ' ;
+            }
+            if(hotkeyList[ii].modifier & vwHOTKEY_WIN)
+            {
+                *ss++ = 'W' ;
+                *ss++ = ' ' ;
+                *ss++ = '+' ;
+                *ss++ = ' ' ;
+            }
+            jj = MapVirtualKey((UINT) hotkeyList[ii].key,0);
+            if(hotkeyList[ii].modifier & vwHOTKEY_EXT)
+                jj |= 0x100 ;
+            GetKeyNameText(jj << 16, ss, 20);
+            SendDlgItemMessage(setupHotkeysHWnd,IDC_HOTKEY_LIST,LB_ADDSTRING,0,(LONG) buff);
+        }
+    }
+    if(vwSetupHotkeyCur >= 0)
+    {
+        for(ii=0, jj=0 ; ii != vwSetupHotkeyCur ; ii++)
+            if(hotkeyList[ii].desk <= deskCount)
+                jj++ ;
+        SendDlgItemMessage(setupHotkeysHWnd,IDC_HOTKEY_LIST,LB_SETCURSEL,jj,0) ;
+    }
+}
 
 static void
 vwSetupApply(HWND hDlg, int curPageMask)
@@ -75,7 +152,7 @@ vwSetupApply(HWND hDlg, int curPageMask)
         pageApplyMask |= curPageMask ;
         if((pageApplyMask & pageChangeMask) == pageChangeMask)
         {
-            // All pages have now got any changes from the GUI, save them and apply
+            /* All pages have now got any changes from the GUI, save them and apply */
             saveVirtuawinConfig();
             vwHotkeyUnregister(1);
             /* Need to get the taskbar again in case the order has changed to dynamic taskbar */
@@ -85,7 +162,9 @@ vwSetupApply(HWND hDlg, int curPageMask)
             vwHotkeyRegister(1);
             enableMouse(mouseEnable);
             vwIconSet(currentDesk,0);
-            // Tell modules about the config change
+            /* update the hotkey dialog as user may have made desktops (and therefore a hidden hotkey) visible */ 
+            vwSetupHotKeysInitList() ;
+            /* Tell modules about the config change */
             vwModulesPostMessage(MOD_CFGCHANGE, 0, 0);
             pageChangeMask = 0 ;
             pageApplyMask = 0 ;
@@ -112,8 +191,8 @@ initDesktopProperties(void)
     int pcm = pageChangeMask ;
     pageChangeMask = -1 ;
     _stprintf(buff,_T("Name of desktop %d:"),currentDesk) ;
-    SetDlgItemText(setupKeysHWnd, IDC_DESKTOPLBL, buff) ;
-    SetDlgItemText(setupKeysHWnd, IDC_DESKTOPNAME, (desktopName[currentDesk] != NULL) ? desktopName[currentDesk]:_T("")) ;
+    SetDlgItemText(setupGeneralHWnd, IDC_DESKTOPLBL, buff) ;
+    SetDlgItemText(setupGeneralHWnd, IDC_DESKTOPNAME, (desktopName[currentDesk] != NULL) ? desktopName[currentDesk]:_T("")) ;
     pageChangeMask = pcm ;
 }
 
@@ -122,7 +201,7 @@ storeDesktopProperties(void)
 {
     TCHAR buff[64], *ss ;
     
-    GetDlgItemText(setupKeysHWnd,IDC_DESKTOPNAME,buff,64) ;
+    GetDlgItemText(setupGeneralHWnd,IDC_DESKTOPNAME,buff,64) ;
     if(((desktopName[currentDesk] == NULL) && (buff[0] != '\0')) ||
        ((desktopName[currentDesk] != NULL) && _tcscmp(buff,desktopName[currentDesk])))
     {
@@ -140,7 +219,7 @@ storeDesktopProperties(void)
 }
 
 /*************************************************
- * The "Key" tab callback
+ * The "General" tab callback
  * This is the firts callback to be called when the property sheet is created
  */
 BOOL APIENTRY
@@ -156,7 +235,7 @@ setupGeneral(HWND hDlg, UINT message, UINT wParam, LONG lParam)
     case WM_INITDIALOG:
         {
             dialogHWnd = GetParent(hDlg) ;
-            setupKeysHWnd = hDlg ;
+            setupGeneralHWnd = hDlg ;
             pageChangeMask = 0 ;
             pageApplyMask = 0 ;
             
@@ -337,114 +416,33 @@ setupGeneral(HWND hDlg, UINT message, UINT wParam, LONG lParam)
 /*************************************************
  * The "Hotkeys" tab callback
  */
-static int vwSetupHotkeyCur ;
-static unsigned char vwSetupHotkeyGotKey ;
-
 static void
-vwSetupHotKeysInitList(HWND hDlg)
-{
-    TCHAR buff[128], *ss;
-    int ii, jj, cmd, deskCount ;
-    
-    if((deskCount = nDesks) < currentDesk)
-        deskCount = currentDesk ;
-    
-    SendDlgItemMessage(hDlg,IDC_HOTKEY_LIST,LB_RESETCONTENT,0, 0);
-    ii = 130 ;
-    SendDlgItemMessage(hDlg,IDC_HOTKEY_LIST,LB_SETTABSTOPS,(WPARAM)1,(LPARAM)&ii);
-    for(ii=0 ; ii<hotkeyCount ; ii++)
-    {
-        if(hotkeyList[ii].desk <= deskCount)
-        {
-            cmd = 0 ;
-            while((vwCommandEnum[cmd] != 0) && (vwCommandEnum[cmd] != hotkeyList[ii].command))
-                cmd++ ;
-            ss = buff ;
-            _tcscpy(ss,vwCommandName[cmd]) ;
-            if(hotkeyList[ii].desk && vwCommandEnum[cmd])
-            {
-                ss = _tcschr(ss,'#') ;
-                ss += _stprintf(ss,_T("%d"),hotkeyList[ii].desk) ;
-                _tcscpy(ss,_tcschr(vwCommandName[cmd],'#') + 1) ;
-            }
-            ss += _tcslen(ss) ;
-            *ss++ = '\t' ;
-            if(hotkeyList[ii].modifier & vwHOTKEY_ALT)
-            {
-                *ss++ = 'A' ;
-                *ss++ = ' ' ;
-                *ss++ = '+' ;
-                *ss++ = ' ' ;
-            }
-            if(hotkeyList[ii].modifier & vwHOTKEY_CONTROL)
-            {
-                *ss++ = 'C' ;
-                *ss++ = ' ' ;
-                *ss++ = '+' ;
-                *ss++ = ' ' ;
-            }
-            if(hotkeyList[ii].modifier & vwHOTKEY_SHIFT)
-            {
-                *ss++ = 'S' ;
-                *ss++ = ' ' ;
-                *ss++ = '+' ;
-                *ss++ = ' ' ;
-            }
-            if(hotkeyList[ii].modifier & vwHOTKEY_WIN)
-            {
-                *ss++ = 'W' ;
-                *ss++ = ' ' ;
-                *ss++ = '+' ;
-                *ss++ = ' ' ;
-            }
-            jj = MapVirtualKey((UINT) hotkeyList[ii].key,0);
-            if(hotkeyList[ii].modifier & vwHOTKEY_EXT)
-                jj |= 0x100 ;
-            GetKeyNameText(jj << 16, ss, 20);
-            SendDlgItemMessage(hDlg,IDC_HOTKEY_LIST,LB_ADDSTRING,0,(LONG) buff);
-        }
-    }
-    if(vwSetupHotkeyCur >= 0)
-    {
-        for(ii=0, jj=0 ; ii != vwSetupHotkeyCur ; ii++)
-            if(hotkeyList[ii].desk <= deskCount)
-                jj++ ;
-        SendDlgItemMessage(hDlg,IDC_HOTKEY_LIST,LB_SETCURSEL,jj,0) ;
-    }
-}
-
-static void
-vwSetupHotKeysInit(HWND hDlg, int firstTime)
+vwSetupHotKeysInit(void)
 {
     TCHAR buff[10] ;
     int ii, jj ;
     
-    if(firstTime)
-    {
-        for(ii=0 ; vwCommandEnum[ii] != 0 ; ii++)
-            SendDlgItemMessage(hDlg,IDC_HOTKEY_CMD,CB_ADDSTRING,0,(LONG) vwCommandName[ii]) ;
-        SendDlgItemMessage(hDlg,IDC_HOTKEY_CMD,CB_SETCURSEL,0,0) ;
-    }
-    else
-    {
-        SendDlgItemMessage(hDlg,IDC_HOTKEY_DSK,CB_RESETCONTENT,0,0);
-    }
+    for(ii=0 ; vwCommandEnum[ii] != 0 ; ii++)
+        SendDlgItemMessage(setupHotkeysHWnd,IDC_HOTKEY_CMD,CB_ADDSTRING,0,(LONG) vwCommandName[ii]) ;
+    SendDlgItemMessage(setupHotkeysHWnd,IDC_HOTKEY_CMD,CB_SETCURSEL,0,0) ;
+    
     if((jj = nDesks) < currentDesk)
         jj = currentDesk ;
     for(ii=1 ; ii<=jj ; ii++)
     {
         _stprintf(buff,_T("%d"),ii) ;
-        SendDlgItemMessage(hDlg, IDC_HOTKEY_DSK, CB_ADDSTRING, 0, (LONG) buff) ;
+        SendDlgItemMessage(setupHotkeysHWnd, IDC_HOTKEY_DSK, CB_ADDSTRING, 0, (LONG) buff) ;
     }
-    SendDlgItemMessage(hDlg,IDC_HOTKEY_DSK,CB_SETCURSEL,currentDesk-1,0) ;
-    EnableWindow(GetDlgItem(hDlg,IDC_HOTKEY_DSK),FALSE) ;
-    EnableWindow(GetDlgItem(hDlg,IDC_HOTKEY_ADD),FALSE) ;
-    EnableWindow(GetDlgItem(hDlg,IDC_HOTKEY_MOD),FALSE) ;
-    EnableWindow(GetDlgItem(hDlg,IDC_HOTKEY_DEL),FALSE) ;
+    SendDlgItemMessage(setupHotkeysHWnd,IDC_HOTKEY_DSK,CB_SETCURSEL,currentDesk-1,0) ;
+    EnableWindow(GetDlgItem(setupHotkeysHWnd,IDC_HOTKEY_DSK),FALSE) ;
+    EnableWindow(GetDlgItem(setupHotkeysHWnd,IDC_HOTKEY_ADD),FALSE) ;
+    EnableWindow(GetDlgItem(setupHotkeysHWnd,IDC_HOTKEY_MOD),FALSE) ;
+    EnableWindow(GetDlgItem(setupHotkeysHWnd,IDC_HOTKEY_DEL),FALSE) ;
     vwSetupHotkeyCur = -1 ;
     vwSetupHotkeyGotKey = 0 ;
-    vwSetupHotKeysInitList(hDlg) ;
+    vwSetupHotKeysInitList() ;
 }
+
 
 static void
 vwSetupHotKeysSetCommand(HWND hDlg)
@@ -602,7 +600,7 @@ vwSetupHotKeysAddMod(HWND hDlg, int add)
         EnableWindow(GetDlgItem(hDlg,IDC_HOTKEY_ADD),FALSE) ;
         EnableWindow(GetDlgItem(hDlg,IDC_HOTKEY_MOD),FALSE) ;
         EnableWindow(GetDlgItem(hDlg,IDC_HOTKEY_DEL),TRUE) ;
-        vwSetupHotKeysInitList(hDlg) ;
+        vwSetupHotKeysInitList() ;
         pageChangeMask |= 0x02 ;
         SendMessage(GetParent(hDlg), PSM_CHANGED, (WPARAM)hDlg, 0L);
     }
@@ -627,7 +625,7 @@ vwSetupHotKeysDelete(HWND hDlg)
     EnableWindow(GetDlgItem(hDlg,IDC_HOTKEY_ADD),TRUE) ;
     EnableWindow(GetDlgItem(hDlg,IDC_HOTKEY_MOD),FALSE) ;
     EnableWindow(GetDlgItem(hDlg,IDC_HOTKEY_DEL),FALSE) ;
-    vwSetupHotKeysInitList(hDlg) ;
+    vwSetupHotKeysInitList() ;
     pageChangeMask |= 0x02 ;
     SendMessage(GetParent(hDlg), PSM_CHANGED, (WPARAM)hDlg, 0L);
 }
@@ -636,7 +634,8 @@ BOOL APIENTRY setupHotkeys(HWND hDlg, UINT message, UINT wParam, LONG lParam)
 {
     switch (message) {
     case WM_INITDIALOG:
-        vwSetupHotKeysInit(hDlg,1) ;
+        setupHotkeysHWnd = hDlg ;
+        vwSetupHotKeysInit() ;
         return TRUE;
         
     case WM_NOTIFY:
@@ -1276,7 +1275,8 @@ createSetupDialog(HINSTANCE theHinst, HWND theHwndOwner)
     psh.hIcon = (HICON) LoadImage(theHinst, MAKEINTRESOURCE(IDI_VIRTUAWIN), IMAGE_ICON, xIcon, yIcon, 0);
     psh.pfnCallback = (PFNPROPSHEETCALLBACK)propCallBack;
     
-    setupKeysHWnd = NULL;
+    setupGeneralHWnd = NULL;
+    setupHotkeysHWnd = NULL;
     dialogOpen = TRUE;
     PropertySheet(&psh);
     dialogOpen = FALSE;
