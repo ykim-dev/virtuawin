@@ -49,6 +49,7 @@ VW_COMMAND (vwCMD_WIN_MOVE_NEXT_FOL, 15, 2, "WIN: Move to next desktop and follo
 VW_COMMAND (vwCMD_WIN_MOVE_PREV_FOL, 13, 2, "WIN: Move to prev desktop and follow")
 VW_COMMAND (vwCMD_WIN_MOVE_DESK_FOL, 11, 3, "WIN: Move to desktop # and follow")
 VW_COMMAND (vwCMD_WIN_GATHER_ALL,    26, 0, "WIN: Gather all windows")
+VW_COMMAND (vwCMD_WIN_REAPPLY_RULES, 46, 0, "WIN: Reapply window rules")
 VW_COMMAND (vwCMD_UI_CTLMENU_STD,    43, 0, "UI: Open standard control menu")
 VW_COMMAND (vwCMD_UI_CTLMENU_CMP,    28, 0, "UI: Open compact control menu")
 VW_COMMAND (vwCMD_UI_WINMENU_STD,    18, 0, "UI: Open standard window menu")

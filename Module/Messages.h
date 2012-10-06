@@ -169,6 +169,9 @@
  *  3 execute the desktop change */
 #define VW_ICHANGEDESK  (WM_USER + 48)
 
+/* Message, command to make VirtuaWin reapply window rules, always returns TRUE */
+#define VW_APPLYRULES   (WM_USER + 49)
+
 
 /* Message, sent by VirtuaWin after a switch. lParam will contain current desktop number 
    if wParam isn't one of the following, then wParam will also contain current desktop.

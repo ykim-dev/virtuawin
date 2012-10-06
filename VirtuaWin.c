@@ -4778,7 +4778,7 @@ popupControlMenu(HWND aHWnd, int cmFlags)
             insertMenuItems(hpopup,200,&mi,&mid) ;
             AppendMenu(hpopup,MF_STRING,ID_WTYPE,_T("&Window Rules")) ;
             insertMenuItems(hpopup,300,&mi,&mid) ;
-            AppendMenu(hpopup,MF_STRING,ID_REAPPLY_RULES,_T("&Re-apply Rules")) ;
+            AppendMenu(hpopup,MF_STRING,ID_REAPPLY_RULES,_T("&Reapply Rules")) ;
         }
     }
     else
@@ -4865,7 +4865,7 @@ popupControlMenu(HWND aHWnd, int cmFlags)
         showWindowRule(NULL,0) ;
         break;
     case ID_REAPPLY_RULES:
-        vwWindowRuleReapply() ;
+        vwWindowRuleReapply() ; // Reapply all window rules
         break ;
     case ID_GATHER:		// gather all windows
         vwWindowShowAll(0);
@@ -4973,6 +4973,9 @@ vwHotkeyExecute(vwUByte command, vwUByte desk, vwUByte modifier)
         return windowSetAlwaysOnTop(theWin) ;
     case vwCMD_WIN_GATHER_ALL:
         vwWindowShowAll(0);
+        break ;
+    case vwCMD_WIN_REAPPLY_RULES:
+        vwWindowRuleReapply() ;
         break ;
     case vwCMD_UI_WTYPE_SETUP:
         showWindowRule(theWin,0) ;
@@ -5442,6 +5445,10 @@ wndProc(HWND aHWnd, UINT message, WPARAM wParam, LPARAM lParam)
             ichangeHWnd = NULL ;
         return 0 ;
         
+    case VW_APPLYRULES:
+        vwWindowRuleReapply() ;
+        return TRUE ;
+
         // End plugin messages
         
     case WM_CREATE:		       // when main window is created
