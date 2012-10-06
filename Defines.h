@@ -73,6 +73,7 @@ typedef unsigned char  vwUByte ;
 #define vwWTFLAGS_GROUP_APP        0x00010000
 #define vwWTFLAGS_HWACT_MASK       0x000e0000
 #define vwWTFLAGS_HWACT_BITROT     17
+#define vwWTFLAGS_CLOSE            0x00100000
 #define vwWTFLAGS_HIDEWIN_MASK     0x0f000000
 #define vwWTFLAGS_HIDEWIN_BITROT   24
 #define vwWTFLAGS_HIDEWIN_HIDE     0x00000000

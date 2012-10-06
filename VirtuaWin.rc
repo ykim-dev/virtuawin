@@ -176,7 +176,7 @@ BEGIN
     DEFPUSHBUTTON   "OK", IDCANCEL,  105, 190, 40, 14
 END
 
-IDD_WINDOWRULEDIALOG DIALOG 79, 25, 292, 351
+IDD_WINDOWRULEDIALOG DIALOG 79, 25, 292, 362
 STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "VirtuaWin - Window Rules"
 FONT 8, "MS Shell Dlg"
@@ -196,27 +196,28 @@ BEGIN
     EDITTEXT        IDC_WTYPE_PNAME,              60, 158, 135, 12, ES_LEFT | ES_AUTOHSCROLL
 
     AUTOCHECKBOX    "Window rule enabled", IDC_WTYPE_ENABLE, 6, 172, 100, 10
-    AUTOCHECKBOX    "Make windows of this type always on top", IDC_WTYPE_ALONTOP, 18, 183, 160, 10
-    AUTORADIOBUTTON "Never manage windows of this type", IDC_WTYPE_NMANAGE, 18, 194, 130, 10
-    AUTORADIOBUTTON "Always manage windows of this type", IDC_WTYPE_AMANAGE, 18, 205, 140, 10
-    AUTORADIOBUTTON "Let VirtuaWin decide whether to manage windows", IDC_WTYPE_VMANAGE, 18, 216, 170, 10
-    AUTOCHECKBOX    "Main window of multiple taskbar buttons", IDC_WTYPE_MAINWIN,  18, 227, 160, 10
-    AUTOCHECKBOX    "Show windows of this type on all desktops", IDC_WTYPE_STICKY,  18, 238, 160, 10
-    AUTOCHECKBOX    "Keep all windows of this application together", IDC_WTYPE_GRPAPP,  18, 249, 160, 10
-    AUTOCHECKBOX    "Automatically move windows of this type to Desktop:", IDC_WTYPE_AMOVE, 18, 262, 180, 10
-    COMBOBOX        IDC_WTYPE_AMDSK, 200, 260, 40, 200, CBS_AUTOHSCROLL | CBS_DROPDOWNLIST | WS_TABSTOP
-    AUTOCHECKBOX    "Move windows immediately", IDC_WTYPE_AMIMM, 30, 274, 100, 10
-    LTEXT           "On hidden window activation:", IDC_STATIC,   18, 287, 110, 10
-    COMBOBOX        IDC_WTYPE_HWACT, 130, 285, 130, 56, CBS_AUTOHSCROLL | CBS_DROPDOWNLIST | WS_TABSTOP
-    LTEXT           "Method for hiding the window:", IDC_STATIC,  18, 301, 110, 10
-    COMBOBOX        IDC_WTYPE_WHIDE, 130, 299, 130, 150, WS_VSCROLL | CBS_DROPDOWNLIST | WS_TABSTOP
-    LTEXT           "Method for hiding taskbar button:", IDC_STATIC,  18, 315, 110, 10
-    COMBOBOX        IDC_WTYPE_THIDE, 130, 313, 130, 150, WS_VSCROLL | CBS_DROPDOWNLIST | WS_TABSTOP
+    AUTOCHECKBOX    "Automatically close windows of this type", IDC_WTYPE_CLOSE, 18, 183, 160, 10
+    AUTOCHECKBOX    "Make windows of this type always on top", IDC_WTYPE_ALONTOP, 18, 194, 160, 10
+    AUTORADIOBUTTON "Never manage windows of this type", IDC_WTYPE_NMANAGE, 18, 205, 130, 10
+    AUTORADIOBUTTON "Always manage windows of this type", IDC_WTYPE_AMANAGE, 18, 216, 140, 10
+    AUTORADIOBUTTON "Let VirtuaWin decide whether to manage windows", IDC_WTYPE_VMANAGE, 18, 227, 170, 10
+    AUTOCHECKBOX    "Main window of multiple taskbar buttons", IDC_WTYPE_MAINWIN,  18, 238, 160, 10
+    AUTOCHECKBOX    "Show windows of this type on all desktops", IDC_WTYPE_STICKY,  18, 249, 160, 10
+    AUTOCHECKBOX    "Keep all windows of this application together", IDC_WTYPE_GRPAPP,  18, 260, 160, 10
+    AUTOCHECKBOX    "Automatically move windows of this type to Desktop:", IDC_WTYPE_AMOVE, 18, 273, 180, 10
+    COMBOBOX        IDC_WTYPE_AMDSK, 200, 271, 40, 200, CBS_AUTOHSCROLL | CBS_DROPDOWNLIST | WS_TABSTOP
+    AUTOCHECKBOX    "Move windows immediately", IDC_WTYPE_AMIMM, 30, 285, 100, 10
+    LTEXT           "On hidden window activation:", IDC_STATIC,   18, 298, 110, 10
+    COMBOBOX        IDC_WTYPE_HWACT, 130, 296, 130, 56, CBS_AUTOHSCROLL | CBS_DROPDOWNLIST | WS_TABSTOP
+    LTEXT           "Method for hiding the window:", IDC_STATIC,  18, 312, 110, 10
+    COMBOBOX        IDC_WTYPE_WHIDE, 130, 310, 130, 150, WS_VSCROLL | CBS_DROPDOWNLIST | WS_TABSTOP
+    LTEXT           "Method for hiding taskbar button:", IDC_STATIC,  18, 326, 110, 10
+    COMBOBOX        IDC_WTYPE_THIDE, 130, 324, 130, 150, WS_VSCROLL | CBS_DROPDOWNLIST | WS_TABSTOP
 
-    PUSHBUTTON      "OK",      IDC_WTYPE_OK,     111, 331, 40, 14
-    DEFPUSHBUTTON   "Cancel",  IDCANCEL,         156, 331, 40, 14
-    PUSHBUTTON      "Apply",   IDC_WTYPE_APPLY,  201, 331, 40, 14
-    PUSHBUTTON      "Help",    IDC_WTYPE_HELP,   246, 331, 40, 14
+    PUSHBUTTON      "OK",      IDC_WTYPE_OK,     111, 342, 40, 14
+    DEFPUSHBUTTON   "Cancel",  IDCANCEL,         156, 342, 40, 14
+    PUSHBUTTON      "Apply",   IDC_WTYPE_APPLY,  201, 342, 40, 14
+    PUSHBUTTON      "Help",    IDC_WTYPE_HELP,   246, 342, 40, 14
 END
 
 #ifndef _MAC

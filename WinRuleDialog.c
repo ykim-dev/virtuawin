@@ -150,6 +150,7 @@ windowRuleDialogInitItem(HWND hDlg)
             EnableWindow(GetDlgItem(hDlg,IDC_WTYPE_MOD),TRUE) ;
             EnableWindow(GetDlgItem(hDlg,IDC_WTYPE_DEL),TRUE) ;
             SendDlgItemMessage(hDlg,IDC_WTYPE_ENABLE,BM_SETCHECK,((wt->flags & vwWTFLAGS_ENABLED) != 0), 0);
+            SendDlgItemMessage(hDlg,IDC_WTYPE_CLOSE,BM_SETCHECK,((wt->flags & vwWTFLAGS_CLOSE) != 0), 0);
             SendDlgItemMessage(hDlg,IDC_WTYPE_ALONTOP,BM_SETCHECK,((wt->flags & vwWTFLAGS_ALWAYSONTOP) != 0), 0);
             SendDlgItemMessage(hDlg,IDC_WTYPE_NMANAGE,BM_SETCHECK,((wt->flags & vwWTFLAGS_DONT_MANAGE) != 0), 0);
             SendDlgItemMessage(hDlg,IDC_WTYPE_AMANAGE,BM_SETCHECK,((wt->flags & vwWTFLAGS_MANAGE) != 0), 0);
@@ -427,9 +428,11 @@ windowRuleDialogAddMod(HWND hDlg, int add)
         } while(--ii >= 0) ;
         if(SendDlgItemMessage(hDlg,IDC_WTYPE_ENABLE,BM_GETCHECK,0,0) == BST_CHECKED)
             flags |= vwWTFLAGS_ENABLED ;
+        if(SendDlgItemMessage(hDlg,IDC_WTYPE_CLOSE,BM_GETCHECK,0,0) == BST_CHECKED)
+            flags |= vwWTFLAGS_CLOSE ;
         if(SendDlgItemMessage(hDlg,IDC_WTYPE_ALONTOP,BM_GETCHECK,0,0) == BST_CHECKED)
             flags |= vwWTFLAGS_ALWAYSONTOP ;
-        if(SendDlgItemMessage(hDlg,IDC_WTYPE_NMANAGE,BM_GETCHECK,0,0) == BST_CHECKED)
+        else if(SendDlgItemMessage(hDlg,IDC_WTYPE_NMANAGE,BM_GETCHECK,0,0) == BST_CHECKED)
             flags |= vwWTFLAGS_DONT_MANAGE ;
         else if(SendDlgItemMessage(hDlg,IDC_WTYPE_AMANAGE,BM_GETCHECK,0,0) == BST_CHECKED)
             flags |= vwWTFLAGS_MANAGE ;

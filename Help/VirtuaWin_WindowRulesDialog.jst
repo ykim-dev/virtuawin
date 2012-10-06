@@ -90,12 +90,19 @@ identification, particularly the Window Name.
 side effects; VirtuaWin handles most windows correctly so only change settings
 which directly address a problem.
 
-*.  &[a WRD_MWAOT]**//Make windows of this type always on top//**: If checked
+*.  &[a WRD_ACWOTT]**//Automatically close windows of this type//**: If checked
+    any window of this type will be automatically closed as soon as they are
+    detected.
+    
+    **Note:** This option is applied regardless of whether VirtuaWin is
+    configured to manage the window - see option &[l #WRD_MWOTT]Manage windows of this type&[/l].
+
+.   &[a WRD_MWAOT]**//Make windows of this type always on top//**: If checked
     any window of this type will have their Window's 'Always on top' property
     set which keeps the window above other windows.
     
     **Note:** This option is applied regardless of whether VirtuaWin is
-    configured to manage the window - see next option.
+    configured to manage the window - see option &[l #WRD_MWOTT]Manage windows of this type&[/l].
 
 .   &[a WRD_MWOTT]**//Manage windows of this type//**: Three radio buttons give the options to Never
     manage, Always manage or Let VirtuaWin decide (default).

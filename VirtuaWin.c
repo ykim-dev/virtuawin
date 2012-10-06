@@ -1942,8 +1942,13 @@ enumWindowsProc(HWND hwnd, LPARAM lParam)
                 vwLogBasic((_T("Got new unmanaged window %8x Proc %d Flg %x %x (%08x) %x\n"),
                             (int)win->handle,(int)win->processId,(int)win->flags,(int) exstyle,(int)style,win->zOrder[0])) ;
         }
-        if((wt != NULL) && (wt->flags & vwWTFLAGS_ALWAYSONTOP) && ((exstyle & WS_EX_TOPMOST) == 0))
-            windowSetAlwaysOnTop(hwnd) ;
+        if(wt != NULL)
+        {
+            if(wt->flags & vwWTFLAGS_CLOSE)
+               SendMessageTimeout(hwnd,WM_CLOSE,0,0L,SMTO_ABORTIFHUNG|SMTO_BLOCK,100,NULL) ;
+            if((wt->flags & vwWTFLAGS_ALWAYSONTOP) && ((exstyle & WS_EX_TOPMOST) == 0))
+                windowSetAlwaysOnTop(hwnd) ;
+        }
         return TRUE;
     }
     wb->flags |= vwWINFLAGS_FOUND ;
