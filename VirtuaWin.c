@@ -5449,6 +5449,9 @@ wndProc(HWND aHWnd, UINT message, WPARAM wParam, LPARAM lParam)
         vwWindowRuleReapply() ;
         return TRUE ;
 
+    case VW_INVERTY:
+        return invertY ;
+
         // End plugin messages
         
     case WM_CREATE:		       // when main window is created

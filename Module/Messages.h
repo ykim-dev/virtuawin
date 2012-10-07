@@ -155,7 +155,6 @@
  * 2980468 (https://sourceforge.net/tracker/?func=detail&aid=2980468&group_id=39588&atid=526970)
  * for more info and example code */
 #define VW_CMENUITEM    (WM_USER + 47)
-
 /* Message, used to get or set the current desktop change module handler and to manage a desktop
  * change. VirtuaWin supports one module controlling the desktop change process, if a module has 
  * set itself as the ICHANGE handler then on every desktop change VirtuaWin will send the module
@@ -168,9 +167,10 @@
  *  2 to remove self as handler
  *  3 execute the desktop change */
 #define VW_ICHANGEDESK  (WM_USER + 48)
-
 /* Message, command to make VirtuaWin reapply window rules, always returns TRUE */
 #define VW_APPLYRULES   (WM_USER + 49)
+/* Message, returns the Expert setting of Invert Up/Down, 1 = enabled, 0 otherwise */
+#define VW_INVERTY      (WM_USER + 50)
 
 
 /* Message, sent by VirtuaWin after a switch. lParam will contain current desktop number 

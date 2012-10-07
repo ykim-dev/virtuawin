@@ -423,13 +423,30 @@ not be fully up-to-date:
     
     ]! 1071
 
+    ] hWnd
+
+    ] 0
+
+    ] Remove all items added to the control menu, use WM_COPYDATA to add
+    items, see feature request 2980468 for more information and examples.
+    
+    ]! 1071
+
+    ] hWnd
+
+    ] #
+
+    ] Remove added item # from the control menu.
+    
+    ]! 1072
+
     ] 0
 
     ] -
 
     ] Get the handle of the current module handling desktop changes.
 
-    ]! 1071
+    ]! 1072
 
     ] 1
 
@@ -438,7 +455,7 @@ not be fully up-to-date:
     ] Set the handle of the module handling desktop changes, returns 2 if
     successful, 1 otherwise.
 
-    ]! 1071
+    ]! 1072
 
     ] 2
 
@@ -446,7 +463,7 @@ not be fully up-to-date:
 
     ] Unsets the current desktop change handling module.
 
-    ]! 1071
+    ]! 1072
 
     ] 3
 
@@ -455,13 +472,22 @@ not be fully up-to-date:
     ] Execute the desktop change - only sent but the module controlling
     desktop changing. See Messages.h for more information.
 
-    ]? 1072
+    ]! 1073
 
     ] -
     
     ] -
 
     ] Re-initialize all windows visible on the current desktop, applying all
+    window rules appropriately. Window settings like 'Always show' will be reset.
+
+    ]? 1074
+
+    ] -
+    
+    ] -
+
+    ] Return current Inervt Up/Down setting, Re-initialize all windows visible on the current desktop, applying all
     window rules appropriately. Window settings like 'Always show' will be reset.
 
 
