@@ -2605,14 +2605,15 @@ monitorTimerProc(HWND hwnd, UINT uMsg, UINT idEvent, DWORD dwTime)
     int ii, hungCount ;
     
     timerCounter++ ;
-    if((taskHWnd == NULL) && (noTaskbarCheck == 0) && ((timerCounter & 0x3) == 0))
+    if(((deskIconHWnd == NULL) || ((hwnd=taskHWnd) == NULL)) && (noTaskbarCheck == 0) && ((timerCounter & 0x3) == 0))
     {
         vwTaskbarHandleGet() ;
-        if(taskHWnd != NULL)
+        if((hwnd == NULL) && (taskHWnd != NULL))
             vwIconSet(currentDesk,0) ;
-        else if(timerCounter >= 20)
+        if(timerCounter >= 20)
         {
-            MessageBox(hWnd,_T("Could not locate handle to the taskbar.\n This will disable the ability to hide troublesome windows correctly."),vwVIRTUAWIN_NAME _T(" Error"), 0); 
+            if(taskHWnd == NULL)
+                MessageBox(hWnd,_T("Could not locate handle to the taskbar.\n This will disable the ability to hide troublesome windows correctly."),vwVIRTUAWIN_NAME _T(" Error"), 0); 
             noTaskbarCheck = 2 ;
         }
     }
@@ -5579,7 +5580,10 @@ wndProc(HWND aHWnd, UINT message, WPARAM wParam, LPARAM lParam)
         {
             taskbarIconShown &= ~0x01 ;
             vwTaskbarHandleGet();
-            vwIconSet(currentDesk,0) ;
+            if(taskHWnd != NULL)
+                vwIconSet(currentDesk,0) ;
+            else if(deskIconHWnd == NULL)
+                timerCounter = 0 ;
         }
         break;
     }
