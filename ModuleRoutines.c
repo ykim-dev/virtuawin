@@ -3,7 +3,7 @@
 //  ModuleRoutines.c - Module handling routines.
 // 
 //  Copyright (c) 1999-2005 Johan Piculell
-//  Copyright (c) 2006-2010 VirtuaWin (VirtuaWin@home.se)
+//  Copyright (c) 2006-2012 VirtuaWin (VirtuaWin@home.se)
 // 
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by

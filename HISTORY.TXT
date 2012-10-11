@@ -1,6 +1,27 @@
 ***   VirtuaWin Revision History   ***
 --------------------------------------
 
+Ver 4.4 2012/10/09
+
+* 3178720 Added dynamic taskbar support for Win7
+* 3082777 Implemented boss & unboss key
+* 3205756 Fixed activation of minimized window when not hiding them.
+* 3213525 Fixed title bar redraw issue caused by toggling TOOLWIN flag
+* 3310612 Implemented own FindWindow and improved module start-up reliability
+* 3242208 Changed action of Module Enable/Disable button to start module
+* 3060975 Improved code getting a window icon, getting icon from app first
+* 3364055 Updated hotkey list when setup is applied as changes may effect it
+* 3376539 Handled explorer exiting so middle mouse button still works
+* 3575279 Added message VW_INVERTY to return invert Up/Down setting
+* 3481678 Added Reapply window rules hotkey and module interface
+* 3304530 Added Automatically close window option to Window rule dialog
+* 3082788 Fixed problem with middle clicking on opera tabs opening VW menu
+* 3110164 Fixed problem with 'stickies' windows being automatically grouped
+
+
+
+----------------------------
+
 Ver 4.3 2010/09/04
 
 * 3058490 Fixed bug causing current window to be moved to the next desktop

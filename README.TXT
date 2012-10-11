@@ -52,5 +52,5 @@ VirtuaWin is a freely distributed program and is licensed under the GNU
 General Public License.
 
 Copyright (c) 1999-2005 Johan Piculell
-Copyright (c) 2006-2010 VirtuaWin (VirtuaWin@home.se)
+Copyright (c) 2006-2012 VirtuaWin (VirtuaWin@home.se)
 

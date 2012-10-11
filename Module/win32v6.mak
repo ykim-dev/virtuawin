@@ -1,7 +1,7 @@
 # VirtuaWin (virtuawin.sourceforge.net)
 # win32v6.mak - WinList make file for Microsoft MSVC v6.0
 #
-# Copyright (c) 2006-2010 VirtuaWin (VirtuaWin@home.se)
+# Copyright (c) 2006-2012 VirtuaWin (VirtuaWin@home.se)
 #
 # This program is free software; you can redistribute it and/or modify it
 # under the terms of the GNU General Public License as published by the Free
