@@ -56,21 +56,21 @@ A combination of three fields is used to identify what windows the window rule i
 *.  &[a WRD_CN]**//Class Name//**: Defines the name of the window’s class, this can be found
     in the &[l VirtuaWin_WindowMenu.htm]Window Menu&[/l]’s Info dialog. A ‘*’ at the beginning and/or at the end
     can be used for partial string matching (e.g. “*MyClass*” will match any
-    window class containing the string “MyClass”). Leave is field empty if the
+    window class containing the string “MyClass”). Leave this field empty if the
     window rule is not to match on the window’s class.
 
 .   &[a WRD_WN]**//Window Name//**: Defines the title of the window, note that this must be
     correctly set for when the window is first created (or when the window
     rules are reapplied). A ‘*’ at the beginning and/or at the end can be used
     for partial string matching (e.g. “*Mozilla Firefox” will match any window
-    whose title ends in the string “Mozilla Firefox ”). Leave is field empty
+    whose title ends in the string “Mozilla Firefox ”). Leave this field empty
     if the window rule is not to match on the window’s title.
 
 
 .   &[a WRD_PN]**//Program Name//**: Defines the full path of the program which created the
     window, this can be found in the &[l VirtuaWin_WindowMenu.htm]Window Menu&[/l]’s Info dialog. A ‘*’ at the
     beginning and/or at the end can be used for partial string matching (e.g.
-    “*\firefox.exe” will match any window created by Firefox). Leave is field
+    “*\firefox.exe” will match any window created by Firefox). Leave this field
     empty if the window rule is not to match on the window’s executable.
 
     **Note:** The Program Name is not support on early versions of Windows, e.g. Win9x.
