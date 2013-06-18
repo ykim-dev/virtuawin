@@ -3341,7 +3341,7 @@ winListCreateItemList(int flags, vwListItem **items,int *numitems)
             else
             {
                 for(y=0 ; y<i ; y++)
-                    if(_tcscmp(item->name,items[y]->name) < 0)
+                    if(_tcsicmp(item->name,items[y]->name) < 0)
                         break ;
             }
             x = i ;
