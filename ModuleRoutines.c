@@ -3,7 +3,7 @@
 //  ModuleRoutines.c - Module handling routines.
 // 
 //  Copyright (c) 1999-2005 Johan Piculell
-//  Copyright (c) 2006-2012 VirtuaWin (VirtuaWin@home.se)
+//  Copyright (c) 2006-2014 VirtuaWin (VirtuaWin@home.se)
 // 
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -49,7 +49,7 @@ void
 vwModuleLoad(int moduleIdx, TCHAR *path)
 {
     HWND modHWnd ;
-    TCHAR buff[MAX_PATH], *s1, *s2 ;
+    TCHAR buff[MAX_PATH+128], *s1, *s2 ;
     STARTUPINFO si;
     PROCESS_INFORMATION pi;  
     int rv1, rv2 ;

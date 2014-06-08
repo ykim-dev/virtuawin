@@ -3,7 +3,7 @@
 //  SetupDialog.c - Setup Dialog routines.
 // 
 //  Copyright (c) 1999-2005 Johan Piculell
-//  Copyright (c) 2006-2012 VirtuaWin (VirtuaWin@home.se)
+//  Copyright (c) 2006-2014 VirtuaWin (VirtuaWin@home.se)
 // 
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -1056,7 +1056,7 @@ setupExpert(HWND hDlg, UINT message, UINT wParam, LONG lParam)
         {   // Explore Config
             STARTUPINFO si;
             PROCESS_INFORMATION pi;  
-            TCHAR cmdLn[MAX_PATH+9], *ss ;
+            TCHAR cmdLn[MAX_PATH+16], *ss ;
             
             _tcscpy(cmdLn,_T("explorer ")) ;
             GetFilename(vwVIRTUAWIN_CFG,1,cmdLn+9) ;
