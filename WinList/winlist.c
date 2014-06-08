@@ -3,7 +3,7 @@
 //  winlist.c - VirtuaWin module for restoring lost windows.
 // 
 //  Copyright (c) 1999-2005 Johan Piculell
-//  Copyright (c) 2006-2012 VirtuaWin (VirtuaWin@home.se)
+//  Copyright (c) 2006-2014 VirtuaWin (VirtuaWin@home.se)
 // 
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -356,9 +356,15 @@ DialogFunc(HWND hwndDlg, UINT msg, WPARAM wParam, LPARAM lParam)
     switch(msg)
     {
     case WM_INITDIALOG:
-        GenerateWinList(hwndDlg,0);
-        return TRUE;
-        
+        {
+            HICON icn;
+            icn = LoadImage(hInst,MAKEINTRESOURCE(IDI_VIRTUAWIN),IMAGE_ICON,
+                            GetSystemMetrics(SM_CXSMICON),GetSystemMetrics(SM_CYSMICON),0);
+            if(icn)
+                SendMessage(hwndDlg,WM_SETICON,ICON_SMALL,(LPARAM)icn);
+            GenerateWinList(hwndDlg,0);
+            return TRUE;
+        }
     case WM_NOTIFY:
         if(wParam == ID_WINLIST)
         {
@@ -586,6 +592,7 @@ WinListInit(void)
     wc.style = 0;
     wc.lpfnWndProc = (WNDPROC)MainWndProc;
     wc.hInstance = hInst;
+    wc.hIcon = LoadIcon(hInst,MAKEINTRESOURCE(IDI_VIRTUAWIN));
     /* IMPORTANT! The classname must be the same as the filename since VirtuaWin uses 
        this for locating the window */
     wc.lpszClassName = _T("WinList.exe");
