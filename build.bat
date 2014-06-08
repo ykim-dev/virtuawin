@@ -2,7 +2,7 @@
 rem VirtuaWin (virtuawin.sourceforge.net)
 rem build - VirtuaWin build script for Microsoft cmd.
 rem
-rem Copyright (c) 2006-2012 VirtuaWin (VirtuaWin@home.se)
+rem Copyright (c) 2006-2014 VirtuaWin (VirtuaWin@home.se)
 rem
 rem See the file VirtuaWin.c for copying and conditions.
 rem
@@ -44,16 +44,37 @@ set MAKEFILE=%1
 shift
 goto build_option
 
-:build_unicode
-
 :build_cont
 
 if "%TARGET%." == "." set TARGET=%DTARGET%
 
-set MAKE=nmake
-if "%MAKEFILE%." == "."       set MAKEFILE=win32v6.mak
-if "%MAKEFILE%" == "Makefile" set MAKE=make
+if "%MAKEFILE%" == "Makefile" set goto build_unxmake
 
+set MAKE=nmake -nologo
+if NOT "%MAKEFILE%." == "." goto build_make
+
+if "%VCINSTALLDIR%." == "." goto build_vc6
+
+set MAKEFILE=win32v9.mak
+if NOT "%VCINSTALLDIR:8\VC=%" == "%VCINSTALLDIR%" set MAKEFILE=win32v8.mak
+
+goto build_make
+
+:build_vc6
+
+set MAKEFILE=win32v6.mak
+if NOT "%MSVCDir%." == "." goto build_make
+
+echo ERROR: Failed to identify C compiler, please setup compiler environment or use -m option
+echo.
+
+goto build_exit
+
+:build_unxmake
+
+set MAKE=make
+
+:build_make
 
 if "%LOGFILE%." == "." goto build_applog
 
@@ -81,7 +102,7 @@ goto build_exit
 :build_help
 
 echo Usage: build [options]
-echo .
+echo.
 echo Where options can be:-
 echo     -C   : Build clean.
 echo     -d   : For debug build (output is VirtuaWinD.exe).
@@ -93,11 +114,13 @@ echo          : Append the compile log to the given file.
 echo     -m {makefile}
 echo            Sets the makefile to use where {makefile} can be:-
 echo              Makefile     Build using Cygwin, MinGW or Linux GNU GCC
-echo              win32v6.mak  Build using MS VC version 6 onwards
+echo              win32v6.mak  Build using MS VC version 6
+echo              win32v8.mak  Build using MS VC version 8 (2005)
+echo              win32v9.mak  Build using MS VC version 9 onwards
 echo     -S   : Build clean spotless.
 echo     -u   : Build with UNICODE support.
 echo     -vd  : Build with debug verbosity logging (large output).
-echo .
+echo.
 echo If you change the build options used do a clean build (build -C) first.
 
 :build_exit

@@ -1,5 +1,5 @@
 # VirtuaWin (virtuawin.sourceforge.net)
-# win32v6.mak - Module make file for Microsoft MSVC v6.0
+# win32v8.mak - Assigner module make file for Microsoft MSVC v8.0
 #
 # Copyright (c) 2006-2014 VirtuaWin (VirtuaWin@home.se)
 #
@@ -19,26 +19,27 @@
 #
 ##############################################################################
 
-TOOLSDIR= c:\Program Files\Microsoft Visual Studio\vc98
 CC      = cl
 RC      = rc
 LD	= link
-CFLAGS	= -nologo -G5 -YX -GX -O2 -DNDEBUG "-I$(TOOLSDIR)\include"
-CFLAGSD = -nologo -G5 -W3 -GX -Z7 -YX -Yd -Od -MLd "-I$(TOOLSDIR)\include"
-LDFLAGS	= /SUBSYSTEM:windows /NOLOGO /INCREMENTAL:no /MACHINE:IX86 /PDB:NONE "/LIBPATH:$(TOOLSDIR)\lib"
-LDFLAGSD= /DEBUG /SUBSYSTEM:windows /NOLOGO /INCREMENTAL:no /MACHINE:IX86 /PDB:NONE "/LIBPATH:$(TOOLSDIR)\lib"
+CFLAGS	= -nologo -W2 -EHsc -O2 -MT -DNDEBUG -D_CRT_SECURE_NO_DEPRECATE -D_CRT_NON_CONFORMING_SWPRINTFS
+CFLAGSD = -nologo -W2 -Z7 -RTC1 -EHsc -Od -MTd -D_DEBUG -D_CRT_SECURE_NO_DEPRECATE -D_CRT_NON_CONFORMING_SWPRINTFS
+LDFLAGS	= -nologo -subsystem:windows -incremental:no -machine:I386
+LDFLAGSD= -nologo -debug -subsystem:windows -incremental:no -machine:I386
 LIBS	= shell32.lib user32.lib gdi32.lib comctl32.lib
 
 !IFDEF vwUNICODE
 CUCDEFS = -DUNICODE -D_UNICODE
 !ENDIF
 
-SRC	= Module.c
+SRC	= assigner.c
+COFFS   = assigner.coff
+OBJRES  = assigner.res
 
-TARGET	= Module.exe
+TARGET	= VWAssigner.exe
 OBJS    = $(SRC:.c=.o)
 
-TARGETD	= ModuleD.exe
+TARGETD	= VWAssignerD.exe
 OBJSD   = $(SRC:.c=.od)
 
 .SUFFIXES: .rc .res .coff .c .o .od
@@ -46,11 +47,13 @@ OBJSD   = $(SRC:.c=.od)
 	$(CC) $(CFLAGS) $(CUCDEFS) -c $< -Fo$@
 .c.od:
 	$(CC) $(CFLAGSD) $(CUCDEFS) -c $< -Fo$@
+.rc.res:	
+	$(RC) -v -fo $@ $*.rc 
 
-$(TARGET): $(OBJS)
+$(TARGET): $(OBJS) $(OBJRES)
 	$(LD) $(LDFLAGS) /out:$@ $(OBJS) $(OBJRES) $(LIBS)
 
-$(TARGETD): $(OBJSD)
+$(TARGETD): $(OBJSD) $(OBJRES)
 	$(LD) $(LDFLAGSD) /out:$@ $(OBJSD) $(OBJRES) $(LIBS)
 
 all:    clean $(TARGET)
@@ -58,7 +61,7 @@ all:    clean $(TARGET)
 alld:   clean $(TARGETD)
 
 clean: 
-	- erase $(OBJS) $(OBJSD) vc60.pch
+	- erase $(OBJS) $(OBJSD) $(OBJRES) vc60.pch
 
 spotless: clean
-	- erase $(TARGET) $(TARGETD)
+	- erase $(TARGET) $(TARGETD) $(COFFS)

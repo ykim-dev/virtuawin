@@ -2,7 +2,7 @@
 rem VirtuaWin (virtuawin.sourceforge.net)
 rem build - VirtuaWin build script for Microsoft cmd.
 rem
-rem Copyright (c) 2006-2012 VirtuaWin (VirtuaWin@home.se)
+rem Copyright (c) 2006-2014 VirtuaWin (VirtuaWin@home.se)
 rem
 rem See the file VirtuaWin.c for copying and conditions.
 rem
@@ -15,7 +15,7 @@ set MAKEFILE=
 :build_option
 if "%1." == "."    goto build_cont
 if "%1" == "-C"    set  TARGET=clean
-if "%1" == "-d"    set  DTARGET=ModuleD.exe
+if "%1" == "-d"    set  DTARGET=alld
 if "%1" == "-h"    goto build_help
 if "%1" == "-l"    goto build_logf
 if "%1" == "-la"   goto build_logfa
@@ -43,16 +43,27 @@ set MAKEFILE=%1
 shift
 goto build_option
 
-:build_unicode
-
 :build_cont
 
 if "%TARGET%." == "." set TARGET=%DTARGET%
 
-set MAKE=nmake
-if "%MAKEFILE%." == "."       set MAKEFILE=win32v6.mak
-if "%MAKEFILE%" == "Makefile" set MAKE=make
+if "%MAKEFILE%" == "Makefile" set goto build_unxmake
 
+set MAKE=nmake -nologo
+if NOT "%MAKEFILE%." == "." goto build_make
+
+set MAKEFILE=win32v6.mak
+
+if NOT "%VS90COMNTOOLS%." == "." set MAKEFILE=win32v9.mak
+if NOT "%VS100COMNTOOLS%." == "." set MAKEFILE=win32v10.mak
+
+goto build_make
+
+:build_unxmake
+
+set MAKE=make
+
+:build_make
 
 if "%LOGFILE%." == "." goto build_applog
 
@@ -80,7 +91,7 @@ goto build_exit
 :build_help
 
 echo Usage: build [options]
-echo .
+echo.
 echo Where options can be:-
 echo     -C   : Build clean.
 echo     -d   : For debug build (output is ModuleD.exe).
@@ -92,10 +103,12 @@ echo          : Append the compile log to the given file.
 echo     -m {makefile}
 echo            Sets the makefile to use where {makefile} can be:-
 echo              Makefile     Build using Cygwin, MinGW or Linux GNU GCC
-echo              win32v6.mak  Build using MS VC version 6 onwards
+echo              win32v6.mak  Build using MS VC version 6
+echo              win32v8.mak  Build using MS VC version 8 (2005)
+echo              win32v9.mak  Build using MS VC version 9 onwards
 echo     -S   : Build clean spotless.
 echo     -u   : Build with UNICODE support.
-echo .
+echo.
 echo If you change the build options used do a clean build (build -C) first.
 
 :build_exit
