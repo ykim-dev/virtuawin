@@ -2,7 +2,7 @@
 //  VirtuaWin - Virtual Desktop Manager (virtuawin.sourceforge.net)
 //  WinRuleDialog.c - Window Rule Dialog routines.
 // 
-//  Copyright (c) 2007-2012 VirtuaWin (VirtuaWin@home.se)
+//  Copyright (c) 2007-2014 VirtuaWin (VirtuaWin@home.se)
 // 
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -39,6 +39,7 @@
 
 static int deskCount ;
 static HWND initWin ;
+static HINSTANCE initHinst ;
 static vwWindowRule *winRuleCur ;
 
 static void
@@ -223,9 +224,6 @@ windowRuleDialogInit(HWND hDlg, int firstTime)
     windowRuleDialogInitItem(hDlg) ;
     if(initWin != NULL)
     {
-        typedef DWORD (WINAPI *vwGETMODULEFILENAMEEX)(HANDLE,HMODULE,LPTSTR,DWORD) ;
-        extern vwGETMODULEFILENAMEEX vwGetModuleFileNameEx ;
-        
         buff[0] = 0 ;
         GetClassName(initWin,buff,MAX_PATH);
         SetDlgItemText(hDlg,wtypeNameEntry[0],buff) ;
@@ -235,11 +233,19 @@ windowRuleDialogInit(HWND hDlg, int firstTime)
             _tcscpy(buff,vwWTNAME_NONE);
         SetDlgItemText(hDlg,wtypeNameEntry[1],buff) ;
         buff[0] = 0 ;
-        if((vwGetModuleFileNameEx != NULL) &&
+        if(((vwGetModuleFileNameEx != NULL) || (vwGetProcessImageName != NULL)) &&
            (GetWindowThreadProcessId(initWin,&procId) != 0) && (procId != 0) && 
            ((procHdl=OpenProcess(PROCESS_QUERY_INFORMATION|PROCESS_VM_READ,FALSE,procId)) != NULL))
         {
-            vwGetModuleFileNameEx(procHdl,NULL,buff,MAX_PATH) ;
+            if(vwGetProcessImageName != NULL)
+            {
+                DWORD dw = MAX_PATH ;
+                if(vwGetProcessImageName(procHdl,0,buff,&dw) == 0)
+                    buff[0] = 0 ;
+            }
+            if((buff[0] == 0) && (vwGetModuleFileNameEx != NULL) &&
+               (vwGetModuleFileNameEx(procHdl,NULL,buff,MAX_PATH) == 0))
+                buff[0] = 0 ;
             CloseHandle(procHdl) ;
         }
         SetDlgItemText(hDlg,wtypeNameEntry[2],buff) ;
@@ -509,11 +515,17 @@ windowRuleDialogFunc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
     switch (msg)
     {
     case WM_INITDIALOG:
-        dialogHWnd = hDlg ;
-        SetWindowPos(hDlg, 0, dialogPos[0], dialogPos[1], 0, 0, SWP_NOZORDER | SWP_NOSIZE | SWP_NOACTIVATE);
-        windowRuleDialogInit(hDlg,1) ;
-        return TRUE;
-        
+        {
+            HICON icn;
+            dialogHWnd = hDlg ;
+            icn = LoadImage(initHinst,MAKEINTRESOURCE(IDI_VIRTUAWIN),IMAGE_ICON,
+                            GetSystemMetrics(SM_CXSMICON),GetSystemMetrics(SM_CYSMICON),0);
+            if(icn)
+                SendMessage(hDlg,WM_SETICON,ICON_SMALL,(LPARAM)icn);
+            SetWindowPos(hDlg, 0, dialogPos[0], dialogPos[1], 0, 0, SWP_NOZORDER | SWP_NOSIZE | SWP_NOACTIVATE);
+            windowRuleDialogInit(hDlg,1) ;
+            return TRUE;
+        }
     case WM_COMMAND:
         switch (LOWORD(wParam))
         {
@@ -614,6 +626,7 @@ createWindowRuleDialog(HINSTANCE theHinst, HWND theHwndOwner, vwWindowRule *wtyp
         deskCount = currentDesk ;
     winRuleCur = wtype ;
     initWin = theWin ;
+    initHinst = theHinst ;
     dialogOpen = TRUE ;
     DialogBox(theHinst,MAKEINTRESOURCE(IDD_WINDOWRULEDIALOG),theHwndOwner,(DLGPROC) windowRuleDialogFunc) ;
     dialogOpen = FALSE ;

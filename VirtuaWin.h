@@ -3,7 +3,7 @@
 //  VirtuaWin.h - Main variable and function definitions.
 // 
 //  Copyright (c) 1999-2005 Johan Piculell
-//  Copyright (c) 2006-2012 VirtuaWin (VirtuaWin@home.se)
+//  Copyright (c) 2006-2014 VirtuaWin (VirtuaWin@home.se)
 // 
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -48,6 +48,10 @@ extern int curDisabledMod;                        // how many disabled modules w
 extern vwModule moduleList[MAXMODULES];           // list that holds modules
 extern vwDisModule disabledModules[MAXMODULES*2]; // list with disabled modules
 extern HWND ichangeHWnd;                          // handle to module hangling desktop changes
+
+/* Windows functions to use to get a programs file name */
+extern vwGETMODULEFILENAMEEX vwGetModuleFileNameEx ;
+extern vwGETPROCESSIMAGENAME vwGetProcessImageName ;
 
 /* logging defines & macros */
 extern vwUByte vwLogFlag ;

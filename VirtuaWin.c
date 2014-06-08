@@ -3,7 +3,7 @@
 //  VirtuaWin.c - Core VirtuaWin routines.
 // 
 //  Copyright (c) 1999-2005 Johan Piculell
-//  Copyright (c) 2006-2012 VirtuaWin (VirtuaWin@home.se)
+//  Copyright (c) 2006-2014 VirtuaWin (VirtuaWin@home.se)
 // 
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -241,8 +241,8 @@ enum {
 } ;
 int osVersion ;
 
-typedef DWORD (WINAPI *vwGETMODULEFILENAMEEX)(HANDLE,HMODULE,LPTSTR,DWORD) ;
 vwGETMODULEFILENAMEEX vwGetModuleFileNameEx ;
+vwGETPROCESSIMAGENAME vwGetProcessImageName ;
 
 vwUByte vwHookUse ;
 vwUByte vwHookInstalled ;
@@ -1494,11 +1494,19 @@ vwWindowRuleFind(HWND hwnd, vwWindowRule *owt)
                             HANDLE procHdl ;
                             DWORD procId ;
                             name[2][0] = '\0' ;
-                            if((vwGetModuleFileNameEx != NULL) &&
+                            if(((vwGetModuleFileNameEx != NULL) || (vwGetProcessImageName != NULL)) &&
                                (GetWindowThreadProcessId(hwnd,&procId) != 0) && (procId != 0) && 
                                ((procHdl=OpenProcess(PROCESS_QUERY_INFORMATION|PROCESS_VM_READ,FALSE,procId)) != NULL))
                             {
-                                vwGetModuleFileNameEx(procHdl,NULL,name[2],MAX_PATH) ;
+                                if(vwGetProcessImageName != NULL)
+                                {
+                                    DWORD dw = MAX_PATH ;
+                                    if(vwGetProcessImageName(procHdl,0,name[2],&dw) == 0)
+                                        name[2][0] = 0 ;
+                                }
+                                if((name[2][0] == 0) && (vwGetModuleFileNameEx != NULL) &&
+                                   (vwGetModuleFileNameEx(procHdl,NULL,name[2],MAX_PATH) == 0))
+                                    name[2][0] = 0 ;
                                 CloseHandle(procHdl) ;
                             }
                         }
@@ -4183,7 +4191,7 @@ WindowInfoDialogFunc(HWND hwndDlg, UINT msg, WPARAM wParam, LPARAM lParam)
             TCHAR buff[vwCLASSNAME_MAX + vwWINDOWNAME_MAX + MAX_PATH + 256], *ss ;
             vwWindow *win ;
             HANDLE procHdl ;
-            DWORD procId ;
+            DWORD procId, dw ;
             RECT pos ;
             int tabstops[2] ;
             
@@ -4208,11 +4216,20 @@ WindowInfoDialogFunc(HWND hwndDlg, UINT msg, WPARAM wParam, LPARAM lParam)
                 ss += _tcslen(ss) ;
                 if(GetWindowThreadProcessId(infoWin,&procId) == 0)
                     procId = 0 ;
-                if(vwGetModuleFileNameEx == NULL)
+                ss[0] = 0 ;
+                if((vwGetModuleFileNameEx == NULL) && (vwGetProcessImageName == NULL))
                     _tcscpy(ss,_T("<Unsupported>"));
                 else if((procId != 0) && ((procHdl=OpenProcess(PROCESS_QUERY_INFORMATION|PROCESS_VM_READ,FALSE,procId)) != NULL))
                 {
-                    vwGetModuleFileNameEx(procHdl,NULL,ss,MAX_PATH) ;
+                    if(vwGetProcessImageName != NULL)
+                    {
+                        dw = MAX_PATH ;
+                        if(vwGetProcessImageName(procHdl,0,ss,&dw) == 0)
+                            ss[0] = 0 ;
+                    }
+                    if((ss[0] == 0) && (vwGetModuleFileNameEx != NULL) &&
+                       (vwGetModuleFileNameEx(procHdl,NULL,ss,MAX_PATH) == 0))
+                        ss[0] = 0 ;
                     CloseHandle(procHdl) ;
                 }
                 if(ss[0] == '\0')
@@ -5751,6 +5768,12 @@ VirtuaWinInit(HINSTANCE hInstance, LPSTR cmdLine)
         vwGetModuleFileNameEx = (vwGETMODULEFILENAMEEX) GetProcAddress(libHandle,"GetModuleFileNameExW") ;
 #else
         vwGetModuleFileNameEx = (vwGETMODULEFILENAMEEX) GetProcAddress(libHandle,"GetModuleFileNameExA") ;
+#endif
+    if((osVersion & OSVERSION_64BIT) && ((libHandle = LoadLibrary(_T("Kernel32"))) != NULL))
+#ifdef _UNICODE
+        vwGetProcessImageName = (vwGETPROCESSIMAGENAME) GetProcAddress(libHandle,"QueryFullProcessImageNameW") ;
+#else
+        vwGetProcessImageName = (vwGETPROCESSIMAGENAME) GetProcAddress(libHandle,"QueryFullProcessImageNameA") ;
 #endif
     
     /* Create a window class for the window that receives systray notifications.

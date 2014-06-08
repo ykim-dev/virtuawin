@@ -3,7 +3,7 @@
 //  ConfigParameters.h - Constant definitions used.
 // 
 //  Copyright (c) 1999-2005 Johan Piculell
-//  Copyright (c) 2006-2012 VirtuaWin (VirtuaWin@home.se)
+//  Copyright (c) 2006-2014 VirtuaWin (VirtuaWin@home.se)
 // 
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -206,5 +206,8 @@ typedef struct {
     vwUShort message ;
     char     label[vwMENU_LABEL_MAX] ;
 } vwMenuItemMsg ;
+
+typedef DWORD (WINAPI *vwGETMODULEFILENAMEEX)(HANDLE,HMODULE,LPTSTR,DWORD) ;
+typedef DWORD (WINAPI *vwGETPROCESSIMAGENAME)(HANDLE,DWORD,LPTSTR,PDWORD) ;
 
 #endif
