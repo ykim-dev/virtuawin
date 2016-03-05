@@ -2385,7 +2385,7 @@ windowListUpdate(void)
                 /* failure was not a timeout - consider this an elevated window . May need to
                  * change this to test the error is ERROR_ACCESS_DENIED */
                 win->flags |= vwWINFLAGS_ELEVATED_TEST ;
-                vwLogBasic((_T("Found window %x elevated: %x"),win->handle,win->flags)) ;
+                vwLogBasic((_T("Found window %x elevated: %x\n"),win->handle,win->flags)) ;
             }
         }
         if(vwWindowIsShow(win))
@@ -2478,7 +2478,7 @@ vwTaskbarButtonListUpdate(void)
     if(taskbarBCType == vwTASKBAR_BC_WIN7)
     {
         /* Win7: Msg result -> the dpa -> button groups -> button group -> buttons */
-	if((dp1 = (vwUByte *) GetWindowLong(taskbarBCHWnd,DWL_MSGRESULT)) == NULL)
+	    if((dp1 = (vwUByte *) GetWindowLong(taskbarBCHWnd,DWL_MSGRESULT)) == NULL)
         {
             vwLogBasic((_T("Win7BC Err0: %d\n"),GetLastError())) ;
             return 0 ;
@@ -2494,7 +2494,8 @@ vwTaskbarButtonListUpdate(void)
            !vwProcessMemoryRead(taskbarProcHdl,dp2,&bgsCount, sizeof(int),rSize) || // button groups count and pointer
            !vwProcessMemoryRead(taskbarProcHdl,dp2+psz,&bgs, sizeof(void *),rSize))
         {
-            vwLogBasic((_T("Win7BC Err1: %p %p -> %d %p\n"),dp1,dp2,bgsCount,bgs)) ;
+            if(&bgs != NULL)
+				vwLogBasic((_T("Win7BC Err1: %p %p -> %d %p\n"),dp1,dp2,bgsCount,bgs)) ;
             return 0 ;
         }
         itemCount = 0 ;
@@ -2753,7 +2754,7 @@ ichangeDeskProc(int newDesk, WPARAM msgWParam)
             nwin = vwWindowGetNext(win) ;
             if(vwWindowIsShownNotHung(win))
             {
-                if(win->handle == taskbarButtonList[ii])
+                if(taskbarButtonList != NULL && win->handle == taskbarButtonList[ii])
                 {
                     win->flags &= ~vwWINFLAGS_NO_TASKBAR_BUT ;
                     ii++ ;
