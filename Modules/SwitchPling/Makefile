@@ -2,10 +2,10 @@
 OSTYPE   = $(shell uname -msr)
 
 ifeq ($(findstring CYGWIN,$(OSTYPE)),CYGWIN)
-CC      = gcc
-CFLAGS	= -mno-cygwin -Wall -O2
-LDFLAGS	= -mwindows -mno-cygwin -O2
-RC      = windres 
+CC      = i686-pc-mingw32-gcc
+CFLAGS	= -Wall -O2
+LDFLAGS	= -mwindows -O2
+RC      = i686-pc-mingw32-windres
 endif
 
 ifeq ($(findstring MINGW32,$(OSTYPE)),MINGW32)
