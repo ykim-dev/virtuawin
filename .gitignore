@@ -8,3 +8,7 @@
 *.coff
 *.pdb
 *.res
+tmp/
+*.chm
+*.zip
+
