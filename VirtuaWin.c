@@ -2494,7 +2494,7 @@ vwTaskbarButtonListUpdate(void)
            !vwProcessMemoryRead(taskbarProcHdl,dp2,&bgsCount, sizeof(int),rSize) || // button groups count and pointer
            !vwProcessMemoryRead(taskbarProcHdl,dp2+psz,&bgs, sizeof(void *),rSize))
         {
-            if(&bgs != NULL)
+            if(bgs != NULL)
 				vwLogBasic((_T("Win7BC Err1: %p %p -> %d %p\n"),dp1,dp2,bgsCount,bgs)) ;
             return 0 ;
         }
