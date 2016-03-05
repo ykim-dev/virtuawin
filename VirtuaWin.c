@@ -3003,8 +3003,8 @@ ichangeDeskProc(int newDesk, WPARAM msgWParam)
         /* assumes the left key is pressed which could lead to problems */
         if(HIWORD(GetAsyncKeyState(VK_MENU)))
         {
-            PostMessage(activeHWnd,WM_KEYUP,VK_MENU,(LPARAM) 0xC0380001) ;
-            PostMessage(activeHWnd,WM_KEYUP,VK_MENU,(LPARAM) 0xC1380001) ;
+            PostMessage(activeHWnd,WM_SYSKEYUP,VK_MENU,(LPARAM) 0xC0380001) ;
+            PostMessage(activeHWnd,WM_SYSKEYUP,VK_MENU,(LPARAM) 0xC1380001) ;
         }
         if(HIWORD(GetAsyncKeyState(VK_CONTROL)))
         {
