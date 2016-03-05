@@ -1,0 +1,10 @@
+*.o
+*.obj
+*.exe
+*.od
+*.exp
+*.dll
+*.lib
+*.coff
+*.pdb
+*.res
