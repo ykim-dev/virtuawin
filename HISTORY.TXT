@@ -1,6 +1,22 @@
 ***   VirtuaWin Revision History   ***
 --------------------------------------
 
+Ver 4.5 2016/03/05
+
+* 235 Corrected message sent for ALT key modifier for release
+* 232 Somewhat patchy fix of unexpected crash. Dynamic taskbar support should probably be rechecked on newer win versions
+* Fixed 1 byte scribble in vwModuleLoad
+* 221 Fixed 64bit process names not being obtained and added VW icon to winrule dialog
+* 228 Added main program resource to WinList to improve its identity
+* 228 Added support for MS VC++ (Epress) 8 & 9+ (tested v10 2010)
+* FR134 Fixed window order to be case insensitively sorted.
+* Fixed typo reported by Dean Toth (thanks for reporting).
+* 236 Hung window (blinking icon) on Windows10
+
+
+
+--------------------------------------
+
 Ver 4.4 2012/10/09
 
 * 3178720 Added dynamic taskbar support for Win7
