@@ -101,6 +101,7 @@ void createWindowRuleDialog(HINSTANCE theHinst, HWND theHwndOwner, vwWindowRule 
 void vwModulesLoad(void);
 void vwModulesSendMessage(UINT Msg, WPARAM wParam, LPARAM lParam);
 void vwModulesPostMessage(UINT Msg, WPARAM wParam, LPARAM lParam);
-void vwModuleLoad(int moduleIdx, TCHAR *path) ;
+void vwModuleLoad(int moduleIdx, TCHAR *path);
+void vwModuleUnLoad();
 
 #endif

@@ -46,6 +46,28 @@ vwModuleCheckDisabled(TCHAR *theModName)
 }
 
 void
+vwModuleUnLoad()
+{
+    int index;
+	/* Unload all modules currently running */
+    vwMenuItem *mi ;
+    vwModulesSendMessage(MOD_QUIT, 0, 0);
+    for(index = 0; index < MAXMODULES; index++)
+    {
+		moduleList[index].handle = NULL;
+        moduleList[index].description[0] = '\0';
+	}
+    moduleCount = 0;
+    /* free off all module inserted menu items and reset ICHANGE and image generation */
+    while((mi = ctlMenuItemList) != NULL)
+    {
+		ctlMenuItemList = mi->next ;
+        free(mi) ;
+    }
+    ichangeHWnd = NULL ;
+}
+
+void
 vwModuleLoad(int moduleIdx, TCHAR *path)
 {
     HWND modHWnd ;

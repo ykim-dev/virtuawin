@@ -171,6 +171,8 @@
 #define VW_APPLYRULES   (WM_USER + 49)
 /* Message, returns the Expert setting of Invert Up/Down, 1 = enabled, 0 otherwise */
 #define VW_INVERTY      (WM_USER + 50)
+/* Message, reloads modules */
+#define VW_MODRELOAD    (WM_USER + 51)
 
 
 /* Message, sent by VirtuaWin after a switch. lParam will contain current desktop number 

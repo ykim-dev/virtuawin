@@ -858,8 +858,6 @@ setupModulesList(HWND hDlg)
 BOOL APIENTRY
 setupModules(HWND hDlg, UINT message, UINT wParam, LONG lParam)
 {
-    int index;
-    
     switch (message)
     {
     case WM_INITDIALOG:
@@ -896,22 +894,7 @@ setupModules(HWND hDlg, UINT message, UINT wParam, LONG lParam)
         }
         else if(LOWORD((wParam) == IDC_MODRELOAD))
         {   
-            /* Unload all modules currently running */
-            vwMenuItem *mi ;
-            vwModulesSendMessage(MOD_QUIT, 0, 0);
-            for(index = 0; index < MAXMODULES; index++)
-            {
-                moduleList[index].handle = NULL;
-                moduleList[index].description[0] = '\0';
-            }
-            moduleCount = 0;
-            /* free off all module inserted menu items and reset ICHANGE and image generation */
-            while((mi = ctlMenuItemList) != NULL)
-            {
-                ctlMenuItemList = mi->next ;
-                free(mi) ;
-            }
-            ichangeHWnd = NULL ;
+            vwModuleUnLoad();
             disableDeskImage(deskImageCount) ;
             /* sleep for a second to allow the modules to exit cleanly */
             Sleep(1000) ;

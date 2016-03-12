@@ -5591,7 +5591,15 @@ wndProc(HWND aHWnd, UINT message, WPARAM wParam, LPARAM lParam)
                 return TRUE ;
             }
         }
-        break ;
+        break;
+	
+	case VW_MODRELOAD:
+        vwModuleUnLoad();
+        /* sleep for a second to allow the modules to exit cleanly */
+        Sleep(1000) ;
+        vwModulesLoad();
+        break;
+	
     default:
         // If taskbar restarted
         if(message == RM_TaskbarCreated)
